@@ -14,7 +14,6 @@ all_link_actions = [
     ACTION_NAMES.cpp_link_executable,
     ACTION_NAMES.cpp_link_dynamic_library,
     ACTION_NAMES.cpp_link_nodeps_dynamic_library,
-    ACTION_NAMES.cpp_link_static_library,
 ]
 
 all_cpp_actions = all_link_actions + [
@@ -70,6 +69,7 @@ def _impl(ctx):
                     flag_groups = ([
                         flag_group(
                             flags = [
+                                "-lm",
                                 "-lstdc++",
                             ],
                         ),
@@ -87,6 +87,7 @@ def _impl(ctx):
                         flag_group(
                             flags = [
                                 "-std=c++20",
+                                "-Wall",
                             ],
                         ),
                     ]),
