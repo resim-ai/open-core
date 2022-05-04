@@ -40,23 +40,31 @@ def _impl(ctx):
         ),
         tool_path(
             name = "cpp",
-            path = "/bin/false",
+            path = "/usr/bin/clang-cpp-14",
         ),
         tool_path(
             name = "gcov",
-            path = "/bin/false",
+            path = "/usr/bin/llvm-profdata-14",
+        ),
+        tool_path(
+            name = "llvm-cov",
+            path = "/usr/bin/llvm-cov-14",
+        ),
+        tool_path(
+            name = "llvm-profdata",
+            path = "/usr/bin/llvm-profdata-14",
         ),
         tool_path(
             name = "nm",
-            path = "/bin/false",
+            path = "/usr/bin/nm",
         ),
         tool_path(
             name = "objdump",
-            path = "/bin/false",
+            path = "/usr/bin/objdump",
         ),
         tool_path(
             name = "strip",
-            path = "/bin/false",
+            path = "/usr/bin/strip",
         ),
     ]
     features = [
@@ -118,4 +126,3 @@ cc_toolchain_config = rule(
     attrs = {},
     provides = [CcToolchainConfigInfo],
 )
-
