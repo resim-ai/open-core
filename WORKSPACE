@@ -6,3 +6,12 @@ http_archive(
     urls = ["https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip"],
     strip_prefix = "googletest-e2239ee6043f73722e7aa812a459f54a28552929",
 )
+
+# Eigen V 3.3.9
+http_archive(
+    name = "libeigen",
+    build_file = "//build:eigen.BUILD",
+    urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.zip"],
+    sha256 = "83709a8def0d60dc4d17a749989893ea5e5aacf13f9184ae0509313f400f6f45",
+    strip_prefix="eigen-3.3.9",
+)
