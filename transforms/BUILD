@@ -2,12 +2,12 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "so3",
-    hdrs = ["so3.hh"],
     srcs = ["so3.cc"],
-    deps = [
-        "@libeigen//:eigen"
-    ],
+    hdrs = ["so3.hh"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
 )
 
 cc_test(
@@ -15,7 +15,7 @@ cc_test(
     srcs = ["so3_test.cc"],
     deps = [
         ":so3",
+        "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
-        "@com_google_googletest//:gtest_main"
     ],
 )

@@ -1,5 +1,6 @@
-# Copied from https://bazel.build/tutorials/cc-toolchain-config 
+# Copied from https://bazel.build/tutorials/cc-toolchain-config
 # with updated clang version 14 paths
+"""C++ toolchain config"""
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load(
@@ -99,7 +100,7 @@ def _impl(ctx):
                             ],
                         ),
                     ]),
-                )
+                ),
             ],
         ),
     ]

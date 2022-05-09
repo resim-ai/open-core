@@ -18,8 +18,6 @@ filegroup(name = "empty")
 
 cc_toolchain(
     name = "k8_toolchain",
-    toolchain_identifier = "k8-toolchain",
-    toolchain_config = ":k8_toolchain_config",
     all_files = ":empty",
     compiler_files = ":empty",
     dwp_files = ":empty",
@@ -27,6 +25,8 @@ cc_toolchain(
     objcopy_files = ":empty",
     strip_files = ":empty",
     supports_param_files = 0,
+    toolchain_config = ":k8_toolchain_config",
+    toolchain_identifier = "k8-toolchain",
 )
 
 # Tests to assert that the expected toolchain is being used.
@@ -40,6 +40,6 @@ cc_test(
     srcs = ["check_compiler_test.cc"],
     deps = [
         ":check_compiler",
-        "@com_google_googletest//:gtest_main"
+        "@com_google_googletest//:gtest_main",
     ],
 )
