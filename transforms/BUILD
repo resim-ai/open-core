@@ -34,6 +34,28 @@ cc_test(
 )
 
 cc_library(
+    name = "se3",
+    srcs = ["se3.cc"],
+    hdrs = ["se3.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":so3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "se3_test",
+    srcs = ["se3_test.cc"],
+    deps = [
+        ":liegroup_test_helpers",
+        ":se3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "so3",
     srcs = ["so3.cc"],
     hdrs = ["so3.hh"],

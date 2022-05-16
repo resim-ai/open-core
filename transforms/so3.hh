@@ -19,6 +19,9 @@ namespace transforms {
 //     const Eigen::Vector3d point_on_robot;
 //     const Eigen::Vector3d point_in_global_frame 
 //           = global_from_robot * point_on_robot;
+//     // Compose two SO3s by multiplication.
+//     const SO3 robot_from_sensor(sensor_pose_source);
+//     const SO3 global_from_sensor = global_from_robot * robot_from_sensor;
 //     // Interpolate a rotation
 //     const SO3 global_from_robot_halfway = global_from_robot.interp(0.5):
 class SO3 {
@@ -82,8 +85,6 @@ class SO3 {
     // SO3 transform.
     const Eigen::Matrix3d &rotation_matrix() const;
 
-    // TODO(simon) implement the rest of SO3 as laid out in task:
-    // https://app.asana.com/0/1202178773526279/1202227479029247/f
   private:
     Eigen::Matrix3d rotation_matrix_;
 };
