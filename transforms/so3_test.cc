@@ -8,6 +8,10 @@
 namespace resim {
 namespace transforms {
 
+// Please Note: Here are the specialized tests for the SO3 class. The SO3 class
+// is also covered by a number of general Liegrooup tests that can be found in
+// liegroup_test.cc
+
 
 TEST(SO3ConstructorTest, angle_axis_zero) {
     // Initialize SO3 with a zero angle angle_axis argument. 
@@ -76,34 +80,7 @@ TEST(SO3Inverse, compare_to_matrix_inverse) {
     }
 }
 
-TEST(SO3Inverse, inverse_negative_alg_equivalence) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    for (const SO3::TangentVector &alg : make_test_algebra_elements<SO3>()) {
-        const SO3 b_from_a_ref = SO3::exp(alg).inverse();
-        const SO3 b_from_a = SO3::exp(-alg);
-        EXPECT_TRUE(b_from_a_ref.is_approx(b_from_a));
-    }
-}
-
-TEST(SO3Interp, interp_zero_identity) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    // Confirm interpolating at zero gives identity.
-    constexpr double ZERO = 0;
-    for (const SO3 &a_from_b : make_test_group_elements<SO3>()) {
-        EXPECT_TRUE(a_from_b.interp(ZERO).is_approx(SO3::identity()));
-    }
-}
-
-TEST(SO3Interp, interp_one_noop) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    // Confirm interpolating at one is a noop.
-    constexpr double ONE = 1.;
-    for (const SO3 &a_from_b : make_test_group_elements<SO3>()) {
-        EXPECT_TRUE(a_from_b.interp(ONE).is_approx(a_from_b));
-    }
-}
-
-TEST(SO3Interp, interp_zero_halfway) {
+TEST(SO3Interp, interp_halfway) {
     constexpr double ANGLE = M_PI / 4.;
     constexpr double HALFWAY = 0.5;
     for (const double angle : {ANGLE, -ANGLE}) {
@@ -130,56 +107,6 @@ TEST(SO3Interp, extrap_double) {
         const SO3 &b_from_c = a_from_b;
         const SO3 a_from_c = a_from_b * b_from_c;
         EXPECT_TRUE(a_from_b.interp(DOUBLE).is_approx(a_from_c));
-    }
-}
-
-TEST(SO3ExpLog, exp_of_zero) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    SO3 frame_from_frame = SO3::exp(SO3::TangentVector::Zero());
-    EXPECT_TRUE(frame_from_frame.rotation_matrix().isApprox(
-        Eigen::Matrix3d::Identity()));
-}
-
-TEST(SO3ExpLog, log_of_identity) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    const SO3 identity = SO3::identity();
-    // Test log of identity SO3 is zero.
-    EXPECT_TRUE(identity.log().isApprox(SO3::TangentVector::Zero()));
-}
-
-TEST(SO3ExpLog, exp_of_log_noop) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    std::vector<SO3> test_elements = make_test_group_elements<SO3>();
-    // Exp should always be the inverse of log.
-    for (const SO3 &a_from_b : test_elements) {
-        const SO3 a_from_b_expected
-            = SO3::exp(a_from_b.log());
-        EXPECT_TRUE(a_from_b_expected.is_approx(
-            a_from_b));
-    }
-}
-
-TEST(SO3Adjoint, self_adjoint_noop) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    for (const SO3::TangentVector &alg : make_test_algebra_elements<SO3>()) {
-        const SO3 a_from_b = SO3::exp(alg);
-        const SO3::TangentVector alg_noop 
-            = a_from_b.adjoint_times(a_from_b.log());
-        EXPECT_TRUE(alg.isApprox(alg_noop));
-    }
-}
-
-TEST(SO3Adjoint, composition_by_adjoint) {
-    // TODO(simon) this test could be templated for all Liegroups.
-    const auto test_so3s = make_test_group_elements<SO3>();
-    SO3 a_from_b = test_so3s.front();
-    for (const SO3 &b_from_c : test_so3s) {
-        const SO3 a_from_c_ref = a_from_b * b_from_c;
-        const SO3 a_from_c 
-            = SO3::exp(a_from_b.adjoint_times(b_from_c.log()))
-            * a_from_b;
-        EXPECT_TRUE(a_from_c_ref.is_approx(a_from_c));
-        a_from_b = b_from_c;
     }
 }
 

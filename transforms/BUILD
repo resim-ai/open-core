@@ -22,6 +22,17 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "liegroup_test",
+    srcs = ["liegroup_test.cc"],
+    deps = [
+        ":liegroup_test_helpers",
+        ":so3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
 cc_library(
     name = "so3",
     srcs = ["so3.cc"],
