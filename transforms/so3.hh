@@ -27,7 +27,6 @@ namespace transforms {
 class SO3 {
  public:
   using TangentVector = Eigen::Vector3d;
-  using TangentMapping = Eigen::Matrix3d;
 
   SO3() = default;
 

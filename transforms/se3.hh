@@ -59,6 +59,10 @@ class SE3 {
   // Return the inverse of this SE3.
   SE3 inverse() const;
 
+  // Return the length of the geodesic curve between frames in the
+  // transformation.
+  double arc_length() const;
+
   // Interpolate this SE3
   // [param] fraction - interpolation is over a unit interval, where
   // fraction=0 returns identity and fraction=1 returns this SE3. In between

@@ -58,6 +58,24 @@ TEST(SE3ConstructorTest, rotation_and_translation) {
   }
 }
 
+TEST(SE3ArcLengthTest, identity_arc_length_is_zero) {
+  const SE3 a_from_a = SE3::identity();
+  constexpr double ZERO = 0;
+  EXPECT_EQ(a_from_a.arc_length(), ZERO);
+}
+
+TEST(SE3ArcLengthTest, unit_circle_arc) {
+  constexpr double HALF_PI = M_PI / 2;
+  const SE3 orig_from_one_zero = SE3(Eigen::Vector3d::UnitX());
+  const SE3 orig_from_zero_one =
+      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
+          Eigen::Vector3d::UnitY());
+  // Following transform is a quater arc of the unit circle.
+  const SE3 zero_one_from_one_zero =
+      orig_from_zero_one.inverse() * orig_from_one_zero;
+  EXPECT_DOUBLE_EQ(zero_one_from_one_zero.arc_length(), HALF_PI);
+}
+
 TEST(TangentVectorHelpers, round_trip_consistent) {
   const SO3::TangentVector alg_rot = SO3::TangentVector::Ones();
   const Eigen::Vector3d alg_trans = Eigen::Vector3d::Ones() * 2.;

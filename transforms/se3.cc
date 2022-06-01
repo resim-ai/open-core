@@ -36,6 +36,10 @@ SE3 SE3::inverse() const {
   return SE3(inverse_rotation, inverse_rotation * -translation_);
 }
 
+double SE3::arc_length() const {
+  return tangent_vector_translation_part(this->log()).norm();
+}
+
 SE3 SE3::interp(const double fraction) const {
   return SE3::exp(this->log() * fraction);
 }
