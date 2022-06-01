@@ -47,8 +47,7 @@ std::vector<Liegroup> make_test_group_elements() {
       group_elements.begin(),
       [](const typename Liegroup::TangentVector &alg) -> Liegroup {
         return Liegroup::exp(alg);
-      }
-  );
+      });
   return group_elements;
 }
 

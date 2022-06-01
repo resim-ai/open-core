@@ -34,8 +34,7 @@ TYPED_TEST(LiegroupHelperTests, test_make_algebra_elements) {
          const typename TypeParam::TangentVector &b) -> bool {
         //
         return a.norm() > b.norm();
-      }
-  );
+      });
 
   // Then find adjacent duplicates (or not)
   const auto last = std::adjacent_find(
@@ -45,8 +44,7 @@ TYPED_TEST(LiegroupHelperTests, test_make_algebra_elements) {
          const typename TypeParam::TangentVector &b) -> bool {
         //
         return a.isApprox(b);
-      }
-  );
+      });
   EXPECT_EQ(last, test_elements.end());
 }
 

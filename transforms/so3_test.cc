@@ -17,11 +17,11 @@ namespace transforms {
 TEST(SO3ConstructorTest, angle_axis_zero) {
   // Initialize SO3 with a zero angle angle_axis argument.
   constexpr double ZERO_ANGLE = 0;
-  const SO3 no_rotation(Eigen::AngleAxisd(ZERO_ANGLE, Eigen::Vector3d::UnitX())
-  );
+  const SO3 no_rotation(
+      Eigen::AngleAxisd(ZERO_ANGLE, Eigen::Vector3d::UnitX()));
   // Verify that the rotation matrix is identity.
-  EXPECT_TRUE(no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()
-  ));
+  EXPECT_TRUE(
+      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
 }
 
 TEST(SO3ConstructorTest, angle_axis_arbitray) {
@@ -31,16 +31,15 @@ TEST(SO3ConstructorTest, angle_axis_arbitray) {
   const SO3 rotation_so3(rotation_aa);
   // Verify that rotation matrices of axis angle and so3 agree.
   EXPECT_TRUE(
-      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix())
-  );
+      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
 }
 
 TEST(SO3ConstructorTest, matrix_identity) {
   // Initialize SO3 with an identity matrix.
   const SO3 from_id_mat(Eigen::Matrix3d::Identity());
   // Initializes to identity
-  EXPECT_TRUE(from_id_mat.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()
-  ));
+  EXPECT_TRUE(
+      from_id_mat.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
   // Compare to identity SO3
   const SO3 identity = SO3::identity();
   EXPECT_TRUE(identity.is_approx(from_id_mat));
