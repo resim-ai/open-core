@@ -26,7 +26,8 @@ cc_library(
     hdrs = ["liegroup_test_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "so3",
+        ":se3",
+        ":so3",
         "@libeigen//:eigen",
     ],
 )
@@ -36,6 +37,7 @@ cc_test(
     srcs = ["liegroup_test_helpers_test.cc"],
     deps = [
         ":liegroup_test_helpers",
+        ":se3",
         ":so3",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
@@ -47,6 +49,7 @@ cc_test(
     srcs = ["liegroup_test.cc"],
     deps = [
         ":liegroup_test_helpers",
+        ":se3",
         ":so3",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
@@ -59,6 +62,7 @@ cc_library(
     hdrs = ["se3.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":liegroup_exp_diff",
         ":so3",
         "@libeigen//:eigen",
     ],

@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 
+#include "transforms/se3.hh"
 #include "transforms/so3.hh"
 
 namespace resim {
@@ -13,8 +14,7 @@ namespace transforms {
 template <typename t>
 class LiegroupHelperTests : public ::testing::Test {};
 
-// TODO(simon) add new liegroups to this list when they land (e.g. SE3).
-using LiegroupTypes = ::testing::Types<SO3>;
+using LiegroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(LiegroupHelperTests, LiegroupTypes);
 
 TYPED_TEST(LiegroupHelperTests, test_make_algebra_elements) {

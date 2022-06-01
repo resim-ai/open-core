@@ -3,7 +3,6 @@
 #include <cmath>
 
 namespace {
-constexpr double TINY_SQUARE_ANGLE = 4e-6;
 
 struct TinyAngleConstCoeffs {
   double a;

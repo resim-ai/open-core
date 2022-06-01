@@ -2,6 +2,8 @@
 
 namespace resim {
 namespace transforms {
+// Define a very small angle threshold for logic avoiding div 0 issues.
+constexpr double TINY_SQUARE_ANGLE = 4e-6;
 
 // This library contains some helper functions to compute the derivatives
 // of the exp and log mapping functions for Liegroups (SO3 and SE3).

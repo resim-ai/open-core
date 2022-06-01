@@ -58,5 +58,13 @@ TEST(SE3ConstructorTest, rotation_and_translation) {
   }
 }
 
+TEST(TangentVectorHelpers, round_trip_consistent) {
+  const SO3::TangentVector alg_rot = SO3::TangentVector::Ones();
+  const Eigen::Vector3d alg_trans = Eigen::Vector3d::Ones() * 2.;
+  SE3::TangentVector alg = SE3::tangent_vector_from_parts(alg_rot, alg_trans);
+  EXPECT_TRUE(alg_rot.isApprox(SE3::tangent_vector_rotation_part(alg)));
+  EXPECT_TRUE(alg_trans.isApprox(SE3::tangent_vector_translation_part(alg)));
+}
+
 }  // namespace transforms
 }  // namespace resim

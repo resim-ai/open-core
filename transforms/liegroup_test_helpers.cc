@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "transforms/se3.hh"
 #include "transforms/so3.hh"
 
 namespace resim {
@@ -54,6 +55,8 @@ std::vector<Liegroup> make_test_group_elements() {
 template std::vector<Eigen::Vector3d> make_test_vectors<Eigen::Vector3d>();
 template std::vector<SO3::TangentVector> make_test_algebra_elements<SO3>();
 template std::vector<SO3> make_test_group_elements<SO3>();
+template std::vector<SE3::TangentVector> make_test_algebra_elements<SE3>();
+template std::vector<SE3> make_test_group_elements<SE3>();
 
 }  // namespace transforms
 }  // namespace resim

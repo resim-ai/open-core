@@ -29,7 +29,6 @@ namespace transforms {
 class SE3 {
  public:
   using TangentVector = Eigen::Matrix<double, 6, 1>;
-  using TangentMatrix = Eigen::Matrix<double, 6, 6>;
 
   SE3() = default;
 
@@ -45,6 +44,41 @@ class SE3 {
   // Create an SE3 with both a rotation and translation component.
   SE3(const SO3 &rotation, const Eigen::Vector3d &translation);
 
+  // Get an identity SE3
+  static SE3 identity();
+
+  // Operator*
+  // Compose this SE3 with another (multiplication)
+  SE3 operator*(const SE3 &other) const;
+
+  // Operator*
+  // Apply the SE3 action to a vector in 3-Dimensional space
+  // (multiplication)
+  Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
+
+  // Return the inverse of this SE3.
+  SE3 inverse() const;
+
+  // Interpolate this SE3
+  // [param] fraction - interpolation is over a unit interval, where
+  // fraction=0 returns identity and fraction=1 returns this SE3. In between
+  // the SE3 returned is a linear interpolation. If fraction is greater than 1
+  // or less than 0, a linear extrapolation will be returned.
+  SE3 interp(const double fraction) const;
+
+  // Create an SE3 from an element of the Liegroup algebra.
+  static SE3 exp(const TangentVector &alg);
+
+  // Retrieve the element of the Liegroup algebra that represents
+  // this group element.
+  TangentVector log() const;
+
+  // Transform a TangentVector from the right tangent space to the left.
+  TangentVector adjoint_times(const TangentVector &alg) const;
+
+  // Test for floating-point equality with another SE3.
+  bool is_approx(const SE3 &other) const;
+
   // Getter
   // Return the rotational part of the transform.
   const SO3 &rotation() const;
@@ -53,8 +87,20 @@ class SE3 {
   // Return the translational part of the transform.
   const Eigen::Vector3d &translation() const;
 
-  // TODO(simon) implement the rest of SE3 as laid out in task:
-  // https://app.asana.com/0/1202178773526279/1202227479029247/f
+  // Some TangentVector helpers:
+
+  // Helper to split out the rotation part of an SE3::TangentVector.
+  static SO3::TangentVector tangent_vector_rotation_part(
+      const TangentVector &alg);
+
+  // Helper to split out the translation part of an SE3::TangentVector.
+  static Eigen::Vector3d tangent_vector_translation_part(
+      const TangentVector &alg);
+
+  // Helper to join rotational and translational parts of an SE3::TangentVector.
+  static TangentVector tangent_vector_from_parts(
+      const SO3::TangentVector &alg_rot,
+      const Eigen::Vector3d &alg_trans);
 
  private:
   SO3 rotation_;

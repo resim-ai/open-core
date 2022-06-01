@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "transforms/liegroup_test_helpers.hh"
+#include "transforms/se3.hh"
 #include "transforms/so3.hh"
 
 namespace resim {
@@ -15,8 +16,7 @@ namespace transforms {
 template <typename t>
 class LiegroupTests : public ::testing::Test {};
 
-// TODO(simon) add new liegroups to this list when they land (e.g. SE3).
-using LiegroupTypes = ::testing::Types<SO3>;
+using LiegroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(LiegroupTests, LiegroupTypes);
 
 TYPED_TEST(LiegroupTests, inverse_negative_alg_equivalence) {
@@ -77,13 +77,12 @@ TYPED_TEST(LiegroupTests, self_adjoint_noop) {
 
 TYPED_TEST(LiegroupTests, composition_by_adjoint) {
   const auto test_elements = make_test_group_elements<TypeParam>();
-  TypeParam a_from_b = test_elements.front();
+  TypeParam a_from_b = test_elements.back();
   for (const TypeParam &b_from_c : test_elements) {
     const TypeParam a_from_c_ref = a_from_b * b_from_c;
     const TypeParam a_from_c =
         TypeParam::exp(a_from_b.adjoint_times(b_from_c.log())) * a_from_b;
     EXPECT_TRUE(a_from_c_ref.is_approx(a_from_c));
-    a_from_b = b_from_c;
   }
 }
 
