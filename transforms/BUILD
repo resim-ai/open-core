@@ -1,6 +1,26 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "liegroup_exp_diff",
+    srcs = ["liegroup_exp_diff.cc"],
+    hdrs = ["liegroup_exp_diff.hh"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "liegroup_exp_diff_test",
+    srcs = ["liegroup_exp_diff_test.cc"],
+    deps = [
+        ":liegroup_exp_diff",
+        ":so3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "liegroup_test_helpers",
     srcs = ["liegroup_test_helpers.cc"],
     hdrs = ["liegroup_test_helpers.hh"],
