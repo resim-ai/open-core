@@ -86,5 +86,21 @@ TYPED_TEST(LiegroupTests, composition_by_adjoint) {
   }
 }
 
+TYPED_TEST(LiegroupTests, floating_point_equality) {
+  const auto test_elements = make_test_group_elements<TypeParam>();
+  TypeParam a_from_a = test_elements.front();
+  for (auto test_elements_it = test_elements.begin() + 1;
+       test_elements_it < test_elements.end();
+       ++test_elements_it) {
+    const TypeParam &a_from_b = *test_elements_it;
+    const TypeParam &a_from_b_cp = *test_elements_it;
+    EXPECT_TRUE(a_from_b.is_approx(a_from_b_cp));
+    // Given that all the test elements are guaranteed to be unique - a
+    // constraint that is enforced in the test for the helper lib - then it is
+    // reasonable to expect the below to test to return false consistently.
+    EXPECT_FALSE(a_from_a.is_approx(a_from_b));
+  }
+}
+
 }  // namespace transforms
 }  // namespace resim

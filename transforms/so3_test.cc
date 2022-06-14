@@ -70,6 +70,22 @@ TEST(SO3ConstructorTest, quaternion) {
   }
 }
 
+TEST(SO3OperatorTest, action_on_vector) {
+  constexpr double HALF_PI = M_PI / 2;
+  const SO3 orig_from_half_pi =
+      SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ()));
+  // Expected Location of axes vectors.
+  const Eigen::Vector3d zero_one_x{0., 1., 0.};
+  const Eigen::Vector3d zero_one_y{-1., 0., 0.};
+  const Eigen::Vector3d zero_one_z{0., 0., 1.};
+  EXPECT_TRUE(
+      zero_one_x.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitX()));
+  EXPECT_TRUE(
+      zero_one_y.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitY()));
+  EXPECT_TRUE(
+      zero_one_z.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
+}
+
 TEST(SO3Inverse, compare_to_matrix_inverse) {
   const auto test_so3s = make_test_group_elements<SO3>();
   for (const SO3 &a_from_b : test_so3s) {
