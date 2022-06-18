@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include "transforms/liegroup.hh"
+
 namespace resim {
 namespace transforms {
 
@@ -24,10 +26,8 @@ namespace transforms {
 //     const SO3 global_from_sensor = global_from_robot * robot_from_sensor;
 //     // Interpolate a rotation
 //     const SO3 global_from_robot_halfway = global_from_robot.interp(0.5):
-class SO3 {
+class SO3 final : public LieGroup<SO3, 3, 3> {
  public:
-  using TangentVector = Eigen::Vector3d;
-
   SO3() = default;
 
   // Constructor

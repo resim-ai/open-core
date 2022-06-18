@@ -1,6 +1,14 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "liegroup",
+    hdrs = ["liegroup.hh"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "liegroup_exp_diff",
     srcs = ["liegroup_exp_diff.cc"],
     hdrs = ["liegroup_exp_diff.hh"],
@@ -62,6 +70,7 @@ cc_library(
     hdrs = ["se3.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":liegroup",
         ":liegroup_exp_diff",
         ":so3",
         "@libeigen//:eigen",
@@ -85,6 +94,7 @@ cc_library(
     hdrs = ["so3.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":liegroup",
         "@libeigen//:eigen",
     ],
 )

@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 
+#include "transforms/liegroup.hh"
 #include "transforms/so3.hh"
 
 namespace resim {
@@ -26,10 +27,8 @@ namespace transforms {
 //     const SE3 global_from_sensor = global_from_robot * robot_from_sensor;
 //     // Interpolate a rigid transformation along the geodesic curve:
 //     const SE3 global_from_robot_halfway = global_from_robot.interp(0.5):
-class SE3 {
+class SE3 final : public LieGroup<SE3, 3, 6> {
  public:
-  using TangentVector = Eigen::Matrix<double, 6, 1>;
-
   SE3() = default;
 
   // Constructor
