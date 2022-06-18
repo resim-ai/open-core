@@ -10,16 +10,16 @@
 namespace resim {
 namespace transforms {
 
-// Common tests that apply over all Liegroup classes, for example: SO3, SE3.
+// Common tests that apply over all LieGroup classes, for example: SO3, SE3.
 // For specialized tests see the test files for the classes themselves, for
 // example so3_test.cc
 template <typename t>
-class LiegroupTests : public ::testing::Test {};
+class LieGroupTests : public ::testing::Test {};
 
-using LiegroupTypes = ::testing::Types<SO3, SE3>;
-TYPED_TEST_SUITE(LiegroupTests, LiegroupTypes);
+using LieGroupTypes = ::testing::Types<SO3, SE3>;
+TYPED_TEST_SUITE(LieGroupTests, LieGroupTypes);
 
-TYPED_TEST(LiegroupTests, inverse_negative_alg_equivalence) {
+TYPED_TEST(LieGroupTests, inverse_negative_alg_equivalence) {
   for (const typename TypeParam::TangentVector &alg :
        make_test_algebra_elements<TypeParam>()) {
     const TypeParam b_from_a_ref = TypeParam::exp(alg).inverse();
@@ -28,7 +28,7 @@ TYPED_TEST(LiegroupTests, inverse_negative_alg_equivalence) {
   }
 }
 
-TYPED_TEST(LiegroupTests, interp_zero_identity) {
+TYPED_TEST(LieGroupTests, interp_zero_identity) {
   // Confirm interpolating at zero gives identity.
   constexpr double ZERO = 0;
   for (const TypeParam &a_from_b : make_test_group_elements<TypeParam>()) {
@@ -36,7 +36,7 @@ TYPED_TEST(LiegroupTests, interp_zero_identity) {
   }
 }
 
-TYPED_TEST(LiegroupTests, interp_one_noop) {
+TYPED_TEST(LieGroupTests, interp_one_noop) {
   // Confirm interpolating at one is a noop.
   constexpr double ONE = 1.;
   for (const TypeParam &a_from_b : make_test_group_elements<TypeParam>()) {
@@ -44,19 +44,19 @@ TYPED_TEST(LiegroupTests, interp_one_noop) {
   }
 }
 
-TYPED_TEST(LiegroupTests, exp_of_zero) {
+TYPED_TEST(LieGroupTests, exp_of_zero) {
   TypeParam a_from_a_ref = TypeParam::identity();
   TypeParam a_from_a = TypeParam::exp(TypeParam::TangentVector::Zero());
   EXPECT_TRUE(a_from_a_ref.is_approx(a_from_a));
 }
 
-TYPED_TEST(LiegroupTests, log_of_identity) {
+TYPED_TEST(LieGroupTests, log_of_identity) {
   const TypeParam a_from_a = TypeParam::identity();
   // Test log of identity TypeParam is zero.
   EXPECT_TRUE(a_from_a.log().isApprox(TypeParam::TangentVector::Zero()));
 }
 
-TYPED_TEST(LiegroupTests, exp_of_log_noop) {
+TYPED_TEST(LieGroupTests, exp_of_log_noop) {
   std::vector<TypeParam> test_elements = make_test_group_elements<TypeParam>();
   // Exp should always be the inverse of log.
   for (const TypeParam &a_from_b : test_elements) {
@@ -65,7 +65,7 @@ TYPED_TEST(LiegroupTests, exp_of_log_noop) {
   }
 }
 
-TYPED_TEST(LiegroupTests, self_adjoint_noop) {
+TYPED_TEST(LieGroupTests, self_adjoint_noop) {
   for (const typename TypeParam::TangentVector &alg :
        make_test_algebra_elements<TypeParam>()) {
     const TypeParam a_from_b = TypeParam::exp(alg);
@@ -75,7 +75,7 @@ TYPED_TEST(LiegroupTests, self_adjoint_noop) {
   }
 }
 
-TYPED_TEST(LiegroupTests, composition_by_adjoint) {
+TYPED_TEST(LieGroupTests, composition_by_adjoint) {
   const auto test_elements = make_test_group_elements<TypeParam>();
   TypeParam a_from_b = test_elements.back();
   for (const TypeParam &b_from_c : test_elements) {
@@ -86,7 +86,7 @@ TYPED_TEST(LiegroupTests, composition_by_adjoint) {
   }
 }
 
-TYPED_TEST(LiegroupTests, floating_point_equality) {
+TYPED_TEST(LieGroupTests, floating_point_equality) {
   const auto test_elements = make_test_group_elements<TypeParam>();
   TypeParam a_from_a = test_elements.front();
   for (auto test_elements_it = test_elements.begin() + 1;

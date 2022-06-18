@@ -21,7 +21,7 @@ TEST(ExpDiffTest, derivative_of_exp_so3) {
   EXPECT_DOUBLE_EQ(coeffs_zero.c, SIXTH);
 
   // Testing the non-tiny angle code path for execution only. Correctness of
-  // the output is covered by the general Liegroup tests and the SE3 tests.
+  // the output is covered by the general LieGroup tests and the SE3 tests.
   SO3::TangentVector all_ones = SO3::TangentVector::Ones();
   ExpDiffCoeffs coeffs_ones = derivative_of_exp_so3(all_ones.squaredNorm());
   constexpr double ZERO = 0;

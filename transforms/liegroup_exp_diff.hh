@@ -6,7 +6,7 @@ namespace transforms {
 constexpr double TINY_SQUARE_ANGLE = 4e-6;
 
 // This library contains some helper functions to compute the derivatives
-// of the exp and log mapping functions for Liegroups (SO3 and SE3).
+// of the exp and log mapping functions for LieGroups (SO3 and SE3).
 // The naming conventions used follow the document "Derivative of the
 // Exponential Map", available here: https://ethaneade.com/exp_diff.pdf
 

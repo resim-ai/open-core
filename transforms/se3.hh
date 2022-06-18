@@ -9,10 +9,10 @@ namespace transforms {
 
 // Special Euclidean Group in 3-Dimensional space.
 //
-// Practical implementation of the Liegroup representing rigid
+// Practical implementation of the LieGroup representing rigid
 // six-degree-of-freedom transformations in 3-Dimensional space.
 //
-// Based on the Liegroups library and documentation available at:
+// Based on the LieGroups library and documentation available at:
 // https://ethaneade.com/
 //
 // Example usages:
@@ -70,10 +70,10 @@ class SE3 {
   // or less than 0, a linear extrapolation will be returned.
   SE3 interp(const double fraction) const;
 
-  // Create an SE3 from an element of the Liegroup algebra.
+  // Create an SE3 from an element of the LieGroup algebra.
   static SE3 exp(const TangentVector &alg);
 
-  // Retrieve the element of the Liegroup algebra that represents
+  // Retrieve the element of the LieGroup algebra that represents
   // this group element.
   TangentVector log() const;
 

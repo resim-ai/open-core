@@ -67,23 +67,23 @@ std::vector<Vector> make_test_vectors() {
   return elements;
 }
 
-template <typename Liegroup>
-std::vector<typename Liegroup::TangentVector> make_test_algebra_elements() {
-  return make_test_vectors<typename Liegroup::TangentVector>();
+template <typename Group>
+std::vector<typename Group::TangentVector> make_test_algebra_elements() {
+  return make_test_vectors<typename Group::TangentVector>();
 }
 
-template <typename Liegroup>
-std::vector<Liegroup> make_test_group_elements() {
-  const std::vector<typename Liegroup::TangentVector> algebra_elements =
-      make_test_algebra_elements<Liegroup>();
-  std::vector<Liegroup> group_elements;
+template <typename Group>
+std::vector<Group> make_test_group_elements() {
+  const std::vector<typename Group::TangentVector> algebra_elements =
+      make_test_algebra_elements<Group>();
+  std::vector<Group> group_elements;
   group_elements.resize(algebra_elements.size());
   std::transform(
       algebra_elements.begin(),
       algebra_elements.end(),
       group_elements.begin(),
-      [](const typename Liegroup::TangentVector &alg) -> Liegroup {
-        return Liegroup::exp(alg);
+      [](const typename Group::TangentVector &alg) -> Group {
+        return Group::exp(alg);
       });
   return group_elements;
 }
