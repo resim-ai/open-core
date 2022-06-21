@@ -49,11 +49,3 @@ py_test(
     name = "check_python_test",
     srcs = ["check_python_test.py"],
 )
-
-cc_test(
-    name = "uuid_test",
-    srcs = ["uuid_test.cc"],
-    deps = [
-        "@com_google_googletest//:gtest_main",
-    ],
-)
