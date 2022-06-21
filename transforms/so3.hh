@@ -4,8 +4,7 @@
 
 #include "transforms/liegroup.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Special Orthogonal Group in 3-Dimensional space.
 //
@@ -42,42 +41,43 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
 
   // Constructor
   // Create and SO3 from a 3x3 rotation matrix.
-  explicit SO3(const Eigen::Matrix3d &rotation_matrix);
+  explicit SO3(Eigen::Matrix3d rotation_matrix);
 
   // Get an identity SO3
   static SO3 identity();
 
   // Operator*
   // Compose this SO3 with another (multiplication)
-  SO3 operator*(const SO3 &other) const;
+  SO3 operator*(const SO3 &other) const override;
 
   // Operator*
   // Apply the action SO3 rotation to a vector in 3-Dimensional space
   // (multiplication)
-  Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
+  Eigen::Vector3d operator*(
+      const Eigen::Vector3d &source_vector) const override;
 
   // Return the inverse of this SO3.
-  SO3 inverse() const;
+  SO3 inverse() const override;
 
   // Interpolate this SO3
   // [param] fraction - interpolation is over a unit interval, where
   // fraction=0 returns identity and fraction=1 returns this SO3. In between
   // the SO3 returned is a linear interpolation. If fraction is greater than 1
   // or less than 0, a linear extrapolation will be returned.
-  SO3 interp(const double fraction) const;
+  SO3 interp(double fraction) const override;
 
   // Create an SO3 from an element of the LieGroup algebra.
   static SO3 exp(const TangentVector &alg);
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
-  TangentVector log() const;
+  TangentVector log() const override;
 
   // Transform a TangentVector from the right tangent space to the left.
-  TangentVector adjoint_times(const TangentVector &alg) const;
+  TangentVector adjoint_times(const TangentVector &alg) const override;
 
   // Test for floating-point equality with another SO3.
-  bool is_approx(const SO3 &other) const;
+  bool is_approx(const SO3 &other) const override;
 
   // Getter
   // Retrieve a reference to the 3x3 rotation matrix that represents the
@@ -88,5 +88,4 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
   Eigen::Matrix3d rotation_matrix_;
 };
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

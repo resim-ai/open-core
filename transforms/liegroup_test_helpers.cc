@@ -36,8 +36,7 @@ SE3::TangentVector make_large_vector<SE3::TangentVector>() {
 
 }  // namespace
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 template <typename Vector>
 std::vector<Vector> make_test_vectors() {
@@ -94,5 +93,4 @@ template std::vector<SO3> make_test_group_elements<SO3>();
 template std::vector<SE3::TangentVector> make_test_algebra_elements<SE3>();
 template std::vector<SE3> make_test_group_elements<SE3>();
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

@@ -7,14 +7,13 @@
 
 #include "transforms/liegroup_test_helpers.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Please Note: Here are the specialized tests for the SO3 class. The SO3 class
 // is also covered by a number of general Liegrooup tests that can be found in
 // liegroup_test.cc
 
-TEST(SO3ConstructorTest, angle_axis_zero) {
+TEST(SO3ConstructorTest, AngleAxisZero) {
   // Initialize SO3 with a zero angle angle_axis argument.
   constexpr double ZERO_ANGLE = 0;
   const SO3 no_rotation(
@@ -24,7 +23,7 @@ TEST(SO3ConstructorTest, angle_axis_zero) {
       no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
 }
 
-TEST(SO3ConstructorTest, angle_axis_arbitray) {
+TEST(SO3ConstructorTest, AngleAxisArbitrary) {
   // Initialize SO3 with a arbitrary angle angle_axis argument.
   constexpr double ANGLE = 0.732;
   const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
@@ -34,7 +33,7 @@ TEST(SO3ConstructorTest, angle_axis_arbitray) {
       rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
 }
 
-TEST(SO3ConstructorTest, matrix_identity) {
+TEST(SO3ConstructorTest, MatrixIdentity) {
   // Initialize SO3 with an identity matrix.
   const SO3 from_id_mat(Eigen::Matrix3d::Identity());
   // Initializes to identity
@@ -52,6 +51,7 @@ TEST(SO3ConstructorTest, quaternion) {
   srand(SEED);
   // Build a vector of random Quaternions.
   std::vector<Eigen::Quaterniond> quats;
+  quats.reserve(TRIES);
   for (int i = 0; i < TRIES; ++i) {
     quats.push_back(Eigen::Quaterniond::UnitRandom());
   }
@@ -70,7 +70,7 @@ TEST(SO3ConstructorTest, quaternion) {
   }
 }
 
-TEST(SO3OperatorTest, action_on_vector) {
+TEST(SO3OperatorTest, ActionOnVector) {
   constexpr double HALF_PI = M_PI / 2;
   const SO3 orig_from_half_pi =
       SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ()));
@@ -86,16 +86,16 @@ TEST(SO3OperatorTest, action_on_vector) {
       zero_one_z.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
 }
 
-TEST(SO3Inverse, compare_to_matrix_inverse) {
+TEST(SO3Inverse, CompareToMatrixInverse) {
   const auto test_so3s = make_test_group_elements<SO3>();
   for (const SO3 &a_from_b : test_so3s) {
-    const Eigen::Matrix3d a_from_b_mat = a_from_b.rotation_matrix();
+    const Eigen::Matrix3d &a_from_b_mat = a_from_b.rotation_matrix();
     const SO3 b_from_a = SO3(a_from_b_mat.inverse());
     EXPECT_TRUE(a_from_b.inverse().is_approx(b_from_a));
   }
 }
 
-TEST(SO3Interp, interp_halfway) {
+TEST(SO3Interp, InterpHalfway) {
   constexpr double ANGLE = M_PI / 4.;
   constexpr double HALFWAY = 0.5;
   for (const double angle : {ANGLE, -ANGLE}) {
@@ -108,7 +108,7 @@ TEST(SO3Interp, interp_halfway) {
   }
 }
 
-TEST(SO3Interp, extrap_double) {
+TEST(SO3Interp, ExtrapDouble) {
   constexpr double ANGLE = M_PI / 4.;
   constexpr double DOUBLE = 2.;
   for (const double angle : {ANGLE, -ANGLE}) {
@@ -121,5 +121,4 @@ TEST(SO3Interp, extrap_double) {
   }
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

@@ -6,10 +6,9 @@
 
 #include "transforms/so3.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
-TEST(ExpDiffTest, derivative_of_exp_so3) {
+TEST(ExpDiffTest, DerivativeOfExpSo3) {
   SO3::TangentVector all_zero = SO3::TangentVector::Zero();
   ExpDiffCoeffs coeffs_zero = derivative_of_exp_so3(all_zero.squaredNorm());
   // For zero case the coefficients are trivially known:
@@ -30,5 +29,4 @@ TEST(ExpDiffTest, derivative_of_exp_so3) {
   EXPECT_GT(coeffs_ones.c, ZERO);
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

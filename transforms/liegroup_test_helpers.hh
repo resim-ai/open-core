@@ -2,8 +2,7 @@
 
 #include <vector>
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Builds and returns a vector containint a fixed number of Eigen nx1 matrices
 // (Vectors) that are useful for testing. The vectors are a mixture of edge
@@ -24,5 +23,4 @@ std::vector<typename Group::TangentVector> make_test_algebra_elements();
 template <typename Group>
 std::vector<Group> make_test_group_elements();
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

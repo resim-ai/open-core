@@ -6,8 +6,7 @@
 
 #include "transforms/liegroup_test_helpers.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Test that an SE3 objects has the expected rotation and translation
 // components.
@@ -17,13 +16,13 @@ namespace transforms {
 void check_se3_rotation_and_translation(
     const SE3 &se3,
     const SO3 &rotation,
-    const Eigen::Vector3d translation) {
+    const Eigen::Vector3d &translation) {
   //
   EXPECT_TRUE(se3.rotation().is_approx(rotation));
   EXPECT_TRUE(se3.translation().isApprox(translation));
 }
 
-TEST(SE3ConstructorTest, rotation_only) {
+TEST(SE3ConstructorTest, RotationOnly) {
   for (const SO3 &a_from_b_rot : make_test_group_elements<SO3>()) {
     const SE3 a_from_b(a_from_b_rot);
     check_se3_rotation_and_translation(
@@ -33,7 +32,7 @@ TEST(SE3ConstructorTest, rotation_only) {
   }
 }
 
-TEST(SE3ConstructorTest, translation_only) {
+TEST(SE3ConstructorTest, TranslationOnly) {
   for (const Eigen::Vector3d &a_from_b_trans :
        make_test_vectors<Eigen::Vector3d>()) {
     const SE3 a_from_b(a_from_b_trans);
@@ -44,7 +43,7 @@ TEST(SE3ConstructorTest, translation_only) {
   }
 }
 
-TEST(SE3ConstructorTest, rotation_and_translation) {
+TEST(SE3ConstructorTest, RotationAndTranslation) {
   const auto trans_elements = make_test_vectors<Eigen::Vector3d>();
   const auto rot_elements = make_test_group_elements<SO3>();
   const unsigned int element_count = trans_elements.size();
@@ -58,7 +57,7 @@ TEST(SE3ConstructorTest, rotation_and_translation) {
   }
 }
 
-TEST(SE3OperatorTest, action_on_vector) {
+TEST(SE3OperatorTest, ActionOnVector) {
   constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_zero_one =
       SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
@@ -75,13 +74,13 @@ TEST(SE3OperatorTest, action_on_vector) {
       zero_one_z.isApprox(orig_from_zero_one * Eigen::Vector3d::UnitZ()));
 }
 
-TEST(SE3ArcLengthTest, identity_arc_length_is_zero) {
+TEST(SE3ArcLengthTest, IdentityArcLengthIsZero) {
   const SE3 a_from_a = SE3::identity();
   constexpr double ZERO = 0;
   EXPECT_EQ(a_from_a.arc_length(), ZERO);
 }
 
-TEST(SE3ArcLengthTest, unit_circle_arc) {
+TEST(SE3ArcLengthTest, UnitCircleArc) {
   constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_one_zero = SE3(Eigen::Vector3d::UnitX());
   const SE3 orig_from_zero_one =
@@ -93,14 +92,13 @@ TEST(SE3ArcLengthTest, unit_circle_arc) {
   EXPECT_DOUBLE_EQ(zero_one_from_one_zero.arc_length(), HALF_PI);
 }
 
-TEST(SE3IsApproxTest, floating_point_equality) {
+TEST(SE3IsApproxTest, FloatingPointEquality) {
   constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_zero_one =
       SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
           Eigen::Vector3d::UnitY());
   // Same rotation and translation
-  const SE3 same_rot_and_trans = orig_from_zero_one;
-  EXPECT_TRUE(orig_from_zero_one.is_approx(same_rot_and_trans));
+  EXPECT_TRUE(orig_from_zero_one.is_approx(orig_from_zero_one));
   // Same rotation only
   const SE3 same_rot_only =
       SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
@@ -118,7 +116,7 @@ TEST(SE3IsApproxTest, floating_point_equality) {
   EXPECT_FALSE(orig_from_zero_one.is_approx(different_rot_and_trans));
 }
 
-TEST(TangentVectorHelpers, round_trip_consistent) {
+TEST(TangentVectorHelpers, RoundTripConsistent) {
   const SO3::TangentVector alg_rot = SO3::TangentVector::Ones();
   const Eigen::Vector3d alg_trans = Eigen::Vector3d::Ones() * 2.;
   SE3::TangentVector alg = SE3::tangent_vector_from_parts(alg_rot, alg_trans);
@@ -126,5 +124,4 @@ TEST(TangentVectorHelpers, round_trip_consistent) {
   EXPECT_TRUE(alg_trans.isApprox(SE3::tangent_vector_translation_part(alg)));
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

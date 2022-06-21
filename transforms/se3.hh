@@ -5,8 +5,7 @@
 #include "transforms/liegroup.hh"
 #include "transforms/so3.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Special Euclidean Group in 3-Dimensional space.
 //
@@ -27,36 +26,38 @@ namespace transforms {
 //     const SE3 global_from_sensor = global_from_robot * robot_from_sensor;
 //     // Interpolate a rigid transformation along the geodesic curve:
 //     const SE3 global_from_robot_halfway = global_from_robot.interp(0.5):
+// NOLINTNEXTLINE(readability-magic-numbers)
 class SE3 final : public LieGroup<SE3, 3, 6> {
  public:
   SE3() = default;
 
   // Constructor
   // Create an SE3 with rotation only from an SO3.
-  explicit SE3(const SO3 &rotation);
+  explicit SE3(SO3 rotation);
 
   // Constructor
   // Create an SE3 with translation only from a 3-Vector.
-  explicit SE3(const Eigen::Vector3d &translation);
+  explicit SE3(Eigen::Vector3d translation);
 
   // Constructor
   // Create an SE3 with both a rotation and translation component.
-  SE3(const SO3 &rotation, const Eigen::Vector3d &translation);
+  SE3(SO3 rotation, Eigen::Vector3d translation);
 
   // Get an identity SE3
   static SE3 identity();
 
   // Operator*
   // Compose this SE3 with another (multiplication)
-  SE3 operator*(const SE3 &other) const;
+  SE3 operator*(const SE3 &other) const override;
 
   // Operator*
   // Apply the SE3 action to a vector in 3-Dimensional space
   // (multiplication)
-  Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
+  Eigen::Vector3d operator*(
+      const Eigen::Vector3d &source_vector) const override;
 
   // Return the inverse of this SE3.
-  SE3 inverse() const;
+  SE3 inverse() const override;
 
   // Return the length of the geodesic curve between frames in the
   // transformation.
@@ -67,20 +68,20 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
   // fraction=0 returns identity and fraction=1 returns this SE3. In between
   // the SE3 returned is a linear interpolation. If fraction is greater than 1
   // or less than 0, a linear extrapolation will be returned.
-  SE3 interp(const double fraction) const;
+  SE3 interp(double fraction) const override;
 
   // Create an SE3 from an element of the LieGroup algebra.
   static SE3 exp(const TangentVector &alg);
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
-  TangentVector log() const;
+  TangentVector log() const override;
 
   // Transform a TangentVector from the right tangent space to the left.
-  TangentVector adjoint_times(const TangentVector &alg) const;
+  TangentVector adjoint_times(const TangentVector &alg) const override;
 
   // Test for floating-point equality with another SE3.
-  bool is_approx(const SE3 &other) const;
+  bool is_approx(const SE3 &other) const override;
 
   // Getter
   // Return the rotational part of the transform.
@@ -110,5 +111,4 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
   Eigen::Vector3d translation_;
 };
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

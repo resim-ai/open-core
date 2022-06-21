@@ -2,8 +2,7 @@
 
 #include <Eigen/Dense>
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 // Abstract base class for LieGroups.
 // All LieGroup classes (e.g. SE3, SO3) represent a rigid transformation in
@@ -22,6 +21,13 @@ namespace transforms {
 template <typename Group, const unsigned int dims, const unsigned int dof>
 class LieGroup {
  public:
+  virtual ~LieGroup() = default;
+  LieGroup() = default;
+  LieGroup(const LieGroup &) = default;
+  LieGroup(LieGroup &&) noexcept = default;
+  LieGroup &operator=(const LieGroup &) = default;
+  LieGroup &operator=(LieGroup &&) noexcept = default;
+
   // Degrees of freedom of the LieGroup.
   static constexpr unsigned int DOF = dof;
   // Spatial Dimensionality of the LieGroup action.
@@ -45,7 +51,7 @@ class LieGroup {
   // fraction=0 returns identity and fraction=1 returns this Group. In between
   // the Group returned is a linear interpolation. If fraction is greater than 1
   // or less than 0, a linear extrapolation will be returned.
-  virtual Group interp(const double fraction) const = 0;
+  virtual Group interp(double fraction) const = 0;
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
@@ -58,5 +64,4 @@ class LieGroup {
   virtual bool is_approx(const Group &other) const = 0;
 };
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

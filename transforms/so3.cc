@@ -1,7 +1,8 @@
 #include "transforms/so3.hh"
 
-namespace resim {
-namespace transforms {
+#include <utility>
+
+namespace resim::transforms {
 
 using TangentVector = SO3::TangentVector;
 
@@ -11,8 +12,8 @@ SO3::SO3(const Eigen::AngleAxisd &angle_axis)
 SO3::SO3(const Eigen::Quaterniond &quaternion)
     : rotation_matrix_(quaternion.toRotationMatrix()) {}
 
-SO3::SO3(const Eigen::Matrix3d &rotation_matrix)
-    : rotation_matrix_(rotation_matrix) {}
+SO3::SO3(Eigen::Matrix3d rotation_matrix)
+    : rotation_matrix_(std::move(rotation_matrix)) {}
 
 SO3 SO3::identity() { return SO3(Eigen::Matrix3d::Identity()); }
 
@@ -36,7 +37,7 @@ SO3 SO3::exp(const TangentVector &alg) {
 
 TangentVector SO3::log() const {
   const Eigen::AngleAxisd aa(rotation_matrix_);
-  const TangentVector alg = aa.axis() * aa.angle();
+  TangentVector alg = aa.axis() * aa.angle();
   return alg;
 }
 
@@ -50,5 +51,4 @@ bool SO3::is_approx(const SO3 &other) const {
 
 const Eigen::Matrix3d &SO3::rotation_matrix() const { return rotation_matrix_; }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

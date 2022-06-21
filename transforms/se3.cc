@@ -1,23 +1,24 @@
 #include "transforms/se3.hh"
 
+#include <utility>
+
 #include "transforms/liegroup_exp_diff.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 using TangentVector = SE3::TangentVector;
 
-SE3::SE3(const SO3 &rotation)
-    : rotation_(rotation),
+SE3::SE3(SO3 rotation)
+    : rotation_(std::move(rotation)),
       translation_(Eigen::Vector3d::Zero()) {}
 
-SE3::SE3(const Eigen::Vector3d &translation)
+SE3::SE3(Eigen::Vector3d translation)
     : rotation_(SO3::identity()),
-      translation_(translation) {}
+      translation_(std::move(translation)) {}
 
-SE3::SE3(const SO3 &rotation, const Eigen::Vector3d &translation)
-    : rotation_(rotation),
-      translation_(translation) {}
+SE3::SE3(SO3 rotation, Eigen::Vector3d translation)
+    : rotation_(std::move(rotation)),
+      translation_(std::move(translation)) {}
 
 SE3 SE3::identity() { return SE3(SO3::identity(), Eigen::Vector3d::Zero()); }
 
@@ -121,5 +122,4 @@ TangentVector SE3::tangent_vector_from_parts(
   return alg;
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

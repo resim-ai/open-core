@@ -24,11 +24,10 @@ const TinyAngleConstCoeffs SO3_TINY_ANGLE_C{
 
 }  // namespace
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 ExpDiffCoeffs derivative_of_exp_so3(const double square_angle) {
-  ExpDiffCoeffs coeffs;
+  ExpDiffCoeffs coeffs{};
   if (square_angle < TINY_SQUARE_ANGLE) {
     const auto tiny_exp_diff_coeff =
         [&square_angle](const TinyAngleConstCoeffs &tiny_coeffs) -> double {
@@ -50,5 +49,4 @@ ExpDiffCoeffs derivative_of_exp_so3(const double square_angle) {
   return coeffs;
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms

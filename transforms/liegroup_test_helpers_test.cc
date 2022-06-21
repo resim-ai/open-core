@@ -8,8 +8,7 @@
 #include "transforms/se3.hh"
 #include "transforms/so3.hh"
 
-namespace resim {
-namespace transforms {
+namespace resim::transforms {
 
 template <typename t>
 class LieGroupHelperTests : public ::testing::Test {};
@@ -17,7 +16,7 @@ class LieGroupHelperTests : public ::testing::Test {};
 using LieGroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(LieGroupHelperTests, LieGroupTypes);
 
-TYPED_TEST(LieGroupHelperTests, test_make_algebra_elements) {
+TYPED_TEST(LieGroupHelperTests, TestMakeAlgebraElements) {
   // Build the vector of test elements
   std::vector<typename TypeParam::TangentVector> test_elements =
       make_test_algebra_elements<TypeParam>();
@@ -48,12 +47,11 @@ TYPED_TEST(LieGroupHelperTests, test_make_algebra_elements) {
   EXPECT_EQ(last, test_elements.end());
 }
 
-TYPED_TEST(LieGroupHelperTests, test_make_group_elements) {
+TYPED_TEST(LieGroupHelperTests, TestMakeGroupElements) {
   const auto algebra_elements = make_test_algebra_elements<TypeParam>();
   const auto group_elements = make_test_group_elements<TypeParam>();
   // Confirm the two vecors are of the same size.
   EXPECT_EQ(algebra_elements.size(), group_elements.size());
 }
 
-}  // namespace transforms
-}  // namespace resim
+}  // namespace resim::transforms
