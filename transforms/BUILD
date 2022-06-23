@@ -1,6 +1,51 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "frame",
+    hdrs = ["frame.hh"],
+    deps = [
+        ":liegroup",
+        "//utils:uuid",
+    ],
+)
+
+cc_test(
+    name = "frame_test",
+    srcs = ["frame_test.cc"],
+    deps = [
+        ":frame",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "framed_group",
+    srcs = ["framed_group.cc"],
+    hdrs = ["framed_group.hh"],
+    deps = [
+        ":frame",
+        ":liegroup",
+        ":liegroup_test_helpers",
+        ":se3",
+        ":so3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "framed_group_test",
+    srcs = ["framed_group_test.cc"],
+    deps = [
+        ":frame",
+        ":framed_group",
+        ":se3",
+        ":so3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "liegroup",
     hdrs = ["liegroup.hh"],
     deps = [
