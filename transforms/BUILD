@@ -3,6 +3,7 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 cc_library(
     name = "frame",
     hdrs = ["frame.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":liegroup",
         "//utils:uuid",
@@ -22,6 +23,7 @@ cc_library(
     name = "framed_group",
     srcs = ["framed_group.cc"],
     hdrs = ["framed_group.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":frame",
         ":liegroup",
