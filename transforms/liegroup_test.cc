@@ -85,6 +85,40 @@ TYPED_TEST(LieGroupTests, CompositionByAdjoint) {
   }
 }
 
+TYPED_TEST(LieGroupTests, AdjointAndTimesGroup) {
+  using TangentVector = typename TypeParam::TangentVector;
+  const auto test_elements = make_test_group_elements<TypeParam>();
+  const TangentVector alg = test_elements.back().log();
+  for (const TypeParam &grp : test_elements) {
+    const TangentVector adj_times = grp.adjoint_times(alg);
+    const TangentVector adj_times_alt = grp.adjoint() * alg;
+    EXPECT_TRUE(adj_times.isApprox(adj_times_alt));
+  }
+}
+
+TYPED_TEST(LieGroupTests, AdjointAndTimesAlgebra) {
+  using TangentVector = typename TypeParam::TangentVector;
+  const auto test_alg_elements = make_test_algebra_elements<TypeParam>();
+  const TangentVector &b = test_alg_elements.back();
+  for (const TangentVector &a : test_alg_elements) {
+    const TangentVector adj_times = TypeParam::adjoint_times(a, b);
+    const TangentVector adj_times_alt = TypeParam::adjoint(a) * b;
+    // isApprox struggles when vectors are close to zero.
+    EXPECT_TRUE((adj_times - adj_times_alt).isZero());
+  }
+}
+
+TYPED_TEST(LieGroupTests, AlgebraAdjointAntiCommutative) {
+  using TangentVector = typename TypeParam::TangentVector;
+  const auto test_alg_elements = make_test_algebra_elements<TypeParam>();
+  const TangentVector &b = test_alg_elements.back();
+  for (const TangentVector &a : test_alg_elements) {
+    const TangentVector x = TypeParam::adjoint_times(a, b);
+    const TangentVector y = TypeParam::adjoint_times(b, a);
+    EXPECT_TRUE(x.isApprox(-y));
+  }
+}
+
 TYPED_TEST(LieGroupTests, FloatingPointEquality) {
   const auto test_elements = make_test_group_elements<TypeParam>();
   const TypeParam &a_from_a = test_elements.front();

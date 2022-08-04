@@ -19,7 +19,7 @@ std::vector<typename Group::TangentVector> make_test_algebra_elements();
 
 // Builds and returns a vector containing a fixed number of LieGroup objects
 // that are useful for testing. The LieGroup objects are built by exponentiation
-// on the algebra elements returned by mate_test_algebra_elements().
+// on the algebra elements returned by make_test_algebra_elements().
 template <typename Group>
 std::vector<Group> make_test_group_elements();
 

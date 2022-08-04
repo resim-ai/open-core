@@ -73,8 +73,19 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
   // this group element.
   TangentVector log() const override;
 
+  // Adjoint representation of this group element.
+  TangentMapping adjoint() const override;
+
+  // Adjoint representation of a given algebra element.
+  static TangentMapping adjoint(const TangentVector &alg);
+
   // Transform a TangentVector from the right tangent space to the left.
   TangentVector adjoint_times(const TangentVector &alg) const override;
+
+  // Adjoint times for algebra elements.
+  static TangentVector adjoint_times(
+      const TangentVector &alg_0,
+      const TangentVector &alg_1);
 
   // Test for floating-point equality with another SO3.
   bool is_approx(const SO3 &other) const override;

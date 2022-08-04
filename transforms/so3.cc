@@ -2,9 +2,12 @@
 
 #include <utility>
 
+#include "transforms/cross_matrix.hh"
+
 namespace resim::transforms {
 
 using TangentVector = SO3::TangentVector;
+using TangentMapping = SO3::TangentMapping;
 
 SO3::SO3(const Eigen::AngleAxisd &angle_axis)
     : rotation_matrix_(angle_axis.toRotationMatrix()) {}
@@ -41,8 +44,20 @@ TangentVector SO3::log() const {
   return alg;
 }
 
+TangentMapping SO3::adjoint() const { return rotation_matrix_; }
+
+TangentMapping SO3::adjoint(const TangentVector &alg) {
+  return cross_matrix(alg);
+}
+
 TangentVector SO3::adjoint_times(const TangentVector &alg) const {
   return rotation_matrix_ * alg;
+}
+
+TangentVector SO3::adjoint_times(
+    const TangentVector &alg_0,
+    const TangentVector &alg_1) {
+  return alg_0.cross(alg_1);
 }
 
 bool SO3::is_approx(const SO3 &other) const {

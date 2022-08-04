@@ -1,6 +1,26 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "cross_matrix",
+    srcs = ["cross_matrix.cc"],
+    hdrs = ["cross_matrix.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "cross_matrix_test",
+    srcs = ["cross_matrix_test.cc"],
+    deps = [
+        ":cross_matrix",
+        ":liegroup_test_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "frame",
     hdrs = ["frame.hh"],
     visibility = ["//visibility:public"],
@@ -117,6 +137,7 @@ cc_library(
     hdrs = ["se3.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":cross_matrix",
         ":liegroup",
         ":liegroup_exp_diff",
         ":so3",
@@ -141,6 +162,7 @@ cc_library(
     hdrs = ["so3.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":cross_matrix",
         ":liegroup",
         "@libeigen//:eigen",
     ],

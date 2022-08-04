@@ -18,6 +18,12 @@ namespace resim::transforms {
 //     a. static Group identity(); // Get a noop transform.
 //     b. // Construct a Group from and algebra element.
 //        static Group exp(const TangentVector & alg);
+//     c. // Adjoint representation of a given algebra element.
+//        static TangentMapping adjoint(const TangentVector &alg);
+//     d. // Adjoint times for algebra elements.
+//        static TangentVector adjoint_times(
+//            const TangentVector &alg_0
+//            const TangentVector &alg_1);
 template <typename Group, const unsigned int dims, const unsigned int dof>
 class LieGroup {
  public:
@@ -35,6 +41,9 @@ class LieGroup {
 
   // For representing vectors in tangent space.
   using TangentVector = Eigen::Matrix<double, DOF, 1>;
+
+  // For representing mappings between tangent spaces
+  using TangentMapping = Eigen::Matrix<double, DOF, DOF>;
 
   // Compose the Group with another (multiplication)
   virtual Group operator*(const Group &other) const = 0;
@@ -56,6 +65,9 @@ class LieGroup {
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
   virtual TangentVector log() const = 0;
+
+  // Retrieve the adjoint representation of this group element.
+  virtual TangentMapping adjoint() const = 0;
 
   // Transform a TangentVector from the right tangent space to the left.
   virtual TangentVector adjoint_times(const TangentVector &alg) const = 0;

@@ -74,6 +74,8 @@ TEST(SE3OperatorTest, ActionOnVector) {
       zero_one_z.isApprox(orig_from_zero_one * Eigen::Vector3d::UnitZ()));
 }
 
+TEST(SE3AdjointTest, AlgebraAdjointTimes) {}
+
 TEST(SE3ArcLengthTest, IdentityArcLengthIsZero) {
   const SE3 a_from_a = SE3::identity();
   constexpr double ZERO = 0;

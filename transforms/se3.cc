@@ -2,11 +2,13 @@
 
 #include <utility>
 
+#include "transforms/cross_matrix.hh"
 #include "transforms/liegroup_exp_diff.hh"
 
 namespace resim::transforms {
 
 using TangentVector = SE3::TangentVector;
+using TangentMapping = SE3::TangentMapping;
 
 SE3::SE3(SO3 rotation)
     : rotation_(std::move(rotation)),
@@ -86,6 +88,29 @@ TangentVector SE3::log() const {
   return tangent_vector_from_parts(alg_rot, alg_trans);
 }
 
+TangentMapping SE3::adjoint() const {
+  TangentMapping adj;
+  const Eigen::Matrix3d adj_rot = rotation_.adjoint();
+  adj.block<3, 3>(0, 0) = adj_rot;
+  adj.block<3, 3>(0, 3).setZero();
+  adj.block<3, 3>(3, 0) = cross_matrix(translation_) * adj_rot;
+  adj.block<3, 3>(3, 3) = adj_rot;
+  return adj;
+}
+
+TangentMapping SE3::adjoint(const TangentVector &alg) {
+  const SO3::TangentVector alg_rot = tangent_vector_rotation_part(alg);
+  const Eigen::Vector3d alg_trans = tangent_vector_translation_part(alg);
+  const SO3::TangentMapping adj_rot = SO3::adjoint(alg_rot);
+  const SO3::TangentMapping adj_trans = SO3::adjoint(alg_trans);
+  TangentMapping adj;
+  adj.block<3, 3>(0, 0) = adj_rot;
+  adj.block<3, 3>(0, 3).setZero();
+  adj.block<3, 3>(3, 0) = adj_trans;
+  adj.block<3, 3>(3, 3) = adj_rot;
+  return adj;
+}
+
 TangentVector SE3::adjoint_times(const TangentVector &alg) const {
   const Eigen::Matrix3d &rotation = rotation_.rotation_matrix();
   const SO3::TangentVector alg_rot = tangent_vector_rotation_part(alg);
@@ -94,6 +119,19 @@ TangentVector SE3::adjoint_times(const TangentVector &alg) const {
   return tangent_vector_from_parts(
       rotated_alg,
       translation_.cross(rotated_alg) + (rotation * alg_trans));
+}
+
+TangentVector SE3::adjoint_times(
+    const TangentVector &alg_0,
+    const TangentVector &alg_1) {
+  const SO3::TangentVector alg_0_rot = tangent_vector_rotation_part(alg_0);
+  const SO3::TangentVector alg_1_rot = tangent_vector_rotation_part(alg_1);
+  const Eigen::Vector3d alg_0_trans = tangent_vector_translation_part(alg_0);
+  const Eigen::Vector3d alg_1_trans = tangent_vector_translation_part(alg_1);
+
+  return tangent_vector_from_parts(
+      alg_0_rot.cross(alg_1_rot),
+      alg_0_trans.cross(alg_1_rot) + alg_0_rot.cross(alg_1_trans));
 }
 
 bool SE3::is_approx(const SE3 &other) const {

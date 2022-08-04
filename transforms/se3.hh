@@ -77,8 +77,19 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
   // this group element.
   TangentVector log() const override;
 
+  // Adjoint representation of this group element.
+  TangentMapping adjoint() const override;
+
+  // Adjoint representation of a given algebra element.
+  static TangentMapping adjoint(const TangentVector &alg);
+
   // Transform a TangentVector from the right tangent space to the left.
   TangentVector adjoint_times(const TangentVector &alg) const override;
+
+  // Adjoint times for algebra elements.
+  static TangentVector adjoint_times(
+      const TangentVector &alg_0,
+      const TangentVector &alg_1);
 
   // Test for floating-point equality with another SE3.
   bool is_approx(const SE3 &other) const override;
