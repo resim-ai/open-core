@@ -18,3 +18,25 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "two_jet",
+    srcs = ["two_jet.cc"],
+    hdrs = ["two_jet.hh"],
+    deps = [
+        "//transforms:framed_group",
+        "//transforms:se3",
+    ],
+)
+
+cc_test(
+    name = "two_jet_test",
+    srcs = ["two_jet_test.cc"],
+    deps = [
+        ":two_jet",
+        "//transforms:framed_group",
+        "//transforms:se3",
+        "//transforms:so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
