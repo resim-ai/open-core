@@ -25,6 +25,7 @@ cc_library(
     hdrs = ["two_jet.hh"],
     deps = [
         "//transforms:framed_group",
+        "//transforms:liegroup_concepts",
         "//transforms:se3",
     ],
 )

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transforms/frame.hh"
+#include "transforms/liegroup_concepts.hh"
 
 namespace resim::curves {
 
@@ -24,11 +25,9 @@ namespace resim::curves {
 // in this codebase. The departure from convention is because time derivatives
 // are in Left tangent space and derivatives in the frame of the point are a
 // little easier to work with.
-template <typename Group>
+template <transforms::LieGroupType Group>
 class TwoJet {
  public:
-  // Assert that the Group is a LieGroup
-  // TODO(michael) add and is_liegroup static assert after type traits land.
   using TangentVector = typename Group::TangentVector;
   TwoJet() = default;
   // Construct a TwoJet by providing data members.

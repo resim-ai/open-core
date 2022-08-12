@@ -184,6 +184,7 @@ cc_test(
 cc_library(
     name = "liegroup_concepts",
     hdrs = ["liegroup_concepts.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":liegroup",
     ],

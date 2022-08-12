@@ -8,7 +8,7 @@
 
 namespace resim::curves {
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 TwoJet<Group>::TwoJet(
     Group frame_from_ref,
     TangentVector d_frame_from_ref,
@@ -17,22 +17,22 @@ TwoJet<Group>::TwoJet(
       d_frame_from_ref_(std::move(d_frame_from_ref)),
       d2_frame_from_ref_(std::move(d2_frame_from_ref)) {}
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 void TwoJet<Group>::set_frame_from_ref(Group frame_from_ref) {
   frame_from_ref_ = std::move(frame_from_ref);
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 void TwoJet<Group>::set_d_frame_from_ref(TangentVector d_frame_from_ref) {
   d_frame_from_ref_ = std::move(d_frame_from_ref);
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 void TwoJet<Group>::set_d2_frame_from_ref(TangentVector d2_frame_from_ref) {
   d2_frame_from_ref_ = std::move(d2_frame_from_ref);
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 TwoJet<Group> TwoJet<Group>::identity() {
   return TwoJet<Group>(
       Group::identity(),
@@ -40,7 +40,7 @@ TwoJet<Group> TwoJet<Group>::identity() {
       Group::TangentVector::Zero());
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 TwoJet<Group> TwoJet<Group>::inverse() const {
   TwoJet<Group> inv = TwoJet<Group>::identity();
   inv.set_frame_from_ref(frame_from_ref_.inverse());
@@ -51,7 +51,7 @@ TwoJet<Group> TwoJet<Group>::inverse() const {
   return inv;
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 TwoJet<Group> TwoJet<Group>::operator*(const TwoJet<Group> &other) const {
   return TwoJet<Group>(
       frame_from_ref_ * other.frame_from_ref_,
@@ -64,22 +64,22 @@ TwoJet<Group> TwoJet<Group>::operator*(const TwoJet<Group> &other) const {
               frame_from_ref_.adjoint_times(other.d_frame_from_ref_)));
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 const Group &TwoJet<Group>::frame_from_ref() const {
   return frame_from_ref_;
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 const typename Group::TangentVector &TwoJet<Group>::d_frame_from_ref() const {
   return d_frame_from_ref_;
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 const typename Group::TangentVector &TwoJet<Group>::d2_frame_from_ref() const {
   return d2_frame_from_ref_;
 }
 
-template <typename Group>
+template <transforms::LieGroupType Group>
 bool TwoJet<Group>::is_approx(const TwoJet<Group> &other) const {
   return (
       frame_from_ref_.is_approx(other.frame_from_ref_) &&
