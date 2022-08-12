@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 
 #include "transforms/liegroup.hh"
+#include "transforms/liegroup_concepts.hh"
 
 namespace resim::transforms {
 
@@ -25,7 +26,7 @@ namespace resim::transforms {
 //     const SO3 global_from_sensor = global_from_robot * robot_from_sensor;
 //     // Interpolate a rotation
 //     const SO3 global_from_robot_halfway = global_from_robot.interp(0.5):
-class SO3 final : public LieGroup<SO3, 3, 3> {
+class SO3 : public LieGroup<3, 3> {
  public:
   SO3() = default;
 
@@ -48,39 +49,38 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
 
   // Operator*
   // Compose this SO3 with another (multiplication)
-  SO3 operator*(const SO3 &other) const override;
+  SO3 operator*(const SO3 &other) const;
 
   // Operator*
   // Apply the action SO3 rotation to a vector in 3-Dimensional space
   // (multiplication)
-  Eigen::Vector3d operator*(
-      const Eigen::Vector3d &source_vector) const override;
+  Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
 
   // Return the inverse of this SO3.
-  SO3 inverse() const override;
+  SO3 inverse() const;
 
   // Interpolate this SO3
   // [param] fraction - interpolation is over a unit interval, where
   // fraction=0 returns identity and fraction=1 returns this SO3. In between
   // the SO3 returned is a linear interpolation. If fraction is greater than 1
   // or less than 0, a linear extrapolation will be returned.
-  SO3 interp(double fraction) const override;
+  SO3 interp(double fraction) const;
 
   // Create an SO3 from an element of the LieGroup algebra.
   static SO3 exp(const TangentVector &alg);
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
-  TangentVector log() const override;
+  TangentVector log() const;
 
   // Adjoint representation of this group element.
-  TangentMapping adjoint() const override;
+  TangentMapping adjoint() const;
 
   // Adjoint representation of a given algebra element.
   static TangentMapping adjoint(const TangentVector &alg);
 
   // Transform a TangentVector from the right tangent space to the left.
-  TangentVector adjoint_times(const TangentVector &alg) const override;
+  TangentVector adjoint_times(const TangentVector &alg) const;
 
   // Adjoint times for algebra elements.
   static TangentVector adjoint_times(
@@ -88,7 +88,7 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
       const TangentVector &alg_1);
 
   // Test for floating-point equality with another SO3.
-  bool is_approx(const SO3 &other) const override;
+  bool is_approx(const SO3 &other) const;
 
   // Getter
   // Retrieve a reference to the 3x3 rotation matrix that represents the
@@ -98,5 +98,9 @@ class SO3 final : public LieGroup<SO3, 3, 3> {
  private:
   Eigen::Matrix3d rotation_matrix_;
 };
+
+static_assert(
+    LieGroupType<SO3>,
+    "SO3 doesn't meet the requirements of a Lie Group.");
 
 }  // namespace resim::transforms

@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 
 #include "transforms/liegroup.hh"
+#include "transforms/liegroup_concepts.hh"
 #include "transforms/so3.hh"
 
 namespace resim::transforms {
@@ -27,7 +28,7 @@ namespace resim::transforms {
 //     // Interpolate a rigid transformation along the geodesic curve:
 //     const SE3 global_from_robot_halfway = global_from_robot.interp(0.5):
 // NOLINTNEXTLINE(readability-magic-numbers)
-class SE3 final : public LieGroup<SE3, 3, 6> {
+class SE3 : public LieGroup<3, 6> {
  public:
   SE3() = default;
 
@@ -48,16 +49,15 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
 
   // Operator*
   // Compose this SE3 with another (multiplication)
-  SE3 operator*(const SE3 &other) const override;
+  SE3 operator*(const SE3 &other) const;
 
   // Operator*
   // Apply the SE3 action to a vector in 3-Dimensional space
   // (multiplication)
-  Eigen::Vector3d operator*(
-      const Eigen::Vector3d &source_vector) const override;
+  Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
 
   // Return the inverse of this SE3.
-  SE3 inverse() const override;
+  SE3 inverse() const;
 
   // Return the length of the geodesic curve between frames in the
   // transformation.
@@ -68,23 +68,23 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
   // fraction=0 returns identity and fraction=1 returns this SE3. In between
   // the SE3 returned is a linear interpolation. If fraction is greater than 1
   // or less than 0, a linear extrapolation will be returned.
-  SE3 interp(double fraction) const override;
+  SE3 interp(double fraction) const;
 
   // Create an SE3 from an element of the LieGroup algebra.
   static SE3 exp(const TangentVector &alg);
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
-  TangentVector log() const override;
+  TangentVector log() const;
 
   // Adjoint representation of this group element.
-  TangentMapping adjoint() const override;
+  TangentMapping adjoint() const;
 
   // Adjoint representation of a given algebra element.
   static TangentMapping adjoint(const TangentVector &alg);
 
   // Transform a TangentVector from the right tangent space to the left.
-  TangentVector adjoint_times(const TangentVector &alg) const override;
+  TangentVector adjoint_times(const TangentVector &alg) const;
 
   // Adjoint times for algebra elements.
   static TangentVector adjoint_times(
@@ -92,7 +92,7 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
       const TangentVector &alg_1);
 
   // Test for floating-point equality with another SE3.
-  bool is_approx(const SE3 &other) const override;
+  bool is_approx(const SE3 &other) const;
 
   // Getter
   // Return the rotational part of the transform.
@@ -121,5 +121,9 @@ class SE3 final : public LieGroup<SE3, 3, 6> {
   SO3 rotation_;
   Eigen::Vector3d translation_;
 };
+
+static_assert(
+    LieGroupType<SE3>,
+    "SE3 doesn't meet the requirements of a Lie Group.");
 
 }  // namespace resim::transforms

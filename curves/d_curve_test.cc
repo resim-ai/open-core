@@ -73,7 +73,7 @@ double DCurveTests<SE3>::rotation_angle_rad(const SE3 &ref_from_point) const {
 
 template <>
 double DCurveTests<FSE3>::rotation_angle_rad(const FSE3 &ref_from_point) const {
-  return ref_from_point.liegroup().rotation().log().norm();
+  return ref_from_point.rotation().log().norm();
 }
 
 using LieGroupTypes = ::testing::Types<FSE3, SE3>;

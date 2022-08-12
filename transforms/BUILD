@@ -139,6 +139,7 @@ cc_library(
     deps = [
         ":cross_matrix",
         ":liegroup",
+        ":liegroup_concepts",
         ":liegroup_exp_diff",
         ":so3",
         "@libeigen//:eigen",
@@ -164,6 +165,7 @@ cc_library(
     deps = [
         ":cross_matrix",
         ":liegroup",
+        ":liegroup_concepts",
         "@libeigen//:eigen",
     ],
 )
@@ -176,5 +178,25 @@ cc_test(
         ":so3",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "liegroup_concepts",
+    hdrs = ["liegroup_concepts.hh"],
+    deps = [
+        ":liegroup",
+    ],
+)
+
+cc_test(
+    name = "liegroup_concepts_test",
+    srcs = ["liegroup_concepts_test.cc"],
+    deps = [
+        ":framed_group",
+        ":liegroup_concepts",
+        ":se3",
+        ":so3",
+        "@com_google_googletest//:gtest_main",
     ],
 )
