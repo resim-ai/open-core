@@ -58,9 +58,8 @@ TEST(SE3ConstructorTest, RotationAndTranslation) {
 }
 
 TEST(SE3OperatorTest, ActionOnVector) {
-  constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_zero_one =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ())),
           Eigen::Vector3d::UnitY());
   // Expected Location of axes vectors.
   const Eigen::Vector3d zero_one_x{0., 2., 0.};
@@ -83,37 +82,35 @@ TEST(SE3ArcLengthTest, IdentityArcLengthIsZero) {
 }
 
 TEST(SE3ArcLengthTest, UnitCircleArc) {
-  constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_one_zero = SE3(Eigen::Vector3d::UnitX());
   const SE3 orig_from_zero_one =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ())),
           Eigen::Vector3d::UnitY());
   // Following transform is a quater arc of the unit circle.
   const SE3 zero_one_from_one_zero =
       orig_from_zero_one.inverse() * orig_from_one_zero;
-  EXPECT_DOUBLE_EQ(zero_one_from_one_zero.arc_length(), HALF_PI);
+  EXPECT_DOUBLE_EQ(zero_one_from_one_zero.arc_length(), M_PI_2);
 }
 
 TEST(SE3IsApproxTest, FloatingPointEquality) {
-  constexpr double HALF_PI = M_PI / 2;
   const SE3 orig_from_zero_one =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ())),
           Eigen::Vector3d::UnitY());
   // Same rotation and translation
   EXPECT_TRUE(orig_from_zero_one.is_approx(orig_from_zero_one));
   // Same rotation only
   const SE3 same_rot_only =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ())),
           Eigen::Vector3d::UnitX());
   EXPECT_FALSE(orig_from_zero_one.is_approx(same_rot_only));
   // Same translation only
   const SE3 same_trans_only =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitY())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitY())),
           Eigen::Vector3d::UnitY());
   EXPECT_FALSE(orig_from_zero_one.is_approx(same_trans_only));
   // Different rot and trans
   const SE3 different_rot_and_trans =
-      SE3(SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitY())),
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitY())),
           Eigen::Vector3d::UnitX());
   EXPECT_FALSE(orig_from_zero_one.is_approx(different_rot_and_trans));
 }

@@ -71,9 +71,8 @@ TEST(SO3ConstructorTest, quaternion) {
 }
 
 TEST(SO3OperatorTest, ActionOnVector) {
-  constexpr double HALF_PI = M_PI / 2;
   const SO3 orig_from_half_pi =
-      SO3(Eigen::AngleAxisd(HALF_PI, Eigen::Vector3d::UnitZ()));
+      SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()));
   // Expected Location of axes vectors.
   const Eigen::Vector3d zero_one_x{0., 1., 0.};
   const Eigen::Vector3d zero_one_y{-1., 0., 0.};
