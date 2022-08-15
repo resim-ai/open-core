@@ -201,3 +201,23 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "framed_group_concept",
+    hdrs = ["framed_group_concept.hh"],
+    deps = [
+        ":framed_group",
+    ],
+)
+
+cc_test(
+    name = "framed_group_concept_test",
+    srcs = ["framed_group_concept_test.cc"],
+    deps = [
+        ":framed_group",
+        ":framed_group_concept",
+        ":se3",
+        ":so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
