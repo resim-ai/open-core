@@ -143,12 +143,24 @@ const SO3 &SE3::rotation() const { return rotation_; }
 
 const Eigen::Vector3d &SE3::translation() const { return translation_; }
 
-SO3::TangentVector SE3::tangent_vector_rotation_part(const TangentVector &alg) {
-  return alg.head<3>();
+Eigen::VectorBlock<const TangentVector, SE3::DIMS>
+SE3::tangent_vector_rotation_part(const TangentVector &alg) {
+  return alg.head<SE3::DIMS>();
 }
 
-Eigen::Vector3d SE3::tangent_vector_translation_part(const TangentVector &alg) {
-  return alg.tail<3>();
+Eigen::VectorBlock<TangentVector, SE3::DIMS> SE3::tangent_vector_rotation_part(
+    TangentVector &alg) {
+  return alg.head<SE3::DIMS>();
+}
+
+Eigen::VectorBlock<const TangentVector, SE3::DIMS>
+SE3::tangent_vector_translation_part(const TangentVector &alg) {
+  return alg.tail<SE3::DIMS>();
+}
+
+Eigen::VectorBlock<TangentVector, SE3::DIMS>
+SE3::tangent_vector_translation_part(TangentVector &alg) {
+  return alg.tail<SE3::DIMS>();
 }
 
 TangentVector SE3::tangent_vector_from_parts(

@@ -123,4 +123,23 @@ TEST(TangentVectorHelpers, RoundTripConsistent) {
   EXPECT_TRUE(alg_trans.isApprox(SE3::tangent_vector_translation_part(alg)));
 }
 
+// This test verifies that we can set parts of the TangentVector using
+// the rotation and translation part helpers.
+TEST(TangentVectorHelpers, VectorPartMutation) {
+  // SETUP
+  SE3::TangentVector alg{SE3::TangentVector::Zero()};
+
+  const SO3::TangentVector new_alg_rot = SO3::TangentVector::Ones();
+  const Eigen::Vector3d new_alg_trans = Eigen::Vector3d::Ones() * 2.;
+
+  // ACTION
+  SE3::tangent_vector_rotation_part(alg) = new_alg_rot;
+  SE3::tangent_vector_translation_part(alg) = new_alg_trans;
+
+  // VERIFICATION
+  const SE3::TangentVector expected_alg{
+      SE3::tangent_vector_from_parts(new_alg_rot, new_alg_trans)};
+  EXPECT_EQ(alg, expected_alg);
+}
+
 }  // namespace resim::transforms

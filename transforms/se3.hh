@@ -105,12 +105,18 @@ class SE3 : public LieGroup<3, 6> {
   // Some TangentVector helpers:
 
   // Helper to split out the rotation part of an SE3::TangentVector.
-  static SO3::TangentVector tangent_vector_rotation_part(
-      const TangentVector &alg);
+  static Eigen::VectorBlock<const TangentVector, DIMS>
+  tangent_vector_rotation_part(const TangentVector &alg);
+
+  static Eigen::VectorBlock<TangentVector, DIMS> tangent_vector_rotation_part(
+      TangentVector &alg);
 
   // Helper to split out the translation part of an SE3::TangentVector.
-  static Eigen::Vector3d tangent_vector_translation_part(
-      const TangentVector &alg);
+  static Eigen::VectorBlock<const TangentVector, DIMS>
+  tangent_vector_translation_part(const TangentVector &alg);
+
+  static Eigen::VectorBlock<TangentVector, DIMS>
+  tangent_vector_translation_part(TangentVector &alg);
 
   // Helper to join rotational and translational parts of an SE3::TangentVector.
   static TangentVector tangent_vector_from_parts(
