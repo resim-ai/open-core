@@ -96,7 +96,7 @@ class SO3 : public LieGroup<3, 3> {
   const Eigen::Matrix3d &rotation_matrix() const;
 
  private:
-  Eigen::Matrix3d rotation_matrix_;
+  Eigen::Matrix3d rotation_matrix_{Eigen::Matrix3d::Identity()};
 };
 
 static_assert(

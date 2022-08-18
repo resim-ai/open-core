@@ -125,7 +125,7 @@ class SE3 : public LieGroup<3, 6> {
 
  private:
   SO3 rotation_;
-  Eigen::Vector3d translation_;
+  Eigen::Vector3d translation_{Eigen::Vector3d::Zero()};
 };
 
 static_assert(

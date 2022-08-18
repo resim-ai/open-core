@@ -66,10 +66,10 @@ class TwoJet {
   Group frame_from_ref_;
   // The first time-derivative of the frame_from_ref transform in LEFT tangent
   // space.
-  TangentVector d_frame_from_ref_;
+  TangentVector d_frame_from_ref_{TangentVector::Zero()};
   // The second time-derivative of the frame_from_ref transform in LEFT tangent
   // space.
-  TangentVector d2_frame_from_ref_;
+  TangentVector d2_frame_from_ref_{TangentVector::Zero()};
 };
 
 }  // namespace resim::curves
