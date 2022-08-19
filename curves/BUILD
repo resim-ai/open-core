@@ -41,3 +41,33 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "extrapolate_two_jet",
+    srcs = ["extrapolate_two_jet.cc"],
+    hdrs = ["extrapolate_two_jet.hh"],
+    deps = [
+        ":two_jet",
+        "//transforms:framed_group",
+        "//transforms:framed_group_concept",
+        "//transforms:liegroup_concepts",
+        "//transforms:se3",
+        "//transforms:so3",
+    ],
+)
+
+cc_test(
+    name = "extrapolate_two_jet_test",
+    srcs = ["extrapolate_two_jet_test.cc"],
+    deps = [
+        ":extrapolate_two_jet",
+        ":two_jet",
+        "//common:random_vector",
+        "//transforms:framed_group",
+        "//transforms:framed_group_concept",
+        "//transforms:liegroup_concepts",
+        "//transforms:se3",
+        "//transforms:so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

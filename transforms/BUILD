@@ -205,6 +205,7 @@ cc_test(
 cc_library(
     name = "framed_group_concept",
     hdrs = ["framed_group_concept.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":framed_group",
     ],
