@@ -35,6 +35,38 @@ cc_test(
 )
 
 cc_library(
+    name = "t_curve_segment",
+    srcs = ["t_curve_segment.cc"],
+    hdrs = ["t_curve_segment.hh"],
+    deps = [
+        ":quintic_poly_coeffs",
+        ":two_jet",
+        "//common:inout",
+        "//transforms:frame",
+        "//transforms:framed_group",
+        "//transforms:framed_group_concept",
+        "//transforms:liegroup_concepts",
+        "//transforms:se3",
+        "//transforms:so3",
+    ],
+)
+
+cc_test(
+    name = "t_curve_segment_test",
+    srcs = ["t_curve_segment_test.cc"],
+    deps = [
+        ":t_curve_segment",
+        ":two_jet",
+        "//common:random_vector",
+        "//transforms:framed_group",
+        "//transforms:framed_group_concept",
+        "//transforms:se3",
+        "//transforms:so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "two_jet",
     srcs = ["two_jet.cc"],
     hdrs = ["two_jet.hh"],
