@@ -20,6 +20,21 @@ cc_test(
 )
 
 cc_library(
+    name = "quintic_poly_coeffs",
+    srcs = ["quintic_poly_coeffs.cc"],
+    hdrs = ["quintic_poly_coeffs.hh"],
+)
+
+cc_test(
+    name = "quintic_poly_coeffs_test",
+    srcs = ["quintic_poly_coeffs_test.cc"],
+    deps = [
+        ":quintic_poly_coeffs",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "two_jet",
     srcs = ["two_jet.cc"],
     hdrs = ["two_jet.hh"],
