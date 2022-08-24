@@ -21,8 +21,9 @@ struct TwoJetPolyCoeffs {
 // Important assumptions:
 // Curve segments are defined by their boundary conditions at a pair of TwoJet
 // objects. These are called - respectively - the origin (orig) and the
-// destination (dest). Time is normalized over the segment, so n_time = {0, 1},
-// for points between the origin (n_time = 0) and destination (n_time = 1).
+// destination (dest). Time is normalized over the segment, so time_nrm = {0,
+// 1}, for points between the origin (time_nrm = 0) and destination (time_nrm =
+// 1).
 class QuinticPolyCoeffs {
  public:
   // Constructing the quintic polynomial requires building and composing TwoJet
@@ -30,12 +31,12 @@ class QuinticPolyCoeffs {
   // the origin and the destination and the first and second normalized-time
   // derivatives at both the origin and the destination. The methods below fetch
   // the TwoJetPolyCoeffs for each of these, given the value of normalized time
-  // (n_time).
-  static TwoJetPolyCoeffs dest_from_orig(double n_time);
-  static TwoJetPolyCoeffs d_orig(double n_time);
-  static TwoJetPolyCoeffs d_dest(double n_time);
-  static TwoJetPolyCoeffs d2_orig(double n_time);
-  static TwoJetPolyCoeffs d2_dest(double n_time);
+  // (time_nrm).
+  static TwoJetPolyCoeffs dest_from_orig(double time_nrm);
+  static TwoJetPolyCoeffs d_orig(double time_nrm);
+  static TwoJetPolyCoeffs d_dest(double time_nrm);
+  static TwoJetPolyCoeffs d2_orig(double time_nrm);
+  static TwoJetPolyCoeffs d2_dest(double time_nrm);
 
  private:
   static constexpr unsigned int QUINTIC = 5;
@@ -48,13 +49,13 @@ class QuinticPolyCoeffs {
   static double two_jet_single_coeff(
       const std::array<double, QUINTIC> &d_mult,
       const std::array<double, QUINTIC> &coeffs,
-      double n_time,
+      double time_nrm,
       int smallest_index);
 
   // Compute coefficient a, da and d2a.
   static TwoJetPolyCoeffs two_jet_coeffs(
       const std::array<double, QUINTIC> &coeffs,
-      double n_time);
+      double time_nrm);
 
   // Store the constants required to compute the coefficients.
   // A coefficient 'a' is calculated from and array 'c' below as:
