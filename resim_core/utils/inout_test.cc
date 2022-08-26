@@ -1,5 +1,5 @@
 
-#include "resim_core/common/inout.hh"
+#include "resim_core/utils/inout.hh"
 
 #include <gtest/gtest.h>
 

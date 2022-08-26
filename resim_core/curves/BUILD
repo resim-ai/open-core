@@ -41,13 +41,13 @@ cc_library(
     deps = [
         ":quintic_poly_coeffs",
         ":two_jet",
-        "//resim_core/common:inout",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "//resim_core/utils:inout",
     ],
 )
 
@@ -57,11 +57,11 @@ cc_test(
     deps = [
         ":t_curve_segment",
         ":two_jet",
-        "//resim_core/common:random_vector",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "//resim_core/utils:random_vector",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -109,12 +109,12 @@ cc_test(
     deps = [
         ":extrapolate_two_jet",
         ":two_jet",
-        "//resim_core/common:random_vector",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "//resim_core/utils:random_vector",
         "@com_google_googletest//:gtest_main",
     ],
 )

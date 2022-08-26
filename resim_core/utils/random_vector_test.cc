@@ -1,4 +1,4 @@
-#include "resim_core/common/random_vector.hh"
+#include "resim_core/utils/random_vector.hh"
 
 #include <gtest/gtest.h>
 
