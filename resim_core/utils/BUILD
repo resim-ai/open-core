@@ -50,3 +50,19 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "double_buffer",
+    hdrs = ["double_buffer.hh"],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+cc_test(
+    name = "double_buffer_test",
+    srcs = ["double_buffer_test.cc"],
+    deps = [
+        ":double_buffer",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
