@@ -83,3 +83,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "integer_power",
+    srcs = ["integer_power.cc"],
+    hdrs = ["integer_power.hh"],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+cc_test(
+    name = "integer_power_test",
+    srcs = ["integer_power_test.cc"],
+    deps = [
+        ":integer_power",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
