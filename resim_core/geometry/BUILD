@@ -1,6 +1,31 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "oriented_box",
+    srcs = ["oriented_box.cc"],
+    hdrs = ["oriented_box.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_concepts",
+        "//resim_core/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "oriented_box_test",
+    srcs = ["oriented_box_test.cc"],
+    deps = [
+        ":oriented_box",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_concepts",
+        "//resim_core/transforms:se3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "gjk_distance_subalgorithm",
     srcs = ["gjk_distance_subalgorithm.cc"],
     hdrs = ["gjk_distance_subalgorithm.hh"],
