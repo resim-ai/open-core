@@ -45,3 +45,26 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "gjk_algorithm",
+    srcs = ["gjk_algorithm.cc"],
+    hdrs = ["gjk_algorithm.hh"],
+    deps = [
+        ":gjk_distance_subalgorithm",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "gjk_algorithm_test",
+    srcs = ["gjk_algorithm_test.cc"],
+    deps = [
+        ":gjk_algorithm",
+        ":oriented_box",
+        "//resim_core/transforms:liegroup_concepts",
+        "//resim_core/utils:random_vector",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
