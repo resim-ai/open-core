@@ -68,3 +68,31 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "boxes_collide",
+    srcs = ["boxes_collide.cc"],
+    hdrs = ["boxes_collide.hh"],
+    deps = [
+        ":gjk_algorithm",
+        ":oriented_box",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:framed_group_concept",
+        "//resim_core/transforms:liegroup_concepts",
+        "//resim_core/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "boxes_collide_test",
+    srcs = ["boxes_collide_test.cc"],
+    deps = [
+        ":boxes_collide",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:framed_group_concept",
+        "//resim_core/transforms:se3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
