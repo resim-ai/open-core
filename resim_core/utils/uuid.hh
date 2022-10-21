@@ -3,6 +3,7 @@
 #include <uuid/uuid.h>
 
 #include <array>
+#include <string>
 
 namespace resim {
 
@@ -18,8 +19,14 @@ class UUID {
   // Construct from a raw id.
   explicit UUID(std::array<unsigned char, ARRAY_SIZE> id);
 
+  // Construct from an ASCII string representation
+  explicit UUID(const std::string &str);
+
   // Generate a new UUID.
   static UUID new_uuid();
+
+  // Format this UUID as a string
+  std::string to_string() const;
 
   // Compate this UUID with another.
   bool operator==(const UUID &other) const;

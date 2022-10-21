@@ -63,6 +63,18 @@ TEST(UUIDTest, CopyConstructUUID) {
   EXPECT_EQ(uuid_a, uuid_b);
 }
 
+TEST(UUIDTest, TestParseRoundTrip) {
+  // SETUP
+  const std::string ascii_rep{"d8c2276f-fffc-4e49-bba7-4254a0b0faf3"};
+
+  // ACTION
+  const UUID uuid{ascii_rep};
+  const std::string test_rep{uuid.to_string()};
+
+  // VERIFICATION
+  EXPECT_EQ(ascii_rep, test_rep);
+}
+
 TEST(UUIDTest, CopyAssignUUID) {
   UUID uuid_a = UUID::new_uuid();
   UUID uuid_b = uuid_a;
