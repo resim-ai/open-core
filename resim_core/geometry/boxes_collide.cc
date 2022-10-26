@@ -39,6 +39,27 @@ Vec3 box_support(const OrientedBox<Group> &box, const Vec3 &direction) {
   return support_in_ref_coordinates;
 }
 
+// This simple helper detects whether the bounding spheres of the
+// given bounding boxes collide within the given collision tolerance.
+// @param[in] box_1 - The first box to collide.
+// @param[in] box_2 - The second box to collide.
+// @param[in] collision_tolerance - The threshold to use for determining
+//                                  collision.
+// @return A boolean saying whether or not the bounding spheres collide.
+template <LieGroupType Group>
+bool bounding_spheres_collide(
+    const OrientedBox<Group> &box_1,
+    const OrientedBox<Group> &box_2,
+    const double collision_tolerance) {
+  const double radius_1 = 0.5 * box_1.extents().norm();
+  const double radius_2 = 0.5 * box_2.extents().norm();
+  const double center_to_center_distance =
+      (box_2.reference_from_box().translation() -
+       box_1.reference_from_box().translation())
+          .norm();
+  return center_to_center_distance < radius_1 + radius_2 + collision_tolerance;
+}
+
 }  // namespace
 
 template <LieGroupType Group>
@@ -50,6 +71,10 @@ bool boxes_collide(
     const bool frames_match =
         box_1.reference_from_box().into() == box_2.reference_from_box().into();
     CHECK(frames_match) << "Box frames don't match!";
+  }
+
+  if (not bounding_spheres_collide(box_1, box_2, collision_tolerance)) {
+    return false;
   }
   constexpr int DIM = 3;
   const SupportFunction<DIM> support_1{[&](const Vec3 &direction) -> Vec3 {
