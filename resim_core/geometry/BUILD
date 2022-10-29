@@ -96,3 +96,21 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "wireframe",
+    srcs = ["wireframe.cc"],
+    hdrs = ["wireframe.hh"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "wireframe_test",
+    srcs = ["wireframe_test.cc"],
+    deps = [
+        ":wireframe",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
