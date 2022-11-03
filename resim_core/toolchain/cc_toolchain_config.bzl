@@ -17,7 +17,7 @@ all_link_actions = [
     ACTION_NAMES.cpp_link_nodeps_dynamic_library,
 ]
 
-all_cpp_actions = all_link_actions + [
+all_cpp_actions = [
     ACTION_NAMES.cpp_compile,
     ACTION_NAMES.cc_flags_make_variable,
     ACTION_NAMES.cpp_module_codegen,

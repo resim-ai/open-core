@@ -17,6 +17,44 @@ http_archive(
     urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.zip"],
 )
 
+# Rules foreign CC
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "5303e3363fe22cbd265c91fce228f84cf698ab0f98358ccf1d95fba227b308f6",
+    strip_prefix = "rules_foreign_cc-0.9.0",
+    urls = ["https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/0.9.0.zip"],
+)
+
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+rules_foreign_cc_dependencies()
+
+# lz4, which is a dependency for mcap
+http_archive(
+    name = "lz4",
+    build_file = "//resim_core/third_party/lz4:lz4.BUILD",
+    sha256 = "4ec935d99aa4950eadfefbd49c9fad863185ac24c32001162c44a683ef61b580",
+    strip_prefix = "lz4-1.9.3",
+    urls = ["https://github.com/lz4/lz4/archive/refs/tags/v1.9.3.zip"],
+)
+
+# zstd, which is a dependency for mcap
+http_archive(
+    name = "zstd",
+    build_file = "//resim_core/third_party/zstd:zstd.BUILD",
+    sha256 = "53f4696f3cec8703f12d3402707a6aaf7eb92d43c90d61e1d32454bda5da7b9c",
+    strip_prefix = "zstd-1.5.2",
+    urls = ["https://github.com/facebook/zstd/archive/refs/tags/v1.5.2.zip"],
+)
+
+http_archive(
+    name = "mcap",
+    build_file = "//resim_core/third_party/mcap:mcap.BUILD",
+    sha256 = "5d30a67c0c282e478e9342127129c3b4138c1464f42c25ba083415ced0824437",
+    strip_prefix = "mcap-releases-cpp-v0.5.0",
+    urls = ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v0.5.0.zip"],
+)
+
 http_archive(
     name = "rules_python",
     sha256 = "cdf6b84084aad8f10bf20b46b77cb48d83c319ebe6458a18e9d2cebf57807cdd",
