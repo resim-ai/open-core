@@ -2,24 +2,28 @@
 
 #include <Eigen/Dense>
 #include <algorithm>
+#include <random>
 #include <vector>
 
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
+#include "resim_core/utils/random_vector.hh"
+#include "resim_core/utils/type.hh"
+
+namespace resim::transforms {
 
 namespace {
 
-using SO3 = resim::transforms::SO3;
-using SE3 = resim::transforms::SE3;
-
-template <typename Vector>
-Vector make_large_vector() {
+template <typename Vector, typename Rng>
+Vector make_large_vector(BasicType<Vector> vec_type, Rng &&rng) {
   constexpr double LARGE = 1E6;
-  return Vector::Random() * LARGE;
+  return testing::random_vector<Vector>(rng) * LARGE;
 }
 
-template <>
-SO3::TangentVector make_large_vector<SO3::TangentVector>() {
+template <typename Rng>
+SO3::TangentVector make_large_vector(
+    BasicType<SO3::TangentVector> vec_type,
+    Rng &&rng) {
   // Close to Pi
   constexpr double NEARLY_PI = M_PI - 0.01;
   constexpr double SQRT_3 = 1.732;
@@ -27,22 +31,23 @@ SO3::TangentVector make_large_vector<SO3::TangentVector>() {
   return SO3::TangentVector{LRG_ROT, LRG_ROT, -LRG_ROT};
 }
 
-template <>
-SE3::TangentVector make_large_vector<SE3::TangentVector>() {
+template <typename Rng>
+SE3::TangentVector make_large_vector(
+    BasicType<SE3::TangentVector> vec_type,
+    Rng &&rng) {
+  constexpr double LARGE = 1E6;
   return SE3::tangent_vector_from_parts(
-      make_large_vector<SO3::TangentVector>(),
-      make_large_vector<Eigen::Vector3d>());
+      make_large_vector(TypeC<SO3::TangentVector>, rng),
+      testing::random_vector<Eigen::Vector3d>(rng) * LARGE);
 }
 
 }  // namespace
-
-namespace resim::transforms {
 
 template <typename Vector>
 std::vector<Vector> make_test_vectors() {
   // Make random seed determistic
   constexpr unsigned int SEED = 42;
-  srand(SEED);
+  std::mt19937 rng{SEED};
   // How many test elements to make.
   constexpr int TEST_ELEMENT_COUNT = 7;
   std::vector<Vector> elements;
@@ -53,15 +58,14 @@ std::vector<Vector> make_test_vectors() {
   // Add a negative ones element.
   elements.push_back(-Vector::Ones());
   // Add a large element.
-  elements.push_back(make_large_vector<Vector>());
+  elements.push_back(make_large_vector(TypeC<Vector>, rng));
   // Add a tiny numbers element.
   constexpr double TINY = 1E-6;
-  elements.push_back(Vector::Random() * TINY);
+  elements.push_back(testing::random_vector<Vector>(rng) * TINY);
   // Populate the remainder with random elements.
   for (int i = elements.size(); i < TEST_ELEMENT_COUNT; ++i) {
-    elements.push_back(Vector::Random());
+    elements.push_back(testing::random_vector<Vector>(rng));
   }
-  srand(1);
   elements.resize(TEST_ELEMENT_COUNT);
   return elements;
 }

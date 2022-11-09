@@ -3,11 +3,26 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Dense>
+#include <random>
 #include <vector>
 
 #include "resim_core/transforms/liegroup_test_helpers.hh"
+#include "resim_core/utils/random_vector.hh"
 
 namespace resim::transforms {
+
+namespace {
+
+// A simple helper to generate random quaternions. Note that these are *NOT*
+// uniformly distributed orientations.
+// TODO(https://app.asana.com/0/1202178773526279/1203262688903982/f)
+template <typename Rng>
+Eigen::Quaterniond random_quaternion(Rng &&rng) {
+  return Eigen::Quaterniond{
+      testing::random_vector<Eigen::Vector4d>(rng).normalized()};
+}
+
+}  // namespace
 
 // Please Note: Here are the specialized tests for the SO3 class. The SO3 class
 // is also covered by a number of general Liegrooup tests that can be found in
@@ -48,16 +63,15 @@ TEST(SO3ConstructorTest, quaternion) {
   constexpr int TRIES = 7;
   constexpr unsigned int SEED = 42;
   // Make a deterministic seed.
-  srand(SEED);
+  std::mt19937 rng{SEED};
   // Build a vector of random Quaternions.
   std::vector<Eigen::Quaterniond> quats;
   quats.reserve(TRIES);
   for (int i = 0; i < TRIES; ++i) {
-    quats.push_back(Eigen::Quaterniond::UnitRandom());
+    quats.push_back(random_quaternion(rng));
   }
-  srand(1);  // Reset the seed
   // Create an arbitrary three vector
-  const Eigen::Vector3d three_vec = Eigen::Vector3d::Random();
+  const Eigen::Vector3d three_vec{testing::random_vector<Eigen::Vector3d>(rng)};
   for (const Eigen::Quaterniond &a_from_b_quat : quats) {
     // Build an SO3 from the quaternion
     const SO3 a_from_b_so3(a_from_b_quat);

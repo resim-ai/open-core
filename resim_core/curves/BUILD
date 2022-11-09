@@ -117,6 +117,7 @@ cc_test(
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "//resim_core/utils:random_vector",
         "@com_google_googletest//:gtest_main",
     ],
 )

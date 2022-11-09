@@ -2,9 +2,12 @@
 
 #include <gtest/gtest.h>
 
+#include <random>
+
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
+#include "resim_core/utils/random_vector.hh"
 
 namespace resim::curves {
 
@@ -19,18 +22,20 @@ template <typename T>
 class TwoJetTests : public ::testing::Test {
  protected:
   void SetUp() override {
-    // TODO(https://app.asana.com/0/1202178773526279/1202774361010794/f)
     constexpr unsigned int SEED = 31;
-    srand(SEED);
+    rng_.seed(SEED);
   }
 
-  void TearDown() override { srand(1); }
-
-  typename T::TangentVector test_vector() { return T::TangentVector::Random(); }
+  typename T::TangentVector test_vector() {
+    return testing::random_vector<typename T::TangentVector>(rng_);
+  }
 
   TwoJet<T> test_two_jet() {
     return TwoJet<T>(T::exp(test_vector()), test_vector(), test_vector());
   }
+
+ private:
+  std::mt19937 rng_;
 };
 
 using LieGroupTypes = ::testing::Types<SE3, SO3, FSE3, FSO3>;

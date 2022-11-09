@@ -47,7 +47,6 @@ cc_library(
     deps = [
         ":frame",
         ":liegroup",
-        ":liegroup_test_helpers",
         ":se3",
         ":so3",
         "@libeigen//:eigen",
@@ -60,6 +59,7 @@ cc_test(
     deps = [
         ":frame",
         ":framed_group",
+        ":liegroup_test_helpers",
         ":se3",
         ":so3",
         "@com_google_googletest//:gtest_main",
@@ -97,12 +97,15 @@ cc_test(
 
 cc_library(
     name = "liegroup_test_helpers",
+    testonly = 1,
     srcs = ["liegroup_test_helpers.cc"],
     hdrs = ["liegroup_test_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
         ":se3",
         ":so3",
+        "//resim_core/utils:random_vector",
+        "//resim_core/utils:type",
         "@libeigen//:eigen",
     ],
 )
@@ -176,6 +179,7 @@ cc_test(
     deps = [
         ":liegroup_test_helpers",
         ":so3",
+        "//resim_core/utils:random_vector",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
