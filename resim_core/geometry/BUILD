@@ -101,6 +101,7 @@ cc_library(
     name = "wireframe",
     srcs = ["wireframe.cc"],
     hdrs = ["wireframe.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "@libeigen//:eigen",
     ],
@@ -111,6 +112,25 @@ cc_test(
     srcs = ["wireframe_test.cc"],
     deps = [
         ":wireframe",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "drone_wireframe",
+    srcs = ["drone_wireframe.cc"],
+    hdrs = ["drone_wireframe.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":wireframe",
+    ],
+)
+
+cc_test(
+    name = "drone_wireframe_test",
+    srcs = ["drone_wireframe_test.cc"],
+    deps = [
+        ":drone_wireframe",
         "@com_google_googletest//:gtest_main",
     ],
 )
