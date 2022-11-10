@@ -114,3 +114,31 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "bounding_box_from_wireframe",
+    srcs = ["bounding_box_from_wireframe.cc"],
+    hdrs = ["bounding_box_from_wireframe.hh"],
+    deps = [
+        ":oriented_box",
+        ":wireframe",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "bounding_box_from_wireframe_test",
+    srcs = ["bounding_box_from_wireframe_test.cc"],
+    deps = [
+        ":bounding_box_from_wireframe",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "//resim_core/utils:random_vector",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
