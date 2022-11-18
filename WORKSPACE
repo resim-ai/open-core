@@ -55,6 +55,15 @@ http_archive(
     urls = ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v0.5.0.zip"],
 )
 
+# Protobuf schemas for communications with foxglove
+http_archive(
+    name = "foxglove_schemas",
+    build_file = "//resim_core/third_party/foxglove_schemas:schemas.BUILD",
+    sha256 = "817d60451b7f09314b9ccf6eafdb5a0c2f354dc219b8d5518d1f4fc5c6f52da8",
+    strip_prefix = "schemas-releases-typescript-v0.7.1/schemas/proto",
+    urls = ["https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v0.7.1.zip"],
+)
+
 http_archive(
     name = "rules_python",
     sha256 = "cdf6b84084aad8f10bf20b46b77cb48d83c319ebe6458a18e9d2cebf57807cdd",
