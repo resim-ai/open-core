@@ -8,6 +8,7 @@ exports_files(
 cc_library(
     name = "mcap_impl",
     srcs = ["mcap_impl.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         "@mcap",
     ],

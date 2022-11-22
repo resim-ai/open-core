@@ -1,0 +1,11 @@
+
+syntax = "proto3";
+
+import "resim_core/utils/proto/testing/message_b.proto";
+import "resim_core/utils/proto/testing/message_c.proto";
+
+package resim.proto.testing;
+message MessageD {
+  MessageB message_b = 1;
+  MessageC message_c = 2;  
+}
