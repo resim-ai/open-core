@@ -141,3 +141,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "match",
+    hdrs = ["match.hh"],
+    deps = [
+    ],
+)
+
+cc_test(
+    name = "match_test",
+    srcs = ["match_test.cc"],
+    deps = [
+        ":match",
+        ":move_copy_tracker",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
