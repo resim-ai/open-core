@@ -10,7 +10,7 @@
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
-#include "resim_core/utils/random_vector.hh"
+#include "resim_core/utils/random_matrix.hh"
 
 namespace resim::curves {
 

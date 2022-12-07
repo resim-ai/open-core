@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-#include "resim_core/utils/random_vector.hh"
+#include "resim_core/utils/random_matrix.hh"
 
 namespace resim::geometry::convex_helpers {
 

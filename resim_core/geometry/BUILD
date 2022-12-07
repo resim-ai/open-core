@@ -41,7 +41,7 @@ cc_test(
     srcs = ["gjk_distance_subalgorithm_test.cc"],
     deps = [
         ":gjk_distance_subalgorithm",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -63,7 +63,7 @@ cc_test(
         ":gjk_algorithm",
         ":oriented_box",
         "//resim_core/transforms:liegroup_concepts",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
@@ -157,7 +157,7 @@ cc_test(
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],

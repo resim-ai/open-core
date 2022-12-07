@@ -61,7 +61,7 @@ cc_test(
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -93,7 +93,7 @@ cc_test(
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -117,7 +117,7 @@ cc_test(
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -147,7 +147,7 @@ cc_test(
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_vector",
+        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )

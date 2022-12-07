@@ -1,4 +1,5 @@
-#include "resim_core/utils/random_vector.hh"
+
+#include "resim_core/utils/random_matrix.hh"
 
 #include <gtest/gtest.h>
 
@@ -16,7 +17,7 @@ using VectorTypes =
 
 TYPED_TEST_SUITE(RandomVectorTests, VectorTypes);
 
-// Test that the random_vector() function returns pseudo-randomly
+// Test that the random_matrix() function returns pseudo-randomly
 // generated vectors with independent entries that have the right
 // means and variances.
 TYPED_TEST(RandomVectorTests, RandomVectorTest) {
@@ -38,7 +39,7 @@ TYPED_TEST(RandomVectorTests, RandomVectorTest) {
   TypeParam mean = TypeParam::Zero();
   Covariance covariance = Covariance::Zero();
   for (int idx = 1; idx <= NUM_SAMPLES; ++idx) {
-    const TypeParam sample{random_vector<TypeParam>(rng, dist)};
+    const TypeParam sample{random_matrix<TypeParam>(rng, dist)};
     const TypeParam residual{sample - mean};
     mean += residual / idx;
     covariance += residual * (sample - mean).transpose();
@@ -73,8 +74,8 @@ TYPED_TEST(RandomVectorTests, RandomVectorOverloadTest) {
   // ACTION / VERIFICATION
   for (int ii = 0; ii < NUM_SAMPLES; ++ii) {
     EXPECT_EQ(
-        random_vector<TypeParam>(rng_1, dist),
-        random_vector<TypeParam>(rng_2));
+        random_matrix<TypeParam>(rng_1, dist),
+        random_matrix<TypeParam>(rng_2));
   }
 }
 
