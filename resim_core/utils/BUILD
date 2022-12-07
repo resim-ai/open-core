@@ -158,3 +158,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "nullable_reference",
+    hdrs = ["nullable_reference.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_test(
+    name = "nullable_reference_test",
+    srcs = ["nullable_reference_test.cc"],
+    deps = [
+        ":nullable_reference",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
