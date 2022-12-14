@@ -1,8 +1,10 @@
 #include "resim_core/math/multivariate_gaussian.hh"
 
+#include <asm-generic/errno.h>
 #include <gtest/gtest.h>
 
 #include <random>
+#include <type_traits>
 
 #include "resim_core/math/sample_statistics.hh"
 
@@ -21,12 +23,16 @@ constexpr double LRG = 6.1E5;
 constexpr std::array<double, 3> SCALES{SML, ONE, LRG};
 }  // namespace
 
+template <typename T>
 class GaussianTest : public ::testing::Test {
  protected:
   struct GaussParams {
     Eigen::VectorXd mu;
     Eigen::MatrixXd cov;
   };
+
+  using VectorD = Eigen::Matrix<double, T::value, 1>;
+  using MatrixDD = Eigen::Matrix<double, T::value, T::value>;
 
   static GaussParams identity_parameters(unsigned int dims) {
     return {
@@ -57,36 +63,50 @@ class GaussianTest : public ::testing::Test {
   std::mt19937 rng_{SEED};
 };
 
-TEST_F(GaussianTest, ConstructionMeanCov) {
+using DimNonTypes = ::testing::Types<
+    std::integral_constant<unsigned int, THREE_D>,
+    std::integral_constant<unsigned int, SIX_D>,
+    std::integral_constant<unsigned int, EIGHTEEN_D>>;
+
+TYPED_TEST_SUITE(GaussianTest, DimNonTypes);
+
+TYPED_TEST(GaussianTest, ConstructionMeanCov) {
   // Check that the Gaussian can be constructed and parameters can be set
   // and retrieved.
   // Generate random parameters.
-  const GaussParams p = generate_parameters(EIGHTEEN_D);
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::GaussParams p =
+      this->generate_parameters(D);
   // Create the Gaussian.
-  const Gaussian<EIGHTEEN_D> g(p.mu, p.cov);
+  const Gaussian<D> g(p.mu, p.cov);
   // Check the retrieved parameters match.
   EXPECT_EQ(p.mu, g.mu());
   EXPECT_EQ(p.cov, g.cov());
 }
 
-TEST_F(GaussianTest, ConstructionTrivialEigenValues) {
+TYPED_TEST(GaussianTest, ConstructionTrivialEigenValues) {
   // For a one sigma iid Gaussian, the Eigenvalues are all 1 and the
   // Eigenvectors matrix is equal to the covariance matrix, which is equal to
   // identity.
-  const GaussParams p = identity_parameters(THREE_D);
-  const Gaussian<THREE_D> g(p.mu, p.cov);
-  EXPECT_TRUE(Eigen::Vector3d::Ones().isApprox(g.eigenvalues()));
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::GaussParams p =
+      this->identity_parameters(D);
+  const Gaussian<D> g(p.mu, p.cov);
+  EXPECT_TRUE(
+      GaussianTest<TypeParam>::VectorD::Ones().isApprox(g.eigenvalues()));
   EXPECT_TRUE(p.cov.isApprox(g.eigenvectors()));
-  EXPECT_TRUE(Eigen::Matrix3d::Identity().isApprox(g.eigenvectors()));
+  EXPECT_TRUE(
+      GaussianTest<TypeParam>::MatrixDD::Identity().isApprox(g.eigenvectors()));
 }
 
-TEST_F(GaussianTest, ConstructionSqrtEigenValues) {
+TYPED_TEST(GaussianTest, ConstructionSqrtEigenValues) {
   // For a trivial diagonal covariance matrix with 2's on the diagonal.
   // The eigenvalues are all 2 so the sqrt eigenvalues matrix is:
   //     identity x sqrt(2).
-  constexpr unsigned int D = EIGHTEEN_D;
+  constexpr unsigned int D = TypeParam::value;
+  typename GaussianTest<TypeParam>::GaussParams p =
+      this->identity_parameters(D);
   constexpr double TWO = 2.;
-  GaussParams p = identity_parameters(D);
   p.cov *= TWO;
   Eigen::Matrix<double, D, 1> expected_diagonal{
       Eigen::Matrix<double, D, 1>::Ones() * sqrt(TWO)};
@@ -94,30 +114,32 @@ TEST_F(GaussianTest, ConstructionSqrtEigenValues) {
   EXPECT_TRUE(g.sqrt_eigenvalues_mat().diagonal().isApprox(expected_diagonal));
 }
 
-TEST_F(GaussianTest, SmallNegativeEigenvaluesFix) {
+TYPED_TEST(GaussianTest, SmallNegativeEigenvaluesFix) {
   // If the computed eigenvalues are negative and small enough to be forgiven
   // as numerical precision errors, then we expect them to be snapped to zero.
-  constexpr unsigned int D = SIX_D;
+  constexpr unsigned int D = TypeParam::value;
+  typename GaussianTest<TypeParam>::GaussParams p =
+      this->identity_parameters(D);
   constexpr double TINY_NEG = -1e-16;
-  GaussParams p = identity_parameters(D);
   p.cov *= TINY_NEG;
   Gaussian<D> g(p.mu, p.cov);
   EXPECT_TRUE(g.eigenvalues().isZero());
 }
 
-TEST_F(GaussianTest, Sampling) {
+TYPED_TEST(GaussianTest, Sampling) {
   // If we generate a significant number of samples then we can approximate the
   // parameters of the Gaussian distribution by computing the mean and the
   // covariance over the sample set, thus demonstrating the correctness of the
   // sampling method.
-  constexpr unsigned int D = THREE_D;
+  constexpr unsigned int D = TypeParam::value;
   constexpr unsigned int SAMPLE_N = 50000;
   constexpr unsigned int TRIES = 11;
   // We are only approximating the parameters so low precision is expected.
   constexpr double PREC = 0.02;
   for (double scale : SCALES) {
     for (int i = 0; i < TRIES; ++i) {
-      const GaussParams p = generate_parameters(D, scale);
+      const typename GaussianTest<TypeParam>::GaussParams p =
+          this->generate_parameters(D, scale);
       Gaussian<D> g(p.mu, p.cov);
       // Draw samples
       const Eigen::MatrixXd samples = g.samples(SAMPLE_N);
@@ -133,12 +155,13 @@ TEST_F(GaussianTest, Sampling) {
   }
 }
 
-TEST_F(GaussianTest, SingleSampling) {
+TYPED_TEST(GaussianTest, SingleSampling) {
   // Gaussian<D>::sample() is simply a convenience overload of samples(1).
   // Given that samples(n) is tested above, this test simply asserts that
   // samples returns a single row matrix (vector) as expected.
-  constexpr unsigned int D = SIX_D;
-  const GaussParams p = generate_parameters(D);
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::GaussParams p =
+      this->generate_parameters(D);
   Gaussian<D> g(p.mu, p.cov);
   Eigen::Matrix<double, 1, D> sample;
   EXPECT_NO_THROW({
@@ -147,11 +170,13 @@ TEST_F(GaussianTest, SingleSampling) {
   });
 }
 
-TEST_F(GaussianTest, SingularMatrix) {
+TYPED_TEST(GaussianTest, SingularMatrix) {
   // The simplest singular matrix is a matrix of zeros.
-  constexpr unsigned int D = SIX_D;
-  Eigen::MatrixXd mu = Eigen::MatrixXd::Zero(D, 1);
-  Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(D, D);
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::VectorD mu =
+      GaussianTest<TypeParam>::VectorD::Zero();
+  const typename GaussianTest<TypeParam>::MatrixDD cov =
+      GaussianTest<TypeParam>::MatrixDD::Zero();
   // Build Gaussian of zeros.
   Gaussian<D> g(mu, cov);
   // Sample should be all zeros.
@@ -159,29 +184,36 @@ TEST_F(GaussianTest, SingularMatrix) {
   EXPECT_TRUE(s.isZero());
 }
 
-using GaussianDeathTest = GaussianTest;
+template <typename T>
+using GaussianDeathTest = GaussianTest<T>;
+TYPED_TEST_SUITE(GaussianDeathTest, DimNonTypes);
 
-TEST_F(GaussianDeathTest, NonSymmetricCov) {
-  constexpr unsigned int D = 4;
-  const Eigen::Vector4d mu = Eigen::Vector4d::Zero();
-  const Eigen::Matrix4d cov = generate_randn_matrix(D, D);
+TYPED_TEST(GaussianDeathTest, NonSymmetricCov) {
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::VectorD mu =
+      GaussianTest<TypeParam>::VectorD::Zero();
+  const typename GaussianTest<TypeParam>::MatrixDD cov =
+      this->generate_randn_matrix(D, D);
   // Check that random did not accidentally generate a symmetric matrix.
   ASSERT_FALSE(cov.isApprox(cov.transpose()));
   EXPECT_DEATH(
       {
-        Gaussian<4> g(mu, cov);
+        Gaussian<D> g(mu, cov);
         (void)g;  // Avoid unused variable errors.
       },
       "Covariance matrix must be symmetric");
 }
 
-TEST_F(GaussianDeathTest, NegativeEigenvalues) {
-  const Eigen::Vector4d mu = Eigen::Vector4d::Zero();
+TYPED_TEST(GaussianDeathTest, NegativeEigenvalues) {
+  constexpr unsigned int D = TypeParam::value;
+  const typename GaussianTest<TypeParam>::VectorD mu =
+      GaussianTest<TypeParam>::VectorD::Zero();
   // Negative numbers on the diagonal will result in negative eigenvalues.
-  const Eigen::Matrix4d cov = Eigen::Matrix4d::Identity() * -1;
+  const typename GaussianTest<TypeParam>::MatrixDD cov =
+      GaussianTest<TypeParam>::MatrixDD::Identity() * -1;
   EXPECT_DEATH(
       {
-        Gaussian<4> g(mu, cov);
+        Gaussian<D> g(mu, cov);
         (void)g;  // Avoid unused variable errors.
       },
       "Symmetric PSD matrices have positive eigenvalues");
