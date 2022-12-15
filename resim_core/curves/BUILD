@@ -102,6 +102,7 @@ cc_library(
     name = "two_jet",
     srcs = ["two_jet.cc"],
     hdrs = ["two_jet.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
