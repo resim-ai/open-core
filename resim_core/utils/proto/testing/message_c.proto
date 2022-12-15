@@ -5,5 +5,5 @@ import "resim_core/utils/proto/testing/message_a.proto";
 
 package resim.proto.testing;
 message MessageC {
-  MessageA message_a = 1;
+    MessageA message_a = 1;
 }
