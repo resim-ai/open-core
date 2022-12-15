@@ -88,7 +88,7 @@ concept BranchesConsistent =
 //  @returns Whatever the selected branch returns.
 template <detail::VariantType T, detail::ClassType... BranchTypes>
 requires detail::BranchesConsistent<T, BranchTypes...>
-auto match(T &&variant, BranchTypes &&...branch) -> decltype(auto) {
+constexpr auto match(T &&variant, BranchTypes &&...branch) -> decltype(auto) {
   return std::visit(
       detail::Overloads{std::forward<BranchTypes>(branch)...},
       std::forward<T>(variant));

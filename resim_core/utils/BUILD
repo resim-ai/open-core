@@ -195,3 +195,22 @@ cc_test(
         "@fmt",
     ],
 )
+
+cc_library(
+    name = "status_value",
+    hdrs = ["status_value.hh"],
+    deps = [
+        ":match",
+        ":status",
+    ],
+)
+
+cc_test(
+    name = "status_value_test",
+    srcs = ["status_value_test.cc"],
+    deps = [
+        ":move_copy_tracker",
+        ":status_value",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
