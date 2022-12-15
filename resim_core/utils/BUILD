@@ -175,3 +175,23 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "status",
+    srcs = ["status.cc"],
+    hdrs = ["status.hh"],
+    deps = [
+        ":match",
+        "@fmt",
+    ],
+)
+
+cc_test(
+    name = "status_test",
+    srcs = ["status_test.cc"],
+    deps = [
+        ":status",
+        "@com_google_googletest//:gtest_main",
+        "@fmt",
+    ],
+)
