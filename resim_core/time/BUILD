@@ -1,10 +1,31 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "timestamp",
     hdrs = ["timestamp.hh"],
     visibility = ["//visibility:public"],
     deps = [],
+)
+
+cc_test(
+    name = "timestamp_test",
+    srcs = ["timestamp_test.cc"],
+    deps = [
+        ":random_duration",
+        ":timestamp",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "random_duration",
+    testonly = True,
+    hdrs = ["random_duration.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":timestamp",
+        "//resim_core/utils:inout",
+    ],
 )
 
 cc_library(
