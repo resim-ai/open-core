@@ -1,8 +1,8 @@
 # Copied from https://bazel.build/tutorials/cc-toolchain-config
 
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
-load(":cc_toolchain_config.bzl", "cc_toolchain_config")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test", "cc_toolchain", "cc_toolchain_suite")
 load("@rules_python//python:defs.bzl", "py_test")
+load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 

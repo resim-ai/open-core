@@ -1,3 +1,5 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 cc_library(
     name = "fmt",
     srcs = [
@@ -11,8 +13,8 @@ cc_library(
         "include/fmt/color.h",
         "include/fmt/compile.h",
         "include/fmt/core.h",
-        "include/fmt/format-inl.h",
         "include/fmt/format.h",
+        "include/fmt/format-inl.h",
         "include/fmt/os.h",
         "include/fmt/ostream.h",
         "include/fmt/printf.h",
@@ -21,7 +23,7 @@ cc_library(
         "include/fmt/xchar.h",
     ],
     includes = [
-        "include",        
+        "include",
     ],
     visibility = ["//visibility:public"],
 )
