@@ -21,11 +21,12 @@ using SO3 = transforms::SO3;
 using FSE3 = transforms::FSE3;
 using FSO3 = transforms::FSO3;
 
+constexpr auto EMPTY_ERR =
+    "Cannot query the frame of a curve with no control points";
+
 template <transforms::FramedGroupType Group>
 const transforms::Frame<Group::DIMS> &reference_frame_impl(
     const std::vector<typename TCurve<Group>::Control> &control_pts) {
-  constexpr auto EMPTY_ERR =
-      "Cannot query the frame of a curve with no control points";
   CHECK(!control_pts.empty()) << EMPTY_ERR;
   return control_pts.back().point.frame_from_ref().from();
 }
@@ -154,6 +155,18 @@ void TCurve<Group>::unnormalize_derivatives(
     InOut<TwoJet<Group>> point) const {
   point->set_d_frame_from_ref(point->d_frame_from_ref() * inv_dt);
   point->set_d2_frame_from_ref(point->d2_frame_from_ref() * inv_dt * inv_dt);
+}
+
+template <transforms::LieGroupType Group>
+double TCurve<Group>::end_time() const {
+  CHECK(!control_pts_.empty()) << EMPTY_ERR;
+  return control_pts_.back().time;
+}
+
+template <transforms::LieGroupType Group>
+double TCurve<Group>::start_time() const {
+  CHECK(!control_pts_.empty()) << EMPTY_ERR;
+  return control_pts_.front().time;
 }
 
 template class TCurve<FSO3>;

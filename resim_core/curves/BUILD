@@ -38,6 +38,7 @@ cc_library(
     name = "t_curve",
     srcs = ["t_curve.cc"],
     hdrs = ["t_curve.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":t_curve_segment",
         ":two_jet",

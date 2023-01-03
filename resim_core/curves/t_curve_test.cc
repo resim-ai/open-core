@@ -145,8 +145,8 @@ TYPED_TEST(TCurveTests, NormalizedSegments) {
 TYPED_TEST(TCurveTests, DeathTestsForChecks) {
   constexpr double T_DELTA = 3.0;
   // Create constants above and below the time range of the default curve.
-  const double HI_TIME = this->DEFAULT_TIMES.back() + T_DELTA;
-  const double LO_TIME = this->DEFAULT_TIMES.front() - T_DELTA;
+  const double HI_TIME = TestFixture::DEFAULT_TIMES.back() + T_DELTA;
+  const double LO_TIME = TestFixture::DEFAULT_TIMES.front() - T_DELTA;
   // Create default curve.
   TCurve<TypeParam> curve_a = this->test_curve_default();
   // Time must increase with each point added to the curve, test a negative
@@ -243,6 +243,14 @@ TYPED_TEST(TCurveTests, DerivativesSmoothness) {
     EXPECT_TRUE(
         upstr.d2_frame_from_ref().isApprox(dnstr.d2_frame_from_ref(), TOL));
   }
+}
+
+TYPED_TEST(TCurveTests, QueryStartAndEnd) {
+  // Create default curve.
+  const TCurve curve = this->test_curve_default();
+  // Check the reference frame of the curve.
+  EXPECT_EQ(curve.start_time(), TestFixture::DEFAULT_TIMES.front());
+  EXPECT_EQ(curve.end_time(), TestFixture::DEFAULT_TIMES.back());
 }
 
 TYPED_TEST(FramedTCurveTests, RetrievePointWithFrame) {

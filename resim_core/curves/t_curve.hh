@@ -54,6 +54,10 @@ class TCurve {
   // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;
 
+  // Getters for the start and end time
+  double start_time() const;
+  double end_time() const;
+
  private:
   // Private data for use in point_at method implementation.
   struct PointAtData {
