@@ -66,4 +66,8 @@ bool SO3::is_approx(const SO3 &other) const {
 
 const Eigen::Matrix3d &SO3::rotation_matrix() const { return rotation_matrix_; }
 
+Eigen::Quaterniond SO3::quaternion() const {
+  return Eigen::Quaterniond{rotation_matrix()};
+}
+
 }  // namespace resim::transforms

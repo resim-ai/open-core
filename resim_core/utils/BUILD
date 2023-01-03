@@ -38,7 +38,9 @@ cc_library(
     testonly = True,
     hdrs = ["random_matrix.hh"],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        "@libeigen//:eigen",
+    ],
 )
 
 cc_test(

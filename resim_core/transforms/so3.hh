@@ -95,6 +95,9 @@ class SO3 : public LieGroup<3, 3> {
   // SO3 transform.
   const Eigen::Matrix3d &rotation_matrix() const;
 
+  // Get a quaternion representing this SO3
+  Eigen::Quaterniond quaternion() const;
+
  private:
   Eigen::Matrix3d rotation_matrix_{Eigen::Matrix3d::Identity()};
 };

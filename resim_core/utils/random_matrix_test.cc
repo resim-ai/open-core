@@ -79,4 +79,26 @@ TYPED_TEST(RandomVectorTests, RandomVectorOverloadTest) {
   }
 }
 
+TEST(RandomQuaternionTest, TestRandomQuaternionIsUnit) {
+  // SETUP
+  constexpr unsigned SEED = 5301U;
+  std::mt19937 rng{SEED};
+
+  // ACTION / VERIFICATION
+  constexpr int NUM_TESTS = 1000U;
+  for (int ii = 0; ii < NUM_TESTS; ++ii) {
+    const Eigen::Quaterniond a{random_quaternion(rng)};
+    const Eigen::Quaterniond b{random_quaternion(rng)};
+
+    // Check that the quaternion is a unit quaternion.
+    EXPECT_DOUBLE_EQ(a.norm(), 1.);
+
+    // Check that the generated quaternions are distinct.
+    EXPECT_FALSE(a.isApprox(b));
+
+    // Check that the quaternions operate as expected.
+    EXPECT_TRUE(a.isApprox(a * b * b.inverse()));
+  }
+}
+
 }  // namespace resim::testing

@@ -11,19 +11,6 @@
 
 namespace resim::transforms {
 
-namespace {
-
-// A simple helper to generate random quaternions. Note that these are *NOT*
-// uniformly distributed orientations.
-// TODO(https://app.asana.com/0/1202178773526279/1203262688903982/f)
-template <typename Rng>
-Eigen::Quaterniond random_quaternion(Rng &&rng) {
-  return Eigen::Quaterniond{
-      testing::random_vector<Eigen::Vector4d>(rng).normalized()};
-}
-
-}  // namespace
-
 // Please Note: Here are the specialized tests for the SO3 class. The SO3 class
 // is also covered by a number of general Liegrooup tests that can be found in
 // liegroup_test.cc
@@ -68,7 +55,7 @@ TEST(SO3ConstructorTest, quaternion) {
   std::vector<Eigen::Quaterniond> quats;
   quats.reserve(TRIES);
   for (int i = 0; i < TRIES; ++i) {
-    quats.push_back(random_quaternion(rng));
+    quats.push_back(testing::random_quaternion(rng));
   }
   // Create an arbitrary three vector
   const Eigen::Vector3d three_vec{testing::random_vector<Eigen::Vector3d>(rng)};
@@ -131,6 +118,28 @@ TEST(SO3Interp, ExtrapDouble) {
     const SO3 &b_from_c = a_from_b;
     const SO3 a_from_c = a_from_b * b_from_c;
     EXPECT_TRUE(a_from_b.interp(DOUBLE).is_approx(a_from_c));
+  }
+}
+
+TEST(SO3Quaterniond, TestGetQuaternion) {
+  // SETUP
+  constexpr unsigned SEED = 594U;
+  std::mt19937 rng_{SEED};
+
+  constexpr int NUM_TESTS = 1000;
+  for (int ii = 0; ii < NUM_TESTS; ++ii) {
+    const Eigen::Quaterniond test_quaternion{testing::random_quaternion(rng_)};
+
+    // ACTION
+    const Eigen::Quaterniond result_quaternion{
+        SO3{test_quaternion}.quaternion()};
+
+    // VERIFICATION
+    // Both +q and -q represent the same orientation for any quaternion q:
+    const Eigen::Quaterniond minus_one{-1., 0., 0., 0.};
+    EXPECT_TRUE(
+        result_quaternion.isApprox(test_quaternion) or
+        result_quaternion.isApprox(minus_one * test_quaternion));
   }
 }
 

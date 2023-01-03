@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <random>
 #include <utility>
 
@@ -50,6 +51,14 @@ Matrix_t random_matrix(RandomGenerator_t &&generator) {
 template <typename Vector_t, typename... Args>
 Vector_t random_vector(Args &&...args) {
   return random_matrix<Vector_t>(std::forward<Args>(args)...);
+}
+
+// A simple helper to generate random quaternions. Note that these are *NOT*
+// uniformly distributed orientations.
+// TODO(https://app.asana.com/0/1202178773526279/1203262688903982/f)
+template <typename Rng>
+Eigen::Quaterniond random_quaternion(Rng &&rng) {
+  return Eigen::Quaterniond{random_vector<Eigen::Vector4d>(rng).normalized()};
 }
 
 }  // namespace resim::testing
