@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <vector>
 
@@ -36,8 +37,14 @@ class DCurve {
   DCurve() = default;
   // Construct a DCurve from a vector of control points.
   explicit DCurve(const std::vector<Group> &points);
+  // Support braces initialization from control points
+  // e.g. DCurve<SE3> curve{p0, p1, p2};
+  DCurve(std::initializer_list<Group> points);
   // Append a control point to the end of the DCurve.
   void append(Group ref_from_control);
+  // Support appending a brace enclosed list.
+  // e.g. curve.append({p0, p1, p2});
+  void append(std::initializer_list<Group> points);
   // Retrieve the transform from a frame at a point arc_length along the DCurve
   // to the reference frame.
   Group point_at(double arc_length) const;

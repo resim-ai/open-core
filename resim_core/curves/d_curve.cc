@@ -19,6 +19,11 @@ DCurve<Group>::DCurve(const std::vector<Group> &points) {
 }
 
 template <typename Group>
+DCurve<Group>::DCurve(std::initializer_list<Group> points) {
+  append(points);
+}
+
+template <typename Group>
 void DCurve<Group>::append(Group ref_from_control) {
   // Note we don't need to check reference frames explicitly because the
   // composition below (when computing arc length) will fail if the frames are
@@ -47,6 +52,13 @@ void DCurve<Group>::append(Group ref_from_control) {
          .ref_from_orig = ref_from_orig,
          .ref_from_dest = control_pts_.back().ref_from_control,
          .orig_from_dest = std::move(orig_from_control)});
+  }
+}
+
+template <typename Group>
+void DCurve<Group>::append(std::initializer_list<Group> points) {
+  for (const auto &point : points) {
+    append(point);
   }
 }
 

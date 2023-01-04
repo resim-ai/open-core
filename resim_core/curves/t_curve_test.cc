@@ -103,6 +103,61 @@ TYPED_TEST(TCurveTests, VectorConstruction) {
   }
 }
 
+TYPED_TEST(TCurveTests, ListInitializationConstruction) {
+  constexpr unsigned int NUM_POINTS = 3;
+  // Create default curve.
+  TCurve<TypeParam> curve_a = this->test_curve_default();
+  ASSERT_GE(curve_a.control_pts().size(), NUM_POINTS);
+  TCurve<TypeParam> curve_b{
+      curve_a.control_pts().at(0),
+      curve_a.control_pts().at(1),
+      curve_a.control_pts().at(2)};
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_DOUBLE_EQ(
+        curve_a.control_pts().at(i).time,
+        curve_b.control_pts().at(i).time);
+    EXPECT_TRUE(curve_a.control_pts().at(i).point.is_approx(
+        curve_a.control_pts().at(i).point));
+  }
+}
+
+TYPED_TEST(TCurveTests, ListInitializationAssignment) {
+  constexpr unsigned int NUM_POINTS = 3;
+  // Create default curve.
+  TCurve<TypeParam> curve_a = this->test_curve_default();
+  ASSERT_GE(curve_a.control_pts().size(), NUM_POINTS);
+  TCurve<TypeParam> curve_b = {
+      curve_a.control_pts().at(0),
+      curve_a.control_pts().at(1),
+      curve_a.control_pts().at(2)};
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_DOUBLE_EQ(
+        curve_a.control_pts().at(i).time,
+        curve_b.control_pts().at(i).time);
+    EXPECT_TRUE(curve_a.control_pts().at(i).point.is_approx(
+        curve_a.control_pts().at(i).point));
+  }
+}
+
+TYPED_TEST(TCurveTests, ListInitializationAppend) {
+  constexpr unsigned int NUM_POINTS = 3;
+  // Create default curve.
+  TCurve<TypeParam> curve_a = this->test_curve_default();
+  ASSERT_GE(curve_a.control_pts().size(), NUM_POINTS);
+  TCurve<TypeParam> curve_b{curve_a.control_pts().at(0)};
+  curve_b.append({curve_a.control_pts().at(1), curve_a.control_pts().at(2)});
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_DOUBLE_EQ(
+        curve_a.control_pts().at(i).time,
+        curve_b.control_pts().at(i).time);
+    EXPECT_TRUE(curve_a.control_pts().at(i).point.is_approx(
+        curve_a.control_pts().at(i).point));
+  }
+}
+
 TYPED_TEST(TCurveTests, ControlAndSegmentDataCheck) {
   // Create default curve.
   TCurve<TypeParam> curve_a = this->test_curve_default();

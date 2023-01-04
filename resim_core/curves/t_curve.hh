@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <vector>
 
 #include "resim_core/curves/t_curve_segment.hh"
@@ -39,8 +40,14 @@ class TCurve {
   // Note: it is more efficient to add control points directly to the curve
   // using the append method, so use that preferably.
   explicit TCurve(const std::vector<Control> &points);
+  // Support braces initialization from control points
+  // e.g. TCurve<SE3> curve{p0, p1, p2};
+  TCurve(std::initializer_list<Control> points);
   // Append a control point to the end of the TCurve.
   void append(Control point);
+  // Support appending a brace enclosed list.
+  // e.g. curve.append({p0, p1, p2});
+  void append(std::initializer_list<Control> points);
   // Retrieve the TwoJet for a point at time 'time' along the TCurve
   TwoJet<Group> point_at(double time) const;
   // Overload allowing the caller to pass in their own frame.

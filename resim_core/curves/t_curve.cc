@@ -40,6 +40,11 @@ TCurve<Group>::TCurve(const std::vector<Control> &points) {
 }
 
 template <transforms::LieGroupType Group>
+TCurve<Group>::TCurve(std::initializer_list<Control> points) {
+  append(points);
+}
+
+template <transforms::LieGroupType Group>
 void TCurve<Group>::append(Control point) {
   if (control_pts_.empty()) {
     control_pts_.push_back(std::move(point));
@@ -74,6 +79,13 @@ void TCurve<Group>::append(Control point) {
          TCurveSegment<Group>(orig, dest)});
     // Finally, add the control point.
     control_pts_.push_back(std::move(point));
+  }
+}
+
+template <transforms::LieGroupType Group>
+void TCurve<Group>::append(std::initializer_list<Control> points) {
+  for (const auto &point : points) {
+    append(point);
   }
 }
 

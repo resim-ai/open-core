@@ -105,6 +105,43 @@ TYPED_TEST(DCurveTests, CopyAndAssignment) {
   EXPECT_DOUBLE_EQ(curve_a.curve_length(), curve_c.curve_length());
 }
 
+TYPED_TEST(DCurveTests, ListInitializationConstruction) {
+  constexpr unsigned int NUM_POINTS = 3;
+  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  ASSERT_GE(points.size(), NUM_POINTS);
+  DCurve<TypeParam> curve{points.at(0), points.at(1), points.at(2)};
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_TRUE(
+        curve.control_pts().at(i).ref_from_control->is_approx(points.at(i)));
+  }
+}
+
+TYPED_TEST(DCurveTests, ListInitializationAssignment) {
+  constexpr unsigned int NUM_POINTS = 3;
+  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  ASSERT_GE(points.size(), NUM_POINTS);
+  DCurve<TypeParam> curve = {points.at(0), points.at(1), points.at(2)};
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_TRUE(
+        curve.control_pts().at(i).ref_from_control->is_approx(points.at(i)));
+  }
+}
+
+TYPED_TEST(DCurveTests, ListInitializationAppend) {
+  constexpr unsigned int NUM_POINTS = 3;
+  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  ASSERT_GE(points.size(), NUM_POINTS);
+  DCurve<TypeParam> curve = {points.at(0)};
+  curve.append({points.at(1), points.at(2)});
+  // Confirm the control points are the same.
+  for (unsigned int i = 0; i < NUM_POINTS; ++i) {
+    EXPECT_TRUE(
+        curve.control_pts().at(i).ref_from_control->is_approx(points.at(i)));
+  }
+}
+
 TYPED_TEST(DCurveTests, Append) {
   DCurve<TypeParam> curve_a(this->points_on_the_unit_circle());
   // Complete the circle:
