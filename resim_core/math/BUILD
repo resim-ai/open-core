@@ -52,3 +52,21 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "safe_integer_utils",
+    srcs = ["safe_integer_utils.cc"],
+    hdrs = ["safe_integer_utils.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_test(
+    name = "safe_integer_utils_test",
+    srcs = ["safe_integer_utils_test.cc"],
+    deps = [
+        ":safe_integer_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
