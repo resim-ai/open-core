@@ -79,7 +79,7 @@ TYPED_TEST(RandomVectorTests, RandomVectorOverloadTest) {
   }
 }
 
-TEST(RandomQuaternionTest, TestRandomQuaternionIsUnit) {
+TEST(RandomQuaternionTest, TestRandomQuaternion) {
   // SETUP
   constexpr unsigned SEED = 5301U;
   std::mt19937 rng{SEED};

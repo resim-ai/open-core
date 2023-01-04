@@ -107,6 +107,7 @@ cc_library(
     name = "mcap_logger",
     srcs = ["mcap_logger.cc"],
     hdrs = ["mcap_logger.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/third_party/mcap:mcap_impl",
         "//resim_core/time:timestamp",
