@@ -46,3 +46,24 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "sample_interval",
+    srcs = ["sample_interval.cc"],
+    hdrs = ["sample_interval.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":timestamp",
+        "//resim_core/math:safe_integer_utils",
+    ],
+)
+
+cc_test(
+    name = "sample_interval_test",
+    srcs = ["sample_interval_test.cc"],
+    deps = [
+        ":sample_interval",
+        ":timestamp",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
