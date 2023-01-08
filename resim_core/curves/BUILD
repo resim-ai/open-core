@@ -105,6 +105,7 @@ cc_library(
     hdrs = ["two_jet.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":two_jet_concepts",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
@@ -116,10 +117,33 @@ cc_test(
     srcs = ["two_jet_test.cc"],
     deps = [
         ":two_jet",
+        ":two_jet_concepts",
         "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "two_jet_concepts",
+    hdrs = ["two_jet_concepts.hh"],
+    deps = [
+        "//resim_core/transforms:liegroup_concepts",
+    ],
+)
+
+cc_test(
+    name = "two_jet_concepts_test",
+    srcs = ["two_jet_concepts_test.cc"],
+    deps = [
+        ":two_jet",
+        ":two_jet_concepts",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "//resim_core/transforms:so3",
         "@com_google_googletest//:gtest_main",
     ],
 )
