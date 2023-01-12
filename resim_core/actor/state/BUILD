@@ -26,3 +26,37 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "trajectory",
+    srcs = ["trajectory.cc"],
+    hdrs = ["trajectory.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rigid_body_state",
+        "//resim_core/curves:t_curve",
+        "//resim_core/curves:two_jet",
+        "//resim_core/time:timestamp",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "trajectory_test",
+    srcs = ["trajectory_test.cc"],
+    deps = [
+        ":rigid_body_state",
+        ":trajectory",
+        "//resim_core/curves:t_curve",
+        "//resim_core/curves:two_jet",
+        "//resim_core/time:timestamp",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "//resim_core/utils:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
