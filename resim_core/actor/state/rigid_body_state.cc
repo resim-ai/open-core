@@ -12,113 +12,151 @@ template <transforms::LieGroupType Group>
 using LinearDelta = typename RigidBodyState<Group>::LinearDelta;
 
 template <transforms::LieGroupType Group>
+using LinearDeltaBlock = typename RigidBodyState<Group>::LinearDeltaBlock;
+
+template <transforms::LieGroupType Group>
 using AngularDelta = typename RigidBodyState<Group>::AngularDelta;
 
 template <transforms::LieGroupType Group>
-RigidBodyState<Group>::RigidBodyState(curves::TwoJet<Group> body_from_reference)
-    : body_from_reference_{std::move(body_from_reference)} {};
+using AngularDeltaBlock = typename RigidBodyState<Group>::AngularDeltaBlock;
+
+template <transforms::LieGroupType Group>
+using StateDerivatives = typename RigidBodyState<Group>::StateDerivatives;
+
+template <transforms::LieGroupType Group>
+RigidBodyState<Group>::RigidBodyState(Group ref_from_body) {
+  this->set_ref_from_body(std::move(ref_from_body));
+};
+
+template <transforms::LieGroupType Group>
+RigidBodyState<Group>::RigidBodyState(
+    Group ref_from_body,
+    StateDerivatives body_derivatives)
+    : ref_from_body_(
+          std::move(ref_from_body),
+          Group::tangent_vector_from_parts(
+              body_derivatives.velocity.angular_radps,
+              body_derivatives.velocity.linear_mps),
+          Group::tangent_vector_from_parts(
+              body_derivatives.acceleration.angular_radpss,
+              body_derivatives.acceleration.linear_mpss)) {}
+
+template <transforms::LieGroupType Group>
+RigidBodyState<Group>::RigidBodyState(curves::TwoJetR<Group> ref_from_body)
+    : ref_from_body_{std::move(ref_from_body)} {};
 
 template <transforms::LieGroupType Group>
 RigidBodyState<Group> RigidBodyState<Group>::identity() {
-  return RigidBodyState{curves::TwoJet<Group>::identity()};
+  return RigidBodyState{curves::TwoJetR<Group>::identity()};
 }
 
 template <transforms::LieGroupType Group>
-const Group &RigidBodyState<Group>::body_from_reference() const {
-  return body_from_reference_.frame_from_ref();
+RigidBodyState<Group> RigidBodyState<Group>::operator*(
+    const RigidBodyState<Group> &other) const {
+  return RigidBodyState{ref_from_body_ * other.ref_from_body_};
 }
 
 template <transforms::LieGroupType Group>
-Group RigidBodyState<Group>::reference_from_body() const {
-  return body_from_reference().inverse();
+RigidBodyState<Group> RigidBodyState<Group>::inverse_times(
+    const RigidBodyState<Group> &other) const {
+  return RigidBodyState{ref_from_body_.inverse() * other.ref_from_body_};
 }
 
 template <transforms::LieGroupType Group>
-LinearDelta<Group> RigidBodyState<Group>::position_m() const {
-  return body_from_reference_.frame_from_ref().inverse().translation();
+const Group &RigidBodyState<Group>::ref_from_body() const {
+  return ref_from_body_.ref_from_frame();
 }
 
 template <transforms::LieGroupType Group>
-AngularDelta<Group> RigidBodyState<Group>::orientation_rad() const {
-  return -body_from_reference_.frame_from_ref().rotation().log();
+StateDerivatives<Group> RigidBodyState<Group>::body_derivatives() const {
+  return {
+      .velocity =
+          {.linear_mps = body_linear_velocity_mps(),
+           .angular_radps = body_angular_velocity_radps()},
+      .acceleration = {
+          .linear_mpss = body_linear_acceleration_mpss(),
+          .angular_radpss = body_angular_acceleration_radpss()}};
 }
 
 template <transforms::LieGroupType Group>
-LinearDelta<Group> RigidBodyState<Group>::linear_velocity_mps() const {
-  return -Group::tangent_vector_translation_part(
-      body_from_reference_.d_frame_from_ref());
-}
-template <transforms::LieGroupType Group>
-AngularDelta<Group> RigidBodyState<Group>::angular_velocity_radps() const {
-  return -Group::tangent_vector_rotation_part(
-      body_from_reference_.d_frame_from_ref());
+LinearDeltaBlock<Group> RigidBodyState<Group>::body_linear_velocity_mps()
+    const {
+  return Group::tangent_vector_translation_part(
+      ref_from_body_.d_ref_from_frame());
 }
 
 template <transforms::LieGroupType Group>
-LinearDelta<Group> RigidBodyState<Group>::linear_acceleration_mpss() const {
-  return -Group::tangent_vector_translation_part(
-      body_from_reference_.d2_frame_from_ref());
+AngularDeltaBlock<Group> RigidBodyState<Group>::body_angular_velocity_radps()
+    const {
+  return Group::tangent_vector_rotation_part(ref_from_body_.d_ref_from_frame());
 }
 
 template <transforms::LieGroupType Group>
-AngularDelta<Group> RigidBodyState<Group>::angular_acceleration_radpss() const {
-  return -Group::tangent_vector_rotation_part(
-      body_from_reference_.d2_frame_from_ref());
+LinearDeltaBlock<Group> RigidBodyState<Group>::body_linear_acceleration_mpss()
+    const {
+  return Group::tangent_vector_translation_part(
+      ref_from_body_.d2_ref_from_frame());
 }
 
 template <transforms::LieGroupType Group>
-const curves::TwoJet<Group>
-    &RigidBodyState<Group>::body_from_reference_two_jet() const {
-  return body_from_reference_;
+AngularDeltaBlock<Group>
+RigidBodyState<Group>::body_angular_acceleration_radpss() const {
+  return Group::tangent_vector_rotation_part(
+      ref_from_body_.d2_ref_from_frame());
 }
 
 template <transforms::LieGroupType Group>
-void RigidBodyState<Group>::set_reference_from_body(
-    const Group &reference_from_body) {
-  body_from_reference_.set_frame_from_ref(reference_from_body.inverse());
+const curves::TwoJetR<Group> &RigidBodyState<Group>::ref_from_body_two_jet()
+    const {
+  return ref_from_body_;
 }
 
 template <transforms::LieGroupType Group>
-void RigidBodyState<Group>::set_linear_velocity_mps(
-    LinearDelta linear_velocity_mps) {
-  typename Group::TangentVector d_frame_from_ref{
-      body_from_reference_.d_frame_from_ref()};
-  Group::tangent_vector_translation_part(d_frame_from_ref) =
-      -linear_velocity_mps;
-  body_from_reference_.set_d_frame_from_ref(d_frame_from_ref);
+void RigidBodyState<Group>::set_ref_from_body(Group ref_from_body) {
+  ref_from_body_.set_ref_from_frame(std::move(ref_from_body));
 }
 
 template <transforms::LieGroupType Group>
-void RigidBodyState<Group>::set_angular_velocity_radps(
-    AngularDelta angular_velocity_radps) {
-  typename Group::TangentVector d_frame_from_ref{
-      body_from_reference_.d_frame_from_ref()};
-  Group::tangent_vector_rotation_part(d_frame_from_ref) =
-      -angular_velocity_radps;
-  body_from_reference_.set_d_frame_from_ref(d_frame_from_ref);
+void RigidBodyState<Group>::set_body_linear_velocity_mps(
+    LinearDelta body_linear_velocity_mps) {
+  typename Group::TangentVector d_ref_from_frame{
+      ref_from_body_.d_ref_from_frame()};
+  Group::tangent_vector_translation_part(d_ref_from_frame) =
+      body_linear_velocity_mps;
+  ref_from_body_.set_d_ref_from_frame(d_ref_from_frame);
 }
 
 template <transforms::LieGroupType Group>
-void RigidBodyState<Group>::set_linear_acceleration_mpss(
-    LinearDelta linear_acceleration_mpss) {
-  typename Group::TangentVector d2_frame_from_ref{
-      body_from_reference_.d2_frame_from_ref()};
-  Group::tangent_vector_translation_part(d2_frame_from_ref) =
-      -linear_acceleration_mpss;
-  body_from_reference_.set_d2_frame_from_ref(d2_frame_from_ref);
+void RigidBodyState<Group>::set_body_angular_velocity_radps(
+    AngularDelta body_angular_velocity_radps) {
+  typename Group::TangentVector d_ref_from_frame{
+      ref_from_body_.d_ref_from_frame()};
+  Group::tangent_vector_rotation_part(d_ref_from_frame) =
+      body_angular_velocity_radps;
+  ref_from_body_.set_d_ref_from_frame(d_ref_from_frame);
 }
 
 template <transforms::LieGroupType Group>
-void RigidBodyState<Group>::set_angular_acceleration_radpss(
-    AngularDelta angular_acceleration_radpss) {
-  typename Group::TangentVector d2_frame_from_ref{
-      body_from_reference_.d2_frame_from_ref()};
-  Group::tangent_vector_rotation_part(d2_frame_from_ref) =
-      -angular_acceleration_radpss;
-  body_from_reference_.set_d2_frame_from_ref(d2_frame_from_ref);
+void RigidBodyState<Group>::set_body_linear_acceleration_mpss(
+    LinearDelta body_linear_acceleration_mpss) {
+  typename Group::TangentVector d2_ref_from_frame{
+      ref_from_body_.d2_ref_from_frame()};
+  Group::tangent_vector_translation_part(d2_ref_from_frame) =
+      body_linear_acceleration_mpss;
+  ref_from_body_.set_d2_ref_from_frame(d2_ref_from_frame);
 }
 
-template class RigidBodyState<transforms::SE3>;
+template <transforms::LieGroupType Group>
+void RigidBodyState<Group>::set_body_angular_acceleration_radpss(
+    AngularDelta body_angular_acceleration_radpss) {
+  typename Group::TangentVector d2_ref_from_frame{
+      ref_from_body_.d2_ref_from_frame()};
+  Group::tangent_vector_rotation_part(d2_ref_from_frame) =
+      body_angular_acceleration_radpss;
+  ref_from_body_.set_d2_ref_from_frame(d2_ref_from_frame);
+}
+
 template class RigidBodyState<transforms::FSE3>;
+template class RigidBodyState<transforms::SE3>;
 
 }  // namespace resim::actor::state
