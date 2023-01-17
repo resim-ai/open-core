@@ -19,6 +19,7 @@ cc_test(
     srcs = ["mcap_test.cc"],
     deps = [
         ":mcap_impl",
+        "//resim_core/testing:test_directory",
         "//resim_core/utils:uuid",
         "@com_google_googletest//:gtest_main",
         "@mcap",

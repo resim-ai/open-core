@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <mcap/mcap.hpp>
 
+#include "resim_core/testing/test_directory.hh"
 #include "resim_core/utils/uuid.hh"
 
 namespace resim {
@@ -15,8 +16,9 @@ mcap::Timestamp arbitrary_time() {
 
 TEST(McapTest, TestWriteAndRead) {
   // SETUP
-  std::filesystem::path test_mcap{
-      std::filesystem::temp_directory_path() / "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
+
   constexpr auto TEST_PROFILE = "test_profile";
 
   mcap::McapWriter writer;
@@ -95,7 +97,6 @@ TEST(McapTest, TestWriteAndRead) {
 
   // Clean up the mcap
   reader.close();
-  std::filesystem::remove(test_mcap);
 }
 
 }  // namespace resim

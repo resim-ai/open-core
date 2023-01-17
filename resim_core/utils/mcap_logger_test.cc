@@ -7,6 +7,7 @@
 #include <cstring>
 #include <mcap/reader.hpp>
 
+#include "resim_core/testing/test_directory.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/utils/proto/testing/message_a.pb.h"
 #include "resim_core/utils/proto/testing/test.pb.h"
@@ -17,8 +18,8 @@ using std::literals::chrono_literals::operator""s;
 
 TEST(McapLoggerTest, TestAddProtoChannel) {
   // SETUP
-  const std::filesystem::path test_mcap{
-      std::filesystem::temp_directory_path() / "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
 
   // ACTION
   constexpr auto TOPIC_A = "/topic_a";
@@ -73,14 +74,13 @@ TEST(McapLoggerTest, TestAddProtoChannel) {
 
   // Clean up the mcap
   reader.close();
-
-  std::filesystem::remove(test_mcap);
 }
 
 TEST(McapLoggerTest, TestLogProto) {
   // SETUP
-  const std::filesystem::path test_mcap{
-      std::filesystem::temp_directory_path() / "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
+
   constexpr auto TOPIC_A = "/topic_a";
   constexpr auto TOPIC_B = "/topic_b";
   constexpr auto TOPIC_C = "/topic_c";
@@ -117,26 +117,24 @@ TEST(McapLoggerTest, TestLogProto) {
 
   // Clean up the mcap
   reader.close();
-
-  std::filesystem::remove(test_mcap);
 }
 
 TEST(McapLoggerDeathTest, TestDoubleAddChannel) {
   constexpr auto CHANNEL = "channel";
-  std::filesystem::path test_mcap{
-      std::filesystem::temp_directory_path() / "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
+
   McapLogger logger{test_mcap};
   logger.add_proto_channel<proto::testing::Test>(CHANNEL);
   EXPECT_DEATH(
       { logger.add_proto_channel<proto::testing::Test>(CHANNEL); },
       "Channel with name already added!");
-  std::filesystem::remove(test_mcap);
 }
 
 TEST(McapLoggerDeathTest, TestBadFilePath) {
-  std::filesystem::path bad_test_mcap{
-      std::filesystem::temp_directory_path() / "some_bogus_folder" /
-      "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path bad_test_mcap{
+      test_directory.path() / "some_bogus_folder" / "test.mcap"};
   EXPECT_DEATH(
       { McapLogger logger{bad_test_mcap}; },
       "Could not open mcap for writing!");
@@ -144,8 +142,8 @@ TEST(McapLoggerDeathTest, TestBadFilePath) {
 
 TEST(McapLoggerDeathTest, TestBadLogProto) {
   // SETUP
-  const std::filesystem::path test_mcap{
-      std::filesystem::temp_directory_path() / "test.mcap"};
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
   constexpr auto TOPIC = "/topic";
   constexpr auto BAD_TOPIC = "/bad_topic";
   constexpr time::Timestamp LOG_TIME{3s};
@@ -165,8 +163,6 @@ TEST(McapLoggerDeathTest, TestBadLogProto) {
   EXPECT_DEATH(
       logger.log_proto(TOPIC, LOG_TIME, proto::testing::MessageA{}),
       "Wrong message type for channel!");
-
-  std::filesystem::remove(test_mcap);
 }
 
 }  // namespace resim

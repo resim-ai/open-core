@@ -120,6 +120,7 @@ cc_test(
     srcs = ["mcap_logger_test.cc"],
     deps = [
         ":mcap_logger",
+        "//resim_core/testing:test_directory",
         "//resim_core/utils/proto/testing:message_a_proto_cc",
         "//resim_core/utils/proto/testing:test_proto_cc",
         "@com_google_googletest//:gtest_main",
