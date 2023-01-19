@@ -5,9 +5,9 @@
 #include <random>
 #include <vector>
 
+#include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
-#include "resim_core/utils/random_matrix.hh"
 #include "resim_core/utils/type.hh"
 
 namespace resim::transforms {

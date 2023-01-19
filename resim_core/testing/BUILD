@@ -19,3 +19,23 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "random_matrix",
+    testonly = True,
+    hdrs = ["random_matrix.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "random_matrix_test",
+    srcs = ["random_matrix_test.cc"],
+    deps = [
+        ":random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)

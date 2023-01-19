@@ -19,10 +19,10 @@ cc_test(
     deps = [
         ":rigid_body_state",
         "//resim_core/curves:two_jet",
+        "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -52,11 +52,11 @@ cc_test(
         ":trajectory",
         "//resim_core/curves:t_curve",
         "//resim_core/curves:two_jet",
+        "//resim_core/testing:random_matrix",
         "//resim_core/time:timestamp",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )

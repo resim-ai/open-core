@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <random>
 
+#include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
-#include "resim_core/utils/random_matrix.hh"
 
 namespace resim::geometry {
 

@@ -6,10 +6,10 @@
 #include <utility>
 
 #include "resim_core/curves/two_jet.hh"
+#include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
-#include "resim_core/utils/random_matrix.hh"
 
 namespace resim::actor::state {
 

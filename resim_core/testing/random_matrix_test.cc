@@ -1,5 +1,5 @@
 
-#include "resim_core/utils/random_matrix.hh"
+#include "resim_core/testing/random_matrix.hh"
 
 #include <gtest/gtest.h>
 

@@ -8,7 +8,7 @@
 #include <random>
 #include <utility>
 
-#include "resim_core/utils/random_matrix.hh"
+#include "resim_core/testing/random_matrix.hh"
 
 namespace resim::planning {
 

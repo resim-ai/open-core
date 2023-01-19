@@ -36,7 +36,7 @@ cc_test(
     srcs = ["ilqr_test.cc"],
     deps = [
         ":ilqr",
-        "//resim_core/utils:random_matrix",
+        "//resim_core/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )

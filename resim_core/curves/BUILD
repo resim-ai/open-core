@@ -59,11 +59,11 @@ cc_test(
     deps = [
         ":t_curve",
         ":two_jet",
+        "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -91,11 +91,11 @@ cc_test(
     deps = [
         ":t_curve_segment",
         ":two_jet",
+        "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -119,11 +119,11 @@ cc_test(
     deps = [
         ":two_jet",
         ":two_jet_concepts",
+        "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -169,12 +169,12 @@ cc_test(
     deps = [
         ":extrapolate_two_jet",
         ":two_jet",
+        "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "//resim_core/utils:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
