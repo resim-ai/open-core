@@ -1,5 +1,5 @@
 
-#include "resim_core/utils/move_copy_tracker.hh"
+#include "resim_core/testing/move_copy_tracker.hh"
 
 #include <gtest/gtest.h>
 

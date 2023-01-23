@@ -1,6 +1,4 @@
-#include "resim_core/utils/move_copy_tracker.hh"
-
-#include <iostream>
+#include "resim_core/testing/move_copy_tracker.hh"
 
 namespace resim ::testing {
 
