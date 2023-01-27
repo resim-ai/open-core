@@ -69,9 +69,26 @@ class McapLogger {
 
 template <typename MessageType>
 void McapLogger::add_proto_channel(const std::string &channel_name) {
-  constexpr auto ERR_MSG = "Channel with name already added!";
-  CHECK(not channels_.contains(channel_name)) << ERR_MSG;
   const std::string message_name{MessageType().GetDescriptor()->full_name()};
+
+  // If channel_name exists, error if of different MessageType.
+  if (channels_.contains(channel_name)) {
+    {
+      constexpr auto ERR_MSG = "Schema does not exist.";
+      CHECK(schemas_.contains(message_name)) << ERR_MSG;
+    }
+
+    {
+      const mcap::SchemaId expected_schema_id =
+          channel_to_schema_map_.at(channels_.at(channel_name));
+      constexpr auto ERR_MSG =
+          "Channel with name but different MessageType already added!";
+      CHECK(expected_schema_id == schemas_.at(message_name)) << ERR_MSG;
+    }
+
+    return;
+  }
+
   add_proto_schema<MessageType>(message_name);
   constexpr auto ENCODING = "protobuf";
   mcap::Channel channel{channel_name, ENCODING, schemas_.at(message_name)};

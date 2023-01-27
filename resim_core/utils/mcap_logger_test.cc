@@ -121,14 +121,27 @@ TEST(McapLoggerTest, TestLogProto) {
 
 TEST(McapLoggerDeathTest, TestDoubleAddChannel) {
   constexpr auto CHANNEL = "channel";
+  constexpr auto TOPIC_A = "topicA";
   const testing::TestDirectoryRAII test_directory;
   const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
 
   McapLogger logger{test_mcap};
   logger.add_proto_channel<proto::testing::Test>(CHANNEL);
+  logger.add_proto_channel<proto::testing::Test>(CHANNEL);  // Double add.
+
+  // Try adding "channel" but haven't seen type MessageA.
   EXPECT_DEATH(
-      { logger.add_proto_channel<proto::testing::Test>(CHANNEL); },
-      "Channel with name already added!");
+      { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
+      "Schema does not exist.");
+
+  // Adding a channel of type MessageA.
+  logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);
+  logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);  // Double add.
+
+  // Try adding "channel" of type MessageA.
+  EXPECT_DEATH(
+      { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
+      "Channel with name but different MessageType already added!");
 }
 
 TEST(McapLoggerDeathTest, TestBadFilePath) {
