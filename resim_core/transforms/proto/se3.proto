@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package resim.transforms.proto;
+
+message SE3 {
+    repeated double algebra = 1;
+}
