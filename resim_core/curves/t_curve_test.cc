@@ -35,13 +35,13 @@ class TCurveTests : public ::testing::Test {
     return testing::random_vector<typename T::TangentVector>(rng_);
   }
 
-  TwoJet<T> test_two_jet() {
-    return TwoJet<T>(T::exp(test_vector()), test_vector(), test_vector());
+  TwoJetL<T> test_two_jet() {
+    return TwoJetL<T>(T::exp(test_vector()), test_vector(), test_vector());
   }
 
-  TwoJet<T> test_two_jet(const Frame &into) requires
+  TwoJetL<T> test_two_jet(const Frame &into) requires
       transforms::FramedGroupType<T> {
-    return TwoJet<T>(
+    return TwoJetL<T>(
         T::exp(test_vector(), into, REF_FRAME),
         test_vector(),
         test_vector());
@@ -213,7 +213,7 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
       "Control points must have strictly increasing time");
   if constexpr (transforms::FramedGroupType<TypeParam>) {
     // Make a frame reversed control point.
-    TwoJet<TypeParam> last_point = curve_a.control_pts().back().point;
+    TwoJetL<TypeParam> last_point = curve_a.control_pts().back().point;
     last_point.set_frame_from_ref(last_point.frame_from_ref().inverse());
     // Try to add the point to the curve.
     EXPECT_DEATH(
@@ -226,21 +226,21 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
   TCurve<TypeParam> empty_curve;
   EXPECT_DEATH(
       {
-        const TwoJet<TypeParam> bad_point = empty_curve.point_at(1.0);
+        const TwoJetL<TypeParam> bad_point = empty_curve.point_at(1.0);
         (void)bad_point;  // Avoid unused variable errors.
       },
       "Cannot query a curve with less than two control points");
   // Try querying a curve below its time range.
   EXPECT_DEATH(
       {
-        const TwoJet<TypeParam> bad_point = curve_a.point_at(LO_TIME);
+        const TwoJetL<TypeParam> bad_point = curve_a.point_at(LO_TIME);
         (void)bad_point;  // Avoid unused variable errors.
       },
       "Query time must be within the range of times in the control points.");
   // Try querying a curve above its time range.
   EXPECT_DEATH(
       {
-        const TwoJet<TypeParam> bad_point = curve_a.point_at(HI_TIME);
+        const TwoJetL<TypeParam> bad_point = curve_a.point_at(HI_TIME);
         (void)bad_point;  // Avoid unused variable errors.
       },
       "Query time must be within the range of times in the control points.");
@@ -255,11 +255,11 @@ TYPED_TEST(TCurveTests, NumericalVsAnalyticalDerivatives) {
     const TCurve curve = this->test_curve_default();
     for (const double time : test_t_vals) {
       // Query the test curve at n_time.
-      const TwoJet<TypeParam> point = curve.point_at(time);
+      const TwoJetL<TypeParam> point = curve.point_at(time);
 
       // Compute numerical derivatives at this point.
-      const TwoJet<TypeParam> upstr = curve.point_at(time - EPS);
-      const TwoJet<TypeParam> dnstr = curve.point_at(time + EPS);
+      const TwoJetL<TypeParam> upstr = curve.point_at(time - EPS);
+      const TwoJetL<TypeParam> dnstr = curve.point_at(time + EPS);
 
       const typename TypeParam::TangentVector num_d_frame_from_ref =
           (dnstr.frame_from_ref() * upstr.frame_from_ref().inverse()).log() /
@@ -290,8 +290,8 @@ TYPED_TEST(TCurveTests, DerivativesSmoothness) {
        ++cp_it) {
     const double t = cp_it->time;
     // Query slightly upstream and downstream of the control points.
-    const TwoJet<TypeParam> upstr = curve.point_at(t - EPS);
-    const TwoJet<TypeParam> dnstr = curve.point_at(t + EPS);
+    const TwoJetL<TypeParam> upstr = curve.point_at(t - EPS);
+    const TwoJetL<TypeParam> dnstr = curve.point_at(t + EPS);
     // Test that the derivatives are close to the same value.
     EXPECT_TRUE(
         upstr.d_frame_from_ref().isApprox(dnstr.d_frame_from_ref(), TOL));
@@ -314,7 +314,7 @@ TYPED_TEST(FramedTCurveTests, RetrievePointWithFrame) {
   // Create default curve.
   const TCurve curve = this->test_curve_default();
   // Query the curve with a caller supplied frame.
-  TwoJet<TypeParam> point = curve.point_at(QUERY_TIME, point_frame);
+  TwoJetL<TypeParam> point = curve.point_at(QUERY_TIME, point_frame);
   // Check that the retuned points frames are as expected.
   EXPECT_EQ(point_frame, point.frame_from_ref().into());
   EXPECT_EQ(TCurveTests<TypeParam>::REF_FRAME, point.frame_from_ref().from());

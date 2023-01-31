@@ -13,7 +13,7 @@ using Frame = transforms::Frame<3>;
 using transforms::FSE3;
 using TangentVector = FSE3::TangentVector;
 using Vec3 = Eigen::Vector3d;
-using TwoJet = curves::TwoJet<FSE3>;
+using TwoJetL = curves::TwoJetL<FSE3>;
 
 // Sample the curve along its length to verify that it has the right translation
 // and orientation along the length.
@@ -38,7 +38,7 @@ TEST(TestHelpersTest, TestMakeCircleCurve) {
     const double time =
         frac * curve.start_time() + (1. - frac) * curve.end_time();
 
-    const TwoJet point_from_ref{curve.point_at(time, into)};
+    const TwoJetL point_from_ref{curve.point_at(time, into)};
     const Vec3 translation{
         point_from_ref.frame_from_ref().inverse().translation()};
     constexpr double TOLERANCE = 1e-7;

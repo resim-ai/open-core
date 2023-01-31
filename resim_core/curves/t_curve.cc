@@ -65,11 +65,11 @@ void TCurve<Group>::append(Control point) {
     // Build a segment, note segments are time normalized so we need
     // to create new control points with scaled derivatives.
     const double dt = point.time - control_pts_.back().time;
-    const TwoJet<Group> orig(
+    const TwoJetL<Group> orig(
         control_pts_.back().point.frame_from_ref(),
         control_pts_.back().point.d_frame_from_ref() * dt,
         control_pts_.back().point.d2_frame_from_ref() * dt * dt);
-    const TwoJet<Group> dest(
+    const TwoJetL<Group> dest(
         point.point.frame_from_ref(),
         point.point.d_frame_from_ref() * dt,
         point.point.d2_frame_from_ref() * dt * dt);
@@ -90,27 +90,29 @@ void TCurve<Group>::append(std::initializer_list<Control> points) {
 }
 
 template <transforms::LieGroupType Group>
-TwoJet<Group> TCurve<Group>::point_at(const double time) const {
+TwoJetL<Group> TCurve<Group>::point_at(const double time) const {
   const PointAtData pd = point_at_impl(time);
-  TwoJet<Group> point = pd.in_segment.curve.point_at(pd.time_nrm);
+  TwoJetL<Group> point = pd.in_segment.curve.point_at(pd.time_nrm);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }
 
 template <>
-TwoJet<FSE3> TCurve<FSE3>::point_at(const double time, const Frame &point_frame)
-    const {
+TwoJetL<FSE3> TCurve<FSE3>::point_at(
+    const double time,
+    const Frame &point_frame) const {
   const PointAtData pd = point_at_impl(time);
-  TwoJet<FSE3> point = pd.in_segment.curve.point_at(pd.time_nrm, point_frame);
+  TwoJetL<FSE3> point = pd.in_segment.curve.point_at(pd.time_nrm, point_frame);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }
 
 template <>
-TwoJet<FSO3> TCurve<FSO3>::point_at(const double time, const Frame &point_frame)
-    const {
+TwoJetL<FSO3> TCurve<FSO3>::point_at(
+    const double time,
+    const Frame &point_frame) const {
   const PointAtData pd = point_at_impl(time);
-  TwoJet<FSO3> point = pd.in_segment.curve.point_at(pd.time_nrm, point_frame);
+  TwoJetL<FSO3> point = pd.in_segment.curve.point_at(pd.time_nrm, point_frame);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }
@@ -164,7 +166,7 @@ typename TCurve<Group>::PointAtData TCurve<Group>::point_at_impl(
 template <transforms::LieGroupType Group>
 void TCurve<Group>::unnormalize_derivatives(
     const double inv_dt,
-    InOut<TwoJet<Group>> point) const {
+    InOut<TwoJetL<Group>> point) const {
   point->set_d_frame_from_ref(point->d_frame_from_ref() * inv_dt);
   point->set_d2_frame_from_ref(point->d2_frame_from_ref() * inv_dt * inv_dt);
 }

@@ -49,15 +49,14 @@ class TwoJetR;
 // time derivatives, thus describing the motion of the point. These derivatives
 // are in *LEFT* tangent space.
 //
-// TODO(https://app.asana.com/0/1202178773526279/1203608723315721/f)
 template <transforms::LieGroupType Group>
-class TwoJet {
+class TwoJetL {
  public:
   using GroupType = Group;
   using TangentVector = typename Group::TangentVector;
-  TwoJet() = default;
-  // Construct a TwoJet by providing data members.
-  TwoJet(
+  TwoJetL() = default;
+  // Construct a TwoJetL by providing data members.
+  TwoJetL(
       Group frame_from_ref,
       TangentVector d_frame_from_ref,
       TangentVector d2_frame_from_ref);
@@ -67,17 +66,18 @@ class TwoJet {
   void set_d_frame_from_ref(TangentVector d_frame_from_ref);
   void set_d2_frame_from_ref(TangentVector d2_frame_from_ref);
 
-  // Get and identity TwoJet.
-  static TwoJet<Group> identity();
+  // Get and identity TwoJetL.
+  static TwoJetL<Group> identity();
 
-  // Invert this TwoJet.
-  TwoJet<Group> inverse() const;
+  // Invert this TwoJetL.
+  TwoJetL<Group> inverse() const;
 
-  // Compose this TwoJet with another. TwoJet composition behaves very similarly
-  // to LieGroup composition. It in non-commutative and inner-frames must match
-  // for a valid composition. This is enforced if a FramedGroup is used.
-  // Derivatives are summed in the left tangent space of the left (this) Group.
-  TwoJet<Group> operator*(const TwoJet<Group> &other) const;
+  // Compose this TwoJetL with another. TwoJetL composition behaves very
+  // similarly to LieGroup composition. It in non-commutative and inner-frames
+  // must match for a valid composition. This is enforced if a FramedGroup is
+  // used. Derivatives are summed in the left tangent space of the left (this)
+  // Group.
+  TwoJetL<Group> operator*(const TwoJetL<Group> &other) const;
 
   // Convert this two jet to a right two jet. This library is opinionated about
   // the frame ordering in right and left two jets. Namely in a right two jet
@@ -91,7 +91,7 @@ class TwoJet {
   const TangentVector &d_frame_from_ref() const;
   const TangentVector &d2_frame_from_ref() const;
 
-  bool is_approx(const TwoJet<Group> &other) const;
+  bool is_approx(const TwoJetL<Group> &other) const;
 
  private:
   // A rigid transformation describing the position and pose of a frame
@@ -104,10 +104,6 @@ class TwoJet {
   // space.
   TangentVector d2_frame_from_ref_{TangentVector::Zero()};
 };
-
-// TODO(https://app.asana.com/0/1202178773526279/1203608723315721/f)
-template <transforms::LieGroupType Group>
-using TwoJetL = TwoJet<Group>;
 
 static_assert(
     TwoJetType<TwoJetL<transforms::SE3>>,

@@ -56,13 +56,13 @@ class TCurveSegmentTests : public ::testing::Test {
     return test_group(DEST_FRAME);
   }
 
-  TwoJet<T> test_two_jet() {
-    return TwoJet<T>(test_group(), test_vector(), test_vector());
+  TwoJetL<T> test_two_jet() {
+    return TwoJetL<T>(test_group(), test_vector(), test_vector());
   }
 
-  TwoJet<T> test_two_jet(const Frame &into) requires
+  TwoJetL<T> test_two_jet(const Frame &into) requires
       transforms::FramedGroupType<T> {
-    return TwoJet<T>(test_group(into), test_vector(), test_vector());
+    return TwoJetL<T>(test_group(into), test_vector(), test_vector());
   }
 
   TCurveSegment<T> test_t_curve_segment() {
@@ -106,8 +106,8 @@ TYPED_TEST(FramedTCurveSegmentTests, ConstructionWithFrames) {
     (void)good_curve;  // Avoid unused variable errors.
   });
   // Build a curve with non-matching ref frames.
-  const TwoJet<TypeParam> orig = this->test_two_jet(this->ORIG_FRAME);
-  const TwoJet<TypeParam> inv_dest =
+  const TwoJetL<TypeParam> orig = this->test_two_jet(this->ORIG_FRAME);
+  const TwoJetL<TypeParam> inv_dest =
       this->test_two_jet(this->DEST_FRAME).inverse();
   EXPECT_DEATH(
       {
@@ -124,8 +124,8 @@ TYPED_TEST(TCurveSegmentTests, BoundaryConditionsRecover) {
     // Create a test curve
     TCurveSegment<TypeParam> segment = this->test_t_curve_segment();
     // Query points at the boundaries
-    TwoJet<TypeParam> orig = segment.point_at(ORIG_T);
-    TwoJet<TypeParam> dest = segment.point_at(DEST_T);
+    TwoJetL<TypeParam> orig = segment.point_at(ORIG_T);
+    TwoJetL<TypeParam> dest = segment.point_at(DEST_T);
     // Test that the queried points match the boundary points.
     EXPECT_TRUE(orig.is_approx(segment.orig()));
     EXPECT_TRUE(dest.is_approx(segment.dest()));
@@ -136,8 +136,8 @@ TYPED_TEST(TCurveSegmentTests, ZeroDerivsReducesToGeodesicInterp) {
   constexpr double QUARTER = 0.25;
   constexpr double HALF = QUARTER + QUARTER;
   constexpr double THREEQUARTER = HALF + QUARTER;
-  TwoJet<TypeParam> orig = TwoJet<TypeParam>::identity();
-  TwoJet<TypeParam> dest = TwoJet<TypeParam>::identity();
+  TwoJetL<TypeParam> orig = TwoJetL<TypeParam>::identity();
+  TwoJetL<TypeParam> dest = TwoJetL<TypeParam>::identity();
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     // Create a test curve with all derivatives set to zero.
     orig.set_frame_from_ref(this->test_orig_group());
@@ -145,7 +145,7 @@ TYPED_TEST(TCurveSegmentTests, ZeroDerivsReducesToGeodesicInterp) {
     TCurveSegment<TypeParam> segment(orig, dest);
 
     // Query a point halfway along the curve.
-    const TwoJet<TypeParam> halfway = segment.point_at(HALF);
+    const TwoJetL<TypeParam> halfway = segment.point_at(HALF);
 
     // Try a Geodesic interpolation to the halfway point.
     // In the case where the derivatives are the same at both boundaries, we
@@ -163,9 +163,9 @@ TYPED_TEST(TCurveSegmentTests, ZeroDerivsReducesToGeodesicInterp) {
     // accelerate and decelerate symmetrically with a zero acceleration  point
     // in the middle. Test this:
     EXPECT_TRUE(halfway.d2_frame_from_ref().isZero());
-    const TwoJet<TypeParam> quarterway = segment.point_at(QUARTER);
+    const TwoJetL<TypeParam> quarterway = segment.point_at(QUARTER);
     EXPECT_FALSE(quarterway.d2_frame_from_ref().isZero());
-    const TwoJet<TypeParam> threequarterway = segment.point_at(THREEQUARTER);
+    const TwoJetL<TypeParam> threequarterway = segment.point_at(THREEQUARTER);
     EXPECT_TRUE(quarterway.d2_frame_from_ref().isApprox(
         -threequarterway.d2_frame_from_ref()));
   }
@@ -174,9 +174,9 @@ TYPED_TEST(TCurveSegmentTests, ZeroDerivsReducesToGeodesicInterp) {
 TYPED_TEST(TCurveSegmentTests, ConstVReducesToGeodesicInterp) {
   constexpr double HALF = 0.5;
   constexpr double DOUBLE = 2.;
-  TwoJet<TypeParam> orig = TwoJet<TypeParam>::identity();
+  TwoJetL<TypeParam> orig = TwoJetL<TypeParam>::identity();
   orig.set_d_frame_from_ref(TypeParam::TangentVector::Ones());
-  TwoJet<TypeParam> dest = orig;
+  TwoJetL<TypeParam> dest = orig;
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     // Create a test curve with constant non-zero velocity at the boundaries.
     orig.set_frame_from_ref(this->test_orig_group());
@@ -184,7 +184,7 @@ TYPED_TEST(TCurveSegmentTests, ConstVReducesToGeodesicInterp) {
     TCurveSegment<TypeParam> segment(orig, dest);
 
     // Query a point halfway along the curve.
-    const TwoJet<TypeParam> halfway = segment.point_at(HALF);
+    const TwoJetL<TypeParam> halfway = segment.point_at(HALF);
 
     // Try a Geodesic interpolation to the halfway point.
     // In the case where the derivatives are the same at both boundaries, we
@@ -200,10 +200,10 @@ TYPED_TEST(TCurveSegmentTests, ConstVReducesToGeodesicInterp) {
     EXPECT_TRUE(halfway.frame_from_ref().is_approx(point_from_ref));
 
     // Confirm the negative case, for non constant velocity:
-    TwoJet<TypeParam> dest_2 = dest;
+    TwoJetL<TypeParam> dest_2 = dest;
     dest_2.set_d_frame_from_ref(DOUBLE * TypeParam::TangentVector::Ones());
     TCurveSegment<TypeParam> segment_2(orig, dest_2);
-    const TwoJet<TypeParam> halfway_2 = segment_2.point_at(HALF);
+    const TwoJetL<TypeParam> halfway_2 = segment_2.point_at(HALF);
     EXPECT_FALSE(halfway_2.frame_from_ref().is_approx(point_from_ref));
   }
 }
@@ -216,11 +216,11 @@ TYPED_TEST(TCurveSegmentTests, NumericalDerivativesAreConsistent) {
     const TCurveSegment<TypeParam> segment = this->test_t_curve_segment();
     for (const double n_time : test_t_vals) {
       // Query the test curve at n_time.
-      const TwoJet<TypeParam> point = segment.point_at(n_time);
+      const TwoJetL<TypeParam> point = segment.point_at(n_time);
 
       // Compute numerical derivatives at this point.
-      const TwoJet<TypeParam> upstr = segment.point_at(n_time - EPS);
-      const TwoJet<TypeParam> dnstr = segment.point_at(n_time + EPS);
+      const TwoJetL<TypeParam> upstr = segment.point_at(n_time - EPS);
+      const TwoJetL<TypeParam> dnstr = segment.point_at(n_time + EPS);
 
       const typename TypeParam::TangentVector num_d_frame_from_ref =
           (dnstr.frame_from_ref() * upstr.frame_from_ref().inverse()).log() /

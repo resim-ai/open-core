@@ -15,7 +15,7 @@ namespace resim::curves {
 // @param[in] two_jet - The two jet to extrapolate.
 // @param[in] dt - The time to extrapolate forward.
 template <transforms::LieGroupType Group>
-TwoJet<Group> extrapolate_two_jet(const TwoJet<Group> &two_jet, double dt);
+TwoJetL<Group> extrapolate_two_jet(const TwoJetL<Group> &two_jet, double dt);
 
 // An overload of the above specifically for framed groups that lets you specify
 // what into frame you want the resulting TwoJet to have.
@@ -24,8 +24,8 @@ TwoJet<Group> extrapolate_two_jet(const TwoJet<Group> &two_jet, double dt);
 // @param[in] return_frame - The into frame we want the resulting two jet to
 //                           have.
 template <transforms::LieGroupType Group>
-TwoJet<transforms::FramedGroup<Group>> extrapolate_two_jet(
-    const TwoJet<transforms::FramedGroup<Group>> &two_jet,
+TwoJetL<transforms::FramedGroup<Group>> extrapolate_two_jet(
+    const TwoJetL<transforms::FramedGroup<Group>> &two_jet,
     double dt,
     const transforms::Frame<Group::DIMS> &return_frame);
 

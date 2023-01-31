@@ -13,11 +13,11 @@ namespace {
 // arguments to the exponential in order to initialize the group's frames if
 // it's a framed group.
 template <transforms::LieGroupType Group, typename... FrameArgs>
-TwoJet<Group> extrapolate_two_jet_impl(
-    const TwoJet<Group> &two_jet,
+TwoJetL<Group> extrapolate_two_jet_impl(
+    const TwoJetL<Group> &two_jet,
     const double dt,
     FrameArgs &&...frame_args) {
-  TwoJet<Group> result{two_jet};
+  TwoJetL<Group> result{two_jet};
 
   constexpr double ONE_HALF = 0.5;
   const Group next_from_prev_frame = Group::exp(
@@ -35,16 +35,16 @@ TwoJet<Group> extrapolate_two_jet_impl(
 // without any arguments. In this case, we can use the extrapolate two jet
 // function and default to the pre-existing into frame.
 template <transforms::LieGroupType Group>
-TwoJet<transforms::FramedGroup<Group>> extrapolate_two_jet_impl(
-    const TwoJet<transforms::FramedGroup<Group>> &two_jet,
+TwoJetL<transforms::FramedGroup<Group>> extrapolate_two_jet_impl(
+    const TwoJetL<transforms::FramedGroup<Group>> &two_jet,
     double dt) {
   return extrapolate_two_jet(two_jet, dt, two_jet.frame_from_ref().into());
 }
 }  // namespace
 
 template <transforms::LieGroupType Group>
-TwoJet<transforms::FramedGroup<Group>> extrapolate_two_jet(
-    const TwoJet<transforms::FramedGroup<Group>> &two_jet,
+TwoJetL<transforms::FramedGroup<Group>> extrapolate_two_jet(
+    const TwoJetL<transforms::FramedGroup<Group>> &two_jet,
     double dt,
     const transforms::Frame<Group::DIMS> &return_frame) {
   return extrapolate_two_jet_impl(
@@ -55,21 +55,21 @@ TwoJet<transforms::FramedGroup<Group>> extrapolate_two_jet(
 }
 
 template <transforms::LieGroupType Group>
-TwoJet<Group> extrapolate_two_jet(const TwoJet<Group> &two_jet, double dt) {
+TwoJetL<Group> extrapolate_two_jet(const TwoJetL<Group> &two_jet, double dt) {
   return extrapolate_two_jet_impl(two_jet, dt);
 }
 
-template TwoJet<transforms::SE3> extrapolate_two_jet(
-    const TwoJet<transforms::SE3> &,
+template TwoJetL<transforms::SE3> extrapolate_two_jet(
+    const TwoJetL<transforms::SE3> &,
     double);
-template TwoJet<transforms::SO3> extrapolate_two_jet(
-    const TwoJet<transforms::SO3> &,
+template TwoJetL<transforms::SO3> extrapolate_two_jet(
+    const TwoJetL<transforms::SO3> &,
     double);
-template TwoJet<transforms::FSE3> extrapolate_two_jet(
-    const TwoJet<transforms::FSE3> &,
+template TwoJetL<transforms::FSE3> extrapolate_two_jet(
+    const TwoJetL<transforms::FSE3> &,
     double);
-template TwoJet<transforms::FSO3> extrapolate_two_jet(
-    const TwoJet<transforms::FSO3> &,
+template TwoJetL<transforms::FSO3> extrapolate_two_jet(
+    const TwoJetL<transforms::FSO3> &,
     double);
 
 }  // namespace resim::curves

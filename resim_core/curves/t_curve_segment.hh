@@ -28,17 +28,17 @@ class TCurveSegment {
 
   // Initialize a curve with origin and destination boundary conditions.
   // If using a FramedGroup, orig and dest must use the same reference frame.
-  TCurveSegment(TwoJet<Group> orig, TwoJet<Group> dest);
+  TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest);
 
   // Retrieve a point on the curve at normalized time time_nrm.
   // If the curve is in a FramedGroup the user may optionally specify a frame.
   // for the point.
-  TwoJet<Group> point_at(
+  TwoJetL<Group> point_at(
       double time_nrm,
       const Frame &point_frame = Frame::new_frame()) const;
 
-  const TwoJet<Group> &orig() const;
-  const TwoJet<Group> &dest() const;
+  const TwoJetL<Group> &orig() const;
+  const TwoJetL<Group> &dest() const;
 
  private:
   // Points are built up incrementally by composing five TwoJets, sequentially
@@ -56,7 +56,7 @@ class TCurveSegment {
       double time_nrm,
       const TwoJetPolyCoeffs &coeffs,
       const TangentVector &vec,
-      InOut<TwoJet<Group>> point) const;
+      InOut<TwoJetL<Group>> point) const;
   // A helper specifically for incrementing the Group part of the point TwoJet.
   // alg - is the algebra representation of the Group being applied in the
   // increment.
@@ -64,11 +64,11 @@ class TCurveSegment {
   // composition does not occur here, however we need a reference to the point
   // for the case when the Group is a FramedGroup and we wish to ensure
   // consistency in the frames used in the increment.
-  Group increment_group(const TangentVector &alg, const TwoJet<Group> &point)
+  Group increment_group(const TangentVector &alg, const TwoJetL<Group> &point)
       const;
 
-  TwoJet<Group> orig_;
-  TwoJet<Group> dest_;
+  TwoJetL<Group> orig_;
+  TwoJetL<Group> dest_;
 };
 
 }  // namespace resim::curves

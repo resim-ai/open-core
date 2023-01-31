@@ -11,7 +11,7 @@
 
 namespace resim::curves {
 // A time parameterized curve that is built up from segments of quintic Hermite
-// curves between TwoJet<Group> control points. The degrees-of-freedom of the
+// curves between TwoJetL<Group> control points. The degrees-of-freedom of the
 // curve is determined by the underlying LieGroup (e.g. six for SE3). By design
 // the curve is C2 smooth.
 // Control points appended to the curve must all use the same reference frame.
@@ -25,7 +25,7 @@ class TCurve {
     // Time of the control point.
     double time;
     // TwoJet specifying he control point.
-    TwoJet<Group> point;
+    TwoJetL<Group> point;
   };
   // Data for a curve segment.
   // Segments are between two control points: the origin control point (orig)
@@ -49,10 +49,10 @@ class TCurve {
   // e.g. curve.append({p0, p1, p2});
   void append(std::initializer_list<Control> points);
   // Retrieve the TwoJet for a point at time 'time' along the TCurve
-  TwoJet<Group> point_at(double time) const;
+  TwoJetL<Group> point_at(double time) const;
   // Overload allowing the caller to pass in their own frame.
   // Note, this method is only valid for FramedGroup<T> types
-  TwoJet<Group> point_at(double time, const Frame &point_frame) const;
+  TwoJetL<Group> point_at(double time, const Frame &point_frame) const;
   // Access a reference to the control points.
   const std::vector<Control> &control_pts() const;
   // Access a reference to the segments.
@@ -77,7 +77,8 @@ class TCurve {
   };
   // Common logic for the point_at methods.
   PointAtData point_at_impl(double time) const;
-  void unnormalize_derivatives(double inv_dt, InOut<TwoJet<Group>> point) const;
+  void unnormalize_derivatives(double inv_dt, InOut<TwoJetL<Group>> point)
+      const;
   // The curve's control points.
   std::vector<Control> control_pts_;
   // The curve's segments.

@@ -13,7 +13,7 @@ using transforms::SE3;
 using transforms::SO3;
 using TangentVector = FSE3::TangentVector;
 using Vec3 = Eigen::Vector3d;
-using TwoJet = curves::TwoJet<FSE3>;
+using TwoJetL = curves::TwoJetL<FSE3>;
 
 curves::TCurve<transforms::FSE3> make_circle_curve(
     const transforms::Frame<3> &into,
@@ -30,7 +30,7 @@ curves::TCurve<transforms::FSE3> make_circle_curve(
     control_points.push_back({
         .time = time,
         .point =
-            TwoJet{
+            TwoJetL{
                 FSE3{
                     SE3{SO3::exp(-(M_PI_2 + time) * Vec3::UnitZ()),
                         Vec3::UnitY()},

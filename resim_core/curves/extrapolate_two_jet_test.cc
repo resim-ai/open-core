@@ -23,8 +23,8 @@ Group random_group_member(Rng &&rng) {
 }
 
 template <transforms::LieGroupType Group, typename Rng>
-curves::TwoJet<Group> random_two_jet(Rng &&rng) {
-  return curves::TwoJet<Group>{
+curves::TwoJetL<Group> random_two_jet(Rng &&rng) {
+  return curves::TwoJetL<Group>{
       random_group_member<Group>(std::forward<Rng>(rng)),
       testing::random_vector<typename Group::TangentVector>(
           std::forward<Rng>(rng)),
@@ -39,10 +39,10 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
  protected:
   void test_extrapolation(const double dt) {
     // SETUP
-    TwoJet<T> two_jet{random_two_jet<T>(this->rng_)};
+    TwoJetL<T> two_jet{random_two_jet<T>(this->rng_)};
 
     // ACTION
-    TwoJet<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+    TwoJetL<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
 
     // VERIFICATION
     EXPECT_TRUE(((extrapolated_two_jet.frame_from_ref() *
@@ -74,15 +74,15 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
     if constexpr (transforms::FramedGroupType<T>) {
       // SETUP
       const transforms::Frame<T::DIMS> frame;
-      const TwoJet<T> two_jet{random_two_jet<T>(this->rng_)};
+      const TwoJetL<T> two_jet{random_two_jet<T>(this->rng_)};
 
       // ACTION
-      TwoJet<T> extrapolated_two_jet_explicit{
+      TwoJetL<T> extrapolated_two_jet_explicit{
           extrapolate_two_jet(two_jet, dt, frame)};
 
       // VERIFICATION
       // Verify using the other overload tested above
-      TwoJet<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+      TwoJetL<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
       EXPECT_TRUE(
           extrapolated_two_jet.is_approx(extrapolated_two_jet_explicit));
 

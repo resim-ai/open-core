@@ -17,7 +17,7 @@
 namespace resim::curves {
 
 template <transforms::LieGroupType Group>
-TCurveSegment<Group>::TCurveSegment(TwoJet<Group> orig, TwoJet<Group> dest)
+TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
     : orig_(std::move(orig)),
       dest_(std::move(dest)) {
   if constexpr (transforms::FramedGroupType<Group>) {
@@ -30,10 +30,10 @@ TCurveSegment<Group>::TCurveSegment(TwoJet<Group> orig, TwoJet<Group> dest)
 }
 
 template <transforms::LieGroupType Group>
-TwoJet<Group> TCurveSegment<Group>::point_at(
+TwoJetL<Group> TCurveSegment<Group>::point_at(
     const double time_nrm,
     const Frame &point_frame) const {
-  TwoJet<Group> point = TwoJet<Group>::identity();
+  TwoJetL<Group> point = TwoJetL<Group>::identity();
   if constexpr (transforms::FramedGroupType<Group>) {
     // TODO(https://app.asana.com/0/0/1202833644049385/f)
     point.set_frame_from_ref(
@@ -85,12 +85,12 @@ TwoJet<Group> TCurveSegment<Group>::point_at(
 }
 
 template <transforms::LieGroupType Group>
-const TwoJet<Group> &TCurveSegment<Group>::orig() const {
+const TwoJetL<Group> &TCurveSegment<Group>::orig() const {
   return orig_;
 }
 
 template <transforms::LieGroupType Group>
-const TwoJet<Group> &TCurveSegment<Group>::dest() const {
+const TwoJetL<Group> &TCurveSegment<Group>::dest() const {
   return dest_;
 }
 
@@ -99,8 +99,8 @@ void TCurveSegment<Group>::point_value_accumulator(
     const double time_nrm,
     const TwoJetPolyCoeffs &coeffs,
     const TangentVector &vec,
-    InOut<TwoJet<Group>> point) const {
-  TwoJet<Group> increment(
+    InOut<TwoJetL<Group>> point) const {
+  TwoJetL<Group> increment(
       increment_group(coeffs.a * vec, *point),
       coeffs.da * vec,
       coeffs.d2a * vec);
@@ -111,7 +111,7 @@ void TCurveSegment<Group>::point_value_accumulator(
 template <transforms::LieGroupType Group>
 Group TCurveSegment<Group>::increment_group(
     const TangentVector &alg,
-    const TwoJet<Group> &point) const {
+    const TwoJetL<Group> &point) const {
   Group increment = Group::identity();
   if constexpr (transforms::FramedGroupType<Group>) {
     const Frame &point_frame = point.frame_from_ref().into();

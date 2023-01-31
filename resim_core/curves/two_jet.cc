@@ -9,9 +9,8 @@
 
 namespace resim::curves {
 
-// TODO(https://app.asana.com/0/1202178773526279/1203608723315721/f)
 template <transforms::LieGroupType Group>
-TwoJetL<Group>::TwoJet(
+TwoJetL<Group>::TwoJetL(
     Group frame_from_ref,
     TangentVector d_frame_from_ref,
     TangentVector d2_frame_from_ref)
@@ -98,10 +97,10 @@ bool TwoJetL<Group>::is_approx(const TwoJetL<Group> &other) const {
 }
 
 // TODO(https://app.asana.com/0/1202178773526279/1203608723315721/f)
-template class TwoJet<transforms::SE3>;
-template class TwoJet<transforms::SO3>;
-template class TwoJet<transforms::FSE3>;
-template class TwoJet<transforms::FSO3>;
+template class TwoJetL<transforms::SE3>;
+template class TwoJetL<transforms::SO3>;
+template class TwoJetL<transforms::FSE3>;
+template class TwoJetL<transforms::FSO3>;
 
 template <transforms::LieGroupType Group>
 TwoJetR<Group>::TwoJetR(
