@@ -12,6 +12,9 @@ using TangentMapping = SO3::TangentMapping;
 SO3::SO3(const Eigen::AngleAxisd &angle_axis)
     : rotation_matrix_(angle_axis.toRotationMatrix()) {}
 
+SO3::SO3(const double angle, const Eigen::Vector3d &axis)
+    : SO3::SO3{Eigen::AngleAxisd(angle, axis)} {}
+
 SO3::SO3(const Eigen::Quaterniond &quaternion)
     : rotation_matrix_(quaternion.toRotationMatrix()) {}
 

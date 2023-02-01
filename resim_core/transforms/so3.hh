@@ -32,9 +32,15 @@ class SO3 : public LieGroup<3, 3> {
 
   // Constructor
   // Create an SO3 from an Eigen AngleAxisd object, which describes a
-  // rotation as an right-handed rotation of 'angle' about a specified unit
+  // rotation as a right-handed rotation of 'angle' about a specified unit
   // axis.
   explicit SO3(const Eigen::AngleAxisd &angle_axis);
+
+  // Constructor
+  // Create an SO3 from an explicit angle and axis, which describes a
+  // rotation as a right-handed rotation of 'angle' about a specified unit
+  // 'axis'.
+  SO3(double angle, const Eigen::Vector3d &axis);
 
   // Constructor
   // Create an SO3 from a quaternion.

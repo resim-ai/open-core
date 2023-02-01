@@ -12,7 +12,7 @@
 namespace resim::transforms {
 
 // Please Note: Here are the specialized tests for the SO3 class. The SO3 class
-// is also covered by a number of general Liegrooup tests that can be found in
+// is also covered by a number of general Lie group tests that can be found in
 // liegroup_test.cc
 
 TEST(SO3ConstructorTest, AngleAxisZero) {
@@ -30,6 +30,25 @@ TEST(SO3ConstructorTest, AngleAxisArbitrary) {
   constexpr double ANGLE = 0.732;
   const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
   const SO3 rotation_so3(rotation_aa);
+  // Verify that rotation matrices of axis angle and so3 agree.
+  EXPECT_TRUE(
+      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
+}
+
+TEST(SO3ConstructorTest, AngleWithAxisZero) {
+  // Initialize SO3 with a zero angle and unit x axis argument.
+  constexpr double ZERO_ANGLE = 0.;
+  const SO3 no_rotation(ZERO_ANGLE, {1., 0., 0.});
+  // Verify that the rotation matrix is identity.
+  EXPECT_TRUE(
+      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+}
+
+TEST(SO3ConstructorTest, AngleWithAxisArbitrary) {
+  // Initialize SO3 with a arbitrary angle angle and unit y axis argument.
+  constexpr double ANGLE = 0.732;
+  const SO3 rotation_so3(ANGLE, {0., 1., 0.});
+  const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
   // Verify that rotation matrices of axis angle and so3 agree.
   EXPECT_TRUE(
       rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
