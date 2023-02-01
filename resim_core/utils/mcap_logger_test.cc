@@ -5,7 +5,9 @@
 
 #include <chrono>
 #include <cstring>
+#include <fstream>
 #include <mcap/reader.hpp>
+#include <sstream>
 
 #include "resim_core/testing/test_directory.hh"
 #include "resim_core/time/timestamp.hh"
@@ -14,7 +16,24 @@
 
 namespace resim {
 
+using proto::testing::MessageA;
+using TestMsg = proto::testing::Test;
+
 using std::literals::chrono_literals::operator""s;
+
+namespace {
+
+// Checks that the given filepath's contents exactly match the given string.
+void expect_file_contains_string(
+    const std::filesystem::path &filepath,
+    const std::string &string) {
+  std::ostringstream expected_os;
+  std::ifstream is{filepath};
+  expected_os << is.rdbuf();
+  EXPECT_EQ(expected_os.str(), string);
+}
+
+}  // namespace
 
 TEST(McapLoggerTest, TestAddProtoChannel) {
   // SETUP
@@ -26,8 +45,8 @@ TEST(McapLoggerTest, TestAddProtoChannel) {
   constexpr auto TOPIC_B = "/topic_b";
   {
     McapLogger logger{test_mcap};
-    logger.add_proto_channel<proto::testing::Test>(TOPIC_A);
-    logger.add_proto_channel<proto::testing::Test>(TOPIC_B);
+    logger.add_proto_channel<TestMsg>(TOPIC_A);
+    logger.add_proto_channel<TestMsg>(TOPIC_B);
   }
   mcap::McapReader reader;
   ASSERT_TRUE(reader.open(test_mcap.string()).ok());
@@ -61,10 +80,10 @@ TEST(McapLoggerTest, TestAddProtoChannel) {
   ASSERT_EQ(schemas.size(), 1U);
   EXPECT_EQ(
       schemas.cbegin()->second->name,
-      proto::testing::Test{}.GetDescriptor()->full_name());
+      TestMsg{}.GetDescriptor()->full_name());
   EXPECT_EQ(schemas.cbegin()->second->encoding, EXPECTED_ENCODING);
   const std::string expected_data_string =
-      dependency_file_descriptor_set(*proto::testing::Test::GetDescriptor());
+      dependency_file_descriptor_set(*TestMsg::GetDescriptor());
   std::vector<std::byte> expected_data{expected_data_string.size()};
   std::memcpy(
       expected_data.data(),
@@ -81,6 +100,9 @@ TEST(McapLoggerTest, TestLogProto) {
   const testing::TestDirectoryRAII test_directory;
   const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
 
+  // String stream for testing the streaming constructor
+  std::ostringstream os;
+
   constexpr auto TOPIC_A = "/topic_a";
   constexpr auto TOPIC_B = "/topic_b";
   constexpr auto TOPIC_C = "/topic_c";
@@ -88,17 +110,20 @@ TEST(McapLoggerTest, TestLogProto) {
   constexpr int MESSAGES_PER_CHANNEL = 47;
 
   // ACTION
-  {
-    McapLogger logger{test_mcap};
-    logger.add_proto_channel<proto::testing::Test>(TOPIC_A);
-    logger.add_proto_channel<proto::testing::MessageA>(TOPIC_B);
-    logger.add_proto_channel<proto::testing::MessageA>(TOPIC_C);
+  const auto &log_test_messages = [&](auto &&...logger_args) {
+    McapLogger logger{std::forward<decltype(logger_args)>(logger_args)...};
+    logger.add_proto_channel<TestMsg>(TOPIC_A);
+    logger.add_proto_channel<MessageA>(TOPIC_B);
+    logger.add_proto_channel<MessageA>(TOPIC_C);
     for (int ii = 0; ii < MESSAGES_PER_CHANNEL; ++ii) {
-      logger.log_proto(TOPIC_A, LOG_TIME, proto::testing::Test{});
-      logger.log_proto(TOPIC_B, LOG_TIME, proto::testing::MessageA{});
-      logger.log_proto(TOPIC_C, LOG_TIME, proto::testing::MessageA{});
+      logger.log_proto(TOPIC_A, LOG_TIME, TestMsg{});
+      logger.log_proto(TOPIC_B, LOG_TIME, MessageA{});
+      logger.log_proto(TOPIC_C, LOG_TIME, MessageA{});
     }
-  }
+  };
+
+  log_test_messages(test_mcap);
+  log_test_messages(os);
 
   // VERIFICATION
   mcap::McapReader reader;
@@ -114,6 +139,9 @@ TEST(McapLoggerTest, TestLogProto) {
   }
   constexpr int NUM_CHANNELS = 3;
   EXPECT_EQ(count, NUM_CHANNELS * MESSAGES_PER_CHANNEL);
+
+  // Check that the stream contains the same stuff as the file
+  expect_file_contains_string(test_mcap, os.str());
 
   // Clean up the mcap
   reader.close();
@@ -163,18 +191,18 @@ TEST(McapLoggerDeathTest, TestBadLogProto) {
 
   // ACTION
   McapLogger logger{test_mcap};
-  logger.add_proto_channel<proto::testing::Test>(TOPIC);
+  logger.add_proto_channel<TestMsg>(TOPIC);
 
   EXPECT_DEATH(
-      logger.log_proto(BAD_TOPIC, LOG_TIME, proto::testing::Test{}),
+      logger.log_proto(BAD_TOPIC, LOG_TIME, TestMsg{}),
       "No channel with the given name found!");
   EXPECT_DEATH(
-      logger.log_proto(TOPIC, LOG_TIME, proto::testing::MessageA{}),
+      logger.log_proto(TOPIC, LOG_TIME, MessageA{}),
       "No schema found for this message type!");
   constexpr auto TOPIC_A = "/topic_a";
-  logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);
+  logger.add_proto_channel<MessageA>(TOPIC_A);
   EXPECT_DEATH(
-      logger.log_proto(TOPIC, LOG_TIME, proto::testing::MessageA{}),
+      logger.log_proto(TOPIC, LOG_TIME, MessageA{}),
       "Wrong message type for channel!");
 }
 

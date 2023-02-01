@@ -3,12 +3,20 @@
 
 namespace resim {
 
+namespace {
+constexpr auto PROFILE = "resim_mcap";
+}
+
 McapLogger::McapLogger(const std::filesystem::path &mcap_path) {
-  constexpr auto PROFILE = "resim_mcap";
   const mcap::McapWriterOptions options{PROFILE};
   const auto status = writer_.open(mcap_path.string(), options);
   constexpr auto ERROR_MSG = "Could not open mcap for writing!";
   CHECK(status.ok()) << ERROR_MSG;
+}
+
+McapLogger::McapLogger(std::ostream &os) {
+  const mcap::McapWriterOptions options{PROFILE};
+  writer_.open(os, options);
 }
 
 McapLogger::~McapLogger() { writer_.close(); }

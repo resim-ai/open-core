@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <map>
 #include <mcap/writer.hpp>
+#include <ostream>
 #include <string>
 #include <utility>
 
@@ -25,6 +26,12 @@ class McapLogger {
   // Construct this logger, setting up a log at the given path.
   // @param[in] mcap_path - The path of the file to log to
   explicit McapLogger(const std::filesystem::path &mcap_path);
+
+  // Construct this logger to output to the given ostream. The user is
+  // responsible for ensuring this stream's lifetime is longer than this
+  // logger's.
+  // @param[in] os - The stream to output the binary log to.
+  explicit McapLogger(std::ostream &os);
 
   McapLogger(const McapLogger &) = delete;
   McapLogger &operator=(const McapLogger &) = delete;
