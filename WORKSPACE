@@ -118,3 +118,12 @@ http_archive(
     strip_prefix = "fmt-9.1.0",
     urls = ["https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.zip"],
 )
+
+# libcurl
+http_archive(
+    name = "curl",
+    build_file = "//resim_core/third_party/curl:curl.BUILD",
+    sha256 = "6147ac0b22f8c11cbd3933d7fec064dee373402c3705193ceb703a5a665f2e0c",
+    strip_prefix = "curl-7.87.0",
+    urls = ["https://github.com/curl/curl/releases/download/curl-7_87_0/curl-7.87.0.zip"],
+)
