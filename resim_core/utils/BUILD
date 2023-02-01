@@ -110,6 +110,7 @@ cc_test(
 cc_library(
     name = "match",
     hdrs = ["match.hh"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
@@ -164,6 +165,7 @@ cc_test(
 cc_library(
     name = "status_value",
     hdrs = ["status_value.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":match",
         ":status",

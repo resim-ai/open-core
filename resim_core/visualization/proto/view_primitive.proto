@@ -1,0 +1,15 @@
+
+syntax = "proto3";
+
+package resim.visualization.proto;
+
+import "resim_core/utils/proto/uuid.proto";
+import "resim_core/transforms/proto/se3.proto";
+
+message ViewPrimitive {
+    resim.proto.UUID id = 1;
+
+    oneof payload {
+        resim.transforms.proto.SE3 se3 = 2;
+    }
+}

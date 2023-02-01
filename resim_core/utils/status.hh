@@ -74,14 +74,14 @@ constexpr Status OKAY_STATUS{};
 // Define a macro to check that a given status is okay.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_STATUS_OK(status)       \
-  do {                                \
+  ({                                  \
     const auto err_msg = fmt::format( \
         fg(fmt::color::red),          \
         "{{{0}.what() == {1}}}",      \
         #status,                      \
         (status).what());             \
     CHECK((status).ok()) << err_msg;  \
-  } while (0)
+  })
 
 constexpr Status
 Status::make_at_line(const char *file, int line, const char *message) {
