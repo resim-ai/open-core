@@ -18,15 +18,15 @@ void pack_liegroup(const Group &in, Msg *out) {
 }
 
 template <transforms::LieGroupType Group, typename Msg>
-Group unpack_liegroup(const Msg &in) {
+void unpack_liegroup(const Msg &in, InOut<Group> out) {
   typename Group::TangentVector alg;
   math::proto::unpack_matrix(in.algebra(), InOut(alg));
-  return Group::exp(alg);
+  *out = Group::exp(alg);
 }
 
 template void pack_liegroup(const transforms::SE3 &, SE3 *);
 template void pack_liegroup(const transforms::SO3 &, SO3 *);
-template transforms::SE3 unpack_liegroup(const SE3 &);
-template transforms::SO3 unpack_liegroup(const SO3 &);
+template void unpack_liegroup(const SE3 &, InOut<transforms::SE3>);
+template void unpack_liegroup(const SO3 &, InOut<transforms::SO3>);
 
 }  // namespace resim::transforms::proto

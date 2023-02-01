@@ -9,7 +9,9 @@ namespace resim::transforms::proto {
 void pack(const transforms::SE3 &in, SE3 *const out) { pack_liegroup(in, out); }
 
 transforms::SE3 unpack(const SE3 &in) {
-  return unpack_liegroup<transforms::SE3, SE3>(in);
+  transforms::SE3 transform;
+  unpack_liegroup(in, InOut(transform));
+  return transform;
 }
 
 }  // namespace resim::transforms::proto

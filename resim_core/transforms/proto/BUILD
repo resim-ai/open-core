@@ -12,6 +12,7 @@ cc_library(
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "//resim_core/utils:inout",
     ],
 )
 

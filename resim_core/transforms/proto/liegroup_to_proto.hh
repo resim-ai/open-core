@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resim_core/transforms/liegroup_concepts.hh"
+#include "resim_core/utils/inout.hh"
 
 // Pack and Unpack Liegroups into their corresponding protobuf messages.
 // For example SO3 -> proto::SO3, SE3 -> proto::SE3.
@@ -20,6 +21,6 @@ void pack_liegroup(const Group &in, Msg *out);
 // @param[in]  in  - A proto message representing the LieGroupType.
 // @returns - An unpacked LieGroupType object.
 template <transforms::LieGroupType Group, typename Msg>
-Group unpack_liegroup(const Msg &in);
+void unpack_liegroup(const Msg &in, InOut<Group> out);
 
 }  // namespace resim::transforms::proto
