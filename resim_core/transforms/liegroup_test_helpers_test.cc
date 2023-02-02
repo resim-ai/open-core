@@ -10,11 +10,34 @@
 
 namespace resim::transforms {
 
+namespace {
+constexpr unsigned MIN_DEFAULT = 7;
+}  //  namespace
+
 template <typename t>
 class LieGroupHelperTests : public ::testing::Test {};
 
 using LieGroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(LieGroupHelperTests, LieGroupTypes);
+
+TYPED_TEST(LieGroupHelperTests, ReturnCounts) {
+  const auto test_min_vec =
+      make_test_vectors<typename TypeParam::TangentVector>();
+  EXPECT_EQ(test_min_vec.size(), MIN_DEFAULT);
+  const auto test_min_alg = make_test_algebra_elements<TypeParam>();
+  EXPECT_EQ(test_min_alg.size(), MIN_DEFAULT);
+  const auto test_min_grp = make_test_group_elements<TypeParam>();
+  EXPECT_EQ(test_min_grp.size(), MIN_DEFAULT);
+
+  constexpr unsigned LRG_COUNT = 101;
+  const auto test_lrg_vec =
+      make_test_vectors<typename TypeParam::TangentVector>(LRG_COUNT);
+  EXPECT_EQ(test_lrg_vec.size(), LRG_COUNT);
+  const auto test_lrg_alg = make_test_algebra_elements<TypeParam>(LRG_COUNT);
+  EXPECT_EQ(test_lrg_alg.size(), LRG_COUNT);
+  const auto test_lrg_grp = make_test_group_elements<TypeParam>(LRG_COUNT);
+  EXPECT_EQ(test_lrg_grp.size(), LRG_COUNT);
+}
 
 TYPED_TEST(LieGroupHelperTests, TestMakeAlgebraElements) {
   // Build the vector of test elements
@@ -52,6 +75,33 @@ TYPED_TEST(LieGroupHelperTests, TestMakeGroupElements) {
   const auto group_elements = make_test_group_elements<TypeParam>();
   // Confirm the two vecors are of the same size.
   EXPECT_EQ(algebra_elements.size(), group_elements.size());
+}
+
+template <typename T>
+using LieGroupHelperDeathTests = LieGroupHelperTests<T>;
+TYPED_TEST_SUITE(LieGroupHelperDeathTests, LieGroupTypes);
+
+TYPED_TEST(LieGroupHelperDeathTests, TooFewElementsRequested) {
+  constexpr unsigned TOO_FEW = MIN_DEFAULT - 1;
+  EXPECT_DEATH(
+      {
+        const auto test_vec =
+            make_test_vectors<typename TypeParam::TangentVector>(TOO_FEW);
+        (void)test_vec;
+      },
+      "The minimum number of test elements you can request");
+  EXPECT_DEATH(
+      {
+        const auto test_alg = make_test_algebra_elements<TypeParam>(TOO_FEW);
+        (void)test_alg;
+      },
+      "The minimum number of test elements you can request");
+  EXPECT_DEATH(
+      {
+        const auto test_grp = make_test_group_elements<TypeParam>(TOO_FEW);
+        (void)test_grp;
+      },
+      "The minimum number of test elements you can request");
 }
 
 }  // namespace resim::transforms

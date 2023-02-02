@@ -1,5 +1,7 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 
+#include <glog/logging.h>
+
 #include <Eigen/Dense>
 #include <algorithm>
 #include <random>
@@ -14,6 +16,10 @@ namespace resim::transforms {
 
 namespace {
 
+constexpr unsigned MIN_DEFAULT = 7;
+constexpr auto LOW_COUNT =
+    "The minimum number of test elements you can request is seven. Please "
+    "increase the count.";
 template <typename Vector, typename Rng>
 Vector make_large_vector(BasicType<Vector> vec_type, Rng &&rng) {
   constexpr double LARGE = 1E6;
@@ -44,12 +50,12 @@ SE3::TangentVector make_large_vector(
 }  // namespace
 
 template <typename Vector>
-std::vector<Vector> make_test_vectors() {
+std::vector<Vector> make_test_vectors(const unsigned count) {
   // Make random seed determistic
   constexpr unsigned int SEED = 42;
   std::mt19937 rng{SEED};
   // How many test elements to make.
-  constexpr int TEST_ELEMENT_COUNT = 7;
+  CHECK(count >= MIN_DEFAULT) << LOW_COUNT;
   std::vector<Vector> elements;
   // Add a zero element.
   elements.push_back(Vector::Zero());
@@ -63,22 +69,23 @@ std::vector<Vector> make_test_vectors() {
   constexpr double TINY = 1E-6;
   elements.push_back(testing::random_vector<Vector>(rng) * TINY);
   // Populate the remainder with random elements.
-  for (int i = elements.size(); i < TEST_ELEMENT_COUNT; ++i) {
+  for (int i = elements.size(); i < count; ++i) {
     elements.push_back(testing::random_vector<Vector>(rng));
   }
-  elements.resize(TEST_ELEMENT_COUNT);
+  elements.resize(count);
   return elements;
 }
 
 template <typename Group>
-std::vector<typename Group::TangentVector> make_test_algebra_elements() {
-  return make_test_vectors<typename Group::TangentVector>();
+std::vector<typename Group::TangentVector> make_test_algebra_elements(
+    const unsigned count) {
+  return make_test_vectors<typename Group::TangentVector>(count);
 }
 
 template <typename Group>
-std::vector<Group> make_test_group_elements() {
+std::vector<Group> make_test_group_elements(const unsigned count) {
   const std::vector<typename Group::TangentVector> algebra_elements =
-      make_test_algebra_elements<Group>();
+      make_test_algebra_elements<Group>(count);
   std::vector<Group> group_elements;
   group_elements.resize(algebra_elements.size());
   std::transform(
@@ -91,10 +98,13 @@ std::vector<Group> make_test_group_elements() {
   return group_elements;
 }
 
-template std::vector<Eigen::Vector3d> make_test_vectors<Eigen::Vector3d>();
-template std::vector<SO3::TangentVector> make_test_algebra_elements<SO3>();
-template std::vector<SO3> make_test_group_elements<SO3>();
-template std::vector<SE3::TangentVector> make_test_algebra_elements<SE3>();
-template std::vector<SE3> make_test_group_elements<SE3>();
+template std::vector<Eigen::Vector3d> make_test_vectors<Eigen::Vector3d>(
+    unsigned);
+template std::vector<SO3::TangentVector> make_test_algebra_elements<SO3>(
+    unsigned);
+template std::vector<SO3> make_test_group_elements<SO3>(unsigned);
+template std::vector<SE3::TangentVector> make_test_algebra_elements<SE3>(
+    unsigned);
+template std::vector<SE3> make_test_group_elements<SE3>(unsigned);
 
 }  // namespace resim::transforms
