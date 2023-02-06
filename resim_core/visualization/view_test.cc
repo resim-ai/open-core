@@ -12,6 +12,8 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/status.hh"
+#include "resim_core/visualization/client/view_client_libcurl.hh"
+#include "resim_core/visualization/testing/mock_server.hh"
 #include "resim_core/visualization/view_client.hh"
 
 namespace resim::visualization {
@@ -42,7 +44,132 @@ class MockViewClient : public ViewClient {
 
 using transforms::SE3;
 
+// Get a vector of arbitrary random SE3s of a given size.
+// @param[in] num_se3s - The number of se3s to get.
+std::vector<SE3> random_se3s(const std::size_t num_se3s) {
+  constexpr unsigned SEED = 8943U;
+  std::mt19937 rng{SEED};
+
+  std::vector<SE3> result;
+  result.reserve(num_se3s);
+  for (std::size_t ii = 0U; ii < num_se3s; ++ii) {
+    result.push_back(
+        SE3::exp(resim::testing::random_vector<SE3::TangentVector>(rng)));
+  }
+
+  return result;
+}
+
 }  // namespace
+
+TEST(LibcurlClientTest, TestClientBasicFunction) {
+  // SET UP
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {}};
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+
+  // Create SE3 objects and corresponding ViewUpdates.
+  constexpr std::size_t NUM_SE3S = 100;
+  std::vector<SE3> test_elements{random_se3s(NUM_SE3S)};
+  ViewUpdate update;
+  for (const SE3 &se3 : test_elements) {
+    update.primitives.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = se3,
+    });
+  }
+
+  // ACTION
+  Status status = mock_client->send_view_update(update);
+  CHECK(status.ok());
+
+  status = mock_client->send_view_update(update);
+  CHECK(status.ok());
+
+  status = mock_client->send_view_update(update);
+  CHECK(status.ok());
+}
+
+TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
+  // SET UP
+  testing::MockServer server{
+      "localhost",
+      UUID::new_uuid(),
+      [](auto &&...) {},
+      testing::MockServer::ResponseCode::NOT_FOUND};
+
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+
+  // Create SE3 objects and corresponding ViewUpdates.
+  constexpr std::size_t NUM_SE3S = 100;
+  std::vector<SE3> test_elements{random_se3s(NUM_SE3S)};
+  ViewUpdate update;
+  for (const SE3 &se3 : test_elements) {
+    update.primitives.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = se3,
+    });
+  }
+
+  // ACTION
+  Status status = mock_client->send_view_update(update);
+  CHECK(!status.ok());
+}
+
+TEST(LibcurlClientTest, TestFail) {
+  // Do not set up a server
+  auto mock_client = std::make_unique<LibcurlClient>("zzzz");
+  ViewUpdate update;
+
+  // ACTION
+  EXPECT_DEATH(mock_client->send_view_update(update), ".");
+}
+
+TEST(LibcurlClientTest, TestLibcurlClientView) {
+  // SET UP
+  ViewUpdate expected_update;
+  const UUID expected_session_id{UUID::new_uuid()};
+  uint64_t expected_update_id = 0;
+
+  // Create SE3 objects and corresponding ViewUpdates.
+  constexpr std::size_t NUM_SE3S = 100;
+  std::vector<SE3> test_elements{random_se3s(NUM_SE3S)};
+  for (const SE3 &se3 : test_elements) {
+    expected_update.primitives.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = se3,
+    });
+  }
+
+  // Create MockServer with a receiver function to verify correctness.
+  testing::MockServer server{
+      "localhost",
+      expected_session_id,
+      [&](const ViewUpdate &update,
+          const UUID &session_id,
+          const uint64_t update_id) {
+        EXPECT_EQ(session_id, expected_session_id);
+        EXPECT_EQ(update_id, expected_update_id);
+
+        // Since we feed views one at a time, update.primitives will always only
+        // have one element, but it should correspond with the expected_update
+        // at index update_id.
+        EXPECT_TRUE(std::get<SE3>(update.primitives.at(0).payload)
+                        .is_approx(std::get<SE3>(
+                            expected_update.primitives.at(update_id).payload)));
+      }};
+
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+  view.set_client(std::move(mock_client));
+
+  // ACTION & VERIFICATION
+  for (const SE3 &se3 : test_elements) {
+    view << se3;
+    expected_update_id++;
+  }
+}
 
 TEST(ViewTest, TestViewSingleThread) {
   // SETUP

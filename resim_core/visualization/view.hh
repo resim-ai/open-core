@@ -39,6 +39,7 @@ class View {
   void flush();
 
  private:
+  FRIEND_TEST(LibcurlClientTest, TestLibcurlClientView);
   FRIEND_TEST(ViewTest, TestViewSingleThread);
   FRIEND_TEST(ViewTest, TestViewMultiThread);
   FRIEND_TEST(ViewTest, TestDestructorCoverage);
