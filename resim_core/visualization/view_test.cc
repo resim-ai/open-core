@@ -133,7 +133,8 @@ TEST(ViewTest, TestSingleInstance) { EXPECT_EQ(&View::get_instance(), &view); }
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST(ViewDeathTest, TestFailedSend) {
   // SETUP
-  std::vector<SE3> test_elements{transforms::make_test_group_elements<SE3>()};
+  const std::vector<SE3> test_elements{
+      transforms::make_test_group_elements<SE3>()};
 
   // Make a mock client that will fail to send the update:
   auto mock_client =

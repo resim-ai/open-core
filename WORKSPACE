@@ -156,3 +156,11 @@ http_archive(
     strip_prefix = "curl-7.87.0",
     urls = ["https://github.com/curl/curl/releases/download/curl-7_87_0/curl-7.87.0.zip"],
 )
+
+http_archive(
+    name = "httplib",
+    build_file = "//resim_core/third_party/httplib:httplib.BUILD",
+    sha256 = "9d884bee50ded17de3a51d673bb9c2d7d11f101c595b0891830ba9d02e0cc368",
+    strip_prefix = "cpp-httplib-0.11.4",
+    urls = ["https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.11.4.zip"],
+)
