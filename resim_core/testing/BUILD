@@ -8,6 +8,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim_core/utils:uuid",
+        "@com_github_google_glog//:glog",
     ],
 )
 

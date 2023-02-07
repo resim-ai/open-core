@@ -81,7 +81,6 @@ def _impl(ctx):
                                 "-lm",
                                 "-lstdc++",
                                 "-luuid",
-                                "-lglog",
                             ],
                         ),
                     ]),

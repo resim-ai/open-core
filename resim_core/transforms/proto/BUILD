@@ -14,6 +14,7 @@ cc_library(
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -55,6 +56,7 @@ cc_library(
         ":frame_3_proto_cc",
         "//resim_core/transforms:frame",
         "//resim_core/utils/proto:uuid_to_proto",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -81,6 +83,7 @@ cc_library(
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
     ],
 )
 

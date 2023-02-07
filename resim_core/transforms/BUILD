@@ -49,6 +49,7 @@ cc_library(
         ":liegroup",
         ":se3",
         ":so3",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -106,6 +107,7 @@ cc_library(
         ":so3",
         "//resim_core/testing:random_matrix",
         "//resim_core/utils:type",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

@@ -26,6 +26,7 @@ cc_library(
         ":cost_function",
         ":dynamics",
         "//resim_core/utils:double_buffer",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

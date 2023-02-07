@@ -9,6 +9,7 @@ cc_library(
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -32,6 +33,7 @@ cc_library(
     deps = [
         "//resim_core/utils:inout",
         "//resim_core/utils:integer_power",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -52,6 +54,7 @@ cc_library(
     hdrs = ["gjk_algorithm.hh"],
     deps = [
         ":gjk_distance_subalgorithm",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -64,6 +67,7 @@ cc_test(
         ":oriented_box",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:liegroup_concepts",
+        "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
@@ -80,6 +84,7 @@ cc_library(
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -123,6 +128,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":wireframe",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -145,6 +151,7 @@ cc_library(
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

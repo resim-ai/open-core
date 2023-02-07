@@ -6,6 +6,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
         "@com_google_protobuf//:protobuf",
         "@libeigen//:eigen",
     ],

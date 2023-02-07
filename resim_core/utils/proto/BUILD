@@ -7,6 +7,7 @@ cc_library(
     hdrs = ["dependency_file_descriptor_set.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "@com_github_google_glog//:glog",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -45,6 +46,7 @@ cc_library(
     deps = [
         ":uuid_proto_cc",
         "//resim_core/utils:uuid",
+        "@com_github_google_glog//:glog",
     ],
 )
 

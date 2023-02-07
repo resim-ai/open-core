@@ -5,6 +5,9 @@ cc_library(
     srcs = ["uuid.cc"],
     hdrs = ["uuid.hh"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_google_glog//:glog",
+    ],
 )
 
 cc_test(
@@ -71,7 +74,9 @@ cc_library(
     srcs = ["integer_power.cc"],
     hdrs = ["integer_power.hh"],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        "@com_github_google_glog//:glog",
+    ],
 )
 
 cc_test(
@@ -92,6 +97,7 @@ cc_library(
         "//resim_core/third_party/mcap:mcap_impl",
         "//resim_core/time:timestamp",
         "//resim_core/utils/proto:dependency_file_descriptor_set",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -130,6 +136,7 @@ cc_library(
     hdrs = ["nullable_reference.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -149,6 +156,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":match",
+        "@com_github_google_glog//:glog",
         "@fmt",
     ],
 )
@@ -170,6 +178,7 @@ cc_library(
     deps = [
         ":match",
         ":status",
+        "@com_github_google_glog//:glog",
     ],
 )
 

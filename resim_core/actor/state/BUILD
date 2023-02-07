@@ -40,6 +40,7 @@ cc_library(
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

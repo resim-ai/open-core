@@ -34,6 +34,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":timestamp",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -55,6 +56,7 @@ cc_library(
     deps = [
         ":timestamp",
         "//resim_core/math:safe_integer_utils",
+        "@com_github_google_glog//:glog",
     ],
 )
 

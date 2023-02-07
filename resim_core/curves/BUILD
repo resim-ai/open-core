@@ -8,6 +8,7 @@ cc_library(
     deps = [
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -50,6 +51,7 @@ cc_library(
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -82,6 +84,7 @@ cc_library(
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
     ],
 )
 
