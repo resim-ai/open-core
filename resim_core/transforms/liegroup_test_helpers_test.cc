@@ -10,10 +10,6 @@
 
 namespace resim::transforms {
 
-namespace {
-constexpr unsigned MIN_DEFAULT = 7;
-}  //  namespace
-
 template <typename t>
 class LieGroupHelperTests : public ::testing::Test {};
 
@@ -23,11 +19,11 @@ TYPED_TEST_SUITE(LieGroupHelperTests, LieGroupTypes);
 TYPED_TEST(LieGroupHelperTests, ReturnCounts) {
   const auto test_min_vec =
       make_test_vectors<typename TypeParam::TangentVector>();
-  EXPECT_EQ(test_min_vec.size(), MIN_DEFAULT);
+  EXPECT_EQ(test_min_vec.size(), detail::MIN_TEST_ELEMENTS);
   const auto test_min_alg = make_test_algebra_elements<TypeParam>();
-  EXPECT_EQ(test_min_alg.size(), MIN_DEFAULT);
+  EXPECT_EQ(test_min_alg.size(), detail::MIN_TEST_ELEMENTS);
   const auto test_min_grp = make_test_group_elements<TypeParam>();
-  EXPECT_EQ(test_min_grp.size(), MIN_DEFAULT);
+  EXPECT_EQ(test_min_grp.size(), detail::MIN_TEST_ELEMENTS);
 
   constexpr unsigned LRG_COUNT = 101;
   const auto test_lrg_vec =
@@ -82,7 +78,7 @@ using LieGroupHelperDeathTests = LieGroupHelperTests<T>;
 TYPED_TEST_SUITE(LieGroupHelperDeathTests, LieGroupTypes);
 
 TYPED_TEST(LieGroupHelperDeathTests, TooFewElementsRequested) {
-  constexpr unsigned TOO_FEW = MIN_DEFAULT - 1;
+  constexpr unsigned TOO_FEW = detail::MIN_TEST_ELEMENTS - 1;
   EXPECT_DEATH(
       {
         const auto test_vec =

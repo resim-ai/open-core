@@ -15,8 +15,6 @@
 namespace resim::transforms {
 
 namespace {
-
-constexpr unsigned MIN_DEFAULT = 7;
 constexpr auto LOW_COUNT =
     "The minimum number of test elements you can request is seven. Please "
     "increase the count.";
@@ -55,7 +53,7 @@ std::vector<Vector> make_test_vectors(const unsigned count) {
   constexpr unsigned int SEED = 42;
   std::mt19937 rng{SEED};
   // How many test elements to make.
-  CHECK(count >= MIN_DEFAULT) << LOW_COUNT;
+  CHECK(count >= detail::MIN_TEST_ELEMENTS) << LOW_COUNT;
   std::vector<Vector> elements;
   // Add a zero element.
   elements.push_back(Vector::Zero());
