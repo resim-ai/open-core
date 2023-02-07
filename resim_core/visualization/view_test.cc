@@ -1,14 +1,19 @@
 #include "resim_core/visualization/view.hh"
 
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <random>
+#include <string>
 #include <thread>
 #include <utility>
 #include <variant>
 
 #include "resim_core/testing/random_matrix.hh"
+#include "resim_core/testing/test_directory.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/status.hh"
@@ -169,6 +174,52 @@ TEST(LibcurlClientTest, TestLibcurlClientView) {
     view << se3;
     expected_update_id++;
   }
+}
+
+TEST(LibcurlClientTest, TestLibcurlClientLogging) {
+  // SETUP
+  //  Create a separate test instance of glog.
+  google::InitGoogleLogging("test_logging");
+  // Ask glog to write logs to a temporary file.
+  const resim::testing::TestDirectoryRAII tmp_log_dir;
+  const auto logfile = tmp_log_dir.test_file_path();
+  google::SetLogDestination(google::GLOG_INFO, logfile.string().data());
+  // Setup a minimal mock server.
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {}};
+  // Setup a minimal mock client.
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+  view.set_client(std::move(mock_client));
+
+  // ACTION
+  // Send an identity SE3 to view.
+  view << SE3::identity();
+  // Shutdown the logger here becase A) we don't need it. B) We want to be sure
+  // that the log is flushed to the logfile before we try to read it.
+  google::ShutdownGoogleLogging();
+
+  // VERIFICATION
+  // We expect part of the url to be somewhere in the logfile.
+  constexpr std::string_view url_part = "app.resim.ai/views";
+  bool url_found = false;
+  // Glog mangles logfile paths by adding timestamps. However the directory
+  // is also temporary so we can simply search all (one) files in the directory.
+  for (const auto &file :
+       std::filesystem::directory_iterator(tmp_log_dir.path())) {
+    std::ifstream file_str(file.path(), std::ios::in);
+    if (!file_str.is_open()) {
+      ASSERT_TRUE(false) << "Falied to open the test log file";
+    } else {
+      std::string line;
+      while (std::getline(file_str, line)) {
+        if (line.find(url_part) != std::string::npos) {
+          url_found = true;
+        }
+      }
+      file_str.close();
+    }
+  }
+  EXPECT_TRUE(url_found);
 }
 
 TEST(ViewTest, TestViewSingleThread) {
