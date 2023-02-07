@@ -5,6 +5,7 @@ cc_library(
     name = "liegroup_to_proto",
     srcs = ["liegroup_to_proto.cc"],
     hdrs = ["liegroup_to_proto.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":se3_proto_cc",
         ":so3_proto_cc",
@@ -75,6 +76,7 @@ cc_library(
     name = "framed_group_to_proto",
     srcs = ["framed_group_to_proto.cc"],
     hdrs = ["framed_group_to_proto.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":frame_3_to_proto",
         ":fse3_proto_cc",
@@ -106,6 +108,7 @@ cc_test(
 proto_library(
     name = "fse3_proto",
     srcs = ["fse3.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":frame_3_proto",
         ":se3_proto",
@@ -121,6 +124,7 @@ cc_proto_library(
 proto_library(
     name = "fso3_proto",
     srcs = ["fso3.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":frame_3_proto",
         ":so3_proto",

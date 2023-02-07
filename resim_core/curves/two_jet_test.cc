@@ -41,7 +41,7 @@ class TwoJetTestsBase : public ::testing::Test {
 };
 
 // TwoJetL and TwoJetR implement a number of common methods (as enfoced in the
-// TwoJetType concept). Therfore some tests are also common these are
+// TwoJetType concept). Therefore some tests are also common these are
 // implemented below and templated to the TwoJetL and TwoJetR types.
 template <TwoJetType TwoJet>
 class TwoJetCommonTests : public TwoJetTestsBase {

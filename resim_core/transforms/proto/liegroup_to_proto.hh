@@ -19,7 +19,7 @@ void pack_liegroup(const Group &in, Msg *out);
 
 // Unpack a LieGroup proto message into a corresponding LieGroupType.
 // @param[in]  in  - A proto message representing the LieGroupType.
-// @returns - An unpacked LieGroupType object.
+// @param[in-out] out - An unpacked LieGroupType object.
 template <transforms::LieGroupType Group, typename Msg>
 void unpack_liegroup(const Msg &in, InOut<Group> out);
 
