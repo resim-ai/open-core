@@ -23,7 +23,6 @@ cc_test(
 
 cc_library(
     name = "random_matrix",
-    testonly = True,
     hdrs = ["random_matrix.hh"],
     visibility = ["//visibility:public"],
     deps = [

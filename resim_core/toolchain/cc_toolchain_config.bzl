@@ -104,6 +104,14 @@ def _impl(ctx):
                 ),
             ],
         ),
+        feature(
+            name = "supports_pic",
+            enabled = True,
+        ),
+        feature(
+            name = "supports_dynamic_linker",
+            enabled = True,
+        ),
     ]
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,

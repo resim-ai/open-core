@@ -46,6 +46,8 @@ void McapLogger::log_proto(
   msg.publishTime = time.time_since_epoch().count();
   msg.logTime = time.time_since_epoch().count();
 
+  msg.sequence = 0U;
+
   std::string data_string{message.SerializeAsString()};
   std::vector<std::byte> data_vec{data_string.size()};
   std::memcpy(data_vec.data(), data_string.data(), data_string.size());
