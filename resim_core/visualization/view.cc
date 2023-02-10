@@ -4,13 +4,13 @@
 #include <glog/logging.h>
 
 #include "resim_core/utils/status.hh"
+#include "resim_core/visualization/client/view_client_libcurl.hh"
 #include "resim_core/visualization/view_update.hh"
 
 namespace resim::visualization {
 
-View::View() : client_{nullptr} {
-  // TODO(https://app.asana.com/0/1203751014069901/1203791103932376/f) Set a
-  // default client implementation once one is available
+View::View() {
+  client_ = std::make_unique<LibcurlClient>("http://api.resim.ai:8080");
 }
 
 View &View::get_instance() {
