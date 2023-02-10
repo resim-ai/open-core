@@ -19,10 +19,12 @@ int main(int argc, char *argv[]) {
   const double TRANSLATION_Y = 0.0;
   const double TRANSLATION_Z = 1.0;
 
+  // Initialize our SO3 with an Angle-Axis rotation of ANGLE_RAD radians
+  // about the Z axis {0., 0., 1.}.
   const SO3 world_from_robot_rot(ANGLE_RAD, {AXIS_X, AXIS_Y, AXIS_Z});
 
-  // Combine the rotation with a simple translation {x, y, z}
-  // to make an SE3 rigid transform.
+  // Combine the rotation with a simple translation {x, y, z} to make an SE3
+  // rigid transform.
   const SE3 world_from_robot(
       world_from_robot_rot,
       {TRANSLATION_X, TRANSLATION_Y, TRANSLATION_Z});
