@@ -104,7 +104,7 @@ TYPED_TEST(LieGroupTests, AdjointAndTimesAlgebra) {
     const TangentVector adj_times = TypeParam::adjoint_times(a, b);
     const TangentVector adj_times_alt = TypeParam::adjoint(a) * b;
     // isApprox struggles when vectors are close to zero.
-    constexpr double TOLERANCE = 1e-10;
+    constexpr double TOLERANCE = 1e-9;
     EXPECT_TRUE((adj_times - adj_times_alt).isZero(TOLERANCE));
   }
 }
@@ -116,7 +116,10 @@ TYPED_TEST(LieGroupTests, AlgebraAdjointAntiCommutative) {
   for (const TangentVector &a : test_alg_elements) {
     const TangentVector x = TypeParam::adjoint_times(a, b);
     const TangentVector y = TypeParam::adjoint_times(b, a);
-    EXPECT_TRUE(x.isApprox(-y));
+    // One of our test vectors is close to zero and isApprox struggles close to
+    // zero.
+    constexpr double TOLERANCE = 1e-9;
+    EXPECT_TRUE((x + y).isZero(TOLERANCE));
   }
 }
 

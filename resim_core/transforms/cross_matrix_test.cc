@@ -14,7 +14,8 @@ TEST(CrossMatrixTest, CrossEquivalence) {
   for (const Eigen::Vector3d &vector : test_vectors) {
     Eigen::Vector3d cross_a = cross_matrix(vector) * other;
     Eigen::Vector3d cross_b = vector.cross(other);
-    EXPECT_TRUE(cross_a.isApprox(cross_b));
+    // Some of our test vectors are near zero.
+    EXPECT_TRUE((cross_a - cross_b).isZero());
   }
 }
 

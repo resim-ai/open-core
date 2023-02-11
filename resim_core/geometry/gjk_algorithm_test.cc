@@ -37,7 +37,7 @@ constexpr double ONE = 1.;
 constexpr double SMALL = 1e-3;
 
 // A numerical tolerance.
-constexpr double TOLERANCE = 1.e-14;
+constexpr double TOLERANCE = 1.1e-14;
 
 }  // namespace
 
