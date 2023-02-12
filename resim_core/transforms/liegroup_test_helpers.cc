@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "resim_core/testing/random_matrix.hh"
+#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/type.hh"
@@ -104,5 +105,11 @@ template std::vector<SO3> make_test_group_elements<SO3>(unsigned);
 template std::vector<SE3::TangentVector> make_test_algebra_elements<SE3>(
     unsigned);
 template std::vector<SE3> make_test_group_elements<SE3>(unsigned);
+template std::vector<FSO3::TangentVector> make_test_algebra_elements<FSO3>(
+    unsigned);
+template std::vector<FSO3> make_test_group_elements<FSO3>(unsigned);
+template std::vector<FSE3::TangentVector> make_test_algebra_elements<FSE3>(
+    unsigned);
+template std::vector<FSE3> make_test_group_elements<FSE3>(unsigned);
 
 }  // namespace resim::transforms

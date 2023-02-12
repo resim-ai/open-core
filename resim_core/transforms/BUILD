@@ -103,6 +103,7 @@ cc_library(
     hdrs = ["liegroup_test_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":framed_group",
         ":se3",
         ":so3",
         "//resim_core/testing:random_matrix",
@@ -116,6 +117,7 @@ cc_test(
     name = "liegroup_test_helpers_test",
     srcs = ["liegroup_test_helpers_test.cc"],
     deps = [
+        ":framed_group",
         ":liegroup_test_helpers",
         ":se3",
         ":so3",

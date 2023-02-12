@@ -61,6 +61,7 @@ cc_test(
     deps = [
         ":t_curve",
         ":two_jet",
+        ":two_jet_test_helpers",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
@@ -122,6 +123,7 @@ cc_test(
     deps = [
         ":two_jet",
         ":two_jet_concepts",
+        ":two_jet_test_helpers",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
@@ -172,12 +174,40 @@ cc_test(
     deps = [
         ":extrapolate_two_jet",
         ":two_jet",
+        ":two_jet_test_helpers",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "two_jet_test_helpers",
+    testonly = 1,
+    srcs = ["two_jet_test_helpers.cc"],
+    hdrs = ["two_jet_test_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":two_jet",
+        ":two_jet_concepts",
+        "//resim_core/testing:random_matrix",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_test_helpers",
+        "//resim_core/transforms:se3",
+        "//resim_core/transforms:so3",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_test(
+    name = "two_jet_test_helpers_test",
+    srcs = ["two_jet_test_helpers_test.cc"],
+    deps = [
+        ":two_jet_test_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )

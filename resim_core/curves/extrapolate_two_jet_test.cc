@@ -5,6 +5,7 @@
 #include <random>
 
 #include "resim_core/curves/two_jet.hh"
+#include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
@@ -14,35 +15,15 @@
 
 namespace resim::curves {
 
-namespace {
-
-template <transforms::LieGroupType Group, typename Rng>
-Group random_group_member(Rng &&rng) {
-  return Group::exp(testing::random_vector<typename Group::TangentVector>(
-      std::forward<Rng>(rng)));
-}
-
-template <transforms::LieGroupType Group, typename Rng>
-curves::TwoJetL<Group> random_two_jet(Rng &&rng) {
-  return curves::TwoJetL<Group>{
-      random_group_member<Group>(std::forward<Rng>(rng)),
-      testing::random_vector<typename Group::TangentVector>(
-          std::forward<Rng>(rng)),
-      testing::random_vector<typename Group::TangentVector>(
-          std::forward<Rng>(rng))};
-}
-
-}  // namespace
-
-template <transforms::LieGroupType T>
+template <transforms::LieGroupType Group>
 class ExtrapolateTwoJetTests : public ::testing::Test {
  protected:
   void test_extrapolation(const double dt) {
     // SETUP
-    TwoJetL<T> two_jet{random_two_jet<T>(this->rng_)};
+    TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
 
     // ACTION
-    TwoJetL<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+    TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
 
     // VERIFICATION
     EXPECT_TRUE(((extrapolated_two_jet.frame_from_ref() *
@@ -60,7 +41,7 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
 
     // For framed groups, verify that the frame assignment is done
     // correctly.
-    if constexpr (transforms::FramedGroupType<T>) {
+    if constexpr (transforms::FramedGroupType<Group>) {
       EXPECT_EQ(
           extrapolated_two_jet.frame_from_ref().into(),
           two_jet.frame_from_ref().into());
@@ -71,18 +52,18 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
   }
 
   void test_frame_overload(const double dt) {
-    if constexpr (transforms::FramedGroupType<T>) {
+    if constexpr (transforms::FramedGroupType<Group>) {
       // SETUP
-      const transforms::Frame<T::DIMS> frame;
-      const TwoJetL<T> two_jet{random_two_jet<T>(this->rng_)};
+      const transforms::Frame<Group::DIMS> frame;
+      const TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
 
       // ACTION
-      TwoJetL<T> extrapolated_two_jet_explicit{
+      TwoJetL<Group> extrapolated_two_jet_explicit{
           extrapolate_two_jet(two_jet, dt, frame)};
 
       // VERIFICATION
       // Verify using the other overload tested above
-      TwoJetL<T> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+      TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
       EXPECT_TRUE(
           extrapolated_two_jet.is_approx(extrapolated_two_jet_explicit));
 
@@ -95,7 +76,8 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
 
  private:
   static constexpr unsigned SEED = 839U;
-  std::mt19937 rng_{SEED};
+  TwoJetTestHelper<TwoJetL<Group>> tj_helper =
+      TwoJetTestHelper<TwoJetL<Group>>(SEED);
 };
 
 using LieGroupTypes = ::testing::

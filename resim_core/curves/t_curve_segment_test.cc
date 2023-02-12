@@ -100,7 +100,7 @@ using FramedTypes = ::testing::Types<FSE3, FSO3>;
 TYPED_TEST_SUITE(FramedTCurveSegmentTests, FramedTypes);
 
 TYPED_TEST(FramedTCurveSegmentTests, ConstructionWithFrames) {
-  // Test well formed costruction.
+  // Test well formed construction.
   EXPECT_NO_THROW({
     const TCurveSegment<TypeParam> good_curve = this->test_t_curve_segment();
     (void)good_curve;  // Avoid unused variable errors.

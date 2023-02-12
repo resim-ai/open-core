@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "resim_core/curves/two_jet.hh"
+#include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
@@ -18,6 +19,9 @@ using FSE3 = transforms::FSE3;
 using FSO3 = transforms::FSO3;
 }  // namespace
 
+// An explicit seed for deterministic generation of test objects.
+constexpr unsigned int SEED = 401;
+
 template <typename T>
 class TCurveTests : public ::testing::Test {
  public:
@@ -26,31 +30,22 @@ class TCurveTests : public ::testing::Test {
   inline static const std::vector<double> DEFAULT_TIMES{0.0, 0.15, 0.71};
 
  protected:
-  void SetUp() override {
-    constexpr unsigned int SEED = 401;
-    rng_ = std::mt19937(SEED);
-  }
-  // TODO(https://app.asana.com/0/1202178773526279/1202880741183492/f)
-  typename T::TangentVector test_vector() {
-    return testing::random_vector<typename T::TangentVector>(rng_);
-  }
-
-  TwoJetL<T> test_two_jet() {
-    return TwoJetL<T>(T::exp(test_vector()), test_vector(), test_vector());
-  }
-
+  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJetL<T>>(SEED); }
+  TwoJetTestHelper<TwoJetL<T>> &tj_helper() { return tj_helper_; }
   TwoJetL<T> test_two_jet(const Frame &into) requires
       transforms::FramedGroupType<T> {
-    return TwoJetL<T>(
-        T::exp(test_vector(), into, REF_FRAME),
-        test_vector(),
-        test_vector());
+    TwoJetL<T> test_tj = tj_helper().make_test_two_jet();
+    T group = test_tj.frame_from_ref();
+    group.set_into(into);
+    group.set_from(REF_FRAME);
+    test_tj.set_frame_from_ref(group);
+    return test_tj;
   }
 
   TCurve<T> test_curve(const std::vector<double> &times) {
     TCurve<T> test_curve;
     for (const double &t : times) {
-      test_curve.append({t, test_two_jet()});
+      test_curve.append({t, tj_helper().make_test_two_jet()});
     }
     return test_curve;
   }
@@ -68,7 +63,7 @@ class TCurveTests : public ::testing::Test {
   TCurve<T> test_curve_default() { return test_curve(DEFAULT_TIMES); }
 
  private:
-  std::mt19937 rng_;
+  TwoJetTestHelper<TwoJetL<T>> tj_helper_;
 };
 
 using LieGroupTypes = ::testing::Types<FSE3, FSO3, SE3, SO3>;
@@ -161,7 +156,8 @@ TYPED_TEST(TCurveTests, ListInitializationAppend) {
 TYPED_TEST(TCurveTests, ControlAndSegmentDataCheck) {
   // Create default curve.
   TCurve<TypeParam> curve_a = this->test_curve_default();
-  // Confirm that there are one less segments than control points - as expected.
+  // Confirm that there are one less segments than control points - as
+  // expected.
   const size_t ctrl_count = curve_a.control_pts().size();
   EXPECT_EQ(ctrl_count - 1, curve_a.segments().size());
 }
@@ -208,7 +204,7 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
   // case.
   EXPECT_DEATH(
       {
-        curve_a.append({LO_TIME, this->test_two_jet()});
+        curve_a.append({LO_TIME, TestFixture::tj_helper().make_test_two_jet()});
       },
       "Control points must have strictly increasing time");
   if constexpr (transforms::FramedGroupType<TypeParam>) {

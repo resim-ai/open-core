@@ -96,6 +96,7 @@ cc_test(
         ":two_jetl_fso3_to_proto",
         ":two_jetl_se3_to_proto",
         ":two_jetl_so3_to_proto",
+        "//resim_core/curves:two_jet_test_helpers",
         "//resim_core/math/proto:matrix_to_proto",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",

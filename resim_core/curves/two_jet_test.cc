@@ -5,6 +5,7 @@
 #include <random>
 
 #include "resim_core/curves/two_jet_concepts.hh"
+#include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
@@ -26,38 +27,27 @@ using FSO3 = transforms::FSO3;
 // fundamental functionality which should not be susceptible to errors of high
 // sensitivity. Seven is a (hopefully) lucky guess at the 'right' number.
 constexpr unsigned int NUM_TRIES = 7;
+
+// An explicit seed for deterministic generation of test objects.
+constexpr unsigned int SEED = 11;
+
 }  // namespace
-
-class TwoJetTestsBase : public ::testing::Test {
- protected:
-  void SetUp() override {
-    constexpr unsigned int SEED = 31;
-    rng_.seed(SEED);
-  }
-  std::mt19937 &rng() { return rng_; }
-
- private:
-  std::mt19937 rng_;
-};
 
 // TwoJetL and TwoJetR implement a number of common methods (as enfoced in the
 // TwoJetType concept). Therefore some tests are also common these are
 // implemented below and templated to the TwoJetL and TwoJetR types.
 template <TwoJetType TwoJet>
-class TwoJetCommonTests : public TwoJetTestsBase {
+class TwoJetTestsBase : public ::testing::Test {
  protected:
-  typename TwoJet::GroupType::TangentVector test_vector() {
-    return testing::random_vector<typename TwoJet::GroupType::TangentVector>(
-        this->rng());
-  }
+  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJet>(SEED); }
+  TwoJetTestHelper<TwoJet> &tj_helper() { return tj_helper_; }
 
-  TwoJet test_two_jet() {
-    return TwoJet(
-        TwoJet::GroupType::exp(test_vector()),
-        test_vector(),
-        test_vector());
-  }
+ private:
+  TwoJetTestHelper<TwoJet> tj_helper_;
 };
+
+template <typename T>
+class TwoJetCommonTests : public TwoJetTestsBase<T> {};
 
 using TwoJetTypes = ::testing::Types<
     TwoJetL<SE3>,
@@ -78,18 +68,21 @@ using UnframedTwoJetTypes =
 TYPED_TEST_SUITE(UnframedTwoJetCommonTests, UnframedTwoJetTypes);
 
 TYPED_TEST(TwoJetCommonTests, InverseRoundTrip) {
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TypeParam test_tj = this->test_two_jet();
-    EXPECT_FALSE(test_tj.is_approx(test_tj.inverse()));
+  std::vector<TypeParam> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+  for (const TypeParam &test_tj : test_elements) {
+    EXPECT_TRUE(
+        test_tj.is_approx(TypeParam::identity()) ||
+        !test_tj.is_approx(test_tj.inverse()));
     EXPECT_TRUE(test_tj.is_approx(test_tj.inverse().inverse()));
   }
 }
 
 TYPED_TEST(UnframedTwoJetCommonTests, Associativity) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TypeParam a_from_b = this->test_two_jet();
-    TypeParam b_from_c = this->test_two_jet();
-    TypeParam c_from_d = this->test_two_jet();
+    TypeParam a_from_b = TestFixture::tj_helper().make_test_two_jet();
+    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet();
+    TypeParam c_from_d = TestFixture::tj_helper().make_test_two_jet();
     TypeParam a_from_d_0 = (a_from_b * b_from_c) * c_from_d;
     TypeParam a_from_d_1 = a_from_b * (b_from_c * c_from_d);
     EXPECT_TRUE(a_from_d_0.is_approx(a_from_d_1));
@@ -98,8 +91,8 @@ TYPED_TEST(UnframedTwoJetCommonTests, Associativity) {
 
 TYPED_TEST(UnframedTwoJetCommonTests, Composition) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TypeParam a_from_b = this->test_two_jet();
-    TypeParam b_from_c = this->test_two_jet();
+    TypeParam a_from_b = TestFixture::tj_helper().make_test_two_jet();
+    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet();
     TypeParam a_from_c = a_from_b * b_from_c;
 
     EXPECT_FALSE(a_from_c.is_approx(a_from_b));
@@ -113,19 +106,8 @@ TYPED_TEST(UnframedTwoJetCommonTests, Composition) {
 // TwoJetL specific tests. These tests use methods only defined in TwoJetL
 // and must be tested separately.
 template <transforms::LieGroupType Group>
-class TwoJetLTests : public TwoJetTestsBase {
+class TwoJetLTests : public TwoJetTestsBase<TwoJetL<Group>> {
  protected:
-  typename Group::TangentVector test_vector() {
-    return testing::random_vector<typename Group::TangentVector>(this->rng());
-  }
-
-  TwoJetL<Group> test_two_jet() {
-    return TwoJetL<Group>(
-        Group::exp(test_vector()),
-        test_vector(),
-        test_vector());
-  }
-
   TwoJetL<Group> extrapolate(const TwoJetL<Group> &x, const double dt) {
     constexpr double HALF = 0.5;
     return TwoJetL<Group>{
@@ -147,8 +129,9 @@ using UnframedTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(UnframedTwoJetLTests, UnframedTypes);
 
 TYPED_TEST(TwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJetL<TypeParam> test_tj = this->test_two_jet();
+  std::vector<TwoJetL<TypeParam>> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+  for (const TwoJetL<TypeParam> &test_tj : test_elements) {
     TwoJetL<TypeParam> id_tj = TwoJetL<TypeParam>::identity();
     TwoJetL<TypeParam> expected_id_tj = test_tj.inverse() * test_tj;
     EXPECT_TRUE(
@@ -160,8 +143,8 @@ TYPED_TEST(TwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
 
 TYPED_TEST(UnframedTwoJetLTests, NumericalDerivativesTest) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJetL<TypeParam> a_from_b = this->test_two_jet();
-    TwoJetL<TypeParam> b_from_c = this->test_two_jet();
+    TwoJetL<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
+    TwoJetL<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
     TwoJetL<TypeParam> a_from_c = a_from_b * b_from_c;
 
     constexpr double h = 1e-8;
@@ -179,7 +162,7 @@ TYPED_TEST(UnframedTwoJetLTests, NumericalDerivativesTest) {
 }
 
 TYPED_TEST(TwoJetLTests, ConversionRoundTrip) {
-  TwoJetL<TypeParam> a_from_b = this->test_two_jet();
+  TwoJetL<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
   TwoJetR<TypeParam> b_from_a = a_from_b.right_two_jet();
   TwoJetL<TypeParam> a_from_b_2 = b_from_a.left_two_jet();
 
@@ -192,8 +175,8 @@ TYPED_TEST(TwoJetLTests, ConversionRoundTrip) {
 }
 
 TYPED_TEST(UnframedTwoJetLTests, ConversionAssociativity) {
-  TwoJetL<TypeParam> a_from_b = this->test_two_jet();
-  TwoJetL<TypeParam> b_from_c = this->test_two_jet();
+  TwoJetL<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
+  TwoJetL<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
   TwoJetR<TypeParam> b_from_a = a_from_b.right_two_jet();
   TwoJetR<TypeParam> c_from_b = b_from_c.right_two_jet();
 
@@ -204,8 +187,12 @@ TYPED_TEST(UnframedTwoJetLTests, ConversionAssociativity) {
 }
 
 TYPED_TEST(TwoJetLTests, IsApproxTest) {
-  TwoJetL<TypeParam> test_two_jet_0 = this->test_two_jet();
-  TwoJetL<TypeParam> test_two_jet_1 = this->test_two_jet();
+  TwoJetL<TypeParam> test_two_jet_0 =
+      TestFixture::tj_helper().make_test_two_jet();
+  ;
+  TwoJetL<TypeParam> test_two_jet_1 =
+      TestFixture::tj_helper().make_test_two_jet();
+  ;
   EXPECT_FALSE(test_two_jet_0.is_approx(test_two_jet_1));
   test_two_jet_0.set_frame_from_ref(test_two_jet_1.frame_from_ref());
   EXPECT_FALSE(test_two_jet_0.is_approx(test_two_jet_1));
@@ -218,15 +205,8 @@ TYPED_TEST(TwoJetLTests, IsApproxTest) {
 // TwoJetR specific tests. These tests use methods only defined in TwoJetR
 // and must be tested separately.
 template <typename Group>
-class TwoJetRTests : public TwoJetLTests<Group> {
+class TwoJetRTests : public TwoJetTestsBase<TwoJetR<Group>> {
  protected:
-  TwoJetR<Group> test_two_jet() {
-    return TwoJetR<Group>(
-        Group::exp(this->test_vector()),
-        this->test_vector(),
-        this->test_vector());
-  }
-
   TwoJetR<Group> extrapolate(const TwoJetR<Group> &x, const double dt) {
     constexpr double HALF = 0.5;
     return TwoJetR<Group>{
@@ -246,21 +226,25 @@ class UnframedTwoJetRTests : public TwoJetRTests<T> {};
 TYPED_TEST_SUITE(UnframedTwoJetRTests, UnframedTypes);
 
 TYPED_TEST(TwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJetR<TypeParam> test_tj = this->test_two_jet();
+  std::vector<TwoJetR<TypeParam>> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+  for (const auto &test_tj : test_elements) {
     TwoJetR<TypeParam> id_tj = TwoJetR<TypeParam>::identity();
     TwoJetR<TypeParam> expected_id_tj = test_tj.inverse() * test_tj;
     EXPECT_TRUE(
         expected_id_tj.ref_from_frame().is_approx(id_tj.ref_from_frame()));
-    EXPECT_TRUE(expected_id_tj.d_ref_from_frame().isZero());
-    EXPECT_TRUE(expected_id_tj.d2_ref_from_frame().isZero());
+    // TwoJetR results in inexact inversions, unlike TwoJetL
+    // TODO(https://app.asana.com/0/1202178773526279/1203942988562265/f)
+    constexpr double TOLERANCE = 1e-9;
+    EXPECT_TRUE(expected_id_tj.d_ref_from_frame().isZero(TOLERANCE));
+    EXPECT_TRUE(expected_id_tj.d2_ref_from_frame().isZero(TOLERANCE));
   }
 }
 
 TYPED_TEST(UnframedTwoJetRTests, NumericalDerivativesTest) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJetR<TypeParam> a_from_b = this->test_two_jet();
-    TwoJetR<TypeParam> b_from_c = this->test_two_jet();
+    TwoJetR<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
+    TwoJetR<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
     TwoJetR<TypeParam> a_from_c = a_from_b * b_from_c;
 
     constexpr double h = 1e-8;
@@ -278,7 +262,7 @@ TYPED_TEST(UnframedTwoJetRTests, NumericalDerivativesTest) {
 }
 
 TYPED_TEST(TwoJetRTests, ConversionRoundTrip) {
-  TwoJetR<TypeParam> a_from_b = this->test_two_jet();
+  TwoJetR<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
   TwoJetL<TypeParam> b_from_a = a_from_b.left_two_jet();
   TwoJetR<TypeParam> a_from_b_2 = b_from_a.right_two_jet();
 
@@ -291,8 +275,8 @@ TYPED_TEST(TwoJetRTests, ConversionRoundTrip) {
 }
 
 TYPED_TEST(UnframedTwoJetRTests, ConversionAssociativity) {
-  TwoJetR<TypeParam> a_from_b = this->test_two_jet();
-  TwoJetR<TypeParam> b_from_c = this->test_two_jet();
+  TwoJetR<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
+  TwoJetR<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
   TwoJetL<TypeParam> b_from_a = a_from_b.left_two_jet();
   TwoJetL<TypeParam> c_from_b = b_from_c.left_two_jet();
 
@@ -303,8 +287,10 @@ TYPED_TEST(UnframedTwoJetRTests, ConversionAssociativity) {
 }
 
 TYPED_TEST(TwoJetRTests, IsApproxTest) {
-  TwoJetR<TypeParam> test_two_jet_0 = this->test_two_jet();
-  TwoJetR<TypeParam> test_two_jet_1 = this->test_two_jet();
+  TwoJetR<TypeParam> test_two_jet_0 =
+      TestFixture::tj_helper().make_test_two_jet();
+  TwoJetR<TypeParam> test_two_jet_1 =
+      TestFixture::tj_helper().make_test_two_jet();
   EXPECT_FALSE(test_two_jet_0.is_approx(test_two_jet_1));
   test_two_jet_0.set_ref_from_frame(test_two_jet_1.ref_from_frame());
   EXPECT_FALSE(test_two_jet_0.is_approx(test_two_jet_1));

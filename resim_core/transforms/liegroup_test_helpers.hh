@@ -8,7 +8,7 @@ namespace detail {
 constexpr unsigned MIN_TEST_ELEMENTS = 7;
 }
 
-// Builds and returns a vector containint a fixed number of Eigen nx1 matrices
+// Builds and returns a vector containing a fixed number of Eigen nx1 matrices
 // (Vectors) that are useful for testing. The vectors are a mixture of edge
 // cases (e.g. all zeros, all negative one) and randomly populated elements.
 // @param[in] count - Optionally, the number of vectors to return. The default

@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "random"
 #include "resim_core/curves/proto/two_jet.pb.h"
 #include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
@@ -9,6 +11,7 @@
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
 #include "resim_core/curves/two_jet.hh"
+#include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/math/proto/matrix_to_proto.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
@@ -34,35 +37,23 @@ using TwoJetFSO3 = curves::TwoJetL<transforms::FSO3>;
 // fundamental functionality which should not be susceptible to errors of high
 // sensitivity. Seven is a (hopefully) lucky guess at the 'right' number.
 constexpr unsigned int NUM_TRIES = 7;
+
+// An explicit seed for deterministic generation of test objects.
+constexpr unsigned int SEED = 31;
 }  // namespace
 
-class TwoJetToProtoTestsBase : public ::testing::Test {
+template <typename Pair>
+class TwoJetToProtoTests : public ::testing::Test {
  protected:
   void SetUp() override {
-    constexpr unsigned int SEED = 31;
-    rng_.seed(SEED);
+    tj_helper_ = TwoJetTestHelper<typename Pair::first_type>(SEED);
   }
-  std::mt19937 &rng() { return rng_; }
+  TwoJetTestHelper<typename Pair::first_type> &tj_helper() {
+    return tj_helper_;
+  }
 
  private:
-  std::mt19937 rng_;
-};
-
-template <typename Pair>
-class TwoJetToProtoTests : public TwoJetToProtoTestsBase {
- protected:
-  using TwoJet = typename Pair::first_type;
-  typename TwoJet::GroupType::TangentVector test_vector() {
-    return testing::random_vector<typename TwoJet::GroupType::TangentVector>(
-        this->rng());
-  }
-
-  TwoJet test_two_jet() {
-    return TwoJet(
-        TwoJet::GroupType::exp(test_vector()),
-        test_vector(),
-        test_vector());
-  }
+  TwoJetTestHelper<typename Pair::first_type> tj_helper_;
 };
 
 using TwoJetTypePairs = ::testing::Types<
@@ -79,9 +70,10 @@ TYPED_TEST(TwoJetToProtoTests, TestPack) {
   using Group = typename TwoJet::GroupType;
   using TwoJetMsg = typename TypeParam::second_type;
   TwoJetMsg msg;
+  std::vector<TwoJet> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   // ACTION/VERIFICATION
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJet test_tj = this->test_two_jet();
+  for (const TwoJet &test_tj : test_elements) {
     proto::pack(test_tj, &msg);
     const Group retrieved_group =
         transforms::proto::unpack(msg.frame_from_ref());
@@ -103,9 +95,10 @@ TYPED_TEST(TwoJetToProtoTests, TestRoundTrip) {
   using TwoJet = typename TypeParam::first_type;
   using TwoJetMsg = typename TypeParam::second_type;
   TwoJetMsg msg;
+  std::vector<TwoJet> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   // ACTION/VERIFICATION
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJet test_tj = this->test_two_jet();
+  for (const TwoJet &test_tj : test_elements) {
     proto::pack(test_tj, &msg);
     const TwoJet retrieved_two_jet = proto::unpack(msg);
     EXPECT_TRUE(test_tj.is_approx(retrieved_two_jet));
@@ -120,9 +113,10 @@ TYPED_TEST_SUITE(TwoJetToProtoDeathTests, TwoJetTypePairs);
 TYPED_TEST(TwoJetToProtoDeathTests, TestPackNull) {
   // SETUP
   using TwoJet = typename TypeParam::first_type;
+  std::vector<TwoJet> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   // ACTION/VERIFICATION
-  for (unsigned int i = 0; i < NUM_TRIES; ++i) {
-    TwoJet test_tj = this->test_two_jet();
+  for (const TwoJet &test_tj : test_elements) {
     EXPECT_DEATH(
         { proto::pack(test_tj, nullptr); },
         "Can't pack into invalid proto!");

@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 
+#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -13,7 +14,7 @@ namespace resim::transforms {
 template <typename t>
 class LieGroupHelperTests : public ::testing::Test {};
 
-using LieGroupTypes = ::testing::Types<SO3, SE3>;
+using LieGroupTypes = ::testing::Types<SO3, SE3, FSO3, FSE3>;
 TYPED_TEST_SUITE(LieGroupHelperTests, LieGroupTypes);
 
 TYPED_TEST(LieGroupHelperTests, ReturnCounts) {
