@@ -2,6 +2,82 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
+    name = "d_curve_proto",
+    srcs = ["d_curve.proto"],
+    deps = [
+        "//resim_core/transforms/proto:fse3_proto",
+        "//resim_core/transforms/proto:se3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "d_curve_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":d_curve_proto"],
+)
+
+cc_library(
+    name = "d_curve_to_proto",
+    srcs = ["d_curve_to_proto.cc"],
+    hdrs = ["d_curve_to_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":d_curve_proto_cc",
+        "//resim_core/curves:d_curve",
+        "//resim_core/transforms:se3",
+        "//resim_core/transforms/proto:fse3_to_proto",
+        "//resim_core/transforms/proto:se3_to_proto",
+        "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_library(
+    name = "d_curve_se3_to_proto",
+    srcs = ["d_curve_se3_to_proto.cc"],
+    hdrs = ["d_curve_se3_to_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":d_curve_proto_cc",
+        ":d_curve_to_proto",
+        "//resim_core/transforms:se3",
+        "//resim_core/utils:inout",
+    ],
+)
+
+cc_library(
+    name = "d_curve_fse3_to_proto",
+    srcs = ["d_curve_fse3_to_proto.cc"],
+    hdrs = ["d_curve_fse3_to_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":d_curve_proto_cc",
+        ":d_curve_to_proto",
+        "//resim_core/curves:d_curve",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/utils:inout",
+    ],
+)
+
+cc_test(
+    name = "d_curve_to_proto_test",
+    srcs = ["d_curve_to_proto_test.cc"],
+    deps = [
+        ":d_curve_fse3_to_proto",
+        ":d_curve_proto_cc",
+        ":d_curve_se3_to_proto",
+        ":d_curve_to_proto",
+        "//resim_core/curves:d_curve",
+        "//resim_core/transforms:liegroup_test_helpers",
+        "//resim_core/transforms:se3",
+        "//resim_core/transforms/proto:fse3_to_proto",
+        "//resim_core/transforms/proto:se3_to_proto",
+        "//resim_core/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+proto_library(
     name = "two_jet_proto",
     srcs = ["two_jet.proto"],
     deps = [
