@@ -88,6 +88,11 @@ groups. Furthermore, the `FramedGroup` wrapper inherits from the underlying Lie
 group type so it can be passed to functions for that type as well, although the
 checking is not dynamic, so users should take care in such cases.
 
+## More Information
+
+For more information on the features our Lie group classes provide for
+working with the derivatives of functions involving Lie groups, please refer to [this guide](./liegroup_derivatives.md).
+
 ## External Links
 For more information, please take a look at the following links:
 
