@@ -10,6 +10,10 @@
 #include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
+#include "resim_core/curves/proto/two_jetr_fse3_to_proto.hh"
+#include "resim_core/curves/proto/two_jetr_fso3_to_proto.hh"
+#include "resim_core/curves/proto/two_jetr_se3_to_proto.hh"
+#include "resim_core/curves/proto/two_jetr_so3_to_proto.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/math/proto/matrix_to_proto.hh"
@@ -25,10 +29,15 @@
 namespace resim::curves {
 
 namespace {
-using TwoJetSE3 = curves::TwoJetL<transforms::SE3>;
-using TwoJetSO3 = curves::TwoJetL<transforms::SO3>;
-using TwoJetFSE3 = curves::TwoJetL<transforms::FSE3>;
-using TwoJetFSO3 = curves::TwoJetL<transforms::FSO3>;
+using TwoJetLSE3 = curves::TwoJetL<transforms::SE3>;
+using TwoJetLSO3 = curves::TwoJetL<transforms::SO3>;
+using TwoJetLFSE3 = curves::TwoJetL<transforms::FSE3>;
+using TwoJetLFSO3 = curves::TwoJetL<transforms::FSO3>;
+
+using TwoJetRSE3 = curves::TwoJetR<transforms::SE3>;
+using TwoJetRSO3 = curves::TwoJetR<transforms::SO3>;
+using TwoJetRFSE3 = curves::TwoJetR<transforms::FSE3>;
+using TwoJetRFSO3 = curves::TwoJetR<transforms::FSO3>;
 
 // For each test below we employ (deterministic) randomly generated TwoJet
 // objects. We desire to test a few different generated TwoJets in order to
@@ -43,7 +52,7 @@ constexpr unsigned int SEED = 31;
 }  // namespace
 
 template <typename Pair>
-class TwoJetToProtoTests : public ::testing::Test {
+class TwoJetToProtoTestsBase : public ::testing::Test {
  protected:
   void SetUp() override {
     tj_helper_ = TwoJetTestHelper<typename Pair::first_type>(SEED);
@@ -56,41 +65,22 @@ class TwoJetToProtoTests : public ::testing::Test {
   TwoJetTestHelper<typename Pair::first_type> tj_helper_;
 };
 
+template <typename Pair>
+class TwoJetToProtoCommonTests : public TwoJetToProtoTestsBase<Pair> {};
+
 using TwoJetTypePairs = ::testing::Types<
-    std::pair<TwoJetSE3, proto::TwoJetL_SE3>,
-    std::pair<TwoJetSO3, proto::TwoJetL_SO3>,
-    std::pair<TwoJetFSO3, proto::TwoJetL_FSO3>,
-    std::pair<TwoJetFSE3, proto::TwoJetL_FSE3>>;
+    std::pair<TwoJetLSE3, proto::TwoJetL_SE3>,
+    std::pair<TwoJetLSO3, proto::TwoJetL_SO3>,
+    std::pair<TwoJetLFSO3, proto::TwoJetL_FSO3>,
+    std::pair<TwoJetLFSE3, proto::TwoJetL_FSE3>,
+    std::pair<TwoJetRSE3, proto::TwoJetR_SE3>,
+    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>,
+    std::pair<TwoJetRFSO3, proto::TwoJetR_FSO3>,
+    std::pair<TwoJetRFSE3, proto::TwoJetR_FSE3>>;
 
-TYPED_TEST_SUITE(TwoJetToProtoTests, TwoJetTypePairs);
+TYPED_TEST_SUITE(TwoJetToProtoCommonTests, TwoJetTypePairs);
 
-TYPED_TEST(TwoJetToProtoTests, TestPack) {
-  // SETUP
-  using TwoJet = typename TypeParam::first_type;
-  using Group = typename TwoJet::GroupType;
-  using TwoJetMsg = typename TypeParam::second_type;
-  TwoJetMsg msg;
-  std::vector<TwoJet> test_elements =
-      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
-  // ACTION/VERIFICATION
-  for (const TwoJet &test_tj : test_elements) {
-    proto::pack(test_tj, &msg);
-    const Group retrieved_group =
-        transforms::proto::unpack(msg.frame_from_ref());
-    EXPECT_TRUE(test_tj.frame_from_ref().is_approx(retrieved_group));
-    // Now test the derivatives
-    typename Group::TangentVector d_frame_from_ref;
-    math::proto::unpack_matrix(msg.d_frame_from_ref(), InOut(d_frame_from_ref));
-    EXPECT_TRUE(d_frame_from_ref.isApprox(test_tj.d_frame_from_ref()));
-    typename Group::TangentVector d2_frame_from_ref;
-    math::proto::unpack_matrix(
-        msg.d2_frame_from_ref(),
-        InOut(d2_frame_from_ref));
-    EXPECT_TRUE(d2_frame_from_ref.isApprox(test_tj.d2_frame_from_ref()));
-  }
-}
-
-TYPED_TEST(TwoJetToProtoTests, TestRoundTrip) {
+TYPED_TEST(TwoJetToProtoCommonTests, TestRoundTrip) {
   // SETUP
   using TwoJet = typename TypeParam::first_type;
   using TwoJetMsg = typename TypeParam::second_type;
@@ -106,7 +96,7 @@ TYPED_TEST(TwoJetToProtoTests, TestRoundTrip) {
 }
 
 template <typename Pair>
-using TwoJetToProtoDeathTests = TwoJetToProtoTests<Pair>;
+using TwoJetToProtoDeathTests = TwoJetToProtoCommonTests<Pair>;
 TYPED_TEST_SUITE(TwoJetToProtoDeathTests, TwoJetTypePairs);
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
@@ -123,5 +113,77 @@ TYPED_TEST(TwoJetToProtoDeathTests, TestPackNull) {
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
+
+template <typename Pair>
+class TwoJetLToProtoTests : public TwoJetToProtoTestsBase<Pair> {};
+
+using TwoJetLTypePairs = ::testing::Types<
+    std::pair<TwoJetLSE3, proto::TwoJetL_SE3>,
+    std::pair<TwoJetLSO3, proto::TwoJetL_SO3>,
+    std::pair<TwoJetLFSO3, proto::TwoJetL_FSO3>,
+    std::pair<TwoJetLFSE3, proto::TwoJetL_FSE3>>;
+
+TYPED_TEST_SUITE(TwoJetLToProtoTests, TwoJetLTypePairs);
+
+TYPED_TEST(TwoJetLToProtoTests, TestPack) {
+  // SETUP
+  using TwoJet = typename TypeParam::first_type;
+  using Group = typename TwoJet::GroupType;
+  using TwoJetMsg = typename TypeParam::second_type;
+  TwoJetMsg msg;
+  std::vector<TwoJet> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+  // ACTION/VERIFICATION
+  for (const TwoJet &test_tj : test_elements) {
+    proto::pack(test_tj, &msg);
+    const Group retrieved_group =
+        transforms::proto::unpack(msg.frame_from_ref());
+    EXPECT_TRUE(test_tj.frame_from_ref().is_approx(retrieved_group));
+    typename Group::TangentVector d_frame_from_ref;
+    math::proto::unpack_matrix(msg.d_frame_from_ref(), InOut(d_frame_from_ref));
+    EXPECT_TRUE(d_frame_from_ref.isApprox(test_tj.d_frame_from_ref()));
+    typename Group::TangentVector d2_frame_from_ref;
+    math::proto::unpack_matrix(
+        msg.d2_frame_from_ref(),
+        InOut(d2_frame_from_ref));
+    EXPECT_TRUE(d2_frame_from_ref.isApprox(test_tj.d2_frame_from_ref()));
+  }
+}
+
+template <typename Pair>
+class TwoJetRToProtoTests : public TwoJetToProtoTestsBase<Pair> {};
+
+using TwoJetRTypePairs = ::testing::Types<
+    std::pair<TwoJetRSE3, proto::TwoJetR_SE3>,
+    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>,
+    std::pair<TwoJetRFSO3, proto::TwoJetR_FSO3>,
+    std::pair<TwoJetRFSE3, proto::TwoJetR_FSE3>>;
+
+TYPED_TEST_SUITE(TwoJetRToProtoTests, TwoJetRTypePairs);
+
+TYPED_TEST(TwoJetRToProtoTests, TestPack) {
+  // SETUP
+  using TwoJet = typename TypeParam::first_type;
+  using Group = typename TwoJet::GroupType;
+  using TwoJetMsg = typename TypeParam::second_type;
+  TwoJetMsg msg;
+  std::vector<TwoJet> test_elements =
+      TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+  // ACTION/VERIFICATION
+  for (const TwoJet &test_tj : test_elements) {
+    proto::pack(test_tj, &msg);
+    const Group retrieved_group =
+        transforms::proto::unpack(msg.ref_from_frame());
+    EXPECT_TRUE(test_tj.ref_from_frame().is_approx(retrieved_group));
+    typename Group::TangentVector d_ref_from_frame;
+    math::proto::unpack_matrix(msg.d_ref_from_frame(), InOut(d_ref_from_frame));
+    EXPECT_TRUE(d_ref_from_frame.isApprox(test_tj.d_ref_from_frame()));
+    typename Group::TangentVector d2_ref_from_frame;
+    math::proto::unpack_matrix(
+        msg.d2_ref_from_frame(),
+        InOut(d2_ref_from_frame));
+    EXPECT_TRUE(d2_ref_from_frame.isApprox(test_tj.d2_ref_from_frame()));
+  }
+}
 
 }  // namespace resim::curves

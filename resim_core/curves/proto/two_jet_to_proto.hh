@@ -3,8 +3,8 @@
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/utils/inout.hh"
 
-// Pack and Unpack TwoJetL into their corresponding protobuf messages.
-// For example TwoJetL<SE3> -> proto::TwoJetL_SE3, TwoJetL<FSO3> ->
+// Pack and Unpack TwoJetL and TwoJetR into their corresponding protobuf
+// messages. For example TwoJetL<SE3> -> proto::TwoJetL_SE3, TwoJetL<FSO3> ->
 // proto::TwoJetL_FSO3.
 //
 // Note that these templated packing helpers are intended to
@@ -18,12 +18,24 @@ namespace resim::curves::proto {
 // @param[out] out - A pointer to a proto message representing the
 //                   TwoJetL.
 template <typename Group, typename Msg>
-void pack_two_jet(const TwoJetL<Group> &in, Msg *out);
+void pack_two_jetl(const TwoJetL<Group> &in, Msg *out);
 
-// Unpack a TwoJet proto message into a corresponding TwoJetL.
+// Unpack a TwoJetL proto message into a corresponding TwoJetL.
 // @param[in]  in  - A proto message representing the TwoJetL.
 // @param[in-out] out - An unpacked TwoJetL<Group> object.
 template <typename Group, typename Msg>
-void unpack_two_jet(const Msg &in, InOut<TwoJetL<Group>> out);
+void unpack_two_jetl(const Msg &in, InOut<TwoJetL<Group>> out);
 
+// Pack a TwoJetR object into a corresponding proto message.
+// @param[in]  in  - The TwoJetR object to be packed.
+// @param[out] out - A pointer to a proto message representing the
+//                   TwoJetR.
+template <typename Group, typename Msg>
+void pack_two_jetr(const TwoJetR<Group> &in, Msg *out);
+
+// Unpack a TwoJetR proto message into a corresponding TwoJetR.
+// @param[in]  in  - A proto message representing the TwoJetR.
+// @param[in-out] out - An unpacked TwoJetR<Group> object.
+template <typename Group, typename Msg>
+void unpack_two_jetr(const Msg &in, InOut<TwoJetR<Group>> out);
 }  // namespace resim::curves::proto

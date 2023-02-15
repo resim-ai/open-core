@@ -162,6 +162,54 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "two_jetr_se3_to_proto",
+    srcs = ["two_jetr_se3_to_proto.cc"],
+    hdrs = ["two_jetr_se3_to_proto.hh"],
+    deps = [
+        ":two_jet_proto_cc",
+        ":two_jet_to_proto",
+        "//resim_core/curves:two_jet",
+        "//resim_core/transforms:framed_group",
+    ],
+)
+
+cc_library(
+    name = "two_jetr_so3_to_proto",
+    srcs = ["two_jetr_so3_to_proto.cc"],
+    hdrs = ["two_jetr_so3_to_proto.hh"],
+    deps = [
+        ":two_jet_proto_cc",
+        ":two_jet_to_proto",
+        "//resim_core/curves:two_jet",
+        "//resim_core/transforms:framed_group",
+    ],
+)
+
+cc_library(
+    name = "two_jetr_fso3_to_proto",
+    srcs = ["two_jetr_fso3_to_proto.cc"],
+    hdrs = ["two_jetr_fso3_to_proto.hh"],
+    deps = [
+        ":two_jet_proto_cc",
+        ":two_jet_to_proto",
+        "//resim_core/curves:two_jet",
+        "//resim_core/transforms:framed_group",
+    ],
+)
+
+cc_library(
+    name = "two_jetr_fse3_to_proto",
+    srcs = ["two_jetr_fse3_to_proto.cc"],
+    hdrs = ["two_jetr_fse3_to_proto.hh"],
+    deps = [
+        ":two_jet_proto_cc",
+        ":two_jet_to_proto",
+        "//resim_core/curves:two_jet",
+        "//resim_core/transforms:framed_group",
+    ],
+)
+
 cc_test(
     name = "two_jet_to_proto_test",
     srcs = ["two_jet_to_proto_test.cc"],
@@ -172,6 +220,10 @@ cc_test(
         ":two_jetl_fso3_to_proto",
         ":two_jetl_se3_to_proto",
         ":two_jetl_so3_to_proto",
+        ":two_jetr_fse3_to_proto",
+        ":two_jetr_fso3_to_proto",
+        ":two_jetr_se3_to_proto",
+        ":two_jetr_so3_to_proto",
         "//resim_core/curves:two_jet_test_helpers",
         "//resim_core/math/proto:matrix_to_proto",
         "//resim_core/testing:random_matrix",

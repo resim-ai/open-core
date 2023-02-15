@@ -30,3 +30,27 @@ message TwoJetL_FSO3 {
     repeated double             d_frame_from_ref  = 2;
     repeated double             d2_frame_from_ref = 3;
 }
+
+message TwoJetR_SE3 {
+    resim.transforms.proto.SE3 ref_from_frame    = 1;
+    repeated double            d_ref_from_frame  = 2;
+    repeated double            d2_ref_from_frame = 3;
+}
+
+message TwoJetR_SO3 {
+    resim.transforms.proto.SO3 ref_from_frame    = 1;
+    repeated double            d_ref_from_frame  = 2;
+    repeated double            d2_ref_from_frame = 3;
+}
+
+message TwoJetR_FSE3 {
+    resim.transforms.proto.FSE3 ref_from_frame    = 1;
+    repeated double             d_ref_from_frame  = 2;
+    repeated double             d2_ref_from_frame = 3;
+}
+
+message TwoJetR_FSO3 {
+    resim.transforms.proto.FSO3 ref_from_frame    = 1;
+    repeated double             d_ref_from_frame  = 2;
+    repeated double             d2_ref_from_frame = 3;
+}
