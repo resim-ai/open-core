@@ -19,6 +19,7 @@
 #include "resim_core/math/proto/matrix_to_proto.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -125,30 +126,38 @@ using TwoJetLTypePairs = ::testing::Types<
 
 TYPED_TEST_SUITE(TwoJetLToProtoTests, TwoJetLTypePairs);
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TYPED_TEST(TwoJetLToProtoTests, TestPack) {
   // SETUP
   using TwoJet = typename TypeParam::first_type;
-  using Group = typename TwoJet::GroupType;
   using TwoJetMsg = typename TypeParam::second_type;
   TwoJetMsg msg;
   std::vector<TwoJet> test_elements =
       TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
+
   // ACTION/VERIFICATION
   for (const TwoJet &test_tj : test_elements) {
     proto::pack(test_tj, &msg);
-    const Group retrieved_group =
-        transforms::proto::unpack(msg.frame_from_ref());
-    EXPECT_TRUE(test_tj.frame_from_ref().is_approx(retrieved_group));
-    typename Group::TangentVector d_frame_from_ref;
-    math::proto::unpack_matrix(msg.d_frame_from_ref(), InOut(d_frame_from_ref));
-    EXPECT_TRUE(d_frame_from_ref.isApprox(test_tj.d_frame_from_ref()));
-    typename Group::TangentVector d2_frame_from_ref;
-    math::proto::unpack_matrix(
-        msg.d2_frame_from_ref(),
-        InOut(d2_frame_from_ref));
-    EXPECT_TRUE(d2_frame_from_ref.isApprox(test_tj.d2_frame_from_ref()));
+    const TwoJet retrieved_tj = proto::unpack(msg);
+    EXPECT_TRUE(
+        test_tj.frame_from_ref().is_approx(retrieved_tj.frame_from_ref()));
+    // For framed groups we need to explicitly verify the frames are correct
+    if constexpr (transforms::FramedGroupType<
+                      typename TypeParam::first_type::GroupType>) {
+      EXPECT_EQ(
+          test_tj.frame_from_ref().from(),
+          retrieved_tj.frame_from_ref().from());
+      EXPECT_EQ(
+          test_tj.frame_from_ref().into(),
+          retrieved_tj.frame_from_ref().into());
+    }
+    EXPECT_TRUE(
+        retrieved_tj.d_frame_from_ref().isApprox(test_tj.d_frame_from_ref()));
+    EXPECT_TRUE(
+        retrieved_tj.d2_frame_from_ref().isApprox(test_tj.d2_frame_from_ref()));
   }
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 template <typename Pair>
 class TwoJetRToProtoTests : public TwoJetToProtoTestsBase<Pair> {};
@@ -161,10 +170,10 @@ using TwoJetRTypePairs = ::testing::Types<
 
 TYPED_TEST_SUITE(TwoJetRToProtoTests, TwoJetRTypePairs);
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TYPED_TEST(TwoJetRToProtoTests, TestPack) {
   // SETUP
   using TwoJet = typename TypeParam::first_type;
-  using Group = typename TwoJet::GroupType;
   using TwoJetMsg = typename TypeParam::second_type;
   TwoJetMsg msg;
   std::vector<TwoJet> test_elements =
@@ -172,18 +181,25 @@ TYPED_TEST(TwoJetRToProtoTests, TestPack) {
   // ACTION/VERIFICATION
   for (const TwoJet &test_tj : test_elements) {
     proto::pack(test_tj, &msg);
-    const Group retrieved_group =
-        transforms::proto::unpack(msg.ref_from_frame());
-    EXPECT_TRUE(test_tj.ref_from_frame().is_approx(retrieved_group));
-    typename Group::TangentVector d_ref_from_frame;
-    math::proto::unpack_matrix(msg.d_ref_from_frame(), InOut(d_ref_from_frame));
-    EXPECT_TRUE(d_ref_from_frame.isApprox(test_tj.d_ref_from_frame()));
-    typename Group::TangentVector d2_ref_from_frame;
-    math::proto::unpack_matrix(
-        msg.d2_ref_from_frame(),
-        InOut(d2_ref_from_frame));
-    EXPECT_TRUE(d2_ref_from_frame.isApprox(test_tj.d2_ref_from_frame()));
+    const TwoJet retrieved_tj = proto::unpack(msg);
+    EXPECT_TRUE(
+        test_tj.ref_from_frame().is_approx(retrieved_tj.ref_from_frame()));
+    // For framed groups we need to explicitly verify the frames are correct
+    if constexpr (transforms::FramedGroupType<
+                      typename TypeParam::first_type::GroupType>) {
+      EXPECT_EQ(
+          test_tj.ref_from_frame().from(),
+          retrieved_tj.ref_from_frame().from());
+      EXPECT_EQ(
+          test_tj.ref_from_frame().into(),
+          retrieved_tj.ref_from_frame().into());
+    }
+    EXPECT_TRUE(
+        retrieved_tj.d_ref_from_frame().isApprox(test_tj.d_ref_from_frame()));
+    EXPECT_TRUE(
+        retrieved_tj.d2_ref_from_frame().isApprox(test_tj.d2_ref_from_frame()));
   }
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 }  // namespace resim::curves

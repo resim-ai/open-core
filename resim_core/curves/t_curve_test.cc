@@ -22,37 +22,37 @@ using FSO3 = transforms::FSO3;
 // An explicit seed for deterministic generation of test objects.
 constexpr unsigned int SEED = 401;
 
-template <typename T>
+template <typename Group>
 class TCurveTests : public ::testing::Test {
  public:
-  using Frame = transforms::Frame<T::DIMS>;
+  using Frame = transforms::Frame<Group::DIMS>;
   inline static const Frame REF_FRAME = Frame::new_frame();
   inline static const std::vector<double> DEFAULT_TIMES{0.0, 0.15, 0.71};
 
  protected:
-  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJetL<T>>(SEED); }
-  TwoJetTestHelper<TwoJetL<T>> &tj_helper() { return tj_helper_; }
-  TwoJetL<T> test_two_jet(const Frame &into) requires
-      transforms::FramedGroupType<T> {
-    TwoJetL<T> test_tj = tj_helper().make_test_two_jet();
-    T group = test_tj.frame_from_ref();
+  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJetL<Group>>(SEED); }
+  TwoJetTestHelper<TwoJetL<Group>> &tj_helper() { return tj_helper_; }
+  TwoJetL<Group> test_two_jet(const Frame &into) requires
+      transforms::FramedGroupType<Group> {
+    TwoJetL<Group> test_tj = tj_helper().make_test_two_jet();
+    Group group = test_tj.frame_from_ref();
     group.set_into(into);
     group.set_from(REF_FRAME);
     test_tj.set_frame_from_ref(group);
     return test_tj;
   }
 
-  TCurve<T> test_curve(const std::vector<double> &times) {
-    TCurve<T> test_curve;
+  TCurve<Group> test_curve(const std::vector<double> &times) {
+    TCurve<Group> test_curve;
     for (const double &t : times) {
       test_curve.append({t, tj_helper().make_test_two_jet()});
     }
     return test_curve;
   }
 
-  TCurve<T> test_curve(const std::vector<double> &times) requires
-      transforms::FramedGroupType<T> {
-    TCurve<T> test_curve;
+  TCurve<Group> test_curve(const std::vector<double> &times) requires
+      transforms::FramedGroupType<Group> {
+    TCurve<Group> test_curve;
     for (const double &t : times) {
       const Frame point_frame = Frame::new_frame();
       test_curve.append({t, test_two_jet(point_frame)});
@@ -60,17 +60,17 @@ class TCurveTests : public ::testing::Test {
     return test_curve;
   }
 
-  TCurve<T> test_curve_default() { return test_curve(DEFAULT_TIMES); }
+  TCurve<Group> test_curve_default() { return test_curve(DEFAULT_TIMES); }
 
  private:
-  TwoJetTestHelper<TwoJetL<T>> tj_helper_;
+  TwoJetTestHelper<TwoJetL<Group>> tj_helper_;
 };
 
 using LieGroupTypes = ::testing::Types<FSE3, FSO3, SE3, SO3>;
 TYPED_TEST_SUITE(TCurveTests, LieGroupTypes);
 
-template <typename T>
-class FramedTCurveTests : public TCurveTests<T> {};
+template <typename Group>
+class FramedTCurveTests : public TCurveTests<Group> {};
 
 using FramedTypes = ::testing::Types<FSE3, FSO3>;
 TYPED_TEST_SUITE(FramedTCurveTests, FramedTypes);
