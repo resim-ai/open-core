@@ -21,6 +21,10 @@ Trajectory::Trajectory(std::initializer_list<Control> points) {
   append(points);
 }
 
+Trajectory::Trajectory(curves::TCurve<FSE3> curve, time::Timestamp start_time)
+    : curve_(std::move(curve)),
+      start_time_(start_time){};
+
 void Trajectory::append(const Control &point) {
   if (curve_.control_pts().empty()) {
     // The first point defines the trajectory start time.
@@ -50,8 +54,7 @@ void Trajectory::append(std::initializer_list<Control> points) {
 RigidBodyState<FSE3> Trajectory::point_at(
     const time::Timestamp &at_time) const {
   const double time = time::as_seconds(at_time - start_time());
-  return RigidBodyState<FSE3>(
-      curve_.point_at(time, body_frame()).right_two_jet());
+  return RigidBodyState<FSE3>(curve_.point_at(time).right_two_jet());
 }
 
 RigidBodyState<FSE3> Trajectory::point_at(

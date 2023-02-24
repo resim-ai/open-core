@@ -27,6 +27,7 @@ class TCurveTests : public ::testing::Test {
  public:
   using Frame = transforms::Frame<Group::DIMS>;
   inline static const Frame REF_FRAME = Frame::new_frame();
+  inline static const Frame POINT_FRAME = Frame::new_frame();
   inline static const std::vector<double> DEFAULT_TIMES{0.0, 0.15, 0.71};
 
  protected:
@@ -54,8 +55,7 @@ class TCurveTests : public ::testing::Test {
       transforms::FramedGroupType<Group> {
     TCurve<Group> test_curve;
     for (const double &t : times) {
-      const Frame point_frame = Frame::new_frame();
-      test_curve.append({t, test_two_jet(point_frame)});
+      test_curve.append({t, test_two_jet(POINT_FRAME)});
     }
     return test_curve;
   }
@@ -208,24 +208,68 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
       },
       "Control points must have strictly increasing time");
   if constexpr (transforms::FramedGroupType<TypeParam>) {
-    // Make a frame reversed control point.
+    // Make a reference frame reversed control point.
     TwoJetL<TypeParam> last_point = curve_a.control_pts().back().point;
-    last_point.set_frame_from_ref(last_point.frame_from_ref().inverse());
+    TypeParam last_frame_from_ref = last_point.frame_from_ref();
+    typename TCurveTests<TypeParam>::Frame last_from =
+        last_frame_from_ref.from();
+    last_frame_from_ref.set_from(last_frame_from_ref.into());
+    last_point.set_frame_from_ref(last_frame_from_ref);
     // Try to add the point to the curve.
     EXPECT_DEATH(
         {
           curve_a.append({HI_TIME, last_point});
         },
-        "Control points must all have the same ref frame");
+        "Control points must all have the same ref and point frame");
+
+    // Make a point frame reversed control point.
+    last_frame_from_ref.set_from(last_from);
+    last_frame_from_ref.set_into(last_from);
+    last_point.set_frame_from_ref(last_frame_from_ref);
+    // Try to add the point to the curve.
+    EXPECT_DEATH(
+        {
+          curve_a.append({HI_TIME, last_point});
+        },
+        "Control points must all have the same ref and point frame");
   }
   // Try querying and empty curve
   TCurve<TypeParam> empty_curve;
+  EXPECT_DEATH(
+      {
+        const double bad_start = empty_curve.start_time();
+        (void)bad_start;  // Avoid unused variable errors.
+      },
+      "Cannot query the frame of a curve with no control points");
+  EXPECT_DEATH(
+      {
+        const double bad_end = empty_curve.end_time();
+        (void)bad_end;  // Avoid unused variable errors.
+      },
+      "Cannot query the frame of a curve with no control points");
   EXPECT_DEATH(
       {
         const TwoJetL<TypeParam> bad_point = empty_curve.point_at(1.0);
         (void)bad_point;  // Avoid unused variable errors.
       },
       "Cannot query a curve with less than two control points");
+  if constexpr (transforms::FramedGroupType<TypeParam>) {
+    // Empty point and reference frame
+    EXPECT_DEATH(
+        {
+          const typename TCurveTests<TypeParam>::Frame bad_frame =
+              empty_curve.point_frame();
+          (void)bad_frame;  // Avoid unused variable errors.
+        },
+        "Cannot query the frame of a curve with no control points");
+    EXPECT_DEATH(
+        {
+          const typename TCurveTests<TypeParam>::Frame bad_frame =
+              empty_curve.reference_frame();
+          (void)bad_frame;  // Avoid unused variable errors.
+        },
+        "Cannot query the frame of a curve with no control points");
+  }
   // Try querying a curve below its time range.
   EXPECT_DEATH(
       {
@@ -306,13 +350,12 @@ TYPED_TEST(TCurveTests, QueryStartAndEnd) {
 
 TYPED_TEST(FramedTCurveTests, RetrievePointWithFrame) {
   constexpr double QUERY_TIME = 0.53;
-  const auto point_frame = TCurveTests<TypeParam>::Frame::new_frame();
   // Create default curve.
   const TCurve curve = this->test_curve_default();
   // Query the curve with a caller supplied frame.
-  TwoJetL<TypeParam> point = curve.point_at(QUERY_TIME, point_frame);
+  TwoJetL<TypeParam> point = curve.point_at(QUERY_TIME);
   // Check that the retuned points frames are as expected.
-  EXPECT_EQ(point_frame, point.frame_from_ref().into());
+  EXPECT_EQ(TCurveTests<TypeParam>::POINT_FRAME, point.frame_from_ref().into());
   EXPECT_EQ(TCurveTests<TypeParam>::REF_FRAME, point.frame_from_ref().from());
 }
 
@@ -321,6 +364,13 @@ TYPED_TEST(FramedTCurveTests, QueryReferenceFrame) {
   const TCurve curve = this->test_curve_default();
   // Check the reference frame of the curve.
   EXPECT_EQ(TCurveTests<TypeParam>::REF_FRAME, curve.reference_frame());
+}
+
+TYPED_TEST(FramedTCurveTests, QueryPointFrame) {
+  // Create default curve.
+  const TCurve curve = this->test_curve_default();
+  // Check the point frame of the curve.
+  EXPECT_EQ(TCurveTests<TypeParam>::POINT_FRAME, curve.point_frame());
 }
 
 }  // namespace resim::curves

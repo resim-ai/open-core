@@ -38,7 +38,7 @@ TEST(TestHelpersTest, TestMakeCircleCurve) {
     const double time =
         frac * curve.start_time() + (1. - frac) * curve.end_time();
 
-    const TwoJetL point_from_ref{curve.point_at(time, into)};
+    const TwoJetL point_from_ref{curve.point_at(time)};
     const Vec3 translation{
         point_from_ref.frame_from_ref().inverse().translation()};
     constexpr double TOLERANCE = 1e-7;

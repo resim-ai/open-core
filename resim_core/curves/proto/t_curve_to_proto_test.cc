@@ -35,6 +35,7 @@ class TCurveToProtoTests : public ::testing::Test {
   using Group = typename Pair::first_type;
   using Frame = transforms::Frame<Group::DIMS>;
   inline static const Frame REF_FRAME = Frame::new_frame();
+  inline static const Frame POINT_FRAME = Frame::new_frame();
   inline static constexpr std::array<double, 3> DEFAULT_TIMES{0.0, 0.13, 0.61};
 
  protected:
@@ -64,8 +65,7 @@ class TCurveToProtoTests : public ::testing::Test {
       transforms::FramedGroupType<Group> {
     TCurve<Group> test_curve;
     for (const double &t : times) {
-      const Frame point_frame = Frame::new_frame();
-      test_curve.append({t, test_two_jet(point_frame)});
+      test_curve.append({t, test_two_jet(POINT_FRAME)});
     }
     return test_curve;
   }

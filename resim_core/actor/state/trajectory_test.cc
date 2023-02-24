@@ -108,6 +108,33 @@ class TrajectoryTests : public ::testing::Test {
   std::mt19937 rng_;
 };
 
+TEST_F(TrajectoryTests, TCurveConstructor) {
+  // SETUP
+  Trajectory standard_test_trajectory = this->test_trajectory();
+  const curves::TCurve<FSE3> &underlying_curve =
+      standard_test_trajectory.curve();
+  // We assume exactly three control points in this test so let's check.
+  ASSERT_EQ(underlying_curve.control_pts().size(), NUM_CTRL);
+  // ACTION
+  // Create a copy of the trajectory from the underlying TCurve.
+  Trajectory tcurve_test_trajectory(
+      underlying_curve,
+      standard_test_trajectory.start_time());
+  // VERIFICATION
+  // Sample both trajectories and confirm the samples match.
+  for (const auto &ts : TrajectoryTests::timestamp_samples()) {
+    EXPECT_TRUE(
+        standard_test_trajectory.point_at(ts).ref_from_body_two_jet().is_approx(
+            tcurve_test_trajectory.point_at(ts).ref_from_body_two_jet()));
+    // Confirm sample differs from trajectory endpoint to cover the edge case
+    // of all states are the same.
+    EXPECT_FALSE(
+        standard_test_trajectory.point_at(ts).ref_from_body_two_jet().is_approx(
+            tcurve_test_trajectory.point_at(tcurve_test_trajectory.end_time())
+                .ref_from_body_two_jet()));
+  }
+}
+
 TEST_F(TrajectoryTests, Construction) {
   // SETUP
   Trajectory test_trajectory = this->test_trajectory();
@@ -229,7 +256,7 @@ TEST_F(TrajectoryDeathTests, InvalidFrames) {
       {
         test_trajectory.append({next_ts, RigidBodyState<FSE3>(next_point_b)});
       },
-      "Control points must all have the same ref frame");
+      "Control points must all have the same ref and point frame");
 }
 
 }  // namespace resim::actor::state

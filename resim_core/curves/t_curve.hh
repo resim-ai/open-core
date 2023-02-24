@@ -14,8 +14,13 @@ namespace resim::curves {
 // curves between TwoJetL<Group> control points. The degrees-of-freedom of the
 // curve is determined by the underlying LieGroup (e.g. six for SE3). By design
 // the curve is C2 smooth.
-// Control points appended to the curve must all use the same reference frame.
-// If the caller uses a FramedGroup, then this will be checked.
+//
+// Control points appended to the curve must all use the same reference frame
+// *and* the same point frame (which is required in downstream uses). If the
+// caller uses a FramedGroup, then this will be checked.
+//
+// This design decision, requiring the same point frame, can be revisited should
+// a use case for a TCurve with differing point frames emerge.
 template <transforms::LieGroupType Group>
 class TCurve {
  public:
@@ -24,7 +29,7 @@ class TCurve {
   struct Control {
     // Time of the control point.
     double time;
-    // TwoJet specifying he control point.
+    // TwoJet specifying the control point.
     TwoJetL<Group> point;
   };
   // Data for a curve segment.
@@ -50,9 +55,6 @@ class TCurve {
   void append(std::initializer_list<Control> points);
   // Retrieve the TwoJet for a point at time 'time' along the TCurve
   TwoJetL<Group> point_at(double time) const;
-  // Overload allowing the caller to pass in their own frame.
-  // Note, this method is only valid for FramedGroup<T> types
-  TwoJetL<Group> point_at(double time, const Frame &point_frame) const;
   // Access a reference to the control points.
   const std::vector<Control> &control_pts() const;
   // Access a reference to the segments.
@@ -60,7 +62,9 @@ class TCurve {
   // Retrieve the reference frame of the curve's control points.
   // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;
-
+  // Retrieve the point frame of the curve's control points.
+  // Note, this method is only valid for FramedGroup<T> types
+  const Frame &point_frame() const;
   // Getters for the start and end time
   double start_time() const;
   double end_time() const;

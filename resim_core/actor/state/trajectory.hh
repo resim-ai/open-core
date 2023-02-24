@@ -44,10 +44,8 @@ class Trajectory {
   // Create and empty trajectory to be populated.
   Trajectory() = default;
 
-  // TODO(https://app.asana.com/0/1202178773526279/1203638018487834/f) -
-  // We should have a Trajectory(curves::TCurve<FSE3> curve); constructor.
-  // However this requires some updates to TCurve itself to support forcing
-  // body frame consistency (see ticket).
+  // Create a trajectory directly from a TCurve<FSE3>
+  Trajectory(curves::TCurve<FSE3> curve, time::Timestamp start_time);
 
   // Create a trajectory from a list of control points
   Trajectory(std::initializer_list<Control> points);
