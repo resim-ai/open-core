@@ -14,7 +14,7 @@
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
 #include "resim_core/curves/t_curve.hh"
-#include "resim_core/curves/two_jet_test_helpers.hh"
+#include "resim_core/curves/t_curve_test_helpers.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
@@ -36,44 +36,18 @@ class TCurveToProtoTests : public ::testing::Test {
   using Frame = transforms::Frame<Group::DIMS>;
   inline static const Frame REF_FRAME = Frame::new_frame();
   inline static const Frame POINT_FRAME = Frame::new_frame();
-  inline static constexpr std::array<double, 3> DEFAULT_TIMES{0.0, 0.13, 0.61};
+  inline static const std::vector<double> DEFAULT_TIMES{0.0, 0.13, 0.61};
 
  protected:
-  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJetL<Group>>(SEED); }
+  void SetUp() override { t_curve_helper_ = TCurveTestHelper<Group>(SEED); }
+  TCurveTestHelper<Group> &t_curve_helper() { return t_curve_helper_; }
 
-  TwoJetTestHelper<TwoJetL<Group>> &tj_helper() { return tj_helper_; }
-
-  TwoJetL<Group> test_two_jet(const Frame &into) requires
-      transforms::FramedGroupType<Group> {
-    TwoJetL<Group> test_tj = tj_helper().make_test_two_jet();
-    Group group = test_tj.frame_from_ref();
-    group.set_into(into);
-    group.set_from(REF_FRAME);
-    test_tj.set_frame_from_ref(group);
-    return test_tj;
+  TCurve<Group> test_curve_default() {
+    return t_curve_helper().make_t_curve(DEFAULT_TIMES);
   }
-
-  TCurve<Group> test_curve(const std::array<double, 3> &times) {
-    TCurve<Group> test_curve;
-    for (const double &t : times) {
-      test_curve.append({t, tj_helper().make_test_two_jet()});
-    }
-    return test_curve;
-  }
-
-  TCurve<Group> test_curve(const std::array<double, 3> &times) requires
-      transforms::FramedGroupType<Group> {
-    TCurve<Group> test_curve;
-    for (const double &t : times) {
-      test_curve.append({t, test_two_jet(POINT_FRAME)});
-    }
-    return test_curve;
-  }
-
-  TCurve<Group> test_curve_default() { return test_curve(DEFAULT_TIMES); }
 
  private:
-  TwoJetTestHelper<TwoJetL<Group>> tj_helper_;
+  TCurveTestHelper<Group> t_curve_helper_;
 };
 
 using TCurveTypePairs = ::testing::Types<

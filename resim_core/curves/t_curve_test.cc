@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/curves/t_curve_test_helpers.hh"
 #include "resim_core/curves/two_jet.hh"
-#include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
@@ -26,44 +26,18 @@ template <typename Group>
 class TCurveTests : public ::testing::Test {
  public:
   using Frame = transforms::Frame<Group::DIMS>;
-  inline static const Frame REF_FRAME = Frame::new_frame();
-  inline static const Frame POINT_FRAME = Frame::new_frame();
   inline static const std::vector<double> DEFAULT_TIMES{0.0, 0.15, 0.71};
 
  protected:
-  void SetUp() override { tj_helper_ = TwoJetTestHelper<TwoJetL<Group>>(SEED); }
-  TwoJetTestHelper<TwoJetL<Group>> &tj_helper() { return tj_helper_; }
-  TwoJetL<Group> test_two_jet(const Frame &into) requires
-      transforms::FramedGroupType<Group> {
-    TwoJetL<Group> test_tj = tj_helper().make_test_two_jet();
-    Group group = test_tj.frame_from_ref();
-    group.set_into(into);
-    group.set_from(REF_FRAME);
-    test_tj.set_frame_from_ref(group);
-    return test_tj;
-  }
+  void SetUp() override { t_curve_helper_ = TCurveTestHelper<Group>(SEED); }
+  TCurveTestHelper<Group> &t_curve_helper() { return t_curve_helper_; }
 
-  TCurve<Group> test_curve(const std::vector<double> &times) {
-    TCurve<Group> test_curve;
-    for (const double &t : times) {
-      test_curve.append({t, tj_helper().make_test_two_jet()});
-    }
-    return test_curve;
+  TCurve<Group> test_curve_default() {
+    return t_curve_helper().make_t_curve(DEFAULT_TIMES);
   }
-
-  TCurve<Group> test_curve(const std::vector<double> &times) requires
-      transforms::FramedGroupType<Group> {
-    TCurve<Group> test_curve;
-    for (const double &t : times) {
-      test_curve.append({t, test_two_jet(POINT_FRAME)});
-    }
-    return test_curve;
-  }
-
-  TCurve<Group> test_curve_default() { return test_curve(DEFAULT_TIMES); }
 
  private:
-  TwoJetTestHelper<TwoJetL<Group>> tj_helper_;
+  TCurveTestHelper<Group> t_curve_helper_;
 };
 
 using LieGroupTypes = ::testing::Types<FSE3, FSO3, SE3, SO3>;
@@ -174,7 +148,8 @@ TYPED_TEST(TCurveTests, CanRecoverControlPoints) {
 
 TYPED_TEST(TCurveTests, NormalizedSegments) {
   // Create a curve with segments on exactly unit time.
-  TCurve<TypeParam> curve_a = this->test_curve({-1.0, 0.0, 1.0});
+  TCurve<TypeParam> curve_a =
+      TestFixture::t_curve_helper().make_t_curve({-1.0, 0.0, 1.0});
   const auto &control_points = curve_a.control_pts();
   const auto &segments = curve_a.segments();
   // Confirm that normalization is a noop by checking that the points in the
@@ -204,7 +179,11 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
   // case.
   EXPECT_DEATH(
       {
-        curve_a.append({LO_TIME, TestFixture::tj_helper().make_test_two_jet()});
+        curve_a.append(
+            {LO_TIME,
+             TestFixture::t_curve_helper()
+                 .two_jet_helper()
+                 .make_test_two_jet()});
       },
       "Control points must have strictly increasing time");
   if constexpr (transforms::FramedGroupType<TypeParam>) {
@@ -355,22 +334,26 @@ TYPED_TEST(FramedTCurveTests, RetrievePointWithFrame) {
   // Query the curve with a caller supplied frame.
   TwoJetL<TypeParam> point = curve.point_at(QUERY_TIME);
   // Check that the retuned points frames are as expected.
-  EXPECT_EQ(TCurveTests<TypeParam>::POINT_FRAME, point.frame_from_ref().into());
-  EXPECT_EQ(TCurveTests<TypeParam>::REF_FRAME, point.frame_from_ref().from());
+  EXPECT_EQ(
+      TCurveTestHelper<TypeParam>::POINT_FRAME,
+      point.frame_from_ref().into());
+  EXPECT_EQ(
+      TCurveTestHelper<TypeParam>::REF_FRAME,
+      point.frame_from_ref().from());
 }
 
 TYPED_TEST(FramedTCurveTests, QueryReferenceFrame) {
   // Create default curve.
   const TCurve curve = this->test_curve_default();
   // Check the reference frame of the curve.
-  EXPECT_EQ(TCurveTests<TypeParam>::REF_FRAME, curve.reference_frame());
+  EXPECT_EQ(TCurveTestHelper<TypeParam>::REF_FRAME, curve.reference_frame());
 }
 
 TYPED_TEST(FramedTCurveTests, QueryPointFrame) {
   // Create default curve.
   const TCurve curve = this->test_curve_default();
   // Check the point frame of the curve.
-  EXPECT_EQ(TCurveTests<TypeParam>::POINT_FRAME, curve.point_frame());
+  EXPECT_EQ(TCurveTestHelper<TypeParam>::POINT_FRAME, curve.point_frame());
 }
 
 }  // namespace resim::curves
