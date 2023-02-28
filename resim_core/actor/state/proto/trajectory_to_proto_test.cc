@@ -5,6 +5,7 @@
 #include <random>
 
 #include "resim_core/actor/state/trajectory.hh"
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/t_curve_test_helpers.hh"
@@ -117,9 +118,9 @@ using TrajectoryToProtoDeathTests = TrajectoryToProtoTests;
 
 TEST_F(TrajectoryToProtoDeathTests, InvalidProto) {
   // ACTION/VERIFICATION
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { proto::pack(this->default_test_trajectory(), nullptr); },
-      "Can't pack into invalid proto!");
+      AssertException);
 }
 
 }  // namespace resim::actor::state

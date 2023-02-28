@@ -1,9 +1,8 @@
 #include "resim_core/curves/t_curve.hh"
 
-#include <glog/logging.h>
-
 #include <algorithm>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
@@ -27,14 +26,14 @@ constexpr auto EMPTY_ERR =
 template <transforms::FramedGroupType Group>
 const transforms::Frame<Group::DIMS> &reference_frame_impl(
     const std::vector<typename TCurve<Group>::Control> &control_pts) {
-  CHECK(!control_pts.empty()) << EMPTY_ERR;
+  REASSERT(!control_pts.empty(), EMPTY_ERR);
   return control_pts.back().point.frame_from_ref().from();
 }
 
 template <transforms::FramedGroupType Group>
 const transforms::Frame<Group::DIMS> &point_frame_impl(
     const std::vector<typename TCurve<Group>::Control> &control_pts) {
-  CHECK(!control_pts.empty()) << EMPTY_ERR;
+  REASSERT(!control_pts.empty(), EMPTY_ERR);
   return control_pts.back().point.frame_from_ref().into();
 }
 }  // namespace
@@ -59,7 +58,7 @@ void TCurve<Group>::append(Control point) {
     // Check that time is increasing.
     constexpr auto TIME_ERR =
         "Control points must have strictly increasing time";
-    CHECK(point.time > control_pts_.back().time) << TIME_ERR;
+    REASSERT(point.time > control_pts_.back().time, TIME_ERR);
     // Check that both control point frames match.
     if constexpr (transforms::FramedGroupType<Group>) {
       constexpr auto FRAME_ERR =
@@ -67,7 +66,7 @@ void TCurve<Group>::append(Control point) {
       const bool frame_test = point.point.frame_from_ref().verify_frames(
           this->point_frame(),
           this->reference_frame());
-      CHECK(frame_test) << FRAME_ERR;
+      REASSERT(frame_test, FRAME_ERR);
     }
     // Build a segment, note segments are time normalized so we need
     // to create new control points with scaled derivatives.
@@ -159,12 +158,12 @@ typename TCurve<Group>::PointAtData TCurve<Group>::point_at_impl(
     const double time) const {
   constexpr auto EMPTY_ERR =
       "Cannot query a curve with less than two control points";
-  CHECK(!segments_.empty()) << EMPTY_ERR;
+  REASSERT(!segments_.empty(), EMPTY_ERR);
   constexpr auto TIME_RANGE_ERR =
       "Query time must be within the range of times in the control points.";
   const bool time_lo = time < control_pts_.front().time;
   const bool time_hi = time > control_pts_.back().time;
-  CHECK(!time_lo && !time_hi) << TIME_RANGE_ERR;
+  REASSERT(!time_lo && !time_hi, TIME_RANGE_ERR);
   const auto s = std::lower_bound(
       segments_.begin(),
       segments_.end(),
@@ -188,13 +187,13 @@ void TCurve<Group>::unnormalize_derivatives(
 
 template <transforms::LieGroupType Group>
 double TCurve<Group>::end_time() const {
-  CHECK(!control_pts_.empty()) << EMPTY_ERR;
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
   return control_pts_.back().time;
 }
 
 template <transforms::LieGroupType Group>
 double TCurve<Group>::start_time() const {
-  CHECK(!control_pts_.empty()) << EMPTY_ERR;
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
   return control_pts_.front().time;
 }
 

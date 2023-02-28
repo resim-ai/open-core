@@ -4,6 +4,7 @@
 
 #include <random>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
@@ -109,12 +110,12 @@ TYPED_TEST(FramedTCurveSegmentTests, ConstructionWithFrames) {
   const TwoJetL<TypeParam> orig = this->test_two_jet(this->ORIG_FRAME);
   const TwoJetL<TypeParam> inv_dest =
       this->test_two_jet(this->DEST_FRAME).inverse();
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const TCurveSegment<TypeParam> bad_curve(orig, inv_dest);
         (void)bad_curve;  // Avoid unused variable errors.
       },
-      "Origin and destination TwoJets must have the same reference frame.");
+      AssertException);
 }
 
 TYPED_TEST(TCurveSegmentTests, BoundaryConditionsRecover) {

@@ -2,10 +2,12 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
+
 namespace resim::curves {
 
 // An explicit seed for deterministic generation of test objects.
@@ -71,13 +73,13 @@ TYPED_TEST_SUITE(TwoJetTestHelperDeathTests, TwoJetTypes);
 
 TYPED_TEST(TwoJetTestHelperDeathTests, TooFewElementsRequested) {
   constexpr unsigned TOO_FEW = detail::MIN_TEST_ELEMENTS - 1;
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const auto test_tj =
             TestFixture::tj_helper.make_test_two_jet_elements(TOO_FEW);
         (void)test_tj;
       },
-      "The minimum number of test elements you can request");
+      AssertException);
 }
 
 }  // namespace resim::curves

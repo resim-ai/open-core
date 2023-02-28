@@ -1,11 +1,11 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <Eigen/Dense>
 #include <algorithm>
 #include <random>
 #include <utility>
+
+#include "resim_core/assert/assert.hh"
 
 namespace resim::math {
 
@@ -72,7 +72,7 @@ class Gaussian {
   // sampling requires taking a square-root.
   // Larger negative eigenvalues are an indication that the user supplied
   // covariance matrix is not valid (symmetric positive semi-definite). In
-  // this case we must CHECK fail.
+  // this case we must REASSERT fail.
   void sanitize_eigenvalues();
 
   // The parameters of the Gaussian.
@@ -99,9 +99,9 @@ Gaussian<dims>::Gaussian(Vec mu, Mat cov)
   // Specifically for symmetry and positive eigenvalues. We also check for
   // numerical issues in the Eigen solver.
   constexpr auto SYMMETRY_ERR = "Covariance matrix must be symmetric";
-  CHECK(cov_.isApprox(cov_.transpose())) << SYMMETRY_ERR;
+  REASSERT(cov_.isApprox(cov_.transpose()), SYMMETRY_ERR);
   Solver solver(cov_);
-  CHECK(solver.info() != Eigen::NumericalIssue) << "Eigen solver error.";
+  REASSERT(solver.info() != Eigen::NumericalIssue, "Eigen solver error.");
   eigenvalues_ = solver.eigenvalues();
   // If the eigenvalues are close to zero, the solver can return small
   // negative eigenvalues, these will cause problems later on. These must be
@@ -140,7 +140,7 @@ void Gaussian<dims>::sanitize_eigenvalues() {
       std::max((cov_.maxCoeff() - cov_.minCoeff()) * TOL_BASE, TOL_BASE);
   constexpr auto EIGENVALS_ERR =
       "Symmetric PSD matrices have positive eigenvalues";
-  CHECK(eigenvalues_.minCoeff() > -tol) << EIGENVALS_ERR;
+  REASSERT(eigenvalues_.minCoeff() > -tol, EIGENVALS_ERR);
   eigenvalues_ = eigenvalues_.unaryExpr(
       [&](double eigenval) { return std::max(eigenval, 0.); });
 }

@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/match.hh"
 #include "resim_core/utils/uuid.hh"
@@ -76,7 +77,7 @@ TEST(ViewUpdateToProtoDeathTest, TestPackInvalid) {
   };
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(proto::pack(update, nullptr), "Can't pack into invalid proto!");
+  EXPECT_THROW(proto::pack(update, nullptr), AssertException);
 }
 
 }  // namespace resim::visualization

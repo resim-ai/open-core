@@ -5,6 +5,7 @@
 
 #include <random>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
 #include "resim_core/testing/random_matrix.hh"
@@ -144,9 +145,7 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPackInvalid) {
       ViewPrimitiveToProtoTypedTest<TypeParam>::generate_test_primitive();
 
   // ACTION/VERIFICATION
-  EXPECT_DEATH(
-      proto::pack(test_primitive, nullptr),
-      "Can't pack into invalid proto!");
+  EXPECT_THROW(proto::pack(test_primitive, nullptr), AssertException);
 }
 
 TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestUnpackUnset) {
@@ -155,7 +154,8 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestUnpackUnset) {
 
   // ACTION / VERIFICATION
   EXPECT_FALSE(proto::detail::unpack(primitive_msg).ok());
-  EXPECT_DEATH(unpack(primitive_msg), "Can't unpack unset ViewPrimitive!");
+
+  EXPECT_THROW(unpack(primitive_msg), AssertException);
 }
 
 }  // namespace resim::visualization

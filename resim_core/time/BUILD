@@ -34,7 +34,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":timestamp",
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -44,6 +44,7 @@ cc_test(
     deps = [
         ":event_schedule",
         ":timestamp",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -55,8 +56,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":timestamp",
+        "//resim_core/assert",
         "//resim_core/math:safe_integer_utils",
-        "@com_github_google_glog//:glog",
     ],
 )
 

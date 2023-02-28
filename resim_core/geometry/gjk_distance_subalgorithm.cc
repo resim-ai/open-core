@@ -1,11 +1,10 @@
 #include "resim_core/geometry/gjk_distance_subalgorithm.hh"
 
-#include <glog/logging.h>
-
 #include <cstdint>
 #include <limits>
 #include <optional>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/utils/inout.hh"
 #include "resim_core/utils/integer_power.hh"
 
@@ -83,7 +82,7 @@ Eigen::Index index_from_uint64(const uint64_t x) {
   constexpr auto ERROR_MESSAGE = "Could not convert uint64_t to Eigen::Index!";
   // Lower bound doesn't need to be checked since it's below zero and
   // unsigned ints always satisfy this.
-  CHECK(x <= std::numeric_limits<Eigen::Index>::max()) << ERROR_MESSAGE;
+  REASSERT(x <= std::numeric_limits<Eigen::Index>::max(), ERROR_MESSAGE);
   return static_cast<Eigen::Index>(x);
 }
 
@@ -296,7 +295,7 @@ template <int DIM>
 DistanceResult<DIM> distance_subalgorithm(
     const Simplex<DIM> &simplex,
     const testing::Algorithm force_backup) {
-  CHECK(not simplex.empty()) << "Empty simplex passed in!";
+  REASSERT(not simplex.empty(), "Empty simplex passed in!");
   constexpr uint64_t TWO = 2U;
 
   const uint64_t num_vertices = simplex.size();

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <type_traits>
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/utils/match.hh"
 #include "resim_core/utils/status.hh"
 
@@ -89,9 +88,7 @@ constexpr StatusValue<T>::StatusValue(ValueT &&value)
 template <typename T>
 constexpr StatusValue<T>::StatusValue(const Status &status)
     : value_or_status_{status} {
-  // Glog's CHECK macro is really fancy and this can still be constexpr so long
-  // as non ok() is compile time true.
-  CHECK(not ok()) << VALUELESS_ERR;
+  REASSERT(not ok(), VALUELESS_ERR);
 }
 
 template <typename T>
@@ -101,13 +98,13 @@ constexpr bool StatusValue<T>::ok() const {
 
 template <typename T>
 constexpr const T &StatusValue<T>::value() const & {
-  CHECK(ok()) << "Can't dereference bad StatusValue!";
+  REASSERT(ok(), "Can't dereference bad StatusValue!");
   return std::get<ValueWrapper>(value_or_status_).value;
 }
 
 template <typename T>
 constexpr T &&StatusValue<T>::value() && {
-  CHECK(ok()) << "Can't dereference bad StatusValue!";
+  REASSERT(ok(), "Can't dereference bad StatusValue!");
   // We use forward here so we move if and only if T is a non-const rvalue
   // reference
   return std::forward<T>(std::get<ValueWrapper>(value_or_status_).value);

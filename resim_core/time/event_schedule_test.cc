@@ -8,6 +8,8 @@
 #include <random>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim::time {
 
 namespace {
@@ -113,9 +115,9 @@ TEST(EventScheduleTest, TestDeathOnTooManyEvents) {
         EventTypes::EVENT_A);
     schedule.pop_event();
   }
-  EXPECT_DEATH(
+  EXPECT_THROW(
       schedule.schedule_event(START_TIME, EventTypes::EVENT_A),
-      "Can't schedule in exhausted EventSchedule.");
+      AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 

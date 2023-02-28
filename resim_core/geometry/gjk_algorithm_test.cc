@@ -1,7 +1,6 @@
 
 #include "resim_core/geometry/gjk_algorithm.hh"
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include <Eigen/Dense>
@@ -9,6 +8,7 @@
 #include <random>
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/geometry/oriented_box.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
@@ -56,7 +56,7 @@ SupportFunction<DIM> sphere_support(Point<DIM> center, const double radius) {
 template <LieGroupType Group>
 SupportFunction<3> box_support(OrientedBox<Group> box) {
   return [box = std::move(box)](const Vector<3> &direction) -> Point<3> {
-    CHECK(not direction.isZero()) << "Invalid direction!";
+    REASSERT(not direction.isZero(), "Invalid direction!");
 
     return box.reference_from_box() *
            (box.reference_from_box().rotation().inverse() *

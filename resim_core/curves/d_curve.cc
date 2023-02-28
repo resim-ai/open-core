@@ -1,7 +1,6 @@
 #include "resim_core/curves/d_curve.hh"
 
-#include <glog/logging.h>
-
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 
 namespace resim::curves {
@@ -94,7 +93,7 @@ const std::vector<typename DCurve<Group>::Segment> &DCurve<Group>::segments()
 
 template <typename Group>
 double DCurve<Group>::curve_length() const {
-  CHECK(!control_pts_.empty()) << "Attempt to access length of empty curve.";
+  REASSERT(!control_pts_.empty(), "Attempt to access length of empty curve.");
   return control_pts_.back().arc_length;
 }
 
@@ -107,10 +106,10 @@ template <typename Group>
 typename DCurve<Group>::PointAtData DCurve<Group>::point_at_impl(
     double arc_length) const {
   constexpr double ZERO = 0;
-  CHECK(arc_length >= ZERO) << "Arc length values must be positive.";
+  REASSERT(arc_length >= ZERO, "Arc length values must be positive.");
   constexpr auto LENGTH_ERROR_MSG =
       "Attempt to query a point at an arc length longer that the curve.";
-  CHECK(arc_length <= curve_length()) << LENGTH_ERROR_MSG;
+  REASSERT(arc_length <= curve_length(), LENGTH_ERROR_MSG);
   const auto s = std::find_if(
       segments_.begin(),
       segments_.end(),

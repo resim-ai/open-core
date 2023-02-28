@@ -34,13 +34,13 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":rigid_body_state",
+        "//resim_core/assert",
         "//resim_core/curves:t_curve",
         "//resim_core/curves:two_jet",
         "//resim_core/time:timestamp",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -51,6 +51,7 @@ cc_test(
     deps = [
         ":rigid_body_state",
         ":trajectory",
+        "//resim_core/assert",
         "//resim_core/curves:t_curve",
         "//resim_core/curves:two_jet",
         "//resim_core/testing:random_matrix",

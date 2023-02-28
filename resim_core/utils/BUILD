@@ -6,7 +6,7 @@ cc_library(
     hdrs = ["uuid.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -75,7 +75,7 @@ cc_library(
     hdrs = ["integer_power.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -94,10 +94,10 @@ cc_library(
     hdrs = ["mcap_logger.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim_core/assert",
         "//resim_core/third_party/mcap:mcap_impl",
         "//resim_core/time:timestamp",
         "//resim_core/utils/proto:dependency_file_descriptor_set",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -106,6 +106,7 @@ cc_test(
     srcs = ["mcap_logger_test.cc"],
     deps = [
         ":mcap_logger",
+        "//resim_core/assert",
         "//resim_core/testing:test_directory",
         "//resim_core/utils/proto/testing:message_a_proto_cc",
         "//resim_core/utils/proto/testing:test_proto_cc",
@@ -136,7 +137,7 @@ cc_library(
     hdrs = ["nullable_reference.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -145,6 +146,7 @@ cc_test(
     srcs = ["nullable_reference_test.cc"],
     deps = [
         ":nullable_reference",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -156,7 +158,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":match",
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
         "@fmt",
     ],
 )
@@ -166,6 +168,7 @@ cc_test(
     srcs = ["status_test.cc"],
     deps = [
         ":status",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
         "@fmt",
     ],
@@ -178,7 +181,7 @@ cc_library(
     deps = [
         ":match",
         ":status",
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -187,6 +190,7 @@ cc_test(
     srcs = ["status_value_test.cc"],
     deps = [
         ":status_value",
+        "//resim_core/assert",
         "//resim_core/testing:move_copy_tracker",
         "@com_google_googletest//:gtest_main",
     ],

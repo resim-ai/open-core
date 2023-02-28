@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-#include "glog/logging.h"
+#include "resim_core/assert/assert.hh"
 
 namespace resim::geometry {
 using transforms::FSE3;
@@ -13,7 +13,7 @@ using Vec3 = Eigen::Vector3d;
 OrientedBox<SE3> bounding_box_from_wireframe(const Wireframe &wireframe) {
   constexpr auto EMPTY_WIREFRAME_MSG =
       "Bounding box can't be found for empty or size one wireframe!";
-  CHECK(wireframe.points().size() > 1U) << EMPTY_WIREFRAME_MSG;
+  REASSERT(wireframe.points().size() > 1U, EMPTY_WIREFRAME_MSG);
   Vec3 max_vector{
       Vec3::NullaryExpr([]() { return -std::numeric_limits<double>::max(); })};
   Vec3 min_vector{
@@ -34,7 +34,7 @@ OrientedBox<SE3> bounding_box_from_wireframe(const Wireframe &wireframe) {
   const Vec3 box_translation{0.5 * max_vector + 0.5 * min_vector};
   const Vec3 box_extents = max_vector - min_vector;
   constexpr auto ZERO_EXTENT_MSG = "Wireframe has at least one zero extent!";
-  CHECK((box_extents.array() > 0.).all()) << ZERO_EXTENT_MSG;
+  REASSERT((box_extents.array() > 0.).all(), ZERO_EXTENT_MSG);
   return OrientedBox{SE3{box_translation}, box_extents};
 }
 

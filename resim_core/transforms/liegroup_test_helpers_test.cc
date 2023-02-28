@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -80,25 +81,25 @@ TYPED_TEST_SUITE(LieGroupHelperDeathTests, LieGroupTypes);
 
 TYPED_TEST(LieGroupHelperDeathTests, TooFewElementsRequested) {
   constexpr unsigned TOO_FEW = detail::MIN_TEST_ELEMENTS - 1;
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const auto test_vec =
             make_test_vectors<typename TypeParam::TangentVector>(TOO_FEW);
         (void)test_vec;
       },
-      "The minimum number of test elements you can request");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         const auto test_alg = make_test_algebra_elements<TypeParam>(TOO_FEW);
         (void)test_alg;
       },
-      "The minimum number of test elements you can request");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         const auto test_grp = make_test_group_elements<TypeParam>(TOO_FEW);
         (void)test_grp;
       },
-      "The minimum number of test elements you can request");
+      AssertException);
 }
 
 }  // namespace resim::transforms

@@ -9,6 +9,7 @@
 #include <mcap/reader.hpp>
 #include <sstream>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/test_directory.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/utils/proto/testing/message_a.pb.h"
@@ -158,27 +159,25 @@ TEST(McapLoggerDeathTest, TestDoubleAddChannel) {
   logger.add_proto_channel<proto::testing::Test>(CHANNEL);  // Double add.
 
   // Try adding "channel" but haven't seen type MessageA.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
-      "Schema does not exist.");
+      AssertException);
 
   // Adding a channel of type MessageA.
   logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);
   logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);  // Double add.
 
   // Try adding "channel" of type MessageA.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
-      "Channel with name but different MessageType already added!");
+      AssertException);
 }
 
 TEST(McapLoggerDeathTest, TestBadFilePath) {
   const testing::TestDirectoryRAII test_directory;
   const std::filesystem::path bad_test_mcap{
       test_directory.path() / "some_bogus_folder" / "test.mcap"};
-  EXPECT_DEATH(
-      { McapLogger logger{bad_test_mcap}; },
-      "Could not open mcap for writing!");
+  EXPECT_THROW({ McapLogger logger{bad_test_mcap}; }, AssertException);
 }
 
 TEST(McapLoggerDeathTest, TestBadLogProto) {
@@ -193,17 +192,13 @@ TEST(McapLoggerDeathTest, TestBadLogProto) {
   McapLogger logger{test_mcap};
   logger.add_proto_channel<TestMsg>(TOPIC);
 
-  EXPECT_DEATH(
+  EXPECT_THROW(
       logger.log_proto(BAD_TOPIC, LOG_TIME, TestMsg{}),
-      "No channel with the given name found!");
-  EXPECT_DEATH(
-      logger.log_proto(TOPIC, LOG_TIME, MessageA{}),
-      "No schema found for this message type!");
+      AssertException);
+  EXPECT_THROW(logger.log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
   constexpr auto TOPIC_A = "/topic_a";
   logger.add_proto_channel<MessageA>(TOPIC_A);
-  EXPECT_DEATH(
-      logger.log_proto(TOPIC, LOG_TIME, MessageA{}),
-      "Wrong message type for channel!");
+  EXPECT_THROW(logger.log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
 }
 
 }  // namespace resim

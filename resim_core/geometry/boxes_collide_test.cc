@@ -4,6 +4,7 @@
 
 #include <Eigen/Dense>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
@@ -59,7 +60,7 @@ TYPED_TEST(BoxesCollideTest, TestFailOnBadFrame) {
   if constexpr (FramedGroupType<TypeParam>) {
     const OrientedBox<TypeParam> box_a{TypeParam::identity(), Vec3::Ones()};
     OrientedBox<TypeParam> box_b{TypeParam::identity(), Vec3::Ones()};
-    EXPECT_DEATH(boxes_collide(box_a, box_b), "Box frames don't match!");
+    EXPECT_THROW(boxes_collide(box_a, box_b), AssertException);
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

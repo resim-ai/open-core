@@ -11,7 +11,7 @@ McapLogger::McapLogger(const std::filesystem::path &mcap_path) {
   const mcap::McapWriterOptions options{PROFILE};
   const auto status = writer_.open(mcap_path.string(), options);
   constexpr auto ERROR_MSG = "Could not open mcap for writing!";
-  CHECK(status.ok()) << ERROR_MSG;
+  REASSERT(status.ok(), ERROR_MSG);
 }
 
 McapLogger::McapLogger(std::ostream &os) {
@@ -28,17 +28,17 @@ void McapLogger::log_proto(
   const std::string schema_name{message.GetTypeName()};
   {
     constexpr auto ERR_MSG = "No schema found for this message type!";
-    CHECK(schemas_.contains(schema_name)) << ERR_MSG;
+    REASSERT(schemas_.contains(schema_name), ERR_MSG);
   }
   {
     constexpr auto ERR_MSG = "No channel with the given name found!";
-    CHECK(channels_.contains(channel_name)) << ERR_MSG;
+    REASSERT(channels_.contains(channel_name), ERR_MSG);
   }
   {
     const mcap::SchemaId expected_schema_id =
         channel_to_schema_map_.at(channels_.at(channel_name));
     constexpr auto ERR_MSG = "Wrong message type for channel!";
-    CHECK(expected_schema_id == schemas_.at(schema_name)) << ERR_MSG;
+    REASSERT(expected_schema_id == schemas_.at(schema_name), ERR_MSG);
   }
   mcap::Message msg;
   msg.channelId = channels_.at(channel_name);
@@ -54,7 +54,7 @@ void McapLogger::log_proto(
   msg.data = data_vec.data();
   msg.dataSize = data_string.size();
   const auto success = writer_.write(msg);
-  CHECK(success.ok()) << "Failed to write message!";
+  REASSERT(success.ok(), "Failed to write message!");
 }
 
 }  // namespace resim

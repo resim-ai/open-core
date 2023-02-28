@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "random"
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/two_jet.pb.h"
 #include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
@@ -108,9 +109,7 @@ TYPED_TEST(TwoJetToProtoDeathTests, TestPackNull) {
       TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   // ACTION/VERIFICATION
   for (const TwoJet &test_tj : test_elements) {
-    EXPECT_DEATH(
-        { proto::pack(test_tj, nullptr); },
-        "Can't pack into invalid proto!");
+    EXPECT_THROW({ proto::pack(test_tj, nullptr); }, AssertException);
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

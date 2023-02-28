@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim {
 
 TEST(NullableReferenceTest, TestNullableReference) {
@@ -56,9 +58,7 @@ TEST(NullableReferenceDeathTest, TestBadDereference) {
   };
 
   // ACTION / VERFICIATION
-  EXPECT_DEATH(
-      { test_function(null_reference<int>); },
-      "Can't dereference empty NullableReference!");
+  EXPECT_THROW({ test_function(null_reference<int>); }, AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 

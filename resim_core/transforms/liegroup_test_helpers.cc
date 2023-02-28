@@ -1,12 +1,11 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 
-#include <glog/logging.h>
-
 #include <Eigen/Dense>
 #include <algorithm>
 #include <random>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
@@ -54,7 +53,7 @@ std::vector<Vector> make_test_vectors(const unsigned count) {
   constexpr unsigned int SEED = 42;
   std::mt19937 rng{SEED};
   // How many test elements to make.
-  CHECK(count >= detail::MIN_TEST_ELEMENTS) << LOW_COUNT;
+  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   std::vector<Vector> elements;
   // Add a zero element.
   elements.push_back(Vector::Zero());

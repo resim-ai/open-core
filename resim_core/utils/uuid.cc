@@ -1,6 +1,6 @@
 #include "resim_core/utils/uuid.hh"
 
-#include <glog/logging.h>
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 
@@ -17,7 +17,7 @@ UUID::UUID(std::array<unsigned char, ARRAY_SIZE> id) : id_(id) {}
 UUID::UUID(const std::string &str) : id_{} {
   constexpr int SUCCESS = 0;
   const int result = uuid_parse(str.c_str(), id_.data());
-  CHECK(SUCCESS == result) << "Invalid UUID string!";
+  REASSERT(SUCCESS == result, "Invalid UUID string!");
 }
 
 UUID UUID::new_uuid() {

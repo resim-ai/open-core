@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim::math {
 
 namespace {
@@ -46,12 +48,12 @@ TEST(CovarianceDeathTest, TooFewSamples) {
   // Create a matrix with only one sample.
   const Eigen::Matrix<double, 1, 2> samples =
       Eigen::Matrix<double, 1, 2>::Zero();
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const Eigen::Matrix2d cov = covariance(samples);
         (void)cov;  // Avoid unused variable errors.
       },
-      "At least two samples are needed to compute a covariance matrix");
+      AssertException);
 }
 
 }  // namespace resim::math

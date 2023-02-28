@@ -1,10 +1,9 @@
 #include "t_curve_segment.hh"
 
-#include <glog/logging.h>
-
 #include <utility>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/quintic_poly_coeffs.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/framed_group.hh"
@@ -25,7 +24,7 @@ TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
         "Origin and destination TwoJets must have the same reference frame.";
     const bool frame_equality_test =
         (orig_.frame_from_ref().from() == dest_.frame_from_ref().from());
-    CHECK(frame_equality_test) << ERROR_MESSAGE;
+    REASSERT(frame_equality_test, ERROR_MESSAGE);
   }
 }
 

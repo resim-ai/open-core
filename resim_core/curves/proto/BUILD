@@ -24,12 +24,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":d_curve_proto_cc",
+        "//resim_core/assert",
         "//resim_core/curves:d_curve",
         "//resim_core/transforms:se3",
         "//resim_core/transforms/proto:fse3_to_proto",
         "//resim_core/transforms/proto:se3_to_proto",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -229,6 +229,7 @@ cc_test(
         ":two_jetr_fso3_to_proto",
         ":two_jetr_se3_to_proto",
         ":two_jetr_so3_to_proto",
+        "//resim_core/assert",
         "//resim_core/curves:two_jet_test_helpers",
         "//resim_core/math/proto:matrix_to_proto",
         "//resim_core/testing:random_matrix",
@@ -269,6 +270,7 @@ cc_library(
         ":two_jetl_fso3_to_proto",
         ":two_jetl_se3_to_proto",
         ":two_jetl_so3_to_proto",
+        "//resim_core/assert",
         "//resim_core/curves:t_curve",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
@@ -343,6 +345,7 @@ cc_test(
         ":two_jetl_fso3_to_proto",
         ":two_jetl_se3_to_proto",
         ":two_jetl_so3_to_proto",
+        "//resim_core/assert",
         "//resim_core/curves:t_curve",
         "//resim_core/curves:t_curve_test_helpers",
         "//resim_core/transforms:framed_group",

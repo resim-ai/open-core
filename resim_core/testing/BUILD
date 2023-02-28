@@ -7,6 +7,7 @@ cc_library(
     hdrs = ["test_directory.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim_core/assert",
         "//resim_core/utils:uuid",
         "@com_github_google_glog//:glog",
     ],

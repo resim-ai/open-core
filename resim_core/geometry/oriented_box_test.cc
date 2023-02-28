@@ -5,6 +5,7 @@
 
 #include <Eigen/Dense>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
@@ -43,12 +44,10 @@ TYPED_TEST(OrientedBoxTest, TestNegativeExtents) {
   const Eigen::Vector3d extents{-0.3, 0.4, 0.5};
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(
-      OrientedBox(reference_from_box, extents),
-      "Negative extent detected!");
+  EXPECT_THROW(OrientedBox(reference_from_box, extents), AssertException);
 
   OrientedBox box{reference_from_box, extents.cwiseAbs()};
-  EXPECT_DEATH(box.set_extents(extents), "Negative extent detected!");
+  EXPECT_THROW(box.set_extents(extents), AssertException);
 }
 
 // Test the setters

@@ -7,7 +7,7 @@ cc_library(
     hdrs = ["dependency_file_descriptor_set.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -45,8 +45,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":uuid_proto_cc",
+        "//resim_core/assert",
         "//resim_core/utils:uuid",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -56,6 +56,7 @@ cc_test(
     deps = [
         ":uuid_proto_cc",
         ":uuid_to_proto",
+        "//resim_core/assert",
         "//resim_core/utils:uuid",
         "@com_google_googletest//:gtest_main",
     ],

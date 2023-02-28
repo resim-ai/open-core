@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glog/logging.h>
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 
@@ -50,13 +50,13 @@ NullableReference<T>::operator bool() const {
 
 template <typename T>
 T &NullableReference<T>::operator*() const {
-  CHECK(has_value()) << BAD_DEREFERENCE;
+  REASSERT(has_value(), BAD_DEREFERENCE);
   return *x_;
 }
 
 template <typename T>
 T *NullableReference<T>::operator->() const {
-  CHECK(has_value()) << BAD_DEREFERENCE;
+  REASSERT(has_value(), BAD_DEREFERENCE);
   return x_;
 }
 

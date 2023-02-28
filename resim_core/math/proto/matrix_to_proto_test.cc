@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <random>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/math/proto/testing/test_matrix.pb.h"
 #include "resim_core/testing/random_matrix.hh"
 
@@ -121,9 +122,9 @@ TEST_F(MatrixToProtoDeathTest, WrongDimensions) {
 
   // VERIFICATION
   // Unpack into a matix with different dimensions.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { proto::unpack_matrix(msg.elements(), InOut(retrieved)); },
-      "The expected number of elements in the Matrix");
+      AssertException);
 }
 
 TEST_F(MatrixToProtoDeathTest, UninitializedDynamic) {
@@ -138,9 +139,9 @@ TEST_F(MatrixToProtoDeathTest, UninitializedDynamic) {
 
   // VERIFICATION
   // Unpack into a dynamic matix with uninitialized size.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { proto::unpack_matrix(msg.elements(), InOut(retrieved)); },
-      "The expected number of elements in the Matrix");
+      AssertException);
 }
 
 TEST_F(MatrixToProtoDeathTest, TestPackNull) {
@@ -148,9 +149,7 @@ TEST_F(MatrixToProtoDeathTest, TestPackNull) {
   using TestMatType1 = Eigen::Matrix<double, SML, SML>;
   const TestMatType1 mat{testing::random_matrix<TestMatType1>(this->rng())};
   // ACTION/VERIFICATION
-  EXPECT_DEATH(
-      { proto::pack_matrix(mat, nullptr); },
-      "Can't pack into invalid proto!");
+  EXPECT_THROW({ proto::pack_matrix(mat, nullptr); }, AssertException);
 }
 
 }  //  namespace resim::math

@@ -5,6 +5,7 @@
 #include <limits>
 
 #include "gtest/gtest.h"
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 
@@ -42,7 +43,7 @@ TYPED_TEST(IntegerPowerDeathTest, TestOverFlow) {
   // Should work fine:
   pow(TWO, static_cast<TypeParam>(WIDTH - 1U));
   // Should cause death:
-  EXPECT_DEATH(pow(TWO, WIDTH), "Overflow detected!");
+  EXPECT_THROW(pow(TWO, WIDTH), AssertException);
 }
 
 }  // namespace resim

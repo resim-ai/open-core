@@ -1,10 +1,9 @@
 
 #include "resim_core/geometry/boxes_collide.hh"
 
-#include <glog/logging.h>
-
 #include <Eigen/Dense>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/geometry/gjk_algorithm.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_group_concept.hh"
@@ -19,7 +18,7 @@ using transforms::LieGroupType;
 // This helper represents the support function for a simple oriented box
 template <LieGroupType Group>
 Vec3 box_support(const OrientedBox<Group> &box, const Vec3 &direction) {
-  CHECK(not direction.isZero()) << "Zero direction detected!";
+  REASSERT(not direction.isZero(), "Zero direction detected!");
   const Vec3 direction_in_box_coordinates{
       box.reference_from_box().rotation().inverse() * direction};
 
@@ -70,7 +69,7 @@ bool boxes_collide(
   if constexpr (transforms::FramedGroupType<Group>) {
     const bool frames_match =
         box_1.reference_from_box().into() == box_2.reference_from_box().into();
-    CHECK(frames_match) << "Box frames don't match!";
+    REASSERT(frames_match, "Box frames don't match!");
   }
 
   if (not bounding_spheres_collide(box_1, box_2, collision_tolerance)) {
@@ -87,7 +86,7 @@ bool boxes_collide(
   const std::optional<double> maybe_box_box_distance =
       gjk_algorithm(support_1, support_2);
 
-  CHECK(maybe_box_box_distance.has_value()) << "GJK Algorithm Failed!";
+  REASSERT(maybe_box_box_distance.has_value(), "GJK Algorithm Failed!");
 
   return *maybe_box_box_distance < collision_tolerance;
 }

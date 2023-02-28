@@ -1,13 +1,12 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <queue>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/time/timestamp.hh"
 
 namespace resim::time {
@@ -81,7 +80,7 @@ void EventSchedule<Payload, Count_t>::schedule_event(
     const Timestamp time,
     Payload payload) {
   constexpr auto ERROR = "Can't schedule in exhausted EventSchedule.";
-  CHECK(insertion_count_ < MAX_EVENTS) << ERROR;
+  REASSERT(insertion_count_ < MAX_EVENTS, ERROR);
   event_queue_.emplace(time, std::move(payload), insertion_count_);
   ++insertion_count_;
 }

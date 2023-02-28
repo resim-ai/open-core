@@ -21,7 +21,7 @@ cc_library(
     hdrs = ["multivariate_gaussian.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
         "@libeigen//:eigen",
     ],
 )
@@ -32,6 +32,7 @@ cc_test(
     deps = [
         ":multivariate_gaussian",
         ":sample_statistics",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -41,7 +42,7 @@ cc_library(
     hdrs = ["sample_statistics.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
         "@libeigen//:eigen",
     ],
 )
@@ -51,6 +52,7 @@ cc_test(
     srcs = ["sample_statistics_test.cc"],
     deps = [
         ":sample_statistics",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -61,7 +63,7 @@ cc_library(
     hdrs = ["safe_integer_utils.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -70,6 +72,7 @@ cc_test(
     srcs = ["safe_integer_utils_test.cc"],
     deps = [
         ":safe_integer_utils",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )

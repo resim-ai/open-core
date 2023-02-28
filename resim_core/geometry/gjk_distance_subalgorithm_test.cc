@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
 
 namespace resim::geometry::convex_helpers {
@@ -66,7 +67,7 @@ TEST_F(DistanceSubalgorithmTest, TestFailOnEmptySimplex) {
   const Simplex<DIM> simplex{};
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(distance_subalgorithm(simplex), "Empty simplex passed in!");
+  EXPECT_THROW(distance_subalgorithm(simplex), AssertException);
 }
 
 // Test that the distance subalgorithm works for single vertices.

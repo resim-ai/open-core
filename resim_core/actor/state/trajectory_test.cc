@@ -7,6 +7,7 @@
 #include <random>
 
 #include "resim_core/actor/state/rigid_body_state.hh"
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
@@ -247,16 +248,16 @@ TEST_F(TrajectoryDeathTests, InvalidFrames) {
   auto next_point_b = test_two_jet(IMPOSTER_FRAME, TrajectoryTests::BOD_FRAME);
   // VERIFICATION
   // Confirm that introducing an imposter frame generates the expected errors.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         test_trajectory.append({next_ts, RigidBodyState<FSE3>(next_point_a)});
       },
-      "All control points must have the same body frame");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         test_trajectory.append({next_ts, RigidBodyState<FSE3>(next_point_b)});
       },
-      "Control points must all have the same ref and point frame");
+      AssertException);
 }
 
 }  // namespace resim::actor::state

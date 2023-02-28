@@ -1,7 +1,6 @@
 #include "resim_core/curves/proto/d_curve_to_proto.hh"
 
-#include <glog/logging.h>
-
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve.pb.h"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -11,7 +10,7 @@ namespace resim::curves::proto {
 
 template <typename Group, typename Msg>
 void pack_d_curve(const DCurve<Group> &in, Msg *const out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
 
   for (const auto &control_point : in.control_pts()) {

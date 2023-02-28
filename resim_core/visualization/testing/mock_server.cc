@@ -7,6 +7,8 @@
 #include <string>
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim::visualization::testing {
 
 struct ServerHandle {
@@ -54,12 +56,12 @@ MockServer::MockServer(
         // Deserialize it
         proto::ViewUpdate update_msg;
         const bool success = update_msg.ParseFromString(body);
-        LOG_IF(INFO, success) << "Parsed ViewUpdate Successfully...";
-        CHECK(success) << "Failed to parse ViewUpdate!";
+        REASSERT(success, "Failed to parse ViewUpdate!");
+        LOG(INFO) << "Parsed ViewUpdate Successfully...";
 
         constexpr std::size_t NUM_MATCHES = 3U;
         constexpr auto ERR_MSG{"Wrong number of regex matches!"};
-        CHECK(req.matches.size() == NUM_MATCHES) << ERR_MSG;
+        REASSERT(req.matches.size() == NUM_MATCHES, ERR_MSG);
 
         const UUID session_id{req.matches[1]};
         const uint64_t update_id{std::stoul(req.matches[2])};
@@ -96,7 +98,7 @@ MockServer::MockServer(
     const httplib::Result res{cli.Get("/ready")};
     const bool got_created =
         res->status == static_cast<int>(ResponseCode::CREATED);
-    CHECK(got_created) << "Failed to setup serve";
+    REASSERT(got_created, "Failed to setup serve");
   }
 }
 

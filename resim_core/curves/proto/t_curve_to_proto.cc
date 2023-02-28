@@ -2,6 +2,7 @@
 
 #include <glog/logging.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/t_curve.pb.h"
 #include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
@@ -15,7 +16,7 @@ namespace resim::curves::proto {
 
 template <typename Group, typename Msg>
 void pack_t_curve(const TCurve<Group> &in, Msg *out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   for (const auto &control : in.control_pts()) {
     double time = control.time;

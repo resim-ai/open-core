@@ -1,16 +1,15 @@
 
 #include "resim_core/time/sample_interval.hh"
 
-#include <glog/logging.h>
-
 #include <cmath>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/math/safe_integer_utils.hh"
 
 namespace resim::time {
 
 int64_t num_samples(double start_time, double end_time, double max_abs_dt) {
-  CHECK(max_abs_dt > 0.) << "max_abs_dt must be positive!";
+  REASSERT(max_abs_dt > 0., "max_abs_dt must be positive!");
   const double total_time = std::fabs(end_time - start_time);
 
   // We want to find the smallest integer n such that:
@@ -49,7 +48,7 @@ int64_t num_samples(
     const Timestamp start_time,
     const Timestamp end_time,
     const Duration max_abs_dt) {
-  CHECK(max_abs_dt.count() > 0) << "max_abs_dt must be positive!";
+  REASSERT(max_abs_dt.count() > 0, "max_abs_dt must be positive!");
   const Duration total_time{math::safe_abs(math::safe_difference(
       end_time.time_since_epoch().count(),
       start_time.time_since_epoch().count()))};

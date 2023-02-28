@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim::geometry {
 
 // This library is essentially a replacement for configuration until we choose a
@@ -56,13 +58,9 @@ TEST(DroneWireframeDeathTest, TestFailsOnInvalidExtents) {
   invalid_samples_per_rotor.samples_per_rotor = 1;
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(
-      drone_wireframe(invalid_chassis_radius),
-      "Invalid drone extents!");
-  EXPECT_DEATH(drone_wireframe(invalid_rotor_radius), "Invalid drone extents!");
-  EXPECT_DEATH(
-      drone_wireframe(invalid_samples_per_rotor),
-      "Invalid drone extents!");
+  EXPECT_THROW(drone_wireframe(invalid_chassis_radius), AssertException);
+  EXPECT_THROW(drone_wireframe(invalid_rotor_radius), AssertException);
+  EXPECT_THROW(drone_wireframe(invalid_samples_per_rotor), AssertException);
 }
 
 }  // namespace resim::geometry

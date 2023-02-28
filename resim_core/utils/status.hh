@@ -3,11 +3,12 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
-#include <glog/logging.h>
 
 #include <string>
 #include <string_view>
 #include <variant>
+
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 //
@@ -80,7 +81,7 @@ constexpr Status OKAY_STATUS{};
         "{{{0}.what() == {1}}}",      \
         #status,                      \
         (status).what());             \
-    CHECK((status).ok()) << err_msg;  \
+    REASSERT((status).ok(), err_msg); \
   })
 
 constexpr Status

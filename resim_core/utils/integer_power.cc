@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <limits>
 
-#include "glog/logging.h"
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 
@@ -15,7 +15,7 @@ template <typename IntegerType>
 void overflow_check(IntegerType a, IntegerType b) requires
     std::is_unsigned_v<IntegerType> {
   constexpr IntegerType MAX_VALUE = std::numeric_limits<IntegerType>::max();
-  CHECK(a == 0U or a <= MAX_VALUE / b) << "Overflow detected!";
+  REASSERT(a <= MAX_VALUE / b, "Overflow detected!");
 }
 
 }  // namespace

@@ -2,12 +2,12 @@
 
 #include "resim_core/utils/proto/uuid_to_proto.hh"
 
-#include <glog/logging.h>
+#include "resim_core/assert/assert.hh"
 
 namespace resim::proto {
 
 void pack(const resim::UUID &in, UUID *const out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   out->set_data(in.to_string());
 }

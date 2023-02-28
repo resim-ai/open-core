@@ -24,10 +24,10 @@ cc_library(
     deps = [
         ":trajectory_proto_cc",
         "//resim_core/actor/state:trajectory",
+        "//resim_core/assert",
         "//resim_core/curves/proto:t_curve_fse3_to_proto",
         "//resim_core/time:timestamp",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -37,6 +37,7 @@ cc_test(
     deps = [
         ":trajectory_to_proto",
         "//resim_core/actor/state:trajectory",
+        "//resim_core/assert",
         "//resim_core/curves:t_curve",
         "//resim_core/curves:t_curve_test_helpers",
         "//resim_core/curves/proto:t_curve_fse3_to_proto",

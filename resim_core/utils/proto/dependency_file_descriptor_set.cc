@@ -1,9 +1,9 @@
 #include "resim_core/utils/proto/dependency_file_descriptor_set.hh"
 
-#include <glog/logging.h>
-
 #include <queue>
 #include <unordered_map>
+
+#include "resim_core/assert/assert.hh"
 
 namespace resim {
 
@@ -21,7 +21,7 @@ std::string dependency_file_descriptor_set(
   while (not descriptor_queue.empty()) {
     const google::protobuf::FileDescriptor *const current =
         descriptor_queue.front();
-    CHECK(current != nullptr) << "Invalid FileDescriptor!";
+    REASSERT(current != nullptr, "Invalid FileDescriptor!");
     for (int ii = 0; ii < current->dependency_count(); ++ii) {
       const google::protobuf::FileDescriptor *const dependency{
           current->dependency(ii)};

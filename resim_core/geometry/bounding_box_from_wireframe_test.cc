@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <random>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
 
@@ -21,9 +22,9 @@ TEST(BoundingBoxFromWireframeDeathTest, TestEmptyWireframe) {
   const Wireframe empty_wireframe{{}, {}};
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { bounding_box_from_wireframe(empty_wireframe); },
-      "Bounding box can't be found for empty or size one wireframe!");
+      AssertException);
 }
 
 // Test that we fail when a wireframe with at least one zero extent is passed
@@ -36,9 +37,9 @@ TEST(BoundingBoxFromWireframeDeathTest, TestFlatWireframe) {
       std::vector<Wireframe::Edge>{}};
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { bounding_box_from_wireframe(flat_wireframe); },
-      "Wireframe has at least one zero extent!");
+      AssertException);
 }
 
 // Test that we correctly compute bounding boxes for some random wireframes.

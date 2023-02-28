@@ -6,9 +6,9 @@ cc_library(
     hdrs = ["d_curve.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -17,6 +17,7 @@ cc_test(
     srcs = ["d_curve_test.cc"],
     deps = [
         ":d_curve",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -44,6 +45,7 @@ cc_library(
     deps = [
         ":t_curve_segment",
         ":two_jet",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
@@ -51,7 +53,6 @@ cc_library(
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -62,6 +63,7 @@ cc_test(
         ":t_curve",
         ":t_curve_test_helpers",
         ":two_jet",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
@@ -78,6 +80,7 @@ cc_library(
     deps = [
         ":quintic_poly_coeffs",
         ":two_jet",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
@@ -85,7 +88,6 @@ cc_library(
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -95,6 +97,7 @@ cc_test(
     deps = [
         ":t_curve_segment",
         ":two_jet",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
@@ -194,12 +197,12 @@ cc_library(
     deps = [
         ":two_jet",
         ":two_jet_concepts",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_test_helpers",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -208,6 +211,7 @@ cc_test(
     srcs = ["two_jet_test_helpers_test.cc"],
     deps = [
         ":two_jet_test_helpers",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )

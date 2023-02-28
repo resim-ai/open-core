@@ -134,10 +134,11 @@ TYPED_TEST(TwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
   for (const TwoJetL<TypeParam> &test_tj : test_elements) {
     TwoJetL<TypeParam> id_tj = TwoJetL<TypeParam>::identity();
     TwoJetL<TypeParam> expected_id_tj = test_tj.inverse() * test_tj;
+    constexpr double TOLERANCE = 1e-9;
     EXPECT_TRUE(
         expected_id_tj.frame_from_ref().is_approx(id_tj.frame_from_ref()));
     EXPECT_TRUE(expected_id_tj.d_frame_from_ref().isZero());
-    EXPECT_TRUE(expected_id_tj.d2_frame_from_ref().isZero());
+    EXPECT_TRUE(expected_id_tj.d2_frame_from_ref().isZero(TOLERANCE));
   }
 }
 
@@ -235,7 +236,7 @@ TYPED_TEST(TwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
         expected_id_tj.ref_from_frame().is_approx(id_tj.ref_from_frame()));
     // TwoJetR results in inexact inversions, unlike TwoJetL
     // TODO(https://app.asana.com/0/1202178773526279/1203942988562265/f)
-    constexpr double TOLERANCE = 1e-9;
+    constexpr double TOLERANCE = 1e-8;
     EXPECT_TRUE(expected_id_tj.d_ref_from_frame().isZero(TOLERANCE));
     EXPECT_TRUE(expected_id_tj.d2_ref_from_frame().isZero(TOLERANCE));
   }

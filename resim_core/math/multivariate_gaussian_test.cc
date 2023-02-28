@@ -6,6 +6,7 @@
 #include <random>
 #include <type_traits>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/math/sample_statistics.hh"
 
 namespace resim::math {
@@ -196,12 +197,12 @@ TYPED_TEST(GaussianDeathTest, NonSymmetricCov) {
       this->generate_randn_matrix(D, D);
   // Check that random did not accidentally generate a symmetric matrix.
   ASSERT_FALSE(cov.isApprox(cov.transpose()));
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         Gaussian<D> g(mu, cov);
         (void)g;  // Avoid unused variable errors.
       },
-      "Covariance matrix must be symmetric");
+      AssertException);
 }
 
 TYPED_TEST(GaussianDeathTest, NegativeEigenvalues) {
@@ -211,12 +212,12 @@ TYPED_TEST(GaussianDeathTest, NegativeEigenvalues) {
   // Negative numbers on the diagonal will result in negative eigenvalues.
   const typename GaussianTest<TypeParam>::MatrixDD cov =
       GaussianTest<TypeParam>::MatrixDD::Identity() * -1;
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         Gaussian<D> g(mu, cov);
         (void)g;  // Avoid unused variable errors.
       },
-      "Symmetric PSD matrices have positive eigenvalues");
+      AssertException);
 }
 
 }  // namespace resim::math

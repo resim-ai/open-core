@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <cstring>
 #include <filesystem>
 #include <map>
@@ -10,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/utils/proto/dependency_file_descriptor_set.hh"
 
@@ -82,7 +81,7 @@ void McapLogger::add_proto_channel(const std::string &channel_name) {
   if (channels_.contains(channel_name)) {
     {
       constexpr auto ERR_MSG = "Schema does not exist.";
-      CHECK(schemas_.contains(message_name)) << ERR_MSG;
+      REASSERT(schemas_.contains(message_name), ERR_MSG);
     }
 
     {
@@ -90,7 +89,7 @@ void McapLogger::add_proto_channel(const std::string &channel_name) {
           channel_to_schema_map_.at(channels_.at(channel_name));
       constexpr auto ERR_MSG =
           "Channel with name but different MessageType already added!";
-      CHECK(expected_schema_id == schemas_.at(message_name)) << ERR_MSG;
+      REASSERT(expected_schema_id == schemas_.at(message_name), ERR_MSG);
     }
 
     return;

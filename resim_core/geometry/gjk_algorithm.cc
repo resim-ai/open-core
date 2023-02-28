@@ -1,11 +1,10 @@
 
 #include "resim_core/geometry/gjk_algorithm.hh"
 
-#include <glog/logging.h>
-
 #include <limits>
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/geometry/gjk_distance_subalgorithm.hh"
 
 namespace resim::geometry {
@@ -61,7 +60,7 @@ std::optional<double> gjk_algorithm(
     // point to it.
     constexpr auto ERROR_MESSAGE =
         "This simplex should have intersected the origin!";
-    CHECK(simplex.size() <= DIM) << ERROR_MESSAGE;
+    REASSERT(simplex.size() <= DIM, ERROR_MESSAGE);
     simplex.push_back(support_difference(-distance_result.closest_point));
   }
   return std::nullopt;

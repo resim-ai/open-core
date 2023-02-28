@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/move_copy_tracker.hh"
 
 namespace resim {
@@ -223,25 +224,25 @@ TEST(StatusValueTest, TestConstructWithStatus) {
 // Test that we fail when trying to create a StatusValue from an okay
 // status. This is not allowed as it would yield an unpopulated StatusValue
 TEST(StatusValueDeathTest, TestCantConstructFromOkayStatus) {
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { StatusValue<MoveCopyTrackerWithInt>{OKAY_STATUS}; },
-      "Can't make okay StatusValue without value!");
+      AssertException);
 
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { StatusValue<MoveCopyTrackerWithInt &>{OKAY_STATUS}; },
-      "Can't make okay StatusValue without value!");
+      AssertException);
 
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { StatusValue<const MoveCopyTrackerWithInt &>{OKAY_STATUS}; },
-      "Can't make okay StatusValue without value!");
+      AssertException);
 
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { StatusValue<MoveCopyTrackerWithInt &&>{OKAY_STATUS}; },
-      "Can't make okay StatusValue without value!");
+      AssertException);
 
-  EXPECT_DEATH(
+  EXPECT_THROW(
       { StatusValue<const MoveCopyTrackerWithInt &&>{OKAY_STATUS}; },
-      "Can't make okay StatusValue without value!");
+      AssertException);
 }
 
 // Test that we can create StatusValues with copying.

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <glog/logging.h>
 #include <google/protobuf/repeated_field.h>
 
 #include <Eigen/Dense>
 #include <algorithm>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/utils/inout.hh"
 
 // Pack and Unpack Eigen Matrices into a protobuf repeated field of doubles.
@@ -37,7 +37,7 @@ template <typename MatrixType>
 void pack_matrix(
     const MatrixType &in,
     google::protobuf::RepeatedField<double> *const out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   const auto flat_in = in.reshaped();
   out->Add(flat_in.cbegin(), flat_in.cend());
@@ -56,7 +56,7 @@ void unpack_matrix(
   constexpr auto SIZE_ERR =
       "The expected number of elements in the Matrix (as indicated by .size()) "
       "must match the number of elements in the proto field.";
-  CHECK(in.size() == out->size()) << SIZE_ERR;
+  REASSERT(in.size() == out->size(), SIZE_ERR);
   std::copy(in.cbegin(), in.cend(), out->reshaped().begin());
 }
 

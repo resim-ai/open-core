@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/proto/se3.pb.h"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -59,9 +60,7 @@ TYPED_TEST(LiegroupToProtoDeathTests, TestPackNull) {
   using Group = typename TypeParam::first_type;
   // ACTION/VERIFICATION
   for (const Group &test_group : make_test_group_elements<Group>()) {
-    EXPECT_DEATH(
-        { proto::pack(test_group, nullptr); },
-        "Can't pack into invalid proto!");
+    EXPECT_THROW({ proto::pack(test_group, nullptr); }, AssertException);
   }
 }
 
@@ -76,9 +75,9 @@ TYPED_TEST(LiegroupToProtoDeathTests, TestLongMessage) {
     // Pack another element.
     constexpr double ROGUE_ELEMENT = 1.4142;
     msg.add_algebra(ROGUE_ELEMENT);
-    EXPECT_DEATH(
+    EXPECT_THROW(
         { const Group retrieved_group = unpack(msg); },
-        "The expected number of elements in the Matrix");
+        AssertException);
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

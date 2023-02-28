@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve.pb.h"
 #include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
@@ -116,9 +117,7 @@ TYPED_TEST(DCurveToProtoTests, TestFail) {
   DCurve test_curve(DCurveToProtoTests<Group>::generate_control_points());
 
   // ACTION/VERIFICATION
-  EXPECT_DEATH(
-      { proto::pack(test_curve, nullptr); },
-      "Can't pack into invalid proto!");
+  EXPECT_THROW({ proto::pack(test_curve, nullptr); }, AssertException);
 }
 
 }  // namespace resim::curves

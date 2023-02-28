@@ -9,13 +9,13 @@ cc_library(
     deps = [
         ":se3_proto_cc",
         ":so3_proto_cc",
+        "//resim_core/assert",
         "//resim_core/math/proto:matrix_to_proto",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -27,6 +27,7 @@ cc_test(
         ":se3_to_proto",
         ":so3_proto_cc",
         ":so3_to_proto",
+        "//resim_core/assert",
         "//resim_core/transforms:liegroup_test_helpers",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
@@ -55,9 +56,9 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":frame_3_proto_cc",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "//resim_core/utils/proto:uuid_to_proto",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -67,6 +68,7 @@ cc_test(
     deps = [
         ":frame_3_proto_cc",
         ":frame_3_to_proto",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "@com_google_googletest//:gtest_main",
     ],
@@ -82,10 +84,10 @@ cc_library(
         ":fse3_proto_cc",
         ":fso3_proto_cc",
         ":liegroup_to_proto",
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/utils:inout",
-        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -98,6 +100,7 @@ cc_test(
         ":fse3_to_proto",
         ":fso3_proto_cc",
         ":fso3_to_proto",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_test_helpers",

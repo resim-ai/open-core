@@ -1,9 +1,8 @@
 #include "resim_core/geometry/oriented_box.hh"
 
-#include <glog/logging.h>
-
 #include <utility>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -35,7 +34,7 @@ void OrientedBox<Group>::set_reference_from_box(Group reference_from_box) {
 
 template <LieGroupType Group>
 void OrientedBox<Group>::set_extents(ExtentsType extents) {
-  CHECK((extents.array() > 0.).all()) << "Negative extent detected!";
+  REASSERT((extents.array() > 0.).all(), "Negative extent detected!");
   extents_ = std::move(extents);
 }
 

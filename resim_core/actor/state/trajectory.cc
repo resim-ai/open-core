@@ -1,8 +1,7 @@
 #include "resim_core/actor/state/trajectory.hh"
 
-#include <glog/logging.h>
-
 #include "resim_core/actor/state/rigid_body_state.hh"
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/time/timestamp.hh"
@@ -38,7 +37,7 @@ void Trajectory::append(const Control &point) {
         "All control points must have the same body frame";
     const bool frame_condition =
         point.state.ref_from_body().from() == body_frame();
-    CHECK(frame_condition) << FRAME_ERR;
+    REASSERT(frame_condition, FRAME_ERR);
   }
   // Convert the point to a valid format for the TCurve object.
   double time = time::as_seconds(point.at_time - start_time());
@@ -76,14 +75,14 @@ time::Duration Trajectory::time_duration() const {
 const Frame &Trajectory::reference_frame() const {
   constexpr auto EMPTY_ERR =
       "Cannot query the frame of a trajectory with no control points";
-  CHECK(!curve_.control_pts().empty()) << EMPTY_ERR;
+  REASSERT(!curve_.control_pts().empty(), EMPTY_ERR);
   return curve_.control_pts().back().point.frame_from_ref().from();
 }
 
 const Frame &Trajectory::body_frame() const {
   constexpr auto EMPTY_ERR =
       "Cannot query the frame of a trajectory with no control points";
-  CHECK(!curve_.control_pts().empty()) << EMPTY_ERR;
+  REASSERT(!curve_.control_pts().empty(), EMPTY_ERR);
   return curve_.control_pts().back().point.frame_from_ref().into();
 }
 

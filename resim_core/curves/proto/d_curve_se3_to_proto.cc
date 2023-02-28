@@ -1,7 +1,5 @@
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
 
-#include <glog/logging.h>
-
 #include "resim_core/curves/proto/d_curve.pb.h"
 #include "resim_core/curves/proto/d_curve_to_proto.hh"
 #include "resim_core/transforms/se3.hh"

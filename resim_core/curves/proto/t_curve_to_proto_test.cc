@@ -4,6 +4,7 @@
 
 #include <ostream>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/t_curve.pb.h"
 #include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/t_curve_fso3_to_proto.hh"
@@ -129,9 +130,7 @@ TYPED_TEST(TCurveToProtoDeathTests, TestPackNull) {
   TCurve<Group> test_t_curve = this->test_curve_default();
   // ACTION/VERIFICATION
 
-  EXPECT_DEATH(
-      { proto::pack(test_t_curve, nullptr); },
-      "Can't pack into invalid proto!");
+  EXPECT_THROW({ proto::pack(test_t_curve, nullptr); }, AssertException);
 }
 
 }  // namespace resim::curves::proto

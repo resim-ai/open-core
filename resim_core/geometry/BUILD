@@ -6,10 +6,10 @@ cc_library(
     hdrs = ["oriented_box.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -19,6 +19,7 @@ cc_test(
     srcs = ["oriented_box_test.cc"],
     deps = [
         ":oriented_box",
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
@@ -31,9 +32,9 @@ cc_library(
     srcs = ["gjk_distance_subalgorithm.cc"],
     hdrs = ["gjk_distance_subalgorithm.hh"],
     deps = [
+        "//resim_core/assert",
         "//resim_core/utils:inout",
         "//resim_core/utils:integer_power",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -43,6 +44,7 @@ cc_test(
     srcs = ["gjk_distance_subalgorithm_test.cc"],
     deps = [
         ":gjk_distance_subalgorithm",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
@@ -54,7 +56,7 @@ cc_library(
     hdrs = ["gjk_algorithm.hh"],
     deps = [
         ":gjk_distance_subalgorithm",
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
         "@libeigen//:eigen",
     ],
 )
@@ -65,9 +67,9 @@ cc_test(
     deps = [
         ":gjk_algorithm",
         ":oriented_box",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:liegroup_concepts",
-        "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
@@ -80,11 +82,11 @@ cc_library(
     deps = [
         ":gjk_algorithm",
         ":oriented_box",
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -94,6 +96,7 @@ cc_test(
     srcs = ["boxes_collide_test.cc"],
     deps = [
         ":boxes_collide",
+        "//resim_core/assert",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
@@ -128,7 +131,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":wireframe",
-        "@com_github_google_glog//:glog",
+        "//resim_core/assert",
     ],
 )
 
@@ -137,6 +140,7 @@ cc_test(
     srcs = ["drone_wireframe_test.cc"],
     deps = [
         ":drone_wireframe",
+        "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -148,10 +152,10 @@ cc_library(
     deps = [
         ":oriented_box",
         ":wireframe",
+        "//resim_core/assert",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",
         "//resim_core/transforms:se3",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )
@@ -161,6 +165,7 @@ cc_test(
     srcs = ["bounding_box_from_wireframe_test.cc"],
     deps = [
         ":bounding_box_from_wireframe",
+        "//resim_core/assert",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:frame",
         "//resim_core/transforms:framed_group",

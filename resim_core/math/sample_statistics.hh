@@ -1,8 +1,8 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <Eigen/Dense>
+
+#include "resim_core/assert/assert.hh"
 
 namespace resim::math {
 
@@ -24,7 +24,7 @@ Eigen::MatrixXd covariance(const Eigen::MatrixXd &samples) {
   const unsigned int sample_count = samples.rows();
   constexpr auto ERR_MSG =
       "At least two samples are needed to compute a covariance matrix";
-  CHECK(sample_count > 1) << ERR_MSG;
+  REASSERT(sample_count > 1, ERR_MSG);
   const Eigen::MatrixXd zero_mean =
       samples.rowwise() - samples.colwise().mean();
   Eigen::MatrixXd cov =

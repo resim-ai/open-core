@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/proto/frame_3.pb.h"
 
@@ -35,9 +36,7 @@ TEST(Frame3ToProtoTest, RoundTrip) {
 
 TEST(Frame3ToProtoDeathTest, TestPackInvalid) {
   // ACTION / VERIFICATION
-  EXPECT_DEATH(
-      proto::pack(Frame<3>::new_frame(), nullptr),
-      "Can't pack into invalid proto!");
+  EXPECT_THROW(proto::pack(Frame<3>::new_frame(), nullptr), AssertException);
 }
 
 }  // namespace resim::transforms

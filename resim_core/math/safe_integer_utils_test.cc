@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <limits>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim::math {
 
 namespace {
@@ -31,10 +33,10 @@ TEST(SafeIntegerUtilsDeathTest, TestSafeDifferenceFails) {
   for (int64_t ii = 0; ii < NUM_POINTS; ++ii) {
     // ACTION / VERIFICATION
     // These should be just outside the boundary of what's representable
-    EXPECT_DEATH(safe_difference(MIN + ii, ii + 1), INT_UNDERFLOW_MSG);
-    EXPECT_DEATH(safe_difference(MAX - ii, -ii - 1), INT_OVERFLOW_MSG);
-    EXPECT_DEATH(safe_difference(ii, ii + MIN), INT_OVERFLOW_MSG);
-    EXPECT_DEATH(safe_difference(-ii - 2, MAX - ii), INT_UNDERFLOW_MSG);
+    EXPECT_THROW(safe_difference(MIN + ii, ii + 1), AssertException);
+    EXPECT_THROW(safe_difference(MAX - ii, -ii - 1), AssertException);
+    EXPECT_THROW(safe_difference(ii, ii + MIN), AssertException);
+    EXPECT_THROW(safe_difference(-ii - 2, MAX - ii), AssertException);
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
@@ -55,8 +57,8 @@ TEST(SafeIntegerUtilsDeathTest, TestSafeAdditionFails) {
   for (int64_t ii = 0; ii < NUM_POINTS; ++ii) {
     // ACTION / VERIFICATION
     // These should be just outside the boundary of what's representable
-    EXPECT_DEATH(safe_sum(MIN + ii, -ii - 1), INT_UNDERFLOW_MSG);
-    EXPECT_DEATH(safe_sum(MAX - ii, ii + 1), INT_OVERFLOW_MSG);
+    EXPECT_THROW(safe_sum(MIN + ii, -ii - 1), AssertException);
+    EXPECT_THROW(safe_sum(MAX - ii, ii + 1), AssertException);
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
@@ -73,7 +75,7 @@ TEST(SafeIntegerUtilsTest, TestSafeAbs) {
 
 TEST(SafeIntegerUtilsDeathTest, TestSafeAbsFails) {
   // abs(MIN) can't be represented by the same signed int type.
-  EXPECT_DEATH(safe_abs(MIN), INT_OVERFLOW_MSG);
+  EXPECT_THROW(safe_abs(MIN), AssertException);
 }
 
 }  // namespace resim::math

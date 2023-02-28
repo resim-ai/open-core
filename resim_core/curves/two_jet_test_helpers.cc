@@ -1,10 +1,9 @@
 #include "resim_core/curves/two_jet_test_helpers.hh"
 
-#include <glog/logging.h>
-
 #include <random>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/curves/two_jet_concepts.hh"
 #include "resim_core/testing/random_matrix.hh"
@@ -50,7 +49,7 @@ template <curves::TwoJetType TwoJet>
 std::vector<TwoJet> TwoJetTestHelper<TwoJet>::make_test_two_jet_elements(
     const unsigned count) {
   // How many elements to create
-  CHECK(count >= detail::MIN_TEST_ELEMENTS) << LOW_COUNT;
+  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   std::vector<TwoJet> two_jets;
   // Delegate the creation of edge case and random inputs to the lie group
   // helpers then construct the TwoJet objects

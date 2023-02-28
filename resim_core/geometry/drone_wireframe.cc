@@ -1,17 +1,17 @@
 
 #include "resim_core/geometry/drone_wireframe.hh"
 
-#include <glog/logging.h>
-
 #include <cmath>
+
+#include "resim_core/assert/assert.hh"
 
 namespace resim::geometry {
 
 Wireframe drone_wireframe(const DroneExtents &drone_extents) {
   constexpr auto ERROR_MESSAGE = "Invalid drone extents!";
-  CHECK(drone_extents.chassis_radius_m > 0.) << ERROR_MESSAGE;
-  CHECK(drone_extents.rotor_radius_m > 0.) << ERROR_MESSAGE;
-  CHECK(drone_extents.samples_per_rotor > 1) << ERROR_MESSAGE;
+  REASSERT(drone_extents.chassis_radius_m > 0., ERROR_MESSAGE);
+  REASSERT(drone_extents.rotor_radius_m > 0., ERROR_MESSAGE);
+  REASSERT(drone_extents.samples_per_rotor > 1, ERROR_MESSAGE);
 
   using Point = Wireframe::Point;
   using Edge = Wireframe::Edge;
@@ -94,7 +94,7 @@ Wireframe drone_wireframe(const DroneExtents &drone_extents) {
   }
 
   Wireframe result{std::move(points), std::move(edges)};
-  CHECK(result.is_valid()) << "Drone wireframe is not valid!";
+  REASSERT(result.is_valid(), "Drone wireframe is not valid!");
   return result;
 }
 

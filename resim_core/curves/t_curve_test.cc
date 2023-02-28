@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/t_curve_test_helpers.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
@@ -177,7 +178,7 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
   TCurve<TypeParam> curve_a = this->test_curve_default();
   // Time must increase with each point added to the curve, test a negative
   // case.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         curve_a.append(
             {LO_TIME,
@@ -185,7 +186,7 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
                  .two_jet_helper()
                  .make_test_two_jet()});
       },
-      "Control points must have strictly increasing time");
+      AssertException);
   if constexpr (transforms::FramedGroupType<TypeParam>) {
     // Make a reference frame reversed control point.
     TwoJetL<TypeParam> last_point = curve_a.control_pts().back().point;
@@ -195,74 +196,66 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
     last_frame_from_ref.set_from(last_frame_from_ref.into());
     last_point.set_frame_from_ref(last_frame_from_ref);
     // Try to add the point to the curve.
-    EXPECT_DEATH(
-        {
-          curve_a.append({HI_TIME, last_point});
-        },
-        "Control points must all have the same ref and point frame");
+    EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
 
     // Make a point frame reversed control point.
     last_frame_from_ref.set_from(last_from);
     last_frame_from_ref.set_into(last_from);
     last_point.set_frame_from_ref(last_frame_from_ref);
     // Try to add the point to the curve.
-    EXPECT_DEATH(
-        {
-          curve_a.append({HI_TIME, last_point});
-        },
-        "Control points must all have the same ref and point frame");
+    EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
   }
   // Try querying and empty curve
   TCurve<TypeParam> empty_curve;
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const double bad_start = empty_curve.start_time();
         (void)bad_start;  // Avoid unused variable errors.
       },
-      "Cannot query the frame of a curve with no control points");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         const double bad_end = empty_curve.end_time();
         (void)bad_end;  // Avoid unused variable errors.
       },
-      "Cannot query the frame of a curve with no control points");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         const TwoJetL<TypeParam> bad_point = empty_curve.point_at(1.0);
         (void)bad_point;  // Avoid unused variable errors.
       },
-      "Cannot query a curve with less than two control points");
+      AssertException);
   if constexpr (transforms::FramedGroupType<TypeParam>) {
     // Empty point and reference frame
-    EXPECT_DEATH(
+    EXPECT_THROW(
         {
           const typename TCurveTests<TypeParam>::Frame bad_frame =
               empty_curve.point_frame();
           (void)bad_frame;  // Avoid unused variable errors.
         },
-        "Cannot query the frame of a curve with no control points");
-    EXPECT_DEATH(
+        AssertException);
+    EXPECT_THROW(
         {
           const typename TCurveTests<TypeParam>::Frame bad_frame =
               empty_curve.reference_frame();
           (void)bad_frame;  // Avoid unused variable errors.
         },
-        "Cannot query the frame of a curve with no control points");
+        AssertException);
   }
   // Try querying a curve below its time range.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const TwoJetL<TypeParam> bad_point = curve_a.point_at(LO_TIME);
         (void)bad_point;  // Avoid unused variable errors.
       },
-      "Query time must be within the range of times in the control points.");
+      AssertException);
   // Try querying a curve above its time range.
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const TwoJetL<TypeParam> bad_point = curve_a.point_at(HI_TIME);
         (void)bad_point;  // Avoid unused variable errors.
       },
-      "Query time must be within the range of times in the control points.");
+      AssertException);
 }
 
 TYPED_TEST(TCurveTests, NumericalVsAnalyticalDerivatives) {

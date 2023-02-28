@@ -1,13 +1,12 @@
 #pragma once
 
-#include <glog/logging.h>
-
 #include <Eigen/Dense>
 #include <cmath>
 #include <concepts>
 #include <utility>
 #include <vector>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/planning/cost_function.hh"
 #include "resim_core/planning/dynamics.hh"
 #include "resim_core/utils/double_buffer.hh"
@@ -192,7 +191,7 @@ ILQR<State, Control>::ILQR(
       cost_diffs_{num_steps_ + 1U},
       feedforward_term_(num_steps_, VecU::Zero()),
       feedback_term_(num_steps_, MatUX::Zero()) {
-  CHECK(num_steps > 0) << "Must have at least one step!";
+  REASSERT(num_steps > 0, "Must have at least one step!");
 }
 
 template <StateType State, ControlType Control>
@@ -357,7 +356,7 @@ typename ILQR<State, Control>::Result ILQR<State, Control>::optimize_controls(
     const double tolerance) {
   constexpr auto ERR_MSG =
       "Initial controls size inconsistent with this object!";
-  CHECK(initial_controls.size() == num_steps_) << ERR_MSG;
+  REASSERT(initial_controls.size() == num_steps_, ERR_MSG);
 
   reset(initial_state, initial_controls);
   constexpr double NO_LINESEARCH = 0.0;

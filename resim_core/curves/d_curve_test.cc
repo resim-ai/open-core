@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -201,19 +202,19 @@ TYPED_TEST(DCurveTests, QueryPoints) {
 TYPED_TEST(DCurveTests, InvalidQueries) {
   constexpr double OVERFLOW = 0.1;
   DCurve<TypeParam> curve_a(this->points_on_the_unit_circle());
-  EXPECT_DEATH(
+  EXPECT_THROW(
       {
         const auto invalid_point_a = curve_a.point_at(-OVERFLOW);
         (void)invalid_point_a;  // Avoid unused variable errors.
       },
-      "Arc length values must be positive.");
-  EXPECT_DEATH(
+      AssertException);
+  EXPECT_THROW(
       {
         const auto invalid_point_b =
             curve_a.point_at(curve_a.curve_length() + OVERFLOW);
         (void)invalid_point_b;  // Avoid unused variable errors.
       },
-      "Attempt to query a point at an arc length longer that the curve.");
+      AssertException);
 }
 
 TEST(DCurveFSE3Tests, CheckReferenceFrame) {

@@ -1,8 +1,7 @@
 
 #include "resim_core/visualization/proto/view_primitive_to_proto.hh"
 
-#include <glog/logging.h>
-
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/utils/match.hh"
@@ -11,7 +10,7 @@
 namespace resim::visualization::proto {
 
 void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   pack(in.id, out->mutable_id());
   match(

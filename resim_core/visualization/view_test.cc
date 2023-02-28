@@ -12,6 +12,7 @@
 #include <utility>
 #include <variant>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/testing/test_directory.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
@@ -86,13 +87,13 @@ TEST(LibcurlClientTest, TestClientBasicFunction) {
 
   // ACTION
   Status status = mock_client->send_view_update(update);
-  CHECK(status.ok());
+  REASSERT(status.ok());
 
   status = mock_client->send_view_update(update);
-  CHECK(status.ok());
+  REASSERT(status.ok());
 
   status = mock_client->send_view_update(update);
-  CHECK(status.ok());
+  REASSERT(status.ok());
 }
 
 TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
@@ -119,7 +120,7 @@ TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
 
   // ACTION
   Status status = mock_client->send_view_update(update);
-  CHECK(!status.ok());
+  REASSERT(!status.ok());
 }
 
 TEST(LibcurlClientTest, TestFail) {
@@ -128,7 +129,7 @@ TEST(LibcurlClientTest, TestFail) {
   ViewUpdate update;
 
   // ACTION
-  EXPECT_DEATH(mock_client->send_view_update(update), ".");
+  EXPECT_THROW(mock_client->send_view_update(update), AssertException);
 }
 
 TEST(LibcurlClientTest, TestLibcurlClientView) {
@@ -322,7 +323,7 @@ TEST(ViewDeathTest, TestFailedSend) {
   view.set_client(std::move(mock_client));
 
   // ACTION / VERIFICATION
-  EXPECT_DEATH(view << test_elements.front(), "Fail!");
+  EXPECT_THROW(view << test_elements.front(), AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 

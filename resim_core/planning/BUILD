@@ -25,8 +25,8 @@ cc_library(
     deps = [
         ":cost_function",
         ":dynamics",
+        "//resim_core/assert",
         "//resim_core/utils:double_buffer",
-        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

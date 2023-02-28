@@ -1,7 +1,6 @@
 #include "resim_core/curves/proto/two_jet_to_proto.hh"
 
-#include <glog/logging.h>
-
+#include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/two_jet.pb.h"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/math/proto/matrix_to_proto.hh"
@@ -17,7 +16,7 @@ namespace resim::curves::proto {
 
 template <typename Group, typename Msg>
 void pack_two_jetl(const TwoJetL<Group> &in, Msg *out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   pack(in.frame_from_ref(), out->mutable_frame_from_ref());
   math::proto::pack_matrix(
@@ -30,7 +29,7 @@ void pack_two_jetl(const TwoJetL<Group> &in, Msg *out) {
 
 template <typename Group, typename Msg>
 void pack_two_jetr(const TwoJetR<Group> &in, Msg *out) {
-  CHECK(out != nullptr) << "Can't pack into invalid proto!";
+  REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   pack(in.ref_from_frame(), out->mutable_ref_from_frame());
   math::proto::pack_matrix(

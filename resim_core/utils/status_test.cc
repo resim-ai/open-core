@@ -10,6 +10,8 @@
 #include <string>
 #include <string_view>
 
+#include "resim_core/assert/assert.hh"
+
 namespace resim {
 
 namespace {
@@ -76,7 +78,7 @@ TEST(StatusDeathTest, TestCheckStatus) {
 
   // These macros behave a bit funky if we directly nest them.
   const auto make_check = [&]() { CHECK_STATUS_OK(bad_status); };
-  EXPECT_DEATH(make_check(), ::testing::HasSubstr(expected_death_output));
+  EXPECT_THROW(make_check(), AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
