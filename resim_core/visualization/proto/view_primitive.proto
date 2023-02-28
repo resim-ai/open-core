@@ -5,11 +5,13 @@ package resim.visualization.proto;
 
 import "resim_core/utils/proto/uuid.proto";
 import "resim_core/transforms/proto/se3.proto";
+import "resim_core/curves/proto/d_curve.proto";
 
 message ViewPrimitive {
     resim.proto.UUID id = 1;
 
     oneof payload {
-        resim.transforms.proto.SE3 se3 = 2;
+        resim.transforms.proto.SE3    se3         = 2;
+        resim.curves.proto.DCurve_SE3 d_curve_se3 = 3;
     }
 }

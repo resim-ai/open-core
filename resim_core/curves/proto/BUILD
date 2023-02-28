@@ -4,6 +4,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
     name = "d_curve_proto",
     srcs = ["d_curve.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/transforms/proto:fse3_proto",
         "//resim_core/transforms/proto:se3_proto",
