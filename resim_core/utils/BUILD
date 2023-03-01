@@ -1,5 +1,14 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
+exports_files(
+    [
+        "inout.hh",
+        "uuid.hh",
+        "inout.cc",
+        "uuid.cc",
+    ],
+)
+
 cc_library(
     name = "uuid",
     srcs = ["uuid.cc"],

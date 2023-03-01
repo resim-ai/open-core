@@ -1,5 +1,22 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
+exports_files(
+    [
+        "quintic_poly_coeffs.hh",
+        "t_curve.hh",
+        "t_curve_segment.hh",
+        "two_jet.hh",
+        "two_jet_concepts.hh",
+        "d_curve.hh",
+        "quintic_poly_coeffs.cc",
+        "t_curve.cc",
+        "t_curve_segment.cc",
+        "two_jet.cc",
+        "two_jet_concepts.cc",
+        "d_curve.cc",
+    ],
+)
+
 cc_library(
     name = "d_curve",
     srcs = ["d_curve.cc"],

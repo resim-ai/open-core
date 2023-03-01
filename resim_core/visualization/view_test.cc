@@ -1,3 +1,5 @@
+#define RESIM_TESTING
+
 #include "resim_core/visualization/view.hh"
 
 #include <glog/logging.h>

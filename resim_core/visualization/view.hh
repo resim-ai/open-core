@@ -1,15 +1,21 @@
 #pragma once
 
+#ifdef RESIM_TESTING
 #include <gtest/gtest_prod.h>
+#endif
 
+#include <memory>
 #include <mutex>
 #include <utility>
+#include <vector>
 
-#include "resim_core/visualization/view_client.hh"
 #include "resim_core/visualization/view_primitive.hh"
 
 namespace resim {
 namespace visualization {
+
+// Forward declaration of the ViewClient interface.
+class ViewClient;
 
 // This class is a simple Singleton (using the Meyers approach) which acts as
 // a main entrypoint for the ReSim view workflow. It holds a unique pointer to
@@ -24,7 +30,7 @@ class View {
   View(View &&) = delete;
   View &operator=(const View &) = delete;
   View &operator=(View &&) = delete;
-  ~View() = default;
+  ~View();
 
   // Getter for the single instance of this Singleton
   static View &get_instance();
@@ -32,19 +38,21 @@ class View {
   // Streaming operator which accepts any type that can be held in a
   // ViewPrimitive and stores these internally.
   template <typename T>
-  View &operator<<(T &&subject);
+  View &operator<<(const T &subject);
 
   // Transmit all currently stored primitives to the server via the current
   // client. Fails if the client has not been set.
   void flush();
 
  private:
+#ifdef RESIM_TESTING
   FRIEND_TEST(LibcurlClientTest, TestLibcurlClientView);
   FRIEND_TEST(LibcurlClientTest, TestLibcurlClientLogging);
   FRIEND_TEST(ViewTest, TestViewSingleThread);
   FRIEND_TEST(ViewTest, TestViewMultiThread);
   FRIEND_TEST(ViewTest, TestDestructorCoverage);
   FRIEND_TEST(ViewDeathTest, TestFailedSend);
+#endif
 
   // Default constructor used by get_instance() above.
   View();
@@ -58,25 +66,6 @@ class View {
   std::vector<ViewPrimitive> primitives_;
   std::mutex primitives_mutex_;
 };
-
-template <typename T>
-View &View::operator<<(T &&subject) {
-  {
-    // In a separate scope since flush() needs this lock
-    std::lock_guard<std::mutex> guard{primitives_mutex_};
-
-    // We simply push the primitivies in here without packing
-    // them. The whole ViewUpdate will be packed by the ViewClient.
-    primitives_.emplace_back(ViewPrimitive{
-        .id = UUID::new_uuid(),
-        .payload = std::forward<T>(subject),
-    });
-  }
-  // Currently, we pack each primitive into its own update and send eagerly to
-  // the view server.
-  flush();
-  return *this;
-}
 
 }  // namespace visualization
 

@@ -1,5 +1,22 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
+exports_files(
+    [
+        "frame.hh",
+        "liegroup.hh",
+        "liegroup_concepts.hh",
+        "se3.hh",
+        "so3.hh",
+        "framed_group.hh",
+        "frame.cc",
+        "liegroup.cc",
+        "liegroup_concepts.cc",
+        "se3.cc",
+        "so3.cc",
+        "framed_group.cc",
+    ],
+)
+
 cc_library(
     name = "cross_matrix",
     srcs = ["cross_matrix.cc"],
