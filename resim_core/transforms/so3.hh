@@ -55,7 +55,7 @@ class SO3 : public LieGroup<3, 3> {
 
   // Operator*
   // Compose this SO3 with another (multiplication)
-  SO3 operator*(const SO3 &other) const;
+  virtual SO3 operator*(const SO3 &other) const;
 
   // Operator*
   // Apply the action SO3 rotation to a vector in 3-Dimensional space

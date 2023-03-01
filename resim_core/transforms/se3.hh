@@ -49,7 +49,7 @@ class SE3 : public LieGroup<3, 6> {
 
   // Operator*
   // Compose this SE3 with another (multiplication)
-  SE3 operator*(const SE3 &other) const;
+  virtual SE3 operator*(const SE3 &other) const;
 
   // Operator*
   // Apply the SE3 action to a vector in 3-Dimensional space
