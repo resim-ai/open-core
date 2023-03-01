@@ -22,6 +22,8 @@
 #include "resim_core/visualization/testing/mock_server.hh"
 #include "resim_core/visualization/view_client.hh"
 
+using ::resim::visualization::client::proto::ViewSessionUpdateResponse;
+
 namespace resim::visualization {
 namespace {
 
@@ -70,7 +72,9 @@ std::vector<SE3> random_se3s(const std::size_t num_se3s) {
 
 TEST(LibcurlClientTest, TestClientBasicFunction) {
   // SET UP
-  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {}};
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               return ViewSessionUpdateResponse{};
+                             }};
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
 
@@ -101,7 +105,7 @@ TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
   testing::MockServer server{
       "localhost",
       UUID::new_uuid(),
-      [](auto &&...) {},
+      [](auto &&...) { return ViewSessionUpdateResponse{}; },
       testing::MockServer::ResponseCode::NOT_FOUND};
 
   auto mock_client = std::make_unique<LibcurlClient>(
@@ -164,6 +168,7 @@ TEST(LibcurlClientTest, TestLibcurlClientView) {
         EXPECT_TRUE(std::get<SE3>(update.primitives.at(0).payload)
                         .is_approx(std::get<SE3>(
                             expected_update.primitives.at(update_id).payload)));
+        return ViewSessionUpdateResponse{};
       }};
 
   auto mock_client = std::make_unique<LibcurlClient>(
@@ -186,7 +191,11 @@ TEST(LibcurlClientTest, TestLibcurlClientLogging) {
   const auto logfile = tmp_log_dir.test_file_path();
   google::SetLogDestination(google::GLOG_INFO, logfile.string().data());
   // Setup a minimal mock server.
-  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {}};
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               ViewSessionUpdateResponse response;
+                               response.set_view("app.resim.ai/view");
+                               return response;
+                             }};
   // Setup a minimal mock client.
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
@@ -201,7 +210,7 @@ TEST(LibcurlClientTest, TestLibcurlClientLogging) {
 
   // VERIFICATION
   // We expect part of the url to be somewhere in the logfile.
-  constexpr std::string_view url_part = "app.resim.ai/views";
+  constexpr std::string_view url_part = "app.resim.ai/view";
   bool url_found = false;
   // Glog mangles logfile paths by adding timestamps. However the directory
   // is also temporary so we can simply search all (one) files in the directory.

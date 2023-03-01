@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "resim_core/utils/uuid.hh"
+#include "resim_core/visualization/client/proto/view_client.pb.h"
 #include "resim_core/visualization/proto/view_update.pb.h"
 #include "resim_core/visualization/proto/view_update_to_proto.hh"
 #include "resim_core/visualization/view_update.hh"
@@ -27,8 +28,10 @@ class MockServer {
     NOT_FOUND = 404,
   };
 
-  using Receiver =
-      std::function<void(const ViewUpdate &, const UUID &, uint64_t)>;
+  using Receiver = std::function<client::proto::ViewSessionUpdateResponse(
+      const ViewUpdate &,
+      const UUID &,
+      uint64_t)>;
 
   // Constructor:
   // @param[in] host - The host to serve on.

@@ -2,6 +2,7 @@
 #include "resim_core/visualization/testing/mock_server.hh"
 
 #include <glog/logging.h>
+#include <google/protobuf/util/json_util.h>
 #include <httplib.h>
 
 #include <string>
@@ -67,8 +68,13 @@ MockServer::MockServer(
         const uint64_t update_id{std::stoul(req.matches[2])};
 
         // Call the receiver
-        receiver_(unpack(update_msg), session_id, update_id);
+        client::proto::ViewSessionUpdateResponse response =
+            receiver_(unpack(update_msg), session_id, update_id);
         res.status = static_cast<int>(view_update_response_code_);
+
+        std::string response_string;
+        google::protobuf::util::MessageToJsonString(response, &response_string);
+        res.set_content(response_string, "application/json");
       });
 
   // Stop handler so we can stop the server from another thread

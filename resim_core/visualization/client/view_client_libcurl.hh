@@ -16,7 +16,7 @@ class LibcurlClient : public ViewClient {
 
  private:
   // Log a url pointing to the session-specific page in the resim app.
-  void log_app_url() const;
+  static void log_app_url(std::string url);
   CURL *curl_{};
   std::string base_url_;    // base URL for endpoint
   std::string session_id_;  // unique ID per user

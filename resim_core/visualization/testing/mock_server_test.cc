@@ -16,6 +16,7 @@
 
 namespace resim::visualization::testing {
 
+using ::resim::visualization::client::proto::ViewSessionUpdateResponse;
 using transforms::SE3;
 using TangentVector = SE3::TangentVector;
 
@@ -46,12 +47,12 @@ struct TestReceiver {
   const uint64_t expected_update_id;
   bool &checks_have_run;
 
-  void operator()(
+  ViewSessionUpdateResponse operator()(
       const ViewUpdate &update,
       const UUID &session_id,
       const uint64_t update_id) {
     // Verify that we get back from the server what we expect to:
-    ASSERT_EQ(update.primitives.size(), expected_update.primitives.size());
+    EXPECT_EQ(update.primitives.size(), expected_update.primitives.size());
     for (std::size_t ii = 0U; ii < update.primitives.size(); ++ii) {
       EXPECT_TRUE(primitives_equal(
           update.primitives.at(ii),
@@ -60,6 +61,8 @@ struct TestReceiver {
     EXPECT_EQ(expected_session_id, session_id);
     EXPECT_EQ(expected_update_id, update_id);
     checks_have_run = true;
+
+    return ViewSessionUpdateResponse{};
   }
 };
 

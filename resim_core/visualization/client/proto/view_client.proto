@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package resim.visualization.client.proto;
+
+message ViewSessionUpdateResponse {
+    // The session ID.
+    string id = 1;
+
+    // The URL of the MCAP file produced by the update.
+    string mcap = 2;
+
+    // The URL where the view session can be seen.
+    string view = 3;
+}
