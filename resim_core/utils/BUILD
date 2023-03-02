@@ -204,3 +204,11 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "http_response",
+    hdrs = ["http_response.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)

@@ -19,6 +19,7 @@
 #include "resim_core/testing/test_directory.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
+#include "resim_core/utils/http_response.hh"
 #include "resim_core/utils/status.hh"
 #include "resim_core/visualization/client/view_client_libcurl.hh"
 #include "resim_core/visualization/testing/mock_server.hh"
@@ -108,8 +109,7 @@ TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
       "localhost",
       UUID::new_uuid(),
       [](auto &&...) { return ViewSessionUpdateResponse{}; },
-      testing::MockServer::ResponseCode::NOT_FOUND};
-
+      HttpResponse::NOT_FOUND};
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
 

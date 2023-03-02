@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package resim.auth.proto;
+
+// This file defines protos for communicating with auth0 using the device
+// authorization flow:
+// https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-device-authorization-flow
+// In practice, that means manipulating these messages in C++ and converting
+// them to/from JSON using protobuf's json_utils.h
+
+message DeviceCodeRequest {
+    optional string client_id = 1;
+    optional string scope     = 2;
+    optional string audience  = 3;
+}
+
+message DeviceCodeResponse {
+    optional string device_code               = 1;
+    optional string user_code                 = 2;
+    optional string verification_uri          = 3;
+    optional int32  expires_in                = 4;
+    optional int32  interval                  = 5;
+    optional string verification_uri_complete = 6;
+}
+
+message PollingRequest {
+    optional string grant_type  = 1;
+    optional string device_code = 2;
+    optional string client_id   = 3;
+}
+
+message PollingResponse {
+    optional string error             = 1;
+    optional string error_description = 2;
+
+    optional string access_token = 3;
+    optional int32  expires_in   = 4;
+    optional string token_type   = 5;
+}

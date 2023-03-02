@@ -59,3 +59,18 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "mock_server",
+    testonly = 1,
+    srcs = ["mock_server.cc"],
+    hdrs = ["mock_server.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim_core/assert",
+        "//resim_core/utils:http_response",
+        "//resim_core/utils:inout",
+        "@com_github_google_glog//:glog",
+        "@httplib",
+    ],
+)

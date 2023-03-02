@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "resim_core/transforms/se3.hh"
+#include "resim_core/utils/http_response.hh"
 #include "resim_core/utils/uuid.hh"
 #include "resim_core/visualization/proto/view_update.pb.h"
 #include "resim_core/visualization/proto/view_update_to_proto.hh"
@@ -119,7 +120,7 @@ TEST(MockServerTest, TestReturnsRequestedCode) {
       HOST,
       test_session_id,
       TestReceiver{test_update, test_session_id, UPDATE_ID, checks_have_run},
-      MockServer::ResponseCode::NOT_FOUND};
+      HttpResponse::NOT_FOUND};
 
   ASSERT_NE(server.port(), 0);
   ASSERT_EQ(server.host(), HOST);
@@ -141,7 +142,7 @@ TEST(MockServerTest, TestReturnsRequestedCode) {
       "application/octet-stream");
 
   // VERIFICATION
-  EXPECT_EQ(res->status, static_cast<int>(MockServer::ResponseCode::NOT_FOUND));
+  EXPECT_EQ(res->status, static_cast<int>(HttpResponse::NOT_FOUND));
   EXPECT_TRUE(checks_have_run);
 }
 
