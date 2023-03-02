@@ -122,6 +122,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":framed_group",
+        ":framed_group_concept",
         ":se3",
         ":so3",
         "//resim_core/assert",

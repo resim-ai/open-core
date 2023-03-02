@@ -12,24 +12,7 @@
 #include "resim_core/transforms/se3.hh"
 
 namespace {
-std::vector<resim::transforms::FSE3> generate_fse3_points(
-    const std::vector<resim::transforms::SE3>& se3_points) {
-  std::vector<resim::transforms::FSE3> points;
-  points.reserve(se3_points.size());
-
-  const auto ref_frame =
-      resim::transforms::Frame<resim::transforms::FSE3::DIMS>::new_frame();
-  const auto pt_frame =
-      resim::transforms::Frame<resim::transforms::FSE3::DIMS>::new_frame();
-
-  for (const auto& point : se3_points) {
-    points.emplace_back(resim::transforms::FSE3(point, ref_frame, pt_frame));
-  }
-
-  return points;
-}
-
-constexpr unsigned int NUM_SE3_POINTS = 10;
+constexpr unsigned int NUM_GROUP_POINTS = 10;
 }  // namespace
 
 namespace resim::curves {
@@ -40,18 +23,9 @@ class DCurveToProtoTests : public ::testing::Test {
   static std::vector<T> generate_control_points();
 };
 
-template <>
-std::vector<transforms::SE3>
-DCurveToProtoTests<transforms::SE3>::generate_control_points() {
-  return transforms::make_test_group_elements<transforms::SE3>(NUM_SE3_POINTS);
-}
-
-// TODO(sharon): Iain will add helper function to generate fse3.
-template <>
-std::vector<transforms::FSE3>
-DCurveToProtoTests<transforms::FSE3>::generate_control_points() {
-  return generate_fse3_points(
-      DCurveToProtoTests<transforms::SE3>::generate_control_points());
+template <typename T>
+std::vector<T> DCurveToProtoTests<T>::generate_control_points() {
+  return transforms::make_test_group_elements<T>(NUM_GROUP_POINTS);
 }
 
 using GroupTypePairs = ::testing::Types<

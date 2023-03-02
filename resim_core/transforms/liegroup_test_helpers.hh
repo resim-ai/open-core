@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "resim_core/transforms/framed_group_concept.hh"
+
 namespace resim::transforms {
 
 namespace detail {
@@ -29,6 +31,17 @@ template <typename Group>
 std::vector<typename Group::TangentVector> make_test_algebra_elements(
     unsigned count = detail::MIN_TEST_ELEMENTS);
 
+// Builds and returns a vector containing a fixed number of Framed LieGroup
+// objects that are useful for testing. The Framed LieGroup objects are built by
+// exponentiation on the algebra elements returned by
+// make_test_algebra_elements(), with a specified invariant in and out frame.
+// @param[in] count - Optionally, the number of groups to return. The default
+//                    and the minimum are both seven. If you request less the
+//                    function will check-fail.
+template <FramedGroupType Group>
+std::vector<Group> make_test_group_elements(
+    unsigned count = detail::MIN_TEST_ELEMENTS);
+
 // Builds and returns a vector containing a fixed number of LieGroup objects
 // that are useful for testing. The LieGroup objects are built by exponentiation
 // on the algebra elements returned by make_test_algebra_elements().
@@ -38,5 +51,4 @@ std::vector<typename Group::TangentVector> make_test_algebra_elements(
 template <typename Group>
 std::vector<Group> make_test_group_elements(
     unsigned count = detail::MIN_TEST_ELEMENTS);
-
 }  // namespace resim::transforms

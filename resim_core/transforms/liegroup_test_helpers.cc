@@ -80,6 +80,25 @@ std::vector<typename Group::TangentVector> make_test_algebra_elements(
   return make_test_vectors<typename Group::TangentVector>(count);
 }
 
+template <FramedGroupType Group>
+std::vector<Group> make_test_group_elements(const unsigned count) {
+  const auto ref_frame = Frame<Group::DIMS>::new_frame();
+  const auto pt_frame = Frame<Group::DIMS>::new_frame();
+
+  const std::vector<typename Group::TangentVector> algebra_elements =
+      make_test_algebra_elements<Group>(count);
+  std::vector<Group> group_elements;
+  group_elements.resize(algebra_elements.size());
+  std::transform(
+      algebra_elements.begin(),
+      algebra_elements.end(),
+      group_elements.begin(),
+      [ref_frame, pt_frame](const typename Group::TangentVector &alg) -> Group {
+        return Group::exp(alg, ref_frame, pt_frame);
+      });
+  return group_elements;
+}
+
 template <typename Group>
 std::vector<Group> make_test_group_elements(const unsigned count) {
   const std::vector<typename Group::TangentVector> algebra_elements =
