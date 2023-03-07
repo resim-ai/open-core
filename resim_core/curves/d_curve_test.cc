@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -18,41 +19,9 @@ template <typename T>
 class DCurveTests : public ::testing::Test {
  public:
   inline static const auto REF_FRAME = transforms::Frame<T::DIMS>::new_frame();
-  static std::vector<T> points_on_the_unit_circle();
   static T point_to_append();
   double rotation_angle_rad(const T &ref_from_point) const;
 };
-
-template <>
-std::vector<SE3> DCurveTests<SE3>::points_on_the_unit_circle() {
-  std::vector<SE3> points;
-  const SE3 ref_from_000deg(Eigen::Vector3d::UnitX());
-  points.push_back(ref_from_000deg);
-  const SE3 ref_from_090deg(
-      SO3(Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitZ())),
-      Eigen::Vector3d::UnitY());
-  points.push_back(ref_from_090deg);
-  const SE3 ref_from_180deg(
-      SO3(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ())),
-      -Eigen::Vector3d::UnitX());
-  points.push_back(ref_from_180deg);
-  const SE3 ref_from_270deg(
-      SO3(Eigen::AngleAxisd(3 * M_PI / 2, Eigen::Vector3d::UnitZ())),
-      -Eigen::Vector3d::UnitY());
-  points.push_back(ref_from_270deg);
-  return points;
-}
-
-template <>
-std::vector<FSE3> DCurveTests<FSE3>::points_on_the_unit_circle() {
-  auto raw_se3_points = DCurveTests<SE3>::points_on_the_unit_circle();
-  std::vector<FSE3> points;
-  for (auto &point : raw_se3_points) {
-    const auto pt_frame = transforms::Frame<SE3::DIMS>::new_frame();
-    points.emplace_back(FSE3(std::move(point), REF_FRAME, pt_frame));
-  }
-  return points;
-}
 
 template <>
 SE3 DCurveTests<SE3>::point_to_append() {
@@ -86,7 +55,8 @@ TYPED_TEST(DCurveTests, EmptyCurveConstruction) {
 }
 
 TYPED_TEST(DCurveTests, ConstructionFromPoints) {
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   const DCurve<TypeParam> curve_a(points);
   EXPECT_EQ(curve_a.control_pts().size(), points.size());
 
@@ -96,7 +66,8 @@ TYPED_TEST(DCurveTests, ConstructionFromPoints) {
 }
 
 TYPED_TEST(DCurveTests, CopyAndAssignment) {
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   const DCurve<TypeParam> curve_a(points);
   // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
   const DCurve<TypeParam> curve_b(curve_a);
@@ -108,7 +79,8 @@ TYPED_TEST(DCurveTests, CopyAndAssignment) {
 
 TYPED_TEST(DCurveTests, ListInitializationConstruction) {
   constexpr unsigned int NUM_POINTS = 3;
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   ASSERT_GE(points.size(), NUM_POINTS);
   DCurve<TypeParam> curve{points.at(0), points.at(1), points.at(2)};
   // Confirm the control points are the same.
@@ -120,7 +92,8 @@ TYPED_TEST(DCurveTests, ListInitializationConstruction) {
 
 TYPED_TEST(DCurveTests, ListInitializationAssignment) {
   constexpr unsigned int NUM_POINTS = 3;
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   ASSERT_GE(points.size(), NUM_POINTS);
   DCurve<TypeParam> curve = {points.at(0), points.at(1), points.at(2)};
   // Confirm the control points are the same.
@@ -132,7 +105,8 @@ TYPED_TEST(DCurveTests, ListInitializationAssignment) {
 
 TYPED_TEST(DCurveTests, ListInitializationAppend) {
   constexpr unsigned int NUM_POINTS = 3;
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   ASSERT_GE(points.size(), NUM_POINTS);
   DCurve<TypeParam> curve = {points.at(0)};
   curve.append({points.at(1), points.at(2)});
@@ -144,7 +118,8 @@ TYPED_TEST(DCurveTests, ListInitializationAppend) {
 }
 
 TYPED_TEST(DCurveTests, Append) {
-  DCurve<TypeParam> curve_a(this->points_on_the_unit_circle());
+  DCurve<TypeParam> curve_a(
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME));
   // Complete the circle:
   curve_a.append(this->point_to_append());
   // Confirm data member size.
@@ -158,7 +133,8 @@ TYPED_TEST(DCurveTests, Append) {
 }
 
 TYPED_TEST(DCurveTests, DataMembersSanityChecks) {
-  const std::vector<TypeParam> points = this->points_on_the_unit_circle();
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
   const DCurve<TypeParam> curve_a(points);
   for (unsigned int i = 0; i < points.size(); ++i) {
     EXPECT_TRUE(
@@ -177,7 +153,8 @@ TYPED_TEST(DCurveTests, QueryPoints) {
   // created from just a few points. We can use this fact to help verify the
   // correctness of our implementation. All points sampled from our test curve
   // should be on the unit circle.
-  DCurve<TypeParam> curve_a(this->points_on_the_unit_circle());
+  DCurve<TypeParam> curve_a(
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME));
   // Complete the circle:
   curve_a.append(this->point_to_append());
   // Sample the curve at every degree on the circle.
@@ -201,7 +178,8 @@ TYPED_TEST(DCurveTests, QueryPoints) {
 
 TYPED_TEST(DCurveTests, InvalidQueries) {
   constexpr double OVERFLOW = 0.1;
-  DCurve<TypeParam> curve_a(this->points_on_the_unit_circle());
+  DCurve<TypeParam> curve_a(
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME));
   EXPECT_THROW(
       {
         const auto invalid_point_a = curve_a.point_at(-OVERFLOW);
@@ -218,12 +196,14 @@ TYPED_TEST(DCurveTests, InvalidQueries) {
 }
 
 TEST(DCurveFSE3Tests, CheckReferenceFrame) {
-  const DCurve<FSE3> curve_a(DCurveTests<FSE3>::points_on_the_unit_circle());
+  const DCurve<FSE3> curve_a(
+      DCurveCircle<FSE3>::points(DCurveTests<FSE3>::REF_FRAME));
   EXPECT_EQ(curve_a.reference_frame(), DCurveTests<FSE3>::REF_FRAME);
 }
 
 TEST(DCurveFSE3Tests, QueryPoints) {
-  DCurve<FSE3> curve_a(DCurveTests<FSE3>::points_on_the_unit_circle());
+  DCurve<FSE3> curve_a(
+      DCurveCircle<FSE3>::points(DCurveTests<FSE3>::REF_FRAME));
   // Complete the circle:
   curve_a.append(DCurveTests<FSE3>::point_to_append());
   // Sample the curve at every degree on the circle.

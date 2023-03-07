@@ -29,11 +29,29 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "d_curve_test_helpers",
+    testonly = 1,
+    srcs = ["d_curve_test_helpers.cc"],
+    hdrs = ["d_curve_test_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":d_curve",
+        "//resim_core/assert",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_concepts",
+        "//resim_core/transforms:se3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "d_curve_test",
     srcs = ["d_curve_test.cc"],
     deps = [
         ":d_curve",
+        ":d_curve_test_helpers",
         "//resim_core/assert",
         "@com_google_googletest//:gtest_main",
     ],
