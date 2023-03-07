@@ -11,7 +11,8 @@ message ViewPrimitive {
     resim.proto.UUID id = 1;
 
     oneof payload {
-        resim.transforms.proto.SE3    se3         = 2;
-        resim.curves.proto.DCurve_SE3 d_curve_se3 = 3;
+        resim.transforms.proto.SE3     se3          = 2;
+        resim.curves.proto.DCurve_SE3  d_curve_se3  = 3;
+        resim.curves.proto.DCurve_FSE3 d_curve_fse3 = 4;
     }
 }

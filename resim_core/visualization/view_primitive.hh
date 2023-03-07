@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "resim_core/curves/d_curve.hh"
+#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/uuid.hh"
 
@@ -14,7 +15,11 @@ namespace resim::visualization {
 // curve, box, etc.)
 struct ViewPrimitive {
   UUID id;
-  std::variant<transforms::SE3, curves::DCurve<transforms::SE3>> payload;
+  std::variant<
+      transforms::SE3,
+      curves::DCurve<transforms::SE3>,
+      curves::DCurve<transforms::FSE3>>
+      payload;
 };
 
 }  // namespace resim::visualization

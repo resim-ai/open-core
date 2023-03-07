@@ -7,8 +7,10 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
+#include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
 #include "resim_core/testing/random_matrix.hh"
+#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
@@ -22,9 +24,12 @@
 namespace resim::visualization {
 
 namespace {
+using transforms::FSE3;
 using transforms::SE3;
 using TangentVector = SE3::TangentVector;
+
 constexpr unsigned int NUM_GROUP_POINTS = 10;
+
 }  // namespace
 
 template <typename T>
@@ -54,7 +59,7 @@ template <>
 ViewPrimitive
 ViewPrimitiveToProtoTypedTest<curves::DCurve<SE3>>::generate_test_primitive() {
   const curves::DCurve test_d_curve(
-      transforms::make_test_group_elements<transforms::SE3>(NUM_GROUP_POINTS));
+      transforms::make_test_group_elements<SE3>(NUM_GROUP_POINTS));
 
   ViewPrimitive test_primitive{
       .id = UUID::new_uuid(),
@@ -64,7 +69,22 @@ ViewPrimitiveToProtoTypedTest<curves::DCurve<SE3>>::generate_test_primitive() {
   return test_primitive;
 }
 
-using PayloadTypes = ::testing::Types<SE3, curves::DCurve<SE3>>;
+template <>
+ViewPrimitive
+ViewPrimitiveToProtoTypedTest<curves::DCurve<FSE3>>::generate_test_primitive() {
+  const curves::DCurve test_d_curve(
+      transforms::make_test_group_elements<FSE3>(NUM_GROUP_POINTS));
+
+  ViewPrimitive test_primitive{
+      .id = UUID::new_uuid(),
+      .payload = test_d_curve,
+  };
+
+  return test_primitive;
+}
+
+using PayloadTypes =
+    ::testing::Types<SE3, curves::DCurve<SE3>, curves::DCurve<FSE3>>;
 
 TYPED_TEST_SUITE(ViewPrimitiveToProtoTypedTest, PayloadTypes);
 
@@ -88,6 +108,21 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
         const auto &control_points = test_d_curve_se3.control_pts();
         const auto unpacked_control_points =
             unpack(primitive_msg.d_curve_se3()).control_pts();
+
+        ASSERT_EQ(unpacked_control_points.size(), control_points.size());
+
+        for (int i = 0; i < control_points.size(); i++) {
+          const auto &ref_from_control = *(control_points[i].ref_from_control);
+          const auto &unpacked_ref_from_control =
+              *(unpacked_control_points[i].ref_from_control);
+
+          EXPECT_TRUE(ref_from_control.is_approx(unpacked_ref_from_control));
+        }
+      },
+      [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
+        const auto &control_points = test_d_curve_fse3.control_pts();
+        const auto unpacked_control_points =
+            unpack(primitive_msg.d_curve_fse3()).control_pts();
 
         ASSERT_EQ(unpacked_control_points.size(), control_points.size());
 
@@ -134,6 +169,25 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
         for (int i = 0; i < unpacked_control_points.size(); i++) {
           const auto test_ref_from_control =
               test_d_curve_se3.control_pts().at(i).ref_from_control;
+          EXPECT_TRUE(test_ref_from_control->is_approx(
+              *(unpacked_control_points.at(i).ref_from_control)));
+        }
+      },
+      [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
+        ASSERT_TRUE(
+            std::holds_alternative<curves::DCurve<FSE3>>(unpacked.payload));
+
+        const auto &unpacked_dcurve =
+            std::get<curves::DCurve<FSE3>>(unpacked.payload);
+        const auto &unpacked_control_points = unpacked_dcurve.control_pts();
+
+        ASSERT_EQ(
+            unpacked_control_points.size(),
+            test_d_curve_fse3.control_pts().size());
+
+        for (int i = 0; i < unpacked_control_points.size(); i++) {
+          const auto test_ref_from_control =
+              test_d_curve_fse3.control_pts().at(i).ref_from_control;
           EXPECT_TRUE(test_ref_from_control->is_approx(
               *(unpacked_control_points.at(i).ref_from_control)));
         }
