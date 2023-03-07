@@ -24,7 +24,7 @@ namespace resim::visualization {
 namespace {
 using transforms::SE3;
 using TangentVector = SE3::TangentVector;
-constexpr unsigned int NUM_SE3_POINTS = 10;
+constexpr unsigned int NUM_GROUP_POINTS = 10;
 }  // namespace
 
 template <typename T>
@@ -54,7 +54,7 @@ template <>
 ViewPrimitive
 ViewPrimitiveToProtoTypedTest<curves::DCurve<SE3>>::generate_test_primitive() {
   const curves::DCurve test_d_curve(
-      transforms::make_test_group_elements<transforms::SE3>(NUM_SE3_POINTS));
+      transforms::make_test_group_elements<transforms::SE3>(NUM_GROUP_POINTS));
 
   ViewPrimitive test_primitive{
       .id = UUID::new_uuid(),
@@ -141,7 +141,7 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
 }
 
 TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPackInvalid) {
-  const ViewPrimitive test_primitive =
+  ViewPrimitive test_primitive =
       ViewPrimitiveToProtoTypedTest<TypeParam>::generate_test_primitive();
 
   // ACTION/VERIFICATION
