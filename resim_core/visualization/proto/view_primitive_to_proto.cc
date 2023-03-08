@@ -4,6 +4,9 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
+#include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
+#include "resim_core/curves/t_curve.hh"
+#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/proto/so3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
@@ -26,6 +29,9 @@ void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
       },
       [out](const curves::DCurve<transforms::FSE3> &d_curve_fse3) {
         pack(d_curve_fse3, out->mutable_d_curve_fse3());
+      },
+      [out](const curves::TCurve<transforms::FSE3> &t_curve) {
+        pack(t_curve, out->mutable_t_curve_fse3());
       });
 }
 
@@ -36,7 +42,6 @@ visualization::ViewPrimitive unpack(const ViewPrimitive &in) {
 }
 
 namespace detail {
-
 StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
   using StatusValue = StatusValue<visualization::ViewPrimitive>;
   visualization::ViewPrimitive unpacked{
@@ -55,6 +60,9 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
     case ViewPrimitive::kDCurveFse3:
       unpacked.payload = unpack(in.d_curve_fse3());
       break;
+    case ViewPrimitive::kTCurveFse3:
+      unpacked.payload = unpack(in.t_curve_fse3());
+      break;
     default:
       return StatusValue{MAKE_STATUS("Can't unpack unset ViewPrimitive!")};
   }
@@ -63,5 +71,4 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
 }
 
 }  // namespace detail
-
 };  // namespace resim::visualization::proto
