@@ -1,6 +1,8 @@
 
 #include "resim_core/visualization/proto/view_primitive_to_proto.hh"
 
+#include "resim_core/actor/state/proto/trajectory_to_proto.hh"
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
@@ -34,6 +36,9 @@ void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
       },
       [out](const curves::TCurve<transforms::FSE3> &t_curve) {
         pack(t_curve, out->mutable_t_curve_fse3());
+      },
+      [out](const actor::state::Trajectory &trajectory) {
+        pack(trajectory, out->mutable_trajectory());
       });
 }
 
@@ -67,6 +72,9 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
       break;
     case ViewPrimitive::kTCurveFse3:
       unpacked.payload = unpack(in.t_curve_fse3());
+      break;
+    case ViewPrimitive::kTrajectory:
+      unpacked.payload = unpack(in.trajectory());
       break;
     default:
       return StatusValue{MAKE_STATUS("Can't unpack unset ViewPrimitive!")};

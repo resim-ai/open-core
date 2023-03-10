@@ -6,6 +6,8 @@
 #include <random>
 #include <variant>
 
+#include "resim_core/actor/state/proto/trajectory_to_proto.hh"
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
@@ -14,6 +16,7 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
+#include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
@@ -38,7 +41,7 @@ using transforms::FSE3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame3 = transforms::Frame<3>;
-
+constexpr time::Timestamp ZERO_TIME;
 constexpr unsigned int NUM_GROUP_POINTS = 10;
 
 }  // namespace
@@ -48,6 +51,38 @@ class ViewPrimitiveToProtoTypedTest : public ::testing::Test {
  public:
   ViewPrimitive generate_test_primitive();
 
+  curves::TCurve<FSE3> generate_test_t_curve() {
+    auto control_point_poses =
+        transforms::make_test_group_elements<FSE3>(NUM_GROUP_POINTS);
+
+    const Frame3 into{Frame3::new_frame()};
+    const Frame3 from{Frame3::new_frame()};
+
+    std::vector<curves::TCurve<FSE3>::Control> control_points;
+    control_points.reserve(NUM_GROUP_POINTS);
+    double time = 0;
+    for (FSE3 &pose : control_point_poses) {
+      using TwoJet = curves::TwoJetL<FSE3>;
+
+      pose.set_into(into);
+      pose.set_from(from);
+      const TwoJet point{
+          pose,
+          testing::random_vector<FSE3::TangentVector>(rng()),
+          testing::random_vector<FSE3::TangentVector>(rng())};
+
+      control_points.push_back(curves::TCurve<FSE3>::Control{
+          .time = time,
+          .point = point,
+      });
+      time += 1.;
+    }
+    return curves::TCurve<FSE3>{control_points};
+  }
+
+ protected:
+  std::mt19937 &rng() { return rng_; }
+
  private:
   static constexpr unsigned SEED = 430;
   std::mt19937 rng_{SEED};
@@ -56,7 +91,7 @@ class ViewPrimitiveToProtoTypedTest : public ::testing::Test {
 template <>
 ViewPrimitive ViewPrimitiveToProtoTypedTest<SE3>::generate_test_primitive() {
   const SE3::TangentVector test_tangent{
-      testing::random_vector<SE3::TangentVector>(rng_)};
+      testing::random_vector<SE3::TangentVector>(rng())};
   const SE3 test_se3{SE3::exp(test_tangent)};
 
   ViewPrimitive test_primitive{
@@ -70,7 +105,7 @@ ViewPrimitive ViewPrimitiveToProtoTypedTest<SE3>::generate_test_primitive() {
 template <>
 ViewPrimitive ViewPrimitiveToProtoTypedTest<SO3>::generate_test_primitive() {
   const SO3::TangentVector test_tangent{
-      testing::random_vector<SO3::TangentVector>(rng_)};
+      testing::random_vector<SO3::TangentVector>(rng())};
   const SO3 test_so3{SO3::exp(test_tangent)};
 
   ViewPrimitive test_primitive{
@@ -86,7 +121,7 @@ ViewPrimitive ViewPrimitiveToProtoTypedTest<FSE3>::generate_test_primitive() {
   const Frame3 into{Frame3::new_frame()};
   const Frame3 from{Frame3::new_frame()};
   const FSE3::TangentVector test_tangent{
-      testing::random_vector<FSE3::TangentVector>(rng_)};
+      testing::random_vector<FSE3::TangentVector>(rng())};
   const FSE3 test_fse3{FSE3::exp(test_tangent, into, from)};
 
   ViewPrimitive test_primitive{
@@ -127,36 +162,19 @@ ViewPrimitiveToProtoTypedTest<curves::DCurve<FSE3>>::generate_test_primitive() {
 template <>
 ViewPrimitive
 ViewPrimitiveToProtoTypedTest<curves::TCurve<FSE3>>::generate_test_primitive() {
-  auto control_point_poses =
-      transforms::make_test_group_elements<FSE3>(NUM_GROUP_POINTS);
-
-  const Frame3 into{Frame3::new_frame()};
-  const Frame3 from{Frame3::new_frame()};
-
-  std::vector<curves::TCurve<FSE3>::Control> control_points;
-  control_points.reserve(NUM_GROUP_POINTS);
-  double time = 0;
-  for (FSE3 &pose : control_point_poses) {
-    using TwoJet = curves::TwoJetL<FSE3>;
-
-    pose.set_into(into);
-    pose.set_from(from);
-    const TwoJet point{
-        pose,
-        testing::random_vector<FSE3::TangentVector>(rng_),
-        testing::random_vector<FSE3::TangentVector>(rng_)};
-
-    control_points.push_back(curves::TCurve<FSE3>::Control{
-        .time = time,
-        .point = point,
-    });
-    time += 1.;
-  }
-
   ViewPrimitive test_primitive{
       .id = UUID::new_uuid(),
-      .payload = curves::TCurve<FSE3>{control_points}};
+      .payload = generate_test_t_curve()};
+  return test_primitive;
+}
 
+template <>
+ViewPrimitive ViewPrimitiveToProtoTypedTest<
+    actor::state::Trajectory>::generate_test_primitive() {
+  curves::TCurve<FSE3> t_curve = generate_test_t_curve();
+  ViewPrimitive test_primitive{
+      .id = UUID::new_uuid(),
+      .payload = actor::state::Trajectory{t_curve, ZERO_TIME}};
   return test_primitive;
 }
 
@@ -166,7 +184,8 @@ using PayloadTypes = ::testing::Types<
     FSE3,
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>>;
+    curves::TCurve<FSE3>,
+    actor::state::Trajectory>;
 
 TYPED_TEST_SUITE(ViewPrimitiveToProtoTypedTest, PayloadTypes);
 
@@ -229,6 +248,22 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
 
         ASSERT_EQ(control_points.size(), unpacked_control_points.size());
 
+        for (int i = 0; i < control_points.size(); i++) {
+          const auto &control = control_points.at(i);
+          const auto &unpacked_control = unpacked_control_points.at(i);
+          EXPECT_EQ(control.time, unpacked_control.time);
+          EXPECT_TRUE(control.point.is_approx(unpacked_control.point));
+        }
+      },
+      [&](const actor::state::Trajectory &test_trajectory) {
+        const auto &control_points = test_trajectory.curve().control_pts();
+        const auto &unpacked_trajectory = unpack(primitive_msg.trajectory());
+        const auto unpacked_control_points =
+            unpacked_trajectory.curve().control_pts();
+        EXPECT_EQ(
+            unpacked_trajectory.start_time(),
+            test_trajectory.start_time());
+        ASSERT_EQ(control_points.size(), unpacked_control_points.size());
         for (int i = 0; i < control_points.size(); i++) {
           const auto &control = control_points.at(i);
           const auto &unpacked_control = unpacked_control_points.at(i);
@@ -310,6 +345,26 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
             std::get<curves::TCurve<FSE3>>(unpacked.payload)};
         const auto &unpacked_control_points = unpacked_t_curve.control_pts();
 
+        ASSERT_EQ(control_points.size(), unpacked_control_points.size());
+
+        for (int i = 0; i < control_points.size(); i++) {
+          const auto &control = control_points.at(i);
+          const auto &unpacked_control = unpacked_control_points.at(i);
+          EXPECT_EQ(control.time, unpacked_control.time);
+          EXPECT_TRUE(control.point.is_approx(unpacked_control.point));
+        }
+      },
+      [&](const actor::state::Trajectory &test_trajectory) {
+        ASSERT_TRUE(
+            std::holds_alternative<actor::state::Trajectory>(unpacked.payload));
+        const actor::state::Trajectory &unpacked_trajectory{
+            std::get<actor::state::Trajectory>(unpacked.payload)};
+        EXPECT_EQ(
+            unpacked_trajectory.start_time(),
+            test_trajectory.start_time());
+        const auto &control_points = test_trajectory.curve().control_pts();
+        const auto &unpacked_control_points =
+            unpacked_trajectory.curve().control_pts();
         ASSERT_EQ(control_points.size(), unpacked_control_points.size());
 
         for (int i = 0; i < control_points.size(); i++) {

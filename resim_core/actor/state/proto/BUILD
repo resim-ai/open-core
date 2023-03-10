@@ -4,6 +4,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
     name = "trajectory_proto",
     srcs = ["trajectory.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/curves/proto:t_curve_proto",
         "@com_google_protobuf//:timestamp_proto",

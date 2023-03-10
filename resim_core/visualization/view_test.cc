@@ -14,12 +14,14 @@
 #include <utility>
 #include <variant>
 
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
-#include "resim_core/testing/random_matrix.hh"
+#include "resim_core/curves/d_curve.hh"
+#include "resim_core/curves/t_curve.hh"
 #include "resim_core/testing/test_directory.hh"
 #include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
+#include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/http_response.hh"
 #include "resim_core/utils/match.hh"
 #include "resim_core/utils/status.hh"
@@ -27,6 +29,7 @@
 #include "resim_core/visualization/curve/test_helpers.hh"
 #include "resim_core/visualization/testing/mock_server.hh"
 #include "resim_core/visualization/view_client.hh"
+#include "resim_core/visualization/view_server/view_server_test_helper.hh"
 
 using ::resim::visualization::client::proto::ViewSessionUpdateResponse;
 
@@ -37,8 +40,7 @@ using transforms::FSE3;
 using transforms::SE3;
 using transforms::SO3;
 
-constexpr unsigned int NUM_CURVES = 3;
-constexpr unsigned int NUM_GROUP_ELEMENTS = 10;
+constexpr unsigned int NUM_PAYLOADS = 10;
 
 // A simple mock of the view client that calls the observer given on
 // construction when send_view_update is called.
@@ -67,70 +69,8 @@ class MockViewClient : public ViewClient {
 template <typename T>
 class LibcurlClientTest : public ::testing::Test {
  public:
-  static std::vector<T> generate_payload_type();
   static void check_correctness(const T &original, const T &expected);
 };
-
-template <>
-std::vector<SE3> LibcurlClientTest<SE3>::generate_payload_type() {
-  return transforms::make_test_group_elements<SE3>(NUM_GROUP_ELEMENTS);
-}
-
-template <>
-std::vector<SO3> LibcurlClientTest<SO3>::generate_payload_type() {
-  return transforms::make_test_group_elements<SO3>(NUM_GROUP_ELEMENTS);
-}
-
-template <>
-std::vector<FSE3> LibcurlClientTest<FSE3>::generate_payload_type() {
-  return transforms::make_test_group_elements<FSE3>(NUM_GROUP_ELEMENTS);
-}
-
-template <>
-std::vector<curves::DCurve<SE3>>
-LibcurlClientTest<curves::DCurve<SE3>>::generate_payload_type() {
-  std::vector<curves::DCurve<SE3>> d_curves;
-  d_curves.reserve(NUM_CURVES);
-
-  for (int i = 0; i < NUM_CURVES; i++) {
-    curves::DCurve<SE3> curve(
-        transforms::make_test_group_elements<SE3>(NUM_GROUP_ELEMENTS));
-    d_curves.push_back(curve);
-  }
-
-  return d_curves;
-}
-
-template <>
-std::vector<curves::DCurve<FSE3>>
-LibcurlClientTest<curves::DCurve<FSE3>>::generate_payload_type() {
-  std::vector<curves::DCurve<FSE3>> d_curves;
-  d_curves.reserve(NUM_CURVES);
-
-  for (int i = 0; i < NUM_CURVES; i++) {
-    curves::DCurve<FSE3> curve(
-        transforms::make_test_group_elements<FSE3>(NUM_GROUP_ELEMENTS));
-    d_curves.push_back(curve);
-  }
-  return d_curves;
-}
-
-template <>
-std::vector<curves::TCurve<FSE3>>
-LibcurlClientTest<curves::TCurve<FSE3>>::generate_payload_type() {
-  std::vector<curves::TCurve<FSE3>> t_curves;
-  const transforms::Frame<3> into{transforms::Frame<3>::new_frame()};
-  const transforms::Frame<3> from{transforms::Frame<3>::new_frame()};
-  t_curves.reserve(NUM_CURVES);
-
-  for (int i = 0; i < NUM_CURVES; i++) {
-    curves::TCurve<FSE3> test_curve{
-        curve::testing::make_circle_curve(into, from)};
-    t_curves.push_back(test_curve);
-  }
-
-  return t_curves;
-}
 
 template <>
 void LibcurlClientTest<SE3>::check_correctness(
@@ -150,8 +90,6 @@ template <>
 void LibcurlClientTest<FSE3>::check_correctness(
     const FSE3 &original,
     const FSE3 &expected) {
-  EXPECT_EQ(original.from(), expected.from());
-  EXPECT_EQ(original.into(), expected.into());
   EXPECT_TRUE(original.is_approx(expected));
 }
 
@@ -224,7 +162,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   ViewUpdate update;
   for (const auto &element : test_elements) {
     update.primitives.emplace_back(ViewPrimitive{
@@ -250,7 +188,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   ViewUpdate update;
   for (const auto &element : test_elements) {
     update.primitives.emplace_back(ViewPrimitive{
@@ -279,9 +217,9 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
   const UUID expected_session_id{UUID::new_uuid()};
   uint64_t expected_update_id = 0;
 
-  // Create SE3 objects and corresponding ViewUpdates.
+  // Create Group objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   for (const auto &element : test_elements) {
     expected_update.primitives.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
@@ -339,7 +277,8 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
                   test_t_curve_fse3,
                   std::get<curves::TCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
-            });
+            },
+            [&](const actor::state::Trajectory &test_trajectory) {});
         return ViewSessionUpdateResponse{};
       }};
 
@@ -374,9 +313,9 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientLogging) {
   view.set_client(std::move(mock_client));
 
   // ACTION
-  // Send an identity SE3 to view.
+  // Send viewable types to view.
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
 
   REASSERT(!test_elements.empty(), "Did not generate test elements!");
   view << test_elements[0];
@@ -510,7 +449,7 @@ TYPED_TEST_SUITE(ViewTest, PayloadTypes);
 TYPED_TEST(ViewTest, TestViewSingleThread) {
   // SETUP
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   std::vector<TypeParam> result_elements;
 
   auto mock_client =
@@ -535,7 +474,7 @@ TYPED_TEST(ViewTest, TestViewMultiThread) {
   // SETUP
   // This number consistently causes failures in the absence of mutexes.
   std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
 
   std::vector<TypeParam> result_elements;
   auto mock_client =
@@ -585,7 +524,7 @@ TYPED_TEST(ViewTest, TestSingleInstance) {
 TYPED_TEST(ViewTest, TestFailedSend) {
   // SETUP
   const std::vector<TypeParam> test_elements{
-      LibcurlClientTest<TypeParam>::generate_payload_type()};
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
 
   // Make a mock client that will fail to send the update:
   auto mock_client =

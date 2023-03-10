@@ -3,6 +3,7 @@ syntax = "proto3";
 
 package resim.visualization.proto;
 
+import "resim_core/actor/state/proto/trajectory.proto";
 import "resim_core/curves/proto/d_curve.proto";
 import "resim_core/curves/proto/t_curve.proto";
 import "resim_core/transforms/proto/fse3.proto";
@@ -14,11 +15,12 @@ message ViewPrimitive {
     resim.proto.UUID id = 1;
 
     oneof payload {
-        resim.transforms.proto.SE3     se3          = 2;
-        resim.transforms.proto.SO3     so3          = 3;
-        resim.transforms.proto.FSE3    fse3         = 4;
-        resim.curves.proto.DCurve_SE3  d_curve_se3  = 5;
-        resim.curves.proto.DCurve_FSE3 d_curve_fse3 = 6;
-        resim.curves.proto.TCurve_FSE3 t_curve_fse3 = 7;
+        resim.transforms.proto.SE3         se3          = 2;
+        resim.transforms.proto.SO3         so3          = 3;
+        resim.transforms.proto.FSE3        fse3         = 4;
+        resim.curves.proto.DCurve_SE3      d_curve_se3  = 5;
+        resim.curves.proto.DCurve_FSE3     d_curve_fse3 = 6;
+        resim.curves.proto.TCurve_FSE3     t_curve_fse3 = 7;
+        resim.actor.state.proto.Trajectory trajectory   = 8;
     }
 }
