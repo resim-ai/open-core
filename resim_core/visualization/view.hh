@@ -46,12 +46,23 @@ class View {
 
  private:
 #ifdef RESIM_TESTING
+  template <typename T>
   FRIEND_TEST(LibcurlClientTest, TestLibcurlClientView);
+
+  template <typename T>
   FRIEND_TEST(LibcurlClientTest, TestLibcurlClientLogging);
+
+  template <typename T>
   FRIEND_TEST(ViewTest, TestViewSingleThread);
+
+  template <typename T>
   FRIEND_TEST(ViewTest, TestViewMultiThread);
+
+  template <typename T>
   FRIEND_TEST(ViewTest, TestDestructorCoverage);
-  FRIEND_TEST(ViewDeathTest, TestFailedSend);
+
+  template <typename T>
+  FRIEND_TEST(ViewTest, TestFailedSend);
 #endif
 
   // Default constructor used by get_instance() above.

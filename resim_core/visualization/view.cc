@@ -4,14 +4,23 @@
 #include <glog/logging.h>
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/curves/d_curve.hh"
+#include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
+#include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/status.hh"
 #include "resim_core/visualization/client/view_client_libcurl.hh"
 #include "resim_core/visualization/view_client.hh"
 #include "resim_core/visualization/view_update.hh"
 
 namespace resim::visualization {
+
+namespace {
+using transforms::FSE3;
+using transforms::SE3;
+using transforms::SO3;
+}  // namespace
 
 View::View() {
   client_ = std::make_unique<LibcurlClient>("http://api.resim.ai:8080");
@@ -47,11 +56,20 @@ View &View::operator<<(const T &subject) {
   return *this;
 }
 
-template View &View::operator<< <transforms::SE3>(
-    const transforms::SE3 &subject);
+template View &View::operator<< <SE3>(const SE3 &subject);
 
-template View &View::operator<< <transforms::FSE3>(
-    const transforms::FSE3 &subject);
+template View &View::operator<< <SO3>(const SO3 &subject);
+
+template View &View::operator<< <FSE3>(const FSE3 &subject);
+
+template View &View::operator<< <curves::DCurve<SE3>>(
+    const curves::DCurve<SE3> &subject);
+
+template View &View::operator<< <curves::DCurve<FSE3>>(
+    const curves::DCurve<FSE3> &subject);
+
+template View &View::operator<< <curves::TCurve<FSE3>>(
+    const curves::TCurve<FSE3> &subject);
 
 void View::flush() {
   std::lock_guard<std::mutex> guard{primitives_mutex_};
