@@ -10,6 +10,7 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
+#include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/proto/so3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
@@ -28,6 +29,7 @@ void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
       [out](const transforms::SE3 &se3) { pack(se3, out->mutable_se3()); },
       [out](const transforms::SO3 &so3) { pack(so3, out->mutable_so3()); },
       [out](const transforms::FSE3 &fse3) { pack(fse3, out->mutable_fse3()); },
+      [out](const transforms::FSO3 &fso3) { pack(fso3, out->mutable_fso3()); },
       [out](const curves::DCurve<transforms::SE3> &d_curve_se3) {
         pack(d_curve_se3, out->mutable_d_curve_se3());
       },
@@ -63,6 +65,9 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
       break;
     case ViewPrimitive::kFse3:
       unpacked.payload = unpack(in.fse3());
+      break;
+    case ViewPrimitive::kFso3:
+      unpacked.payload = unpack(in.fso3());
       break;
     case ViewPrimitive::kDCurveSe3:
       unpacked.payload = unpack(in.d_curve_se3());

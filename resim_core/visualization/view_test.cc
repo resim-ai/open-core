@@ -37,6 +37,7 @@ namespace resim::visualization {
 namespace {
 
 using transforms::FSE3;
+using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 
@@ -90,6 +91,13 @@ template <>
 void LibcurlClientTest<FSE3>::check_correctness(
     const FSE3 &original,
     const FSE3 &expected) {
+  EXPECT_TRUE(original.is_approx(expected));
+}
+
+template <>
+void LibcurlClientTest<FSO3>::check_correctness(
+    const FSO3 &original,
+    const FSO3 &expected) {
   EXPECT_TRUE(original.is_approx(expected));
 }
 
@@ -165,6 +173,7 @@ using PayloadTypes = ::testing::Types<
     SE3,
     SO3,
     FSE3,
+    FSO3,
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
     curves::TCurve<FSE3>,
@@ -278,6 +287,12 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
               LibcurlClientTest<FSE3>::check_correctness(
                   test_fse3,
                   std::get<FSE3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const FSO3 &test_fso3) {
+              LibcurlClientTest<FSO3>::check_correctness(
+                  test_fso3,
+                  std::get<FSO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
@@ -432,6 +447,14 @@ void ViewTest<SO3>::sort_elements(std::vector<SO3> &result_elements) {
 
 template <>
 void ViewTest<FSE3>::sort_elements(std::vector<FSE3> &result_elements) {
+  std::sort(
+      result_elements.begin(),
+      result_elements.end(),
+      [](const auto &a, const auto &b) { return a.log().x() < b.log().x(); });
+}
+
+template <>
+void ViewTest<FSO3>::sort_elements(std::vector<FSO3> &result_elements) {
   std::sort(
       result_elements.begin(),
       result_elements.end(),

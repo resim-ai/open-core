@@ -15,6 +15,7 @@ namespace resim::visualization::view_server {
 
 namespace {
 using transforms::FSE3;
+using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 }  // namespace
@@ -26,6 +27,7 @@ using ViewableTypes = ::testing::Types<
     SE3,
     SO3,
     FSE3,
+    FSO3,
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
     curves::TCurve<FSE3>,

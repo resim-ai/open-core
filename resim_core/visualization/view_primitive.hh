@@ -22,6 +22,7 @@ struct ViewPrimitive {
       transforms::SE3,
       transforms::SO3,
       transforms::FSE3,
+      transforms::FSO3,
       curves::DCurve<transforms::SE3>,
       curves::DCurve<transforms::FSE3>,
       curves::TCurve<transforms::FSE3>,

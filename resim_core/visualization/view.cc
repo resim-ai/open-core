@@ -19,6 +19,7 @@ namespace resim::visualization {
 
 namespace {
 using transforms::FSE3;
+using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 }  // namespace
@@ -62,6 +63,8 @@ template View &View::operator<< <SE3>(const SE3 &subject);
 template View &View::operator<< <SO3>(const SO3 &subject);
 
 template View &View::operator<< <FSE3>(const FSE3 &subject);
+
+template View &View::operator<< <FSO3>(const FSO3 &subject);
 
 template View &View::operator<< <curves::DCurve<SE3>>(
     const curves::DCurve<SE3> &subject);

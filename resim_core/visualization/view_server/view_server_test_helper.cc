@@ -15,6 +15,7 @@ namespace resim::visualization::view_server {
 
 namespace {
 using transforms::FSE3;
+using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 constexpr auto LOW_COUNT =
@@ -22,6 +23,7 @@ constexpr auto LOW_COUNT =
     "increase the count.";
 
 constexpr auto TRANSFORM_PREFIX = "transform";
+constexpr auto ROTATION_PREFIX = "rotation";
 constexpr auto D_CURVE_PREFIX = "d_curve";
 constexpr auto T_CURVE_PREFIX = "t_curve";
 constexpr auto TRAJECTORY_PREFIX = "trajectory";
@@ -48,6 +50,13 @@ std::vector<FSE3> generate_payload_type(const unsigned count) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   return transforms::make_test_group_elements<FSE3>(count);
+}
+
+template <>
+std::vector<FSO3> generate_payload_type(const unsigned count) {
+  // How many test elements to make.
+  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
+  return transforms::make_test_group_elements<FSO3>(count);
 }
 
 template <>
@@ -122,12 +131,17 @@ std::string get_type_prefix<SE3>() {
 
 template <>
 std::string get_type_prefix<SO3>() {
-  return TRANSFORM_PREFIX;
+  return ROTATION_PREFIX;
 }
 
 template <>
 std::string get_type_prefix<FSE3>() {
   return TRANSFORM_PREFIX;
+}
+
+template <>
+std::string get_type_prefix<FSO3>() {
+  return ROTATION_PREFIX;
 }
 
 template <>
