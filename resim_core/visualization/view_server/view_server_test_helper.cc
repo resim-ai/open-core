@@ -1,5 +1,6 @@
 #include "resim_core/visualization/view_server/view_server_test_helper.hh"
 
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
@@ -23,6 +24,9 @@ constexpr auto LOW_COUNT =
 constexpr auto TRANSFORM_PREFIX = "transform";
 constexpr auto D_CURVE_PREFIX = "d_curve";
 constexpr auto T_CURVE_PREFIX = "t_curve";
+constexpr auto TRAJECTORY_PREFIX = "trajectory";
+
+constexpr time::Timestamp ZERO_TIME;
 }  // namespace
 
 template <>
@@ -95,6 +99,23 @@ std::vector<curves::TCurve<transforms::FSE3>> generate_payload_type(
 }
 
 template <>
+std::vector<actor::state::Trajectory> generate_payload_type(
+    const unsigned count) {
+  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
+  std::vector<actor::state::Trajectory> trajectories;
+  std::vector<curves::TCurve<transforms::FSE3>> t_curves =
+      generate_payload_type<curves::TCurve<transforms::FSE3>>(count);
+  trajectories.reserve(count);
+
+  for (int i = 0; i < count; i++) {
+    const actor::state::Trajectory test_trajectory{t_curves.at(i), ZERO_TIME};
+    trajectories.push_back(test_trajectory);
+  }
+
+  return trajectories;
+}
+
+template <>
 std::string get_type_prefix<SE3>() {
   return TRANSFORM_PREFIX;
 }
@@ -122,6 +143,11 @@ std::string get_type_prefix<curves::DCurve<FSE3>>() {
 template <>
 std::string get_type_prefix<curves::TCurve<FSE3>>() {
   return T_CURVE_PREFIX;
+}
+
+template <>
+std::string get_type_prefix<actor::state::Trajectory>() {
+  return TRAJECTORY_PREFIX;
 }
 
 }  // namespace resim::visualization::view_server

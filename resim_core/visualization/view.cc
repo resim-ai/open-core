@@ -3,6 +3,7 @@
 
 #include <glog/logging.h>
 
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
@@ -70,6 +71,9 @@ template View &View::operator<< <curves::DCurve<FSE3>>(
 
 template View &View::operator<< <curves::TCurve<FSE3>>(
     const curves::TCurve<FSE3> &subject);
+
+template View &View::operator<< <actor::state::Trajectory>(
+    const actor::state::Trajectory &subject);
 
 void View::flush() {
   std::lock_guard<std::mutex> guard{primitives_mutex_};

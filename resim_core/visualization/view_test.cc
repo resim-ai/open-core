@@ -142,13 +142,33 @@ void LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
   }
 }
 
+template <>
+void LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+    const actor::state::Trajectory &original,
+    const actor::state::Trajectory &expected) {
+  EXPECT_EQ(original.start_time(), expected.start_time());
+
+  const auto &orig_ctrl_pts = original.curve().control_pts();
+  const auto &test_ctrl_pts = expected.curve().control_pts();
+
+  ASSERT_EQ(orig_ctrl_pts.size(), test_ctrl_pts.size());
+
+  for (int i = 0; i < orig_ctrl_pts.size(); i++) {
+    const auto &orig_ctrl_pt = orig_ctrl_pts.at(i);
+    const auto &test_ctrl_pt = test_ctrl_pts.at(i);
+    EXPECT_EQ(orig_ctrl_pt.time, test_ctrl_pt.time);
+    EXPECT_TRUE(orig_ctrl_pt.point.is_approx(test_ctrl_pt.point));
+  }
+}
+
 using PayloadTypes = ::testing::Types<
     SE3,
     SO3,
     FSE3,
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>>;
+    curves::TCurve<FSE3>,
+    actor::state::Trajectory>;
 
 TYPED_TEST_SUITE(LibcurlClientTest, PayloadTypes);
 
@@ -278,7 +298,12 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
                   std::get<curves::TCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const actor::state::Trajectory &test_trajectory) {});
+            [&](const actor::state::Trajectory &test_trajectory) {
+              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+                  test_trajectory,
+                  std::get<actor::state::Trajectory>(
+                      expected_update.primitives.at(update_id).payload));
+            });
         return ViewSessionUpdateResponse{};
       }};
 
@@ -442,6 +467,17 @@ void ViewTest<curves::TCurve<FSE3>>::sort_elements(
       result_elements.begin(),
       result_elements.end(),
       [](const auto &a, const auto &b) { return a.end_time() < b.end_time(); });
+}
+
+template <>
+void ViewTest<actor::state::Trajectory>::sort_elements(
+    std::vector<actor::state::Trajectory> &result_elements) {
+  std::sort(
+      result_elements.begin(),
+      result_elements.end(),
+      [](const auto &a, const auto &b) {
+        return a.curve().end_time() < b.curve().end_time();
+      });
 }
 
 TYPED_TEST_SUITE(ViewTest, PayloadTypes);

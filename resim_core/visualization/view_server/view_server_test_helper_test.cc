@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
@@ -27,7 +28,8 @@ using ViewableTypes = ::testing::Types<
     FSE3,
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>>;
+    curves::TCurve<FSE3>,
+    actor::state::Trajectory>;
 
 TYPED_TEST_SUITE(ViewServerHelperTests, ViewableTypes);
 
