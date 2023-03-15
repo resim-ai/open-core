@@ -176,6 +176,15 @@ TYPED_TEST(DCurveTests, QueryPoints) {
   }
 }
 
+TYPED_TEST(DCurveTests, SinglePointCurveConstruction) {
+  const std::vector<TypeParam> points =
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME);
+  const DCurve<TypeParam> curve_a({points[0]});
+
+  EXPECT_EQ(curve_a.curve_length(), 0);
+  EXPECT_THROW(curve_a.point_at(0), AssertException);
+}
+
 TYPED_TEST(DCurveTests, InvalidQueries) {
   constexpr double OVERFLOW = 0.1;
   DCurve<TypeParam> curve_a(
