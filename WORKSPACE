@@ -3,9 +3,11 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Gtest V 1.11
 http_archive(
     name = "com_google_googletest",
-    sha256 = "8daa1a71395892f7c1ec5f7cb5b099a02e606be720d62f1a6a98f8f8898ec826",
-    strip_prefix = "googletest-e2239ee6043f73722e7aa812a459f54a28552929",
-    urls = ["https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip"],
+    patch_args = ["-p1"],
+    patches = ["//resim_core/third_party/googletest:googletest.patch"],
+    sha256 = "ffa17fbc5953900994e2deec164bb8949879ea09b411e07f215bfbb1f87f4632",
+    strip_prefix = "googletest-1.13.0",
+    urls = ["https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip"],
 )
 
 # Eigen V 3.4.0
@@ -137,9 +139,9 @@ rules_pkg_dependencies()
 http_archive(
     name = "curl",
     build_file = "//resim_core/third_party/curl:curl.BUILD",
-    sha256 = "6147ac0b22f8c11cbd3933d7fec064dee373402c3705193ceb703a5a665f2e0c",
-    strip_prefix = "curl-7.87.0",
-    urls = ["https://github.com/curl/curl/releases/download/curl-7_87_0/curl-7.87.0.zip"],
+    sha256 = "dcaea268c0706109eabacc278b8a4cd839148a9c6cc603cebe91e7d0d935c04a",
+    strip_prefix = "curl-7.88.1",
+    urls = ["https://github.com/curl/curl/releases/download/curl-7_88_1/curl-7.88.1.zip"],
 )
 
 http_archive(

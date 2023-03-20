@@ -1,0 +1,40 @@
+diff --git a/googletest/include/gtest/gtest-typed-test.h b/googletest/include/gtest/gtest-typed-test.h
+index bd35a326..45ad39ae 100644
+--- a/googletest/include/gtest/gtest-typed-test.h
++++ b/googletest/include/gtest/gtest-typed-test.h
+@@ -171,6 +171,8 @@ INSTANTIATE_TYPED_TEST_SUITE_P(My, FooTest, MyTypes);
+ 
+ #endif  // 0
+ 
++// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
++
+ #include "gtest/internal/gtest-internal.h"
+ #include "gtest/internal/gtest-port.h"
+ #include "gtest/internal/gtest-type-util.h"
+@@ -328,4 +330,6 @@ INSTANTIATE_TYPED_TEST_SUITE_P(My, FooTest, MyTypes);
+   INSTANTIATE_TYPED_TEST_SUITE_P
+ #endif  // GTEST_REMOVE_LEGACY_TEST_CASEAPI_
+ 
++// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
++
+ #endif  // GOOGLETEST_INCLUDE_GTEST_GTEST_TYPED_TEST_H_
+diff --git a/googletest/include/gtest/internal/gtest-internal.h b/googletest/include/gtest/internal/gtest-internal.h
+index 3121d428..52b94ec6 100644
+--- a/googletest/include/gtest/internal/gtest-internal.h
++++ b/googletest/include/gtest/internal/gtest-internal.h
+@@ -72,6 +72,8 @@
+ #include "gtest/internal/gtest-string.h"
+ #include "gtest/internal/gtest-type-util.h"
+ 
++// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables, cppcoreguidelines-owning-memory, cppcoreguidelines-avoid-goto)
++
+ // Due to C++ preprocessor weirdness, we need double indirection to
+ // concatenate two tokens when one of them is __LINE__.  Writing
+ //
+@@ -1567,5 +1569,6 @@ class NeverThrown {
+           new ::testing::internal::TestFactoryImpl<GTEST_TEST_CLASS_NAME_(     \
+               test_suite_name, test_name)>);                                   \
+   void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
++// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables, cppcoreguidelines-owning-memory, cppcoreguidelines-avoid-goto)
+ 
+ #endif  // GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
