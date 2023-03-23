@@ -167,7 +167,9 @@ http_archive(
     urls = ["https://github.com/google/glog/archive/v0.6.0.zip"],
 )
 
-# Skylib
-load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
-
-bazel_skylib_workspace()
+http_archive(
+    name = "au",
+    sha256 = "4709343cbdae957c3f00d04d7523c62ee6be94305baa3007750c23fb5050fc29",
+    strip_prefix = "au-0.3.0",
+    urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.0.zip"],
+)
