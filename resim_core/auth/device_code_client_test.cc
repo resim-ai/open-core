@@ -1,12 +1,11 @@
-
-#include "resim_core/auth/auth_client.hh"
+#include "resim_core/auth/device_code_client.hh"
 
 #include <gtest/gtest.h>
 
 #include <utility>
 
 #include "resim_core/assert/assert.hh"
-#include "resim_core/auth/testing/mock_auth_server.hh"
+#include "resim_core/auth/testing/mock_device_code_server.hh"
 #include "resim_core/testing/test_directory.hh"
 
 namespace resim::auth {
@@ -30,7 +29,7 @@ class AuthClientTest : public ::testing::Test {
             .audience = "https://api.resim.ai",
             .token_path = test_directory_.test_file_path("jwt"),
         } {
-    server_ = std::make_unique<testing::MockAuthServer>(
+    server_ = std::make_unique<testing::MockDeviceCodeServer>(
         HOST,
         DEVICE_CODE,
         INTERVAL_S,
@@ -71,9 +70,9 @@ class AuthClientTest : public ::testing::Test {
 
   int device_code_count() const { return device_code_count_; }
   int polling_count() const { return polling_count_; }
-  const AuthClient::Config &config() { return config_; }
+  const DeviceCodeClient::Config &config() { return config_; }
 
-  const std::unique_ptr<testing::MockAuthServer> &mutable_server() {
+  const std::unique_ptr<testing::MockDeviceCodeServer> &mutable_server() {
     return server_;
   }
 
@@ -82,13 +81,13 @@ class AuthClientTest : public ::testing::Test {
   int device_code_count_ = 0;
   int polling_count_ = 0;
 
-  AuthClient::Config config_;
-  std::unique_ptr<testing::MockAuthServer> server_;
+  DeviceCodeClient::Config config_;
+  std::unique_ptr<testing::MockDeviceCodeServer> server_;
 };
 
 TEST_F(AuthClientTest, TestFetch) {
   // Test that we can fetch a token from the mock server
-  AuthClient client{config()};
+  DeviceCodeClient client{config()};
   EXPECT_EQ(client.get_jwt(), TOKEN);
   EXPECT_EQ(device_code_count(), 1);
   EXPECT_EQ(polling_count(), EXPECTED_POLL_COUNT);
@@ -97,7 +96,7 @@ TEST_F(AuthClientTest, TestFetch) {
 TEST_F(AuthClientTest, TestCaching) {
   // Test that this client caches the token so we don't have to query the
   // server.
-  AuthClient client{config()};
+  DeviceCodeClient client{config()};
   EXPECT_EQ(client.get_jwt(), TOKEN);
 
   reset_counts();
@@ -110,9 +109,9 @@ TEST_F(AuthClientTest, TestLoadFromDisk) {
   // Test that we can load a token from disk without querying the server
   {
     // Pre-fetch in another instance so the token is stored on the disk
-    EXPECT_EQ(AuthClient{config()}.get_jwt(), TOKEN);
+    EXPECT_EQ(DeviceCodeClient{config()}.get_jwt(), TOKEN);
   }
-  AuthClient client{config()};
+  DeviceCodeClient client{config()};
   reset_counts();
   EXPECT_EQ(client.get_jwt(), TOKEN);
   EXPECT_EQ(device_code_count(), 0);
@@ -120,7 +119,7 @@ TEST_F(AuthClientTest, TestLoadFromDisk) {
 }
 
 TEST_F(AuthClientTest, TestRefresh) {
-  AuthClient client{config()};
+  DeviceCodeClient client{config()};
   EXPECT_EQ(client.get_jwt(), TOKEN);
 
   // Test that refreshing resets things
@@ -135,7 +134,7 @@ using AuthClientDeathTest = AuthClientTest;
 
 TEST_F(AuthClientDeathTest, TestTimeout) {
   // Test the timeout
-  AuthClient client{config()};
+  DeviceCodeClient client{config()};
   client.refresh();
   mutable_server()->set_timeout_s(0);
   EXPECT_THROW(client.get_jwt(), AssertException);

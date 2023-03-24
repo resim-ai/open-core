@@ -8,7 +8,7 @@ namespace resim::auth::testing {
 // Run a mock server for testing authentication. This mock is meant to support
 // testing the auth0 device authorization flow in unit tests:
 // https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-device-authorization-flow
-class MockAuthServer {
+class MockDeviceCodeServer {
  public:
   // Receiver called for requests on /oauth/device/code
   using DeviceCodeReceiver =
@@ -25,7 +25,7 @@ class MockAuthServer {
   // @param[in] device_code_receiver - The receiver to run for
   // /oauth/device/code
   // @param[in] polling_receiver - The receiver to run for /oauth/token
-  MockAuthServer(
+  MockDeviceCodeServer(
       std::string host,
       std::string device_code,
       int interval,
@@ -33,16 +33,16 @@ class MockAuthServer {
       DeviceCodeReceiver &&device_code_receiver,
       PollingReceiver &&polling_receiver);
 
-  MockAuthServer(const MockAuthServer &) = delete;
-  MockAuthServer(MockAuthServer &&) = delete;
-  MockAuthServer &operator=(const MockAuthServer &) = delete;
-  MockAuthServer &operator=(MockAuthServer &&) = delete;
+  MockDeviceCodeServer(const MockDeviceCodeServer &) = delete;
+  MockDeviceCodeServer(MockDeviceCodeServer &&) = delete;
+  MockDeviceCodeServer &operator=(const MockDeviceCodeServer &) = delete;
+  MockDeviceCodeServer &operator=(MockDeviceCodeServer &&) = delete;
 
-  ~MockAuthServer() = default;
+  ~MockDeviceCodeServer() = default;
 
   // Getters for the host and port for the server.
   std::string host() const;
-  int port();
+  int port() const;
 
   // Helper to simulate the client completing authentication through the
   // browser.

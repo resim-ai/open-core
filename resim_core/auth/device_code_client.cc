@@ -1,4 +1,4 @@
-#include "resim_core/auth/auth_client.hh"
+#include "resim_core/auth/device_code_client.hh"
 
 #include <google/protobuf/util/json_util.h>
 
@@ -72,27 +72,27 @@ HttpResponse json_query(
 
 }  // namespace
 
-AuthClient::AuthClient(Config config)
+DeviceCodeClient::DeviceCodeClient(Config config)
     : config_{std::move(config)},
       curl_{curl_easy_init()} {}
 
-AuthClient::~AuthClient() { curl_easy_cleanup(curl_); }
+DeviceCodeClient::~DeviceCodeClient() { curl_easy_cleanup(curl_); }
 
-std::string AuthClient::get_jwt() {
+std::string DeviceCodeClient::get_jwt() {
   if (token_.empty()) {
     load_token();
   }
   return token_;
 }
 
-void AuthClient::refresh() {
+void DeviceCodeClient::refresh() {
   // TODO(https://app.asana.com/0/0/1203968428742419/f) Try the refresh token
   // instead of just totally resetting.
   token_.clear();
   std::filesystem::remove_all(config_.token_path);
 }
 
-void AuthClient::save_token() {
+void DeviceCodeClient::save_token() {
   std::filesystem::create_directories(config_.token_path.parent_path());
   std::ofstream token_stream;
   token_stream.open(config_.token_path);
@@ -100,7 +100,7 @@ void AuthClient::save_token() {
   token_stream.close();
 }
 
-void AuthClient::load_token() {
+void DeviceCodeClient::load_token() {
   const bool token_exists = std::filesystem::exists(config_.token_path);
   if (not token_exists) {
     fetch_token();
@@ -113,7 +113,7 @@ void AuthClient::load_token() {
   token_ = token_ss.str();
 }
 
-void AuthClient::fetch_token() {
+void DeviceCodeClient::fetch_token() {
   proto::DeviceCodeRequest device_code_request;
   device_code_request.set_client_id(config_.client_id);
   device_code_request.set_scope(config_.scope);

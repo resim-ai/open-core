@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resim_core/auth/auth_client.hh"
+#include "resim_core/auth/auth_client_interface.hh"
 
 namespace resim::auth {
 

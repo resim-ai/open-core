@@ -37,3 +37,10 @@ message PollingResponse {
     optional int32  expires_in   = 4;
     optional string token_type   = 5;
 }
+
+message ClientCredentialsResponse {
+    optional string access_token = 1;
+    optional string token_type   = 2;
+    optional int32  expires_in   = 3;
+    optional string scope        = 4;
+}

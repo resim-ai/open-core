@@ -204,7 +204,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
 
   // ACTION
   Status status = mock_client->send_view_update(update);
-  REASSERT(status.ok());
+  EXPECT_TRUE(status.ok());
 }
 
 TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
@@ -231,7 +231,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
 
   // ACTION
   Status status = mock_client->send_view_update(update);
-  REASSERT(!status.ok());
+  EXPECT_FALSE(status.ok());
 }
 
 TYPED_TEST(LibcurlClientTest, TestFail) {
@@ -242,7 +242,8 @@ TYPED_TEST(LibcurlClientTest, TestFail) {
   ViewUpdate update;
 
   // ACTION
-  EXPECT_THROW(mock_client->send_view_update(update), AssertException);
+  Status status = mock_client->send_view_update(update);
+  EXPECT_FALSE(status.ok());
 }
 
 TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {

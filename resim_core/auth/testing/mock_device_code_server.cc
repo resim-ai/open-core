@@ -1,4 +1,4 @@
-#include "resim_core/auth/testing/mock_auth_server.hh"
+#include "resim_core/auth/testing/mock_device_code_server.hh"
 
 #include <google/protobuf/util/json_util.h>
 
@@ -19,7 +19,7 @@ google::protobuf::util::JsonPrintOptions default_json_options() {
 
 }  // namespace
 
-MockAuthServer::MockAuthServer(
+MockDeviceCodeServer::MockDeviceCodeServer(
     std::string host,
     std::string device_code,
     int interval,
@@ -33,7 +33,7 @@ MockAuthServer::MockAuthServer(
   server_.add_post_receiver(
       "/oauth/device/code",
       [this, receiver = std::move(device_code_receiver)](
-          const std::multimap<std::string, std::string> &headers,
+          const std::multimap<std::string, std::string> &,
           const std::string &body,
           const std::smatch &,
           InOut<Response> response) {
@@ -63,7 +63,7 @@ MockAuthServer::MockAuthServer(
   server_.add_post_receiver(
       "/oauth/token",
       [this, receiver = std::move(polling_receiver)](
-          const std::multimap<std::string, std::string> &headers,
+          const std::multimap<std::string, std::string> &,
           const std::string &body,
           const std::smatch &,
           InOut<Response> response) {
@@ -99,15 +99,15 @@ MockAuthServer::MockAuthServer(
   server_.listen();
 }
 
-std::string MockAuthServer::host() const { return server_.host(); }
+std::string MockDeviceCodeServer::host() const { return server_.host(); }
 
-int MockAuthServer::port() { return server_.port(); }
+int MockDeviceCodeServer::port() const { return server_.port(); }
 
-void MockAuthServer::set_browser_auth_complete() {
+void MockDeviceCodeServer::set_browser_auth_complete() {
   browser_auth_complete_ = true;
 }
 
-void MockAuthServer::set_timeout_s(const int timeout_s) {
+void MockDeviceCodeServer::set_timeout_s(const int timeout_s) {
   timeout_s_ = timeout_s;
 }
 

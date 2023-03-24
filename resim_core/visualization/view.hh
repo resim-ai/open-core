@@ -63,6 +63,8 @@ class View {
 
   template <typename T>
   FRIEND_TEST(ViewTest, TestFailedSend);
+
+  FRIEND_TEST(ViewIntegrationTest, ViewExecutesAndLogs);
 #endif
 
   // Default constructor used by get_instance() above.

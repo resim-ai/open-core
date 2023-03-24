@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "resim_core/auth/auth_client.hh"
+#include "resim_core/auth/auth_client_interface.hh"
 #include "resim_core/utils/status.hh"
 #include "resim_core/visualization/proto/view_update.pb.h"
 #include "resim_core/visualization/view_client.hh"
@@ -29,6 +29,8 @@ class LibcurlClient : public ViewClient {
   std::string base_url_;    // base URL for endpoint
   std::string session_id_;  // unique ID per user
   uint64_t update_id_ = 0;  // view update counter
+
+  std::array<char, CURL_ERROR_SIZE> errbuf;
 };
 
 }  // namespace resim::visualization
