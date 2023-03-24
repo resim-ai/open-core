@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <regex>
 #include <string>
@@ -44,12 +45,15 @@ class MockServer {
     HttpResponse status{HttpResponse::INVALID};
   };
 
-  // A receiver function which is called with (in order), the request body, a
-  // std::smatch containing matches from the endpoint (specified to
-  // add_post_receiver() below as a regex), and an InOut for the response which
-  // this receiver can populate.
-  using PostReceiver = std::function<
-      void(const std::string &, const std::smatch &, InOut<Response>)>;
+  // A receiver function which is called with (in order), the request headers,
+  // the request body, a std::smatch containing matches from the endpoint
+  // (specified to add_post_receiver() below as a regex), and an InOut for the
+  // response which this receiver can populate.
+  using PostReceiver = std::function<void(
+      const std::multimap<std::string, std::string> &headers,
+      const std::string &body,
+      const std::smatch &endpoint_matches,
+      InOut<Response> response)>;
 
   // Add a PostReceiver function (as documented above) to handle endpoints
   // matching the given endpoint regular expression expressed as a string.

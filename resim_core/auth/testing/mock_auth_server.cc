@@ -33,6 +33,7 @@ MockAuthServer::MockAuthServer(
   server_.add_post_receiver(
       "/oauth/device/code",
       [this, receiver = std::move(device_code_receiver)](
+          const std::multimap<std::string, std::string> &headers,
           const std::string &body,
           const std::smatch &,
           InOut<Response> response) {
@@ -62,6 +63,7 @@ MockAuthServer::MockAuthServer(
   server_.add_post_receiver(
       "/oauth/token",
       [this, receiver = std::move(polling_receiver)](
+          const std::multimap<std::string, std::string> &headers,
           const std::string &body,
           const std::smatch &,
           InOut<Response> response) {

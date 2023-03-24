@@ -4,6 +4,7 @@ cc_library(
     name = "auth_client",
     srcs = ["auth_client.cc"],
     hdrs = ["auth_client.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/assert",
         "//resim_core/auth/proto:auth_messages_proto_cc",

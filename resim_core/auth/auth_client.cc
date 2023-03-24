@@ -1,5 +1,3 @@
-
-
 #include "resim_core/auth/auth_client.hh"
 
 #include <google/protobuf/util/json_util.h>
@@ -46,6 +44,7 @@ HttpResponse json_query(
       options);
   REASSERT(serialize_status.ok(), "Failed to serialize request!");
 
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
   curl_easy_setopt(curl, CURLOPT_POST, 1);
   curl_easy_setopt(curl, CURLOPT_URL, endpoint.c_str());
 
@@ -63,6 +62,8 @@ HttpResponse json_query(
   curl_easy_perform(curl);
   uint64_t http_code = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+  // NOLINTEND(cppcoreguidelines-pro-type-vararg)
+
   const auto parse_status =
       google::protobuf::util::JsonStringToMessage(response_str, &*response);
   REASSERT(parse_status.ok(), "Failed to parse response!");

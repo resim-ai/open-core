@@ -84,9 +84,10 @@ TEST(MockServerTest, TestConstruction) {
   ASSERT_EQ(server.host(), HOST);
 
   httplib::Client cli{HOST, server.port()};
+  httplib::Headers headers{{"Authorization", "Bearer test"}};
 
   // ACTION
-  httplib::Result res{cli.Post("/view/sessions", "", "text/plain")};
+  httplib::Result res{cli.Post("/view/sessions", headers, "", "text/plain")};
 
   // VERIFICATION
   EXPECT_EQ(UUID{res.value().body}, test_session_id);
@@ -101,6 +102,7 @@ TEST(MockServerTest, TestConstruction) {
   pack(test_update, &update_msg);
   res = cli.Post(
       endpoint,
+      headers,
       update_msg.SerializeAsString(),
       "application/octet-stream");
 
@@ -135,15 +137,61 @@ TEST(MockServerTest, TestReturnsRequestedCode) {
   proto::ViewUpdate update_msg;
   pack(test_update, &update_msg);
 
+  httplib::Headers headers{{"Authorization", "Bearer test"}};
+
   // ACTION
   const httplib::Result res = cli.Post(
       endpoint,
+      headers,
       update_msg.SerializeAsString(),
       "application/octet-stream");
 
   // VERIFICATION
   EXPECT_EQ(res->status, static_cast<int>(HttpResponse::NOT_FOUND));
   EXPECT_TRUE(checks_have_run);
+}
+
+TEST(MockServerTest, TestChecksAuthorization) {
+  // SETUP
+  const UUID test_session_id{UUID::new_uuid()};
+  constexpr uint64_t UPDATE_ID = 2U;
+  MockServer server{
+      HOST,
+      test_session_id,
+      [](const ViewUpdate &, UUID, uint64_t) {
+        return ViewSessionUpdateResponse();
+      }};
+
+  ASSERT_NE(server.port(), 0);
+  ASSERT_EQ(server.host(), HOST);
+
+  httplib::Client cli{HOST, server.port()};
+
+  const std::vector<std::string> endpoints{
+      "/view/sessions",
+      fmt::format(
+          "/view/sessions/{:s}/updates/{:d}",
+          test_session_id.to_string(),
+          UPDATE_ID)};
+  const std::vector<std::pair<httplib::Headers, HttpResponse>> cases{
+      {{{"Authorization", "Bearer foo"}}, HttpResponse::CREATED},
+      {{{"Authorization", "Bearer"}}, HttpResponse::FORBIDDEN},
+      {{{"Authorization", "Bear"}}, HttpResponse::FORBIDDEN},
+      {{}, HttpResponse::UNAUTHORIZED},
+  };
+
+  for (const auto &endpoint : endpoints) {
+    for (const auto &c : cases) {
+      const httplib::Headers &headers = c.first;
+      const HttpResponse &return_code = c.second;
+
+      // ACTION
+      httplib::Result res = cli.Post(endpoint, headers, "", "text/plain");
+
+      // VERIFICATION
+      EXPECT_EQ(res->status, static_cast<int>(return_code));
+    }
+  }
 }
 
 }  // namespace resim::visualization::testing

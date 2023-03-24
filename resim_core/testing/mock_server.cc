@@ -5,6 +5,7 @@
 #include <httplib.h>
 
 #include <iostream>
+#include <map>
 #include <utility>
 
 #include "resim_core/assert/assert.hh"
@@ -57,8 +58,12 @@ void MockServer::add_post_receiver(
           body.append(data, data_length);
           return true;
         });
+        std::multimap<std::string, std::string> headers;
+        for (const auto &header : req.headers) {
+          headers.insert(header);
+        }
         Response response;
-        receiver(body, req.matches, InOut{response});
+        receiver(headers, body, req.matches, InOut{response});
         res.set_content(response.body, response.mime_type);
         res.status = static_cast<int>(response.status);
       });

@@ -3,6 +3,8 @@
 
 #include <glog/logging.h>
 
+#include <memory>
+
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"

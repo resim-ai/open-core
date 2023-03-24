@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/utils/http_response.hh"
 
 namespace resim::visualization::testing {
 
@@ -29,9 +30,27 @@ MockServer::MockServer(
   server_.add_post_receiver(
       "/view/sessions",
       [this](
+          const std::multimap<std::string, std::string> &headers,
           const std::string &body,
           const std::smatch &,
           InOut<::resim::testing::MockServer::Response> response) {
+        if (not headers.contains("Authorization")) {
+          response->status = HttpResponse::UNAUTHORIZED;
+          return;
+        }
+        bool found = false;
+        const auto &range = headers.equal_range("Authorization");
+        for (auto it = range.first; it != range.second; ++it) {
+          if (it->second.find("Bearer ") == 0) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          response->status = HttpResponse::FORBIDDEN;
+          return;
+        }
+
         LOG(INFO) << "Session ID Requested...";
         response->body = session_id_.to_string();
         response->mime_type = "text/plain";
@@ -42,9 +61,27 @@ MockServer::MockServer(
   server_.add_post_receiver(
       "/view/sessions/(.*)/updates/(.*)",
       [this](
+          const std::multimap<std::string, std::string> &headers,
           const std::string &body,
           const std::smatch &matches,
           InOut<::resim::testing::MockServer::Response> response) {
+        if (not headers.contains("Authorization")) {
+          response->status = HttpResponse::UNAUTHORIZED;
+          return;
+        }
+        bool found = false;
+        const auto &range = headers.equal_range("Authorization");
+        for (auto it = range.first; it != range.second; ++it) {
+          if (it->second.find("Bearer ") == 0) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          response->status = HttpResponse::FORBIDDEN;
+          return;
+        }
+
         LOG(INFO) << "ViewUpdate Received...";
 
         // Deserialize the body

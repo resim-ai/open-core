@@ -16,6 +16,7 @@
 
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
+#include "resim_core/auth/testing/mock_auth_client.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/testing/test_directory.hh"
@@ -188,6 +189,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
                              }};
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
@@ -214,6 +216,7 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
       HttpResponse::NOT_FOUND};
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
@@ -234,6 +237,8 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
 TYPED_TEST(LibcurlClientTest, TestFail) {
   // Do not set up a server
   auto mock_client = std::make_unique<LibcurlClient>("zzzz");
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+
   ViewUpdate update;
 
   // ACTION
@@ -324,6 +329,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
 
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
   // ACTION & VERIFICATION
@@ -350,6 +356,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientLogging) {
   // Setup a minimal mock client.
   auto mock_client = std::make_unique<LibcurlClient>(
       fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
   // ACTION
