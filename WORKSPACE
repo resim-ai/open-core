@@ -167,6 +167,15 @@ http_archive(
     urls = ["https://github.com/google/glog/archive/v0.6.0.zip"],
 )
 
+# Polygon Mesh Processing (pmp) library. Used for loading, manipulating, and saving meshes.
+http_archive(
+    name = "pmp",
+    build_file = "//resim_core/third_party/pmp:pmp.BUILD",
+    sha256 = "8ff56706694bfc85ae1cbbf0777b347d1f2e48d04863b86d73ec42c919ca7fd2",
+    strip_prefix = "pmp-library-2.0.1",
+    urls = ["https://github.com/pmp-library/pmp-library/archive/refs/tags/2.0.1.zip"],
+)
+
 # libccd - Used by fcl (below) for narrow-phase collision detection.
 http_archive(
     name = "libccd",
