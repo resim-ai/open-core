@@ -1,6 +1,35 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
+    name = "step_executor",
+    hdrs = ["step_executor.hh"],
+    visibility = ["//resim_core/simulator:__subpackages__"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "simple_step_executor",
+    srcs = ["simple_step_executor.cc"],
+    hdrs = ["simple_step_executor.hh"],
+    visibility = ["//resim_core/simulator:__subpackages__"],
+    deps = [
+        ":step_executor",
+    ],
+)
+
+cc_test(
+    name = "simple_step_executor_test",
+    srcs = ["simple_step_executor_test.cc"],
+    deps = [
+        ":simple_step_executor",
+        "//resim_core/utils:inout",
+        "//resim_core/utils:uuid",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "channel",
     hdrs = ["channel.hh"],
     visibility = ["//resim_core/simulator:__subpackages__"],
