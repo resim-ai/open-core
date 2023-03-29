@@ -68,3 +68,29 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "executor_builder",
+    srcs = ["executor_builder.cc"],
+    hdrs = ["executor_builder.hh"],
+    visibility = ["//resim_core/simulator:__subpackages__"],
+    deps = [
+        ":channel_registry",
+        ":simple_step_executor",
+        ":step_executor",
+        "//resim_core/assert",
+    ],
+)
+
+cc_test(
+    name = "executor_builder_test",
+    srcs = ["executor_builder_test.cc"],
+    deps = [
+        ":executor_builder",
+        ":simple_step_executor",
+        ":step_executor",
+        "//resim_core/assert",
+        "//resim_core/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
