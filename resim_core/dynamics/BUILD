@@ -49,3 +49,27 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "forward_euler",
+    hdrs = ["forward_euler.hh"],
+    visibility = ["//resim_core/dynamics:__subpackages__"],
+    deps = [
+        ":dynamics",
+        ":integrator",
+        "//resim_core/time:timestamp",
+    ],
+)
+
+cc_test(
+    name = "forward_euler_test",
+    srcs = ["forward_euler_test.cc"],
+    deps = [
+        ":controller",
+        ":dynamics",
+        ":forward_euler",
+        "//resim_core/dynamics/testing:oscillator",
+        "//resim_core/time:sample_interval",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
