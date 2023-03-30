@@ -21,6 +21,10 @@ class ExecutorBuilder final {
  public:
   using Task = StepExecutor::Task;
 
+  // A null topic which no-one should depend on. This is used as a provision for
+  // tasks that no other tasks should depend on.
+  static constexpr std::string_view NULL_TOPIC = "null";
+
   // Build the step executor using the currently added tasks and reset our
   // tasks.
   std::unique_ptr<StepExecutor> build();

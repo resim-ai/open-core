@@ -94,3 +94,45 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "simulation_unit",
+    hdrs = ["simulation_unit.hh"],
+    visibility = ["//resim_core/simulator:__subpackages__"],
+    deps = [],
+)
+
+cc_test(
+    name = "simulation_unit_test",
+    srcs = ["simulation_unit_test.cc"],
+    deps = [
+        ":simulation_unit",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "time_lord",
+    srcs = ["time_lord.cc"],
+    hdrs = ["time_lord.hh"],
+    visibility = ["//resim_core/simulator:__subpackages__"],
+    deps = [
+        ":executor_builder",
+        ":simulation_unit",
+        "//resim_core/assert",
+        "//resim_core/time:timestamp",
+        "//resim_core/utils:inout",
+    ],
+)
+
+cc_test(
+    name = "time_lord_test",
+    srcs = ["time_lord_test.cc"],
+    deps = [
+        ":step_executor",
+        ":time_lord",
+        "//resim_core/assert",
+        "//resim_core/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
