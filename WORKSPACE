@@ -14,9 +14,9 @@ http_archive(
 http_archive(
     name = "libeigen",
     build_file = "//resim_core/third_party/eigen:eigen.BUILD",
-    sha256 = "9824d4e5c8778e88904ca7d51cd733d52a8ff4a44ac6750262b93c55911c4fc4",
-    strip_prefix = "eigen-3147391d946bb4b6c68edd901f2add6ac1f31f8c",
-    urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3147391d946bb4b6c68edd901f2add6ac1f31f8c.zip"],
+    sha256 = "1ccaabbfe870f60af3d6a519c53e09f3dcf630207321dffa553564a8e75c4fc8",
+    strip_prefix = "eigen-3.4.0",
+    urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"],
 )
 
 # Rules foreign CC
