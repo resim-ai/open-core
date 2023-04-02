@@ -73,7 +73,20 @@ TEST(SE3OperatorTest, ActionOnVector) {
       zero_one_z.isApprox(orig_from_zero_one * Eigen::Vector3d::UnitZ()));
 }
 
-TEST(SE3AdjointTest, AlgebraAdjointTimes) {}
+TEST(SE3OperatorTest, RotateVector) {
+  const SE3 orig_from_zero_one =
+      SE3(SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ())),
+          Eigen::Vector3d::UnitY());
+  EXPECT_TRUE(
+      orig_from_zero_one.rotate(Eigen::Vector3d::UnitX())
+          .isApprox(orig_from_zero_one.rotation() * Eigen::Vector3d::UnitX()));
+  EXPECT_TRUE(
+      orig_from_zero_one.rotate(Eigen::Vector3d::UnitY())
+          .isApprox(orig_from_zero_one.rotation() * Eigen::Vector3d::UnitY()));
+  EXPECT_TRUE(
+      orig_from_zero_one.rotate(Eigen::Vector3d::UnitZ())
+          .isApprox(orig_from_zero_one.rotation() * Eigen::Vector3d::UnitZ()));
+}
 
 TEST(SE3ArcLengthTest, IdentityArcLengthIsZero) {
   const SE3 a_from_a = SE3::identity();

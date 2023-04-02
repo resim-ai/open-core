@@ -34,6 +34,10 @@ Eigen::Vector3d SE3::operator*(const Eigen::Vector3d &source_vector) const {
   return rotation_ * source_vector + translation_;
 }
 
+Eigen::Vector3d SE3::rotate(const Eigen::Vector3d &source_vector) const {
+  return rotation_ * source_vector;
+}
+
 SE3 SE3::inverse() const {
   const SO3 inverse_rotation = rotation_.inverse();
   return SE3(inverse_rotation, inverse_rotation * -translation_);

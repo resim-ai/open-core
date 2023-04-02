@@ -105,6 +105,17 @@ TEST(SO3OperatorTest, ActionOnVector) {
       zero_one_z.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
 }
 
+TEST(SO3OperatorTest, RotateVector) {
+  const SO3 orig_from_half_pi =
+      SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()));
+  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitX())
+                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitX()));
+  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitY())
+                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitY()));
+  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitZ())
+                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
+}
+
 TEST(SO3Inverse, CompareToMatrixInverse) {
   const auto test_so3s = make_test_group_elements<SO3>();
   for (const SO3 &a_from_b : test_so3s) {

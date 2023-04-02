@@ -63,6 +63,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":frame",
+        ":framed_vector",
         ":liegroup",
         ":se3",
         ":so3",
@@ -81,6 +82,30 @@ cc_test(
         ":se3",
         ":so3",
         "//resim_core/assert",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "framed_vector",
+    hdrs = ["framed_vector.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":frame",
+        "//resim_core/assert",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "framed_vector_test",
+    srcs = ["framed_vector_test.cc"],
+    deps = [
+        ":frame",
+        ":framed_vector",
+        "//resim_core/assert",
+        "//resim_core/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],

@@ -56,6 +56,11 @@ class SE3 : public LieGroup<3, 6> {
   // (multiplication)
   Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
 
+  // Equivalent to .rotation()*
+  // Providing an explicit interface to apply only the rotation part of the
+  // transformation action to a vector.
+  Eigen::Vector3d rotate(const Eigen::Vector3d &source_vector) const;
+
   // Return the inverse of this SE3.
   SE3 inverse() const;
 

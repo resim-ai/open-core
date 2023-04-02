@@ -62,6 +62,11 @@ class SO3 : public LieGroup<3, 3> {
   // (multiplication)
   Eigen::Vector3d operator*(const Eigen::Vector3d &source_vector) const;
 
+  // Equivalent to operator*
+  // Providing a more explicit interface, which is common with other Lie Groups
+  // e.g. SE3.
+  Eigen::Vector3d rotate(const Eigen::Vector3d &source_vector) const;
+
   // Return the inverse of this SO3.
   SO3 inverse() const;
 

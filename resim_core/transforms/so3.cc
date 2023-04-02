@@ -31,6 +31,10 @@ Eigen::Vector3d SO3::operator*(const Eigen::Vector3d &source_vector) const {
   return rotation_matrix_ * source_vector;
 }
 
+Eigen::Vector3d SO3::rotate(const Eigen::Vector3d &source_vector) const {
+  return rotation_matrix_ * source_vector;
+}
+
 SO3 SO3::inverse() const { return SO3(rotation_matrix_.transpose()); }
 
 SO3 SO3::interp(const double fraction) const {
