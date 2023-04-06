@@ -48,17 +48,15 @@ class DCurve {
   // Retrieve the transform from a frame at a point arc_length along the DCurve
   // to the reference frame.
   Group point_at(double arc_length) const;
-  // Retrieve the transform from a frame at a point arc_length along the DCurve
-  // to the reference frame. The frame of the point will be the user provided
-  // frame 'from'. Note this method is only valid for FramedGroup<T> types.
-  Group point_at(double arc_length, const transforms::Frame<Group::DIMS> &from)
-      const;
   // Access a reference to the control points.
   const std::vector<Control> &control_pts() const;
   // Access a reference to the segments.
   const std::vector<Segment> &segments() const;
   // Retrieve the total length of the curve.
   double curve_length() const;
+  // Retrieve the point frame of the curve's control points.
+  // Note, this method is only valid for FramedGroup<T> types
+  const transforms::Frame<Group::DIMS> &point_frame() const;
   // Retrieve the reference frame of the curve's control points.
   // Note, this method is only valid for FramedGroup<T> types
   const transforms::Frame<Group::DIMS> &reference_frame() const;

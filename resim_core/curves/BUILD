@@ -25,6 +25,7 @@ cc_library(
     deps = [
         "//resim_core/assert",
         "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
     ],
 )

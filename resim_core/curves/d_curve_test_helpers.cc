@@ -16,7 +16,9 @@ using FSE3 = transforms::FSE3;
 }  // namespace
 
 template <>
-std::vector<SE3> DCurveCircle<SE3>::points(const Frame &ref_frame) {
+std::vector<SE3> DCurveCircle<SE3>::points(
+    const Frame &ref_frame,
+    const Frame &pnt_frame) {
   std::vector<SE3> points;
   const SE3 ref_from_000deg(Eigen::Vector3d::UnitX());
   points.push_back(ref_from_000deg);
@@ -36,12 +38,14 @@ std::vector<SE3> DCurveCircle<SE3>::points(const Frame &ref_frame) {
 }
 
 template <>
-std::vector<FSE3> DCurveCircle<FSE3>::points(const Frame &ref_frame) {
+std::vector<FSE3> DCurveCircle<FSE3>::points(
+    const Frame &ref_frame,
+    const Frame &pnt_frame) {
   auto raw_se3_points = DCurveCircle<SE3>::points();
   std::vector<FSE3> points;
+  points.reserve(raw_se3_points.size());
   for (auto &point : raw_se3_points) {
-    const auto pt_frame = transforms::Frame<SE3::DIMS>::new_frame();
-    points.emplace_back(FSE3(std::move(point), ref_frame, pt_frame));
+    points.emplace_back(FSE3(std::move(point), ref_frame, pnt_frame));
   }
   return points;
 }

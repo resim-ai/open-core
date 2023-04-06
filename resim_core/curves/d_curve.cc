@@ -2,12 +2,16 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_group_concept.hh"
 
 namespace resim::curves {
 
 namespace {
 using SE3 = transforms::SE3;
 using FSE3 = transforms::FSE3;
+
+constexpr auto EMPTY_ERR =
+    "Cannot query the frames of a curve with no control points";
 }  // namespace
 
 template <typename Group>
@@ -24,9 +28,15 @@ DCurve<Group>::DCurve(std::initializer_list<Group> points) {
 
 template <typename Group>
 void DCurve<Group>::append(Group ref_from_control) {
-  // Note we don't need to check reference frames explicitly because the
-  // composition below (when computing arc length) will fail if the frames are
-  // inconsistent.
+  if constexpr (transforms::FramedGroupType<Group>) {
+    if (!control_pts_.empty()) {
+      REASSERT(
+          ref_from_control.verify_frames(
+              this->reference_frame(),
+              this->point_frame()),
+          "Control points must have the same reference and point frames.");
+    }
+  }
   constexpr double ZERO_LENGTH_M = 0;
   auto ref_from_control_ptr =
       std::make_shared<Group>(std::move(ref_from_control));
@@ -69,16 +79,6 @@ Group DCurve<Group>::point_at(double arc_length) const {
   return *data.s->ref_from_orig * orig_from_query_point;
 }
 
-template <>
-FSE3 DCurve<FSE3>::point_at(
-    double arc_length,
-    const transforms::Frame<FSE3::DIMS> &from) const {
-  const PointAtData data = point_at_impl(arc_length);
-  const FSE3 orig_from_query_point =
-      data.s->orig_from_dest.interp(data.fraction, from);
-  return *data.s->ref_from_orig * orig_from_query_point;
-}
-
 template <typename Group>
 const std::vector<typename DCurve<Group>::Control> &DCurve<Group>::control_pts()
     const {
@@ -98,7 +98,14 @@ double DCurve<Group>::curve_length() const {
 }
 
 template <>
+const transforms::Frame<FSE3::DIMS> &DCurve<FSE3>::point_frame() const {
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
+  return control_pts_.front().ref_from_control->from();
+}
+
+template <>
 const transforms::Frame<FSE3::DIMS> &DCurve<FSE3>::reference_frame() const {
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
   return control_pts_.front().ref_from_control->into();
 }
 
