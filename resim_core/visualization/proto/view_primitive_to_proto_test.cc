@@ -21,6 +21,7 @@
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
+#include "resim_core/transforms/proto/frame_3_to_proto.hh"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -42,7 +43,7 @@ using transforms::FSE3;
 using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
-using Frame3 = transforms::Frame<3>;
+using Frame = transforms::Frame<3>;
 constexpr time::Timestamp ZERO_TIME;
 constexpr unsigned int NUM_GROUP_POINTS = 10;
 
@@ -57,8 +58,8 @@ class ViewPrimitiveToProtoTypedTest : public ::testing::Test {
     auto control_point_poses =
         transforms::make_test_group_elements<FSE3>(NUM_GROUP_POINTS);
 
-    const Frame3 into{Frame3::new_frame()};
-    const Frame3 from{Frame3::new_frame()};
+    const Frame into{Frame::new_frame()};
+    const Frame from{Frame::new_frame()};
 
     std::vector<curves::TCurve<FSE3>::Control> control_points;
     control_points.reserve(NUM_GROUP_POINTS);
@@ -91,6 +92,16 @@ class ViewPrimitiveToProtoTypedTest : public ::testing::Test {
 };
 
 template <>
+ViewPrimitive ViewPrimitiveToProtoTypedTest<Frame>::generate_test_primitive() {
+  ViewPrimitive test_primitive{
+      .id = UUID::new_uuid(),
+      .payload = Frame::new_frame(),
+  };
+
+  return test_primitive;
+}
+
+template <>
 ViewPrimitive ViewPrimitiveToProtoTypedTest<SE3>::generate_test_primitive() {
   const SE3::TangentVector test_tangent{
       testing::random_vector<SE3::TangentVector>(rng())};
@@ -120,8 +131,8 @@ ViewPrimitive ViewPrimitiveToProtoTypedTest<SO3>::generate_test_primitive() {
 
 template <>
 ViewPrimitive ViewPrimitiveToProtoTypedTest<FSE3>::generate_test_primitive() {
-  const Frame3 into{Frame3::new_frame()};
-  const Frame3 from{Frame3::new_frame()};
+  const Frame into{Frame::new_frame()};
+  const Frame from{Frame::new_frame()};
   const FSE3::TangentVector test_tangent{
       testing::random_vector<FSE3::TangentVector>(rng())};
   const FSE3 test_fse3{FSE3::exp(test_tangent, into, from)};
@@ -136,8 +147,8 @@ ViewPrimitive ViewPrimitiveToProtoTypedTest<FSE3>::generate_test_primitive() {
 
 template <>
 ViewPrimitive ViewPrimitiveToProtoTypedTest<FSO3>::generate_test_primitive() {
-  const Frame3 into{Frame3::new_frame()};
-  const Frame3 from{Frame3::new_frame()};
+  const Frame into{Frame::new_frame()};
+  const Frame from{Frame::new_frame()};
   const FSO3::TangentVector test_tangent{
       testing::random_vector<FSO3::TangentVector>(rng())};
   const FSO3 test_fso3{FSO3::exp(test_tangent, into, from)};
@@ -221,6 +232,9 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
   EXPECT_EQ(test_primitive.id, unpack(primitive_msg.id()));
   match(
       test_primitive.payload,
+      [&](const Frame &test_frame) {
+        EXPECT_TRUE(unpack(primitive_msg.frame()) == test_frame);
+      },
       [&](const SE3 &test_se3) {
         EXPECT_TRUE(unpack(primitive_msg.se3()).is_approx(test_se3));
       },
@@ -309,21 +323,25 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
   EXPECT_EQ(test_primitive.id, unpacked.id);
   match(
       test_primitive.payload,
+      [&](const Frame &test_frame) {
+        ASSERT_TRUE(std::holds_alternative<Frame>(unpacked.payload));
+        ASSERT_EQ(test_frame, std::get<Frame>(unpacked.payload));
+      },
       [&](const SE3 &test_se3) {
         ASSERT_TRUE(std::holds_alternative<SE3>(unpacked.payload));
-        test_se3.is_approx(std::get<SE3>(unpacked.payload));
+        ASSERT_TRUE(test_se3.is_approx(std::get<SE3>(unpacked.payload)));
       },
       [&](const SO3 &test_so3) {
         ASSERT_TRUE(std::holds_alternative<SO3>(unpacked.payload));
-        test_so3.is_approx(std::get<SO3>(unpacked.payload));
+        ASSERT_TRUE(test_so3.is_approx(std::get<SO3>(unpacked.payload)));
       },
       [&](const FSE3 &test_fse3) {
         ASSERT_TRUE(std::holds_alternative<FSE3>(unpacked.payload));
-        test_fse3.is_approx(std::get<FSE3>(unpacked.payload));
+        ASSERT_TRUE(test_fse3.is_approx(std::get<FSE3>(unpacked.payload)));
       },
       [&](const FSO3 &test_fso3) {
         ASSERT_TRUE(std::holds_alternative<FSO3>(unpacked.payload));
-        test_fso3.is_approx(std::get<FSO3>(unpacked.payload));
+        ASSERT_TRUE(test_fso3.is_approx(std::get<FSO3>(unpacked.payload)));
       },
       [&](const curves::DCurve<SE3> &test_d_curve_se3) {
         ASSERT_TRUE(

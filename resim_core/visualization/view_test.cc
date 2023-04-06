@@ -41,6 +41,7 @@ using transforms::FSE3;
 using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
+using Frame = transforms::Frame<3>;
 
 constexpr unsigned int NUM_PAYLOADS = 10;
 
@@ -73,6 +74,13 @@ class LibcurlClientTest : public ::testing::Test {
  public:
   static void check_correctness(const T &original, const T &expected);
 };
+
+template <>
+void LibcurlClientTest<Frame>::check_correctness(
+    const Frame &original,
+    const Frame &expected) {
+  EXPECT_TRUE(original == expected);  // Using Frame equality
+}
 
 template <>
 void LibcurlClientTest<SE3>::check_correctness(
@@ -178,7 +186,8 @@ using PayloadTypes = ::testing::Types<
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
     curves::TCurve<FSE3>,
-    actor::state::Trajectory>;
+    actor::state::Trajectory,
+    Frame>;
 
 TYPED_TEST_SUITE(LibcurlClientTest, PayloadTypes);
 
@@ -277,6 +286,12 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
         // at index update_id.
         match(
             update.primitives.at(0).payload,
+            [&](const Frame &test_frame) {
+              LibcurlClientTest<Frame>::check_correctness(
+                  test_frame,
+                  std::get<Frame>(
+                      expected_update.primitives.at(update_id).payload));
+            },
             [&](const SE3 &test_se3) {
               LibcurlClientTest<SE3>::check_correctness(
                   test_se3,
@@ -435,6 +450,16 @@ std::unique_ptr<MockViewClient> ViewTest<Group>::mock_multi_thread_client(
       });
 
   return mock_client;
+}
+
+template <>
+void ViewTest<Frame>::sort_elements(std::vector<Frame> &result_elements) {
+  std::sort(
+      begin(result_elements),
+      end(result_elements),
+      [](const auto &a, const auto &b) {
+        return a.id().to_string() < b.id().to_string();
+      });
 }
 
 template <>

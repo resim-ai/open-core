@@ -38,6 +38,7 @@ cc_test(
 proto_library(
     name = "frame_3_proto",
     srcs = ["frame_3.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/utils/proto:uuid_proto",
     ],

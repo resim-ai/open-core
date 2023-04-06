@@ -7,6 +7,7 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/curves/t_curve.hh"
+#include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -18,6 +19,7 @@ using transforms::FSE3;
 using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
+using Frame = transforms::Frame<3>;
 }  // namespace
 
 template <typename Viewable>
@@ -31,7 +33,8 @@ using ViewableTypes = ::testing::Types<
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
     curves::TCurve<FSE3>,
-    actor::state::Trajectory>;
+    actor::state::Trajectory,
+    Frame>;
 
 TYPED_TEST_SUITE(ViewServerHelperTests, ViewableTypes);
 

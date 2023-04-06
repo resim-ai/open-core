@@ -7,6 +7,7 @@
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
+#include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -26,7 +27,8 @@ struct ViewPrimitive {
       curves::DCurve<transforms::SE3>,
       curves::DCurve<transforms::FSE3>,
       curves::TCurve<transforms::FSE3>,
-      actor::state::Trajectory>
+      actor::state::Trajectory,
+      transforms::Frame<3>>
       payload;
 };
 

@@ -24,6 +24,7 @@ using transforms::FSE3;
 using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
+using Frame = transforms::Frame<3>;
 }  // namespace
 
 View::View() {
@@ -59,6 +60,8 @@ View &View::operator<<(const T &subject) {
   flush();
   return *this;
 }
+
+template View &View::operator<< <Frame>(const Frame &subject);
 
 template View &View::operator<< <SE3>(const SE3 &subject);
 

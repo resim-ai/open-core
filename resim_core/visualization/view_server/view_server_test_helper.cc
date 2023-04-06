@@ -5,6 +5,7 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/curves/t_curve.hh"
+#include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
@@ -18,6 +19,8 @@ using transforms::FSE3;
 using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
+using Frame = transforms::Frame<3>;
+
 constexpr auto LOW_COUNT =
     "The minimum number of test elements you can request is seven. Please "
     "increase the count.";
@@ -30,6 +33,19 @@ constexpr auto TRAJECTORY_PREFIX = "trajectory";
 
 constexpr time::Timestamp ZERO_TIME;
 }  // namespace
+
+template <>
+std::vector<Frame> generate_payload_type(const unsigned count) {
+  // How many test elements to make.
+  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
+  std::vector<Frame> frames;
+  frames.reserve(count);
+  for (int i = 0; i < count; i++) {
+    Frame frame{Frame::new_frame()};
+    frames.push_back(frame);
+  }
+  return frames;
+}
 
 template <>
 std::vector<SE3> generate_payload_type(const unsigned count) {
