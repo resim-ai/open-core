@@ -1,6 +1,8 @@
 #include "resim_core/utils/uuid.hh"
 
 #include <gtest/gtest.h>
+
+#include <functional>
 namespace resim {
 
 namespace {
@@ -88,6 +90,15 @@ TEST(UUIDTest, UUIDBooleanOperators) {
   EXPECT_EQ(uuid_a, uuid_b);
   EXPECT_NE(uuid_a, uuid_c);
   EXPECT_NE(uuid_b, uuid_c);
+}
+
+TEST(UUIDTest, UUIDHashEquality) {
+  UUID uuid_a = UUID::new_uuid();
+  UUID uuid_b = uuid_a;
+  EXPECT_EQ(uuid_a, uuid_b);
+  std::string uuid_string = uuid_a.to_string();
+  EXPECT_EQ(std::hash<std::string>()(uuid_string), std::hash<UUID>()(uuid_a));
+  EXPECT_EQ(std::hash<UUID>()(uuid_a), std::hash<UUID>()(uuid_b));
 }
 
 }  // namespace resim

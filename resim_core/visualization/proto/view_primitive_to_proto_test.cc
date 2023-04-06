@@ -219,6 +219,7 @@ using PayloadTypes = ::testing::Types<
 
 TYPED_TEST_SUITE(ViewPrimitiveToProtoTypedTest, PayloadTypes);
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
   // SETUP
   const ViewPrimitive test_primitive =
@@ -419,6 +420,7 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
         }
       });
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPackInvalid) {
   ViewPrimitive test_primitive =
