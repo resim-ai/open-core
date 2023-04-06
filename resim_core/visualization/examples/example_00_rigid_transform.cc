@@ -23,6 +23,10 @@ int main(int argc, char *argv[]) {
   // about the Z axis {0., 0., 1.}.
   const SO3 world_from_robot_rot(ANGLE_RAD, {AXIS_X, AXIS_Y, AXIS_Z});
 
+  // Visualize the rotation on its own by running this line and viewing
+  // at app.resim.ai
+  resim::view << world_from_robot_rot;
+
   // Combine the rotation with a simple translation {x, y, z} to make an SE3
   // rigid transform.
   const SE3 world_from_robot(
