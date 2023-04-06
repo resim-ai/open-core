@@ -26,8 +26,7 @@ class TCurveSegmentTests : public ::testing::Test {
  public:
   using Frame = transforms::Frame<T::DIMS>;
   inline static const Frame REF_FRAME = Frame::new_frame();
-  inline static const Frame ORIG_FRAME = Frame::new_frame();
-  inline static const Frame DEST_FRAME = Frame::new_frame();
+  inline static const Frame POINT_FRAME = Frame::new_frame();
 
  protected:
   void SetUp() override {
@@ -41,29 +40,16 @@ class TCurveSegmentTests : public ::testing::Test {
 
   T test_group() { return T::exp(test_vector()); }
 
-  T test_group(const Frame &into) requires transforms::FramedGroupType<T> {
-    return T::exp(test_vector(), into, REF_FRAME);
-  }
-
-  T test_orig_group() { return test_group(); }
-
-  T test_orig_group() requires transforms::FramedGroupType<T> {
-    return test_group(ORIG_FRAME);
-  }
-
-  T test_dest_group() { return test_group(); }
-
-  T test_dest_group() requires transforms::FramedGroupType<T> {
-    return test_group(DEST_FRAME);
+  T test_group() requires transforms::FramedGroupType<T> {
+    return T::exp(test_vector(), POINT_FRAME, REF_FRAME);
   }
 
   TwoJetL<T> test_two_jet() {
     return TwoJetL<T>(test_group(), test_vector(), test_vector());
   }
 
-  TwoJetL<T> test_two_jet(const Frame &into) requires
-      transforms::FramedGroupType<T> {
-    return TwoJetL<T>(test_group(into), test_vector(), test_vector());
+  TwoJetL<T> test_two_jet() requires transforms::FramedGroupType<T> {
+    return TwoJetL<T>(test_group(), test_vector(), test_vector());
   }
 
   TCurveSegment<T> test_t_curve_segment() {
@@ -72,9 +58,7 @@ class TCurveSegmentTests : public ::testing::Test {
 
   TCurveSegment<T> test_t_curve_segment() requires
       transforms::FramedGroupType<T> {
-    return TCurveSegment<T>(
-        this->test_two_jet(ORIG_FRAME),
-        this->test_two_jet(DEST_FRAME));
+    return TCurveSegment<T>(this->test_two_jet(), this->test_two_jet());
   }
 
  private:
@@ -102,14 +86,14 @@ TYPED_TEST_SUITE(FramedTCurveSegmentTests, FramedTypes);
 
 TYPED_TEST(FramedTCurveSegmentTests, ConstructionWithFrames) {
   // Test well formed construction.
-  EXPECT_NO_THROW({
-    const TCurveSegment<TypeParam> good_curve = this->test_t_curve_segment();
-    (void)good_curve;  // Avoid unused variable errors.
-  });
+  const TCurveSegment<TypeParam> good_curve = this->test_t_curve_segment();
+  EXPECT_EQ(good_curve.point_frame(), this->POINT_FRAME);
+  EXPECT_EQ(good_curve.reference_frame(), this->REF_FRAME);
   // Build a curve with non-matching ref frames.
-  const TwoJetL<TypeParam> orig = this->test_two_jet(this->ORIG_FRAME);
-  const TwoJetL<TypeParam> inv_dest =
-      this->test_two_jet(this->DEST_FRAME).inverse();
+  const TwoJetL<TypeParam> orig = this->test_two_jet();
+  // Inverting the test TwoJet reverses the frames, which should throw an
+  // exception.
+  const TwoJetL<TypeParam> inv_dest = this->test_two_jet().inverse();
   EXPECT_THROW(
       {
         const TCurveSegment<TypeParam> bad_curve(orig, inv_dest);
@@ -141,8 +125,8 @@ TYPED_TEST(TCurveSegmentTests, ZeroDerivsReducesToGeodesicInterp) {
   TwoJetL<TypeParam> dest = TwoJetL<TypeParam>::identity();
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     // Create a test curve with all derivatives set to zero.
-    orig.set_frame_from_ref(this->test_orig_group());
-    dest.set_frame_from_ref(this->test_dest_group());
+    orig.set_frame_from_ref(this->test_group());
+    dest.set_frame_from_ref(this->test_group());
     TCurveSegment<TypeParam> segment(orig, dest);
 
     // Query a point halfway along the curve.
@@ -180,8 +164,8 @@ TYPED_TEST(TCurveSegmentTests, ConstVReducesToGeodesicInterp) {
   TwoJetL<TypeParam> dest = orig;
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     // Create a test curve with constant non-zero velocity at the boundaries.
-    orig.set_frame_from_ref(this->test_orig_group());
-    dest.set_frame_from_ref(this->test_dest_group());
+    orig.set_frame_from_ref(this->test_group());
+    dest.set_frame_from_ref(this->test_group());
     TCurveSegment<TypeParam> segment(orig, dest);
 
     // Query a point halfway along the curve.

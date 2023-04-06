@@ -126,8 +126,7 @@ TwoJetL<Group> TCurve<Group>::point_at(const double time) const {
 template <>
 TwoJetL<FSE3> TCurve<FSE3>::point_at(const double time) const {
   const PointAtData pd = point_at_impl(time);
-  TwoJetL<FSE3> point =
-      pd.in_segment.curve.point_at(pd.time_nrm, point_frame());
+  TwoJetL<FSE3> point = pd.in_segment.curve.point_at(pd.time_nrm);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }
@@ -135,8 +134,7 @@ TwoJetL<FSE3> TCurve<FSE3>::point_at(const double time) const {
 template <>
 TwoJetL<FSO3> TCurve<FSO3>::point_at(const double time) const {
   const PointAtData pd = point_at_impl(time);
-  TwoJetL<FSO3> point =
-      pd.in_segment.curve.point_at(pd.time_nrm, point_frame());
+  TwoJetL<FSO3> point = pd.in_segment.curve.point_at(pd.time_nrm);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }

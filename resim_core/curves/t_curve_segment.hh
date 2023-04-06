@@ -31,11 +31,14 @@ class TCurveSegment {
   TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest);
 
   // Retrieve a point on the curve at normalized time time_nrm.
-  // If the curve is in a FramedGroup the user may optionally specify a frame.
-  // for the point.
-  TwoJetL<Group> point_at(
-      double time_nrm,
-      const Frame &point_frame = Frame::new_frame()) const;
+  TwoJetL<Group> point_at(double time_nrm) const;
+
+  // Retrieve the reference frame of the curve segment.
+  // Note, this method is only valid for FramedGroup<T> types
+  const Frame &reference_frame() const;
+  // Retrieve the point frame of the curve segment.
+  // Note, this method is only valid for FramedGroup<T> types
+  const Frame &point_frame() const;
 
   const TwoJetL<Group> &orig() const;
   const TwoJetL<Group> &dest() const;

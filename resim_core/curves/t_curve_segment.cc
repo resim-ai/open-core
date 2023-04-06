@@ -15,6 +15,11 @@
 
 namespace resim::curves {
 
+namespace {
+using FSE3 = transforms::FSE3;
+using FSO3 = transforms::FSO3;
+}  // namespace
+
 template <transforms::LieGroupType Group>
 TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
     : orig_(std::move(orig)),
@@ -29,14 +34,15 @@ TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
 }
 
 template <transforms::LieGroupType Group>
-TwoJetL<Group> TCurveSegment<Group>::point_at(
-    const double time_nrm,
-    const Frame &point_frame) const {
+TwoJetL<Group> TCurveSegment<Group>::point_at(const double time_nrm) const {
   TwoJetL<Group> point = TwoJetL<Group>::identity();
   if constexpr (transforms::FramedGroupType<Group>) {
+    // Note that we accumlate the point transform relative to the origin point
+    // before composing this with the origin point at the end of this function
+    // to get point_from_ref. Therefore, the point starts out as
+    // point_from_point.
     // TODO(https://app.asana.com/0/0/1202833644049385/f)
-    point.set_frame_from_ref(
-        Group::identity(point_frame, orig_.frame_from_ref().into()));
+    point.set_frame_from_ref(Group::identity(point_frame(), point_frame()));
   }
 
   // dest_from_orig
@@ -83,6 +89,28 @@ TwoJetL<Group> TCurveSegment<Group>::point_at(
   return point;
 }
 
+template <>
+const transforms::Frame<FSE3::DIMS> &TCurveSegment<FSE3>::reference_frame()
+    const {
+  return orig_.frame_from_ref().from();
+}
+
+template <>
+const transforms::Frame<FSO3::DIMS> &TCurveSegment<FSO3>::reference_frame()
+    const {
+  return orig_.frame_from_ref().from();
+}
+
+template <>
+const transforms::Frame<FSE3::DIMS> &TCurveSegment<FSE3>::point_frame() const {
+  return orig_.frame_from_ref().into();
+}
+
+template <>
+const transforms::Frame<FSO3::DIMS> &TCurveSegment<FSO3>::point_frame() const {
+  return orig_.frame_from_ref().into();
+}
+
 template <transforms::LieGroupType Group>
 const TwoJetL<Group> &TCurveSegment<Group>::orig() const {
   return orig_;
@@ -113,8 +141,7 @@ Group TCurveSegment<Group>::increment_group(
     const TwoJetL<Group> &point) const {
   Group increment = Group::identity();
   if constexpr (transforms::FramedGroupType<Group>) {
-    const Frame &point_frame = point.frame_from_ref().into();
-    increment = Group::exp(alg, point_frame, point_frame);
+    increment = Group::exp(alg, point_frame(), point_frame());
   } else {
     increment = Group::exp(alg);
   }
