@@ -35,9 +35,9 @@ constexpr std::array<double, NUM_CTRL> DEFAULT_TIMES{
     16.5,
     33.0};
 const std::array<Vector3d, NUM_CTRL> WAYPOINTS{{
-    {  0., -50., 0.},
-    {100.,   0., 0.},
-    {  0.,  50., 0.}}};
+    {  0., -3., 0.},
+    {8.,   0., 0.},
+    {  0.,  3., 0.}}};
 // clang-format on
 
 constexpr std::array<resim::time::Timestamp, NUM_CTRL> timestamps() {
@@ -90,15 +90,16 @@ int main(int argc, char* argv[]) {
   // In this example, we will explore creating a sample drone
   // trajectory that makes a banked curve and returns to its start location
   Trajectory banked_curve = out_and_back_banked();
-  // Visualize the trajectory:
-  resim::view << banked_curve;
+  // Visualize the trajectory: note the alternative syntax for VIEW
+  VIEW(REF_FRAME, "world");
+  VIEW(BOD_FRAME, "body");
+  VIEW(banked_curve, "banked_curve");
 
   // Now, digging into the code that generates this trajectory,
   // we can also view some of the underlying components: the first control
   // point:
-
   FSE3 ref_from_0(SE3(SO3::identity(), WAYPOINTS.at(0)), REF_FRAME, BOD_FRAME);
-  resim::view << ref_from_0;
+  VIEW(ref_from_0) << "ref_from_0_control";
 
   return EXIT_SUCCESS;
 }

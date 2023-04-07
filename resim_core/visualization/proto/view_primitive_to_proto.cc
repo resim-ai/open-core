@@ -26,6 +26,9 @@ void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
   REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
   pack(in.id, out->mutable_id());
+  if (in.user_defined_name.has_value()) {
+    out->set_user_defined_name(in.user_defined_name.value());
+  }
   match(
       in.payload,
       [out](const transforms::Frame<3> &frame) {
@@ -61,6 +64,10 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
   visualization::ViewPrimitive unpacked{
       .id = unpack(in.id()),
   };
+  if (!in.user_defined_name().empty()) {
+    unpacked.user_defined_name = in.user_defined_name();
+  }
+
   switch (in.payload_case()) {
     case ViewPrimitive::kFrame:
       unpacked.payload = unpack(in.frame());

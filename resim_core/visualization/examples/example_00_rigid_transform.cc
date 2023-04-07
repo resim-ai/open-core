@@ -24,8 +24,15 @@ int main(int argc, char *argv[]) {
   const SO3 world_from_robot_rot(ANGLE_RAD, {AXIS_X, AXIS_Y, AXIS_Z});
 
   // Visualize the rotation on its own by running this line and viewing
-  // at app.resim.ai
-  resim::view << world_from_robot_rot;
+  // at app.resim.ai.
+  //
+  // Similar to Google Logging, VIEW requires you to stream in a name for the
+  // object that you would like to view.
+  VIEW(world_from_robot_rot) << "world_from_robot_rot";
+
+  // ReSim VIEW offers an alternative syntax, depending on preference:
+  //
+  // VIEW(world_from_robot_rot,"world_from_robot_rot_alt");
 
   // Combine the rotation with a simple translation {x, y, z} to make an SE3
   // rigid transform.
@@ -35,7 +42,7 @@ int main(int argc, char *argv[]) {
 
   // Visualize the resultant transform
   // Run this line and view at app.resim.ai
-  resim::view << world_from_robot;
+  VIEW(world_from_robot) << "world_from_robot";
 
   return EXIT_SUCCESS;
 }

@@ -76,8 +76,11 @@ int main(int argc, char* argv[]) {
   const Frame world{resim::UUID{"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}};
   const Frame curve{resim::UUID{"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"}};
 
+  VIEW(world) << "world";
+  VIEW(curve) << "curve";
+
   const TCurve circle(make_circle_curve(curve, world));
-  resim::view << circle;
+  VIEW(circle) << "original_circle";
 
   // Now, let us assume that the curve frame is the frame of a robot, and the
   // circle is the path traced through time. If we know the sensor relative to
@@ -87,9 +90,11 @@ int main(int argc, char* argv[]) {
   // Now, suppose we have a robot from sensor transform, which places the sensor
   // w.r.t. the robot, with the same orientation (omitting the rotation):
   const Frame sensor{resim::UUID{"cccccccc-cccc-cccc-cccc-cccccccccccc"}};
+  VIEW(sensor) << "sensor";
+
   const double SENSOR_X = 0.;
   const double SENSOR_Y = 0.;
-  const double SENSOR_Z = 1.0;
+  const double SENSOR_Z = -1.0;
 
   const FSE3 sensor_from_curve_transform(
       SE3({SENSOR_X, SENSOR_Y, SENSOR_Z}),
@@ -97,12 +102,11 @@ int main(int argc, char* argv[]) {
       curve);
 
   // We can easily visualize this transform:
-  resim::view << sensor_from_curve_transform;
+  VIEW(sensor_from_curve_transform) << "sensor_from_curve";
 
   //  We can transform the control points of the TCurve to the sensor frame:
   TCurve sensor_circle = translate_t_curve(circle, sensor_from_curve_transform);
   // and thus visualize the path traced in time for the sensor.
-  resim::view << sensor_circle;
-
+  VIEW(sensor_circle) << "translated_circle";
   return EXIT_SUCCESS;
 }

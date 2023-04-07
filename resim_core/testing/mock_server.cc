@@ -19,6 +19,10 @@ struct ServerHandle {
 MockServer::MockServer(std::string host)
     : host_{std::move(host)},
       handle_{std::make_unique<ServerHandle>()} {
+  // The default keep alive timeout is 5s, which makes our tests using the mock
+  // server excrutiatingly slow. Setting it at 1s somehow overrides any keep
+  // alive timeout, so they run much faster.
+  handle_->server.set_keep_alive_max_count(1);
   // Stop handler so we can stop the server from another thread
   handle_->server.Get(
       "/stop",

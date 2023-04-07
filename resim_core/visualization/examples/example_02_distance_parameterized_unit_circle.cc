@@ -69,7 +69,7 @@ std::vector<FSE3> framed_unit_circle(
   std::vector<FSE3> points;
   points.reserve(raw_se3_points.size());
   for (auto& point : raw_se3_points) {
-    points.emplace_back(FSE3(std::move(point), into_frame, out_frame));
+    points.emplace_back(std::move(point), into_frame, out_frame);
   }
 
   return points;
@@ -79,23 +79,29 @@ int main(int argc, char* argv[]) {
   using resim::transforms::SE3;  // ReSim's 6 d.o.f. rigid xform.
   using resim::transforms::SO3;  // ReSim's 3 d.o.f. rotation.
 
-  // // In this example, we will explore creating distance parameterized unit
-  // // circles using standard transforms and framed transforms. Uncomment out
-  // // the following to see what the unit circle looks like.
-  // const resim::curves::DCurve circle(unit_circle());
-  // resim::view << circle;
+  // In this example, we will explore creating distance parameterized unit
+  // circles using framed transforms.
 
-  // Now, what could the unit circle look like when it is in a different frame?
   // Let's suppose that unit_circle() returns a circle constructed from framed
   // SE3s in the world, from the POV of the robot frame.
   const Frame world = Frame::new_frame();
   const Frame robot = Frame::new_frame();
+  // Name the frames:
+  VIEW(world) << "world";
+  VIEW(robot) << "robot";
+
   auto world_from_robot_points = framed_unit_circle(world, robot);
   const resim::curves::DCurve world_from_robot_circle(world_from_robot_points);
-  resim::view << world_from_robot_circle;
 
-  // Now, suppose we have a robot from sensor transform:
+  // Visualize a control point
+  VIEW(*world_from_robot_circle.control_pts().at(0).ref_from_control)
+      << "world_from_robot";
+  // Visualize the curve
+  VIEW(world_from_robot_circle) << "world_from_robot_circle";
+  //  Now, suppose we have a robot from sensor transform:
   const Frame sensor = Frame::new_frame();
+  VIEW(sensor) << "sensor";
+
   const double SENSOR_X = 1;
   const double SENSOR_Y = 0.0;
   const double SENSOR_Z = 1;
@@ -103,7 +109,7 @@ int main(int argc, char* argv[]) {
       SE3(SO3(M_PI_2, {0, 0, 1.0}), {SENSOR_X, SENSOR_Y, SENSOR_Z}),
       robot,
       sensor);
-  resim::view << robot_from_sensor_transform;
+  VIEW(robot_from_sensor_transform) << "robot_from_sensor";
 
   // Now, what if we wanted to know what the world from sensor looked like? We
   // should compute the transform using robot_from_sensor_transform.
@@ -113,13 +119,16 @@ int main(int argc, char* argv[]) {
     FSE3 world_from_sensor_point =
         world_from_robot * robot_from_sensor_transform;
     world_from_sensor_points.push_back(world_from_sensor_point);
-    resim::view << world_from_sensor_point;
   }
 
   // Plot the resulting circle (sensor to world).
   const resim::curves::DCurve world_from_sensor_circle(
       world_from_sensor_points);
-  resim::view << world_from_sensor_circle;
+  // Visualize a control point
+  VIEW(*world_from_sensor_circle.control_pts().at(0).ref_from_control)
+      << "world_from_sensor";
+  // Visualize the curve
+  VIEW(world_from_sensor_circle) << "transformed_circle";
 
   return EXIT_SUCCESS;
 }

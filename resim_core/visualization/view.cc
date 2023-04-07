@@ -44,20 +44,9 @@ View &View::get_instance() {
 
 template <typename T>
 View &View::operator<<(const T &subject) {
-  {
-    // In a separate scope since flush() needs this lock
-    std::lock_guard<std::mutex> guard{primitives_mutex_};
-
-    // We simply push the primitivies in here without packing
-    // them. The whole ViewUpdate will be packed by the ViewClient.
-    primitives_.emplace_back(ViewPrimitive{
-        .id = UUID::new_uuid(),
-        .payload = subject,
-    });
-  }
-  // Currently, we pack each primitive into its own update and send eagerly to
-  // the view server.
-  flush();
+  // Generate a ViewObject without a name, then view it.
+  const ViewObject<T> &the_view_object{subject};
+  view_object(the_view_object);
   return *this;
 }
 
@@ -83,6 +72,26 @@ template View &View::operator<< <curves::TCurve<FSE3>>(
 template View &View::operator<< <actor::state::Trajectory>(
     const actor::state::Trajectory &subject);
 
+template <typename T>
+void View::view_object(ViewObject<T> view_object) {
+  {
+    // In a separate scope since flush() needs this lock
+    std::lock_guard<std::mutex> guard{primitives_mutex_};
+
+    // We simply push the primitivies in here without packing
+    // them. The whole ViewUpdate will be packed by the ViewClient.
+    // The user defined name is an std::optional so the existence
+    // of a value i.e. a custom name is not cared about here.
+    primitives_.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = view_object.the_object,
+        .user_defined_name = view_object.user_defined_name});
+  }
+  // Currently, we pack each primitive into its own update and send eagerly to
+  // the view server.
+  flush();
+}
+
 void View::flush() {
   std::lock_guard<std::mutex> guard{primitives_mutex_};
   REASSERT(client_ != nullptr, "No client interface set!");
@@ -98,5 +107,33 @@ void View::set_client(std::unique_ptr<ViewClient> &&client) {
   primitives_.clear();
   client_ = std::move(client);
 }
+
+// Implementation for ViewObject
+template <typename T>
+ViewObject<T>::ViewObject(T object) : the_object(std::move(object)) {}
+
+template <typename T>
+ViewObject<T>::ViewObject(T object, std::string name)
+    : the_object(std::move(object)),
+      user_defined_name(std::move(name)) {
+  resim::view.view_object(*this);
+}
+
+// Implementation of the ViewObject steaming operator
+template <typename T>
+void ViewObject<T>::operator<<(const std::string &name) {
+  user_defined_name = name;
+  resim::view.view_object(*this);
+}
+
+template struct ViewObject<transforms::Frame<3>>;
+template struct ViewObject<transforms::SE3>;
+template struct ViewObject<transforms::SO3>;
+template struct ViewObject<transforms::FSE3>;
+template struct ViewObject<transforms::FSO3>;
+template struct ViewObject<curves::DCurve<transforms::SE3>>;
+template struct ViewObject<curves::DCurve<transforms::FSE3>>;
+template struct ViewObject<curves::TCurve<transforms::FSE3>>;
+template struct ViewObject<actor::state::Trajectory>;
 
 }  // namespace resim::visualization

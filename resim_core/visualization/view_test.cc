@@ -1,6 +1,5 @@
+#include <optional>
 #define RESIM_TESTING
-
-#include "resim_core/visualization/view.hh"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -29,6 +28,7 @@
 #include "resim_core/visualization/client/view_client_libcurl.hh"
 #include "resim_core/visualization/curve/test_helpers.hh"
 #include "resim_core/visualization/testing/mock_server.hh"
+#include "resim_core/visualization/view.hh"
 #include "resim_core/visualization/view_client.hh"
 #include "resim_core/visualization/view_server/view_server_test_helper.hh"
 
@@ -44,7 +44,21 @@ using transforms::SO3;
 using Frame = transforms::Frame<3>;
 
 constexpr unsigned int NUM_PAYLOADS = 10;
-
+// Name variants for primitives
+const std::array<std::string, NUM_PAYLOADS> NAME_RANGE =
+    // Custom names for all primitives
+    {
+        "name_1",
+        "name_2",
+        "name_3",
+        "name_4",
+        "name_5",
+        "name_6",
+        "name_7",
+        "name_8",
+        "name_9",
+        "name_10",
+};
 // A simple mock of the view client that calls the observer given on
 // construction when send_view_update is called.
 class MockViewClient : public ViewClient {
@@ -204,10 +218,12 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
   std::vector<TypeParam> test_elements{
       view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   ViewUpdate update;
-  for (const auto &element : test_elements) {
+
+  for (int ii = 0; ii < NUM_PAYLOADS; ++ii) {
     update.primitives.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
-        .payload = element,
+        .payload = test_elements.at(ii),
+        .user_defined_name = NAME_RANGE.at(ii),
     });
   }
 
@@ -231,10 +247,11 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
   std::vector<TypeParam> test_elements{
       view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
   ViewUpdate update;
-  for (const auto &element : test_elements) {
+  for (int ii = 0; ii < NUM_PAYLOADS; ++ii) {
     update.primitives.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
-        .payload = element,
+        .payload = test_elements.at(ii),
+        .user_defined_name = NAME_RANGE.at(ii),
     });
   }
 
@@ -264,10 +281,10 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
   // Create Group objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
       view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
-  for (const auto &element : test_elements) {
+  for (int ii = 0; ii < NUM_PAYLOADS; ++ii) {
     expected_update.primitives.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
-        .payload = element,
+        .payload = test_elements.at(ii),
     });
   }
 
@@ -280,7 +297,6 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
           const uint64_t update_id) {
         EXPECT_EQ(session_id, expected_session_id);
         EXPECT_EQ(update_id, expected_update_id);
-
         // Since we feed views one at a time, update.primitives will always only
         // have one element, but it should correspond with the expected_update
         // at index update_id.
@@ -350,7 +366,210 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
 
   // ACTION & VERIFICATION
   for (const auto &element : test_elements) {
-    view << element;
+    view << element;  // Basic usage without any custom names
+    expected_update_id++;
+  }
+}
+
+TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName) {
+  // SET UP
+  ViewUpdate expected_update;
+  const UUID expected_session_id{UUID::new_uuid()};
+  uint64_t expected_update_id = 0;
+
+  // Create Group objects and corresponding ViewUpdates.
+  std::vector<TypeParam> test_elements{
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
+  for (int ii = 0; ii < NUM_PAYLOADS; ++ii) {
+    expected_update.primitives.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = test_elements.at(ii),
+        .user_defined_name = NAME_RANGE.at(ii),
+    });
+  }
+
+  // Create MockServer with a receiver function to verify correctness.
+  testing::MockServer server{
+      "localhost",
+      expected_session_id,
+      [&](const ViewUpdate &update,
+          const UUID &session_id,
+          const uint64_t update_id) {
+        EXPECT_EQ(session_id, expected_session_id);
+        EXPECT_EQ(update_id, expected_update_id);
+        // Since we feed views one at a time, update.primitives will always only
+        // have one element, but it should correspond with the expected_update
+        // at index update_id.
+        EXPECT_EQ(
+            expected_update.primitives.at(update_id).user_defined_name,
+            update.primitives.at(0).user_defined_name);
+        match(
+            update.primitives.at(0).payload,
+            [&](const Frame &test_frame) {
+              LibcurlClientTest<Frame>::check_correctness(
+                  test_frame,
+                  std::get<Frame>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const SE3 &test_se3) {
+              LibcurlClientTest<SE3>::check_correctness(
+                  test_se3,
+                  std::get<SE3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const SO3 &test_so3) {
+              LibcurlClientTest<SO3>::check_correctness(
+                  test_so3,
+                  std::get<SO3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const FSE3 &test_fse3) {
+              LibcurlClientTest<FSE3>::check_correctness(
+                  test_fse3,
+                  std::get<FSE3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const FSO3 &test_fso3) {
+              LibcurlClientTest<FSO3>::check_correctness(
+                  test_fso3,
+                  std::get<FSO3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::DCurve<SE3> &test_d_curve_se3) {
+              LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+                  test_d_curve_se3,
+                  std::get<curves::DCurve<SE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
+              LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+                  test_d_curve_fse3,
+                  std::get<curves::DCurve<FSE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
+              LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+                  test_t_curve_fse3,
+                  std::get<curves::TCurve<FSE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const actor::state::Trajectory &test_trajectory) {
+              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+                  test_trajectory,
+                  std::get<actor::state::Trajectory>(
+                      expected_update.primitives.at(update_id).payload));
+            });
+        return ViewSessionUpdateResponse{};
+      }};
+
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  view.set_client(std::move(mock_client));
+
+  // ACTION & VERIFICATION
+  for (const auto &element : test_elements) {
+    VIEW(element) << NAME_RANGE.at(expected_update_id);
+    expected_update_id++;
+  }
+}
+
+TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt) {
+  // SET UP
+  ViewUpdate expected_update;
+  const UUID expected_session_id{UUID::new_uuid()};
+  uint64_t expected_update_id = 0;
+
+  // Create Group objects and corresponding ViewUpdates.
+  std::vector<TypeParam> test_elements{
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
+  for (int ii = 0; ii < NUM_PAYLOADS; ++ii) {
+    expected_update.primitives.emplace_back(ViewPrimitive{
+        .id = UUID::new_uuid(),
+        .payload = test_elements.at(ii),
+        .user_defined_name = NAME_RANGE.at(ii),
+    });
+  }
+
+  // Create MockServer with a receiver function to verify correctness.
+  testing::MockServer server{
+      "localhost",
+      expected_session_id,
+      [&](const ViewUpdate &update,
+          const UUID &session_id,
+          const uint64_t update_id) {
+        EXPECT_EQ(session_id, expected_session_id);
+        EXPECT_EQ(update_id, expected_update_id);
+        // Since we feed views one at a time, update.primitives will always only
+        // have one element, but it should correspond with the expected_update
+        // at index update_id.
+        match(
+            update.primitives.at(0).payload,
+            [&](const Frame &test_frame) {
+              LibcurlClientTest<Frame>::check_correctness(
+                  test_frame,
+                  std::get<Frame>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const SE3 &test_se3) {
+              LibcurlClientTest<SE3>::check_correctness(
+                  test_se3,
+                  std::get<SE3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const SO3 &test_so3) {
+              LibcurlClientTest<SO3>::check_correctness(
+                  test_so3,
+                  std::get<SO3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const FSE3 &test_fse3) {
+              LibcurlClientTest<FSE3>::check_correctness(
+                  test_fse3,
+                  std::get<FSE3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const FSO3 &test_fso3) {
+              LibcurlClientTest<FSO3>::check_correctness(
+                  test_fso3,
+                  std::get<FSO3>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::DCurve<SE3> &test_d_curve_se3) {
+              LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+                  test_d_curve_se3,
+                  std::get<curves::DCurve<SE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
+              LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+                  test_d_curve_fse3,
+                  std::get<curves::DCurve<FSE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
+              LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+                  test_t_curve_fse3,
+                  std::get<curves::TCurve<FSE3>>(
+                      expected_update.primitives.at(update_id).payload));
+            },
+            [&](const actor::state::Trajectory &test_trajectory) {
+              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+                  test_trajectory,
+                  std::get<actor::state::Trajectory>(
+                      expected_update.primitives.at(update_id).payload));
+            });
+        return ViewSessionUpdateResponse{};
+      }};
+
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  view.set_client(std::move(mock_client));
+
+  // ACTION & VERIFICATION
+  for (const auto &element : test_elements) {
+    VIEW(element, NAME_RANGE.at(expected_update_id));
     expected_update_id++;
   }
 }
@@ -629,5 +848,68 @@ TYPED_TEST(ViewTest, TestFailedSend) {
   EXPECT_THROW(view << test_elements.front(), AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
+
+template <typename T>
+class ViewObjectTest : public LibcurlClientTest<T> {};
+
+TYPED_TEST_SUITE(ViewObjectTest, PayloadTypes);
+
+TYPED_TEST(ViewObjectTest, TestViewObjectConstructor) {
+  // SETUP
+  std::vector<TypeParam> test_elements{
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
+  std::vector<ViewObject<TypeParam>> result_elements;
+
+  // ACTION
+  for (const auto &element : test_elements) {
+    ViewObject<TypeParam> view_object = view_impl(element);
+    result_elements.push_back(view_object);
+  }
+
+  // VERIFICATION
+  ASSERT_EQ(result_elements.size(), test_elements.size());
+  for (std::size_t ii = 0U; ii < test_elements.size(); ++ii) {
+    ASSERT_EQ(result_elements.at(ii).user_defined_name, std::nullopt);
+    ViewTest<TypeParam>::check_correctness(
+        test_elements.at(ii),
+        result_elements.at(ii).the_object);
+  }
+}
+
+TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
+  // SETUP
+  // Create a mock server to accept views triggerd by the named view object
+  // sending a view on construction.
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               ViewSessionUpdateResponse response;
+                               response.set_view("app.resim.ai/view");
+                               return response;
+                             }};
+  // Setup a minimal mock client.
+  auto mock_client = std::make_unique<LibcurlClient>(
+      fmt::format("localhost:{}", server.port()));
+  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  view.set_client(std::move(mock_client));
+  // Generate the test data
+  const std::string TEST_NAME = "test_name";
+  std::vector<TypeParam> test_elements{
+      view_server::generate_payload_type<TypeParam>(NUM_PAYLOADS)};
+  std::vector<ViewObject<TypeParam>> result_elements;
+
+  // ACTION
+  for (const auto &element : test_elements) {
+    ViewObject<TypeParam> view_object = view_impl(element, TEST_NAME);
+    result_elements.push_back(view_object);
+  }
+
+  // VERIFICATION
+  ASSERT_EQ(result_elements.size(), test_elements.size());
+  for (std::size_t ii = 0U; ii < test_elements.size(); ++ii) {
+    ViewTest<TypeParam>::check_correctness(
+        test_elements.at(ii),
+        result_elements.at(ii).the_object);
+    EXPECT_EQ(result_elements.at(ii).user_defined_name, TEST_NAME);
+  }
+}
 
 }  // namespace resim::visualization

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -16,7 +17,7 @@
 namespace resim::visualization {
 
 // A struct representing a single visualizable piece of data (e.g. a transform,
-// curve, box, etc.)
+// curve, box, etc.) and its optional, user-supplied name.
 struct ViewPrimitive {
   UUID id;
   std::variant<
@@ -30,6 +31,7 @@ struct ViewPrimitive {
       actor::state::Trajectory,
       transforms::Frame<3>>
       payload;
+  std::optional<std::string> user_defined_name = {};
 };
 
 }  // namespace resim::visualization

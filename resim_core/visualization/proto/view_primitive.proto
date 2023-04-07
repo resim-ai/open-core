@@ -27,4 +27,6 @@ message ViewPrimitive {
         resim.actor.state.proto.Trajectory trajectory   = 9;
         resim.transforms.proto.Frame_3     frame        = 10;
     }
+
+    string user_defined_name = 11;
 }

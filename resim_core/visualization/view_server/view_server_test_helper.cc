@@ -25,12 +25,6 @@ constexpr auto LOW_COUNT =
     "The minimum number of test elements you can request is seven. Please "
     "increase the count.";
 
-constexpr auto TRANSFORM_PREFIX = "transform";
-constexpr auto ROTATION_PREFIX = "rotation";
-constexpr auto D_CURVE_PREFIX = "d_curve";
-constexpr auto T_CURVE_PREFIX = "t_curve";
-constexpr auto TRAJECTORY_PREFIX = "trajectory";
-
 constexpr time::Timestamp ZERO_TIME;
 }  // namespace
 
@@ -65,14 +59,28 @@ template <>
 std::vector<FSE3> generate_payload_type(const unsigned count) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  return transforms::make_test_group_elements<FSE3>(count);
+  std::vector<transforms::FSE3> points;
+  for (auto &element : transforms::make_test_group_elements<FSE3>(count)) {
+    // Ensure each element has a unique frame
+    const auto pt_frame = transforms::Frame<SE3::DIMS>::new_frame();
+    element.set_from(pt_frame);
+    points.emplace_back(element);
+  }
+  return points;
 }
 
 template <>
 std::vector<FSO3> generate_payload_type(const unsigned count) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  return transforms::make_test_group_elements<FSO3>(count);
+  std::vector<transforms::FSO3> points;
+  for (auto &element : transforms::make_test_group_elements<FSO3>(count)) {
+    // Ensure each element has a unique frame
+    const auto pt_frame = transforms::Frame<SO3::DIMS>::new_frame();
+    element.set_from(pt_frame);
+    points.emplace_back(element);
+  }
+  return points;
 }
 
 template <>
@@ -138,46 +146,6 @@ std::vector<actor::state::Trajectory> generate_payload_type(
   }
 
   return trajectories;
-}
-
-template <>
-std::string get_type_prefix<SE3>() {
-  return TRANSFORM_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<SO3>() {
-  return ROTATION_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<FSE3>() {
-  return TRANSFORM_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<FSO3>() {
-  return ROTATION_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<curves::DCurve<SE3>>() {
-  return D_CURVE_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<curves::DCurve<FSE3>>() {
-  return D_CURVE_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<curves::TCurve<FSE3>>() {
-  return T_CURVE_PREFIX;
-}
-
-template <>
-std::string get_type_prefix<actor::state::Trajectory>() {
-  return TRAJECTORY_PREFIX;
 }
 
 }  // namespace resim::visualization::view_server
