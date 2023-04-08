@@ -49,6 +49,8 @@ TEST_F(ClientCredentialsClientTest, TestFetch) {
 TEST_F(ClientCredentialsClientTest, TestRefresh) {
   ClientCredentialsClient client{config()};
   EXPECT_EQ(client.get_jwt(), TOKEN);
+  // Repeat the test to cover the case where the token already exists.
+  EXPECT_EQ(client.get_jwt(), TOKEN);
   client.refresh();
   EXPECT_EQ(client.get_jwt(), TOKEN);
 }

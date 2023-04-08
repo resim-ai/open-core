@@ -47,11 +47,7 @@ namespace std {
 template <>
 struct hash<resim::UUID> {
   std::size_t operator()(const resim::UUID &k) const {
-    using std::hash;
-    using std::size_t;
-    using std::string;
-
-    return hash<string>()(k.to_string());
+    return std::hash<std::string>()(k.to_string());
   }
 };
 
