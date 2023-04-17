@@ -1,5 +1,6 @@
 #include "resim_core/auth/device_code_client.hh"
 
+#include <cpr/cpr.h>
 #include <google/protobuf/util/json_util.h>
 
 #include <chrono>
@@ -17,24 +18,14 @@ namespace resim::auth {
 
 namespace {
 
-// Helper callback used so that curl can write the response body into a string
-// which we provide.
-size_t write_callback(char *contents, size_t size, size_t nmemb, void *userp) {
-  (static_cast<std::string *>(userp))->append(contents, size * nmemb);
-  return size * nmemb;
-}
-
-// Helper function that wraps up the curl ugliness so we can just send a
-// protobuf message (converted to JSON) to the server and get back a protobuf
+// Helper function that wraps up the serialization ugliness so we can just send
+// a protobuf message (converted to JSON) to the server and get back a protobuf
 // message (converted from a JSON).
 template <typename RequestProto, typename ResponseProto>
 HttpResponse json_query(
-    CURL *const curl,
     const std::string &endpoint,
     const RequestProto &request,
     InOut<ResponseProto> response) {
-  curl_easy_reset(curl);
-
   std::string request_json;
   google::protobuf::util::JsonPrintOptions options;
   options.preserve_proto_field_names = true;
@@ -44,39 +35,21 @@ HttpResponse json_query(
       options);
   REASSERT(serialize_status.ok(), "Failed to serialize request!");
 
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
-  curl_easy_setopt(curl, CURLOPT_POST, 1);
-  curl_easy_setopt(curl, CURLOPT_URL, endpoint.c_str());
-
-  struct curl_slist *slist = nullptr;
-  slist = curl_slist_append(slist, "content-type: application/json");
-
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_json.c_str());
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, request_json.size());
-
-  std::string response_str;
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_str);
-
-  curl_easy_perform(curl);
-  uint64_t http_code = 0;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-  // NOLINTEND(cppcoreguidelines-pro-type-vararg)
+  const cpr::Response r = cpr::Post(
+      cpr::Url{endpoint},
+      cpr::Header{{"Content-Type", "application/json"}},
+      cpr::Body{request_json});
 
   const auto parse_status =
-      google::protobuf::util::JsonStringToMessage(response_str, &*response);
+      google::protobuf::util::JsonStringToMessage(r.text, &*response);
   REASSERT(parse_status.ok(), "Failed to parse response!");
-  return static_cast<HttpResponse>(http_code);
+  return static_cast<HttpResponse>(r.status_code);
 }
 
 }  // namespace
 
 DeviceCodeClient::DeviceCodeClient(Config config)
-    : config_{std::move(config)},
-      curl_{curl_easy_init()} {}
-
-DeviceCodeClient::~DeviceCodeClient() { curl_easy_cleanup(curl_); }
+    : config_{std::move(config)} {}
 
 std::string DeviceCodeClient::get_jwt() {
   if (token_.empty()) {
@@ -121,7 +94,6 @@ void DeviceCodeClient::fetch_token() {
 
   proto::DeviceCodeResponse device_code_response;
   HttpResponse status = json_query(
-      curl_,
       config_.server + "/oauth/device/code",
       device_code_request,
       InOut{device_code_response});
@@ -144,7 +116,6 @@ void DeviceCodeClient::fetch_token() {
       std::chrono::seconds(device_code_response.expires_in())};
   while (std::chrono::steady_clock::now() < timeout_time) {
     json_query(
-        curl_,
         config_.server + "/oauth/token",
         polling_request,
         InOut{polling_response});

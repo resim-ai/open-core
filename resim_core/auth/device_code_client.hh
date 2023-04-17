@@ -1,7 +1,5 @@
 #pragma once
 
-#include <curl/curl.h>
-
 #include <filesystem>
 #include <string>
 
@@ -25,12 +23,6 @@ class DeviceCodeClient : public AuthClientInterface {
   };
 
   explicit DeviceCodeClient(Config config);
-  DeviceCodeClient() = delete;
-  DeviceCodeClient(const DeviceCodeClient &) = delete;
-  DeviceCodeClient(DeviceCodeClient &&) = delete;
-  DeviceCodeClient &operator=(const DeviceCodeClient &) = delete;
-  DeviceCodeClient &operator=(DeviceCodeClient &&) = delete;
-  ~DeviceCodeClient() override;
 
   std::string get_jwt() override;
 
@@ -49,7 +41,6 @@ class DeviceCodeClient : public AuthClientInterface {
   void save_token();
 
   Config config_;
-  CURL *curl_{nullptr};
   std::string token_;
 };
 

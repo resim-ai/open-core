@@ -135,15 +135,6 @@ load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
 
-# libcurl
-http_archive(
-    name = "curl",
-    build_file = "//resim_core/third_party/curl:curl.BUILD",
-    sha256 = "dcaea268c0706109eabacc278b8a4cd839148a9c6cc603cebe91e7d0d935c04a",
-    strip_prefix = "curl-7.88.1",
-    urls = ["https://github.com/curl/curl/releases/download/curl-7_88_1/curl-7.88.1.zip"],
-)
-
 http_archive(
     name = "httplib",
     build_file = "//resim_core/third_party/httplib:httplib.BUILD",
@@ -206,3 +197,21 @@ http_archive(
     strip_prefix = "au-0.3.0",
     urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.0.zip"],
 )
+
+# Hedron's Bazel Rules for C++ HTTPS Requests
+# Makes @cpr, @curl, and @boringssl available for use
+# https://github.com/hedronvision/bazel-make-cc-https-easy
+http_archive(
+    name = "hedron_make_cc_https_easy",
+    sha256 = "85488c2db684db127c867bb6b5a47e47f844140fc6c64047895d1d19c47e3006",
+    strip_prefix = "bazel-make-cc-https-easy-f4f7512af5644f6f37e2270e0d36debad2bde45d",
+    url = "https://github.com/hedronvision/bazel-make-cc-https-easy/archive/f4f7512af5644f6f37e2270e0d36debad2bde45d.tar.gz",
+)
+
+load("@hedron_make_cc_https_easy//:workspace_setup.bzl", "hedron_make_cc_https_easy")
+
+hedron_make_cc_https_easy()
+
+load("@hedron_make_cc_https_easy//:transitive_workspace_setup.bzl", "hedron_keep_cc_https_easy")
+
+hedron_keep_cc_https_easy()

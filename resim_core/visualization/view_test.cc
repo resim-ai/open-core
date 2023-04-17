@@ -25,11 +25,11 @@
 #include "resim_core/utils/http_response.hh"
 #include "resim_core/utils/match.hh"
 #include "resim_core/utils/status.hh"
-#include "resim_core/visualization/client/view_client_libcurl.hh"
+#include "resim_core/visualization/client/view_client.hh"
 #include "resim_core/visualization/curve/test_helpers.hh"
 #include "resim_core/visualization/testing/mock_server.hh"
 #include "resim_core/visualization/view.hh"
-#include "resim_core/visualization/view_client.hh"
+#include "resim_core/visualization/view_client_interface.hh"
 #include "resim_core/visualization/view_server/view_server_test_helper.hh"
 
 using ::resim::visualization::client::proto::ViewSessionUpdateResponse;
@@ -61,7 +61,7 @@ const std::array<std::string, NUM_PAYLOADS> NAME_RANGE =
 };
 // A simple mock of the view client that calls the observer given on
 // construction when send_view_update is called.
-class MockViewClient : public ViewClient {
+class MockViewClient : public ViewClientInterface {
  public:
   using Observer = std::function<void(const ViewUpdate &)>;
 
@@ -84,48 +84,48 @@ class MockViewClient : public ViewClient {
 }  // namespace
 
 template <typename T>
-class LibcurlClientTest : public ::testing::Test {
+class ViewClientTest : public ::testing::Test {
  public:
   static void check_correctness(const T &original, const T &expected);
 };
 
 template <>
-void LibcurlClientTest<Frame>::check_correctness(
+void ViewClientTest<Frame>::check_correctness(
     const Frame &original,
     const Frame &expected) {
   EXPECT_TRUE(original == expected);  // Using Frame equality
 }
 
 template <>
-void LibcurlClientTest<SE3>::check_correctness(
+void ViewClientTest<SE3>::check_correctness(
     const SE3 &original,
     const SE3 &expected) {
   EXPECT_TRUE(original.is_approx(expected));
 }
 
 template <>
-void LibcurlClientTest<SO3>::check_correctness(
+void ViewClientTest<SO3>::check_correctness(
     const SO3 &original,
     const SO3 &expected) {
   EXPECT_TRUE(original.is_approx(expected));
 }
 
 template <>
-void LibcurlClientTest<FSE3>::check_correctness(
+void ViewClientTest<FSE3>::check_correctness(
     const FSE3 &original,
     const FSE3 &expected) {
   EXPECT_TRUE(original.is_approx(expected));
 }
 
 template <>
-void LibcurlClientTest<FSO3>::check_correctness(
+void ViewClientTest<FSO3>::check_correctness(
     const FSO3 &original,
     const FSO3 &expected) {
   EXPECT_TRUE(original.is_approx(expected));
 }
 
 template <>
-void LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+void ViewClientTest<curves::DCurve<SE3>>::check_correctness(
     const curves::DCurve<SE3> &original,
     const curves::DCurve<SE3> &expected) {
   const auto &orig_ctrl_pts = original.control_pts();
@@ -141,7 +141,7 @@ void LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
 }
 
 template <>
-void LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+void ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
     const curves::DCurve<FSE3> &original,
     const curves::DCurve<FSE3> &expected) {
   const auto &orig_ctrl_pts = original.control_pts();
@@ -157,7 +157,7 @@ void LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
 }
 
 template <>
-void LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+void ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
     const curves::TCurve<FSE3> &original,
     const curves::TCurve<FSE3> &expected) {
   const auto &orig_ctrl_pts = original.control_pts();
@@ -174,7 +174,7 @@ void LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
 }
 
 template <>
-void LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+void ViewClientTest<actor::state::Trajectory>::check_correctness(
     const actor::state::Trajectory &original,
     const actor::state::Trajectory &expected) {
   EXPECT_EQ(original.start_time(), expected.start_time());
@@ -203,15 +203,15 @@ using PayloadTypes = ::testing::Types<
     actor::state::Trajectory,
     Frame>;
 
-TYPED_TEST_SUITE(LibcurlClientTest, PayloadTypes);
+TYPED_TEST_SUITE(ViewClientTest, PayloadTypes);
 
-TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
+TYPED_TEST(ViewClientTest, TestClientBasicFunction) {
   // SET UP
   testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
                                return ViewSessionUpdateResponse{};
                              }};
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
 
   // Create objects and corresponding ViewUpdates.
@@ -232,15 +232,15 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunction) {
   EXPECT_TRUE(status.ok());
 }
 
-TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
+TYPED_TEST(ViewClientTest, TestClientBasicFunctionFail) {
   // SET UP
   testing::MockServer server{
       "localhost",
       UUID::new_uuid(),
       [](auto &&...) { return ViewSessionUpdateResponse{}; },
       HttpResponse::NOT_FOUND};
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
 
   // Create objects and corresponding ViewUpdates.
@@ -260,9 +260,9 @@ TYPED_TEST(LibcurlClientTest, TestClientBasicFunctionFail) {
   EXPECT_FALSE(status.ok());
 }
 
-TYPED_TEST(LibcurlClientTest, TestFail) {
+TYPED_TEST(ViewClientTest, TestFail) {
   // Do not set up a server
-  auto mock_client = std::make_unique<LibcurlClient>("zzzz");
+  auto mock_client = std::make_unique<ViewClient>("zzzz");
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
 
   ViewUpdate update;
@@ -272,7 +272,7 @@ TYPED_TEST(LibcurlClientTest, TestFail) {
   EXPECT_FALSE(status.ok());
 }
 
-TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
+TYPED_TEST(ViewClientTest, TestViewClientView) {
   // SET UP
   ViewUpdate expected_update;
   const UUID expected_session_id{UUID::new_uuid()};
@@ -303,55 +303,55 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
-              LibcurlClientTest<Frame>::check_correctness(
+              ViewClientTest<Frame>::check_correctness(
                   test_frame,
                   std::get<Frame>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SE3 &test_se3) {
-              LibcurlClientTest<SE3>::check_correctness(
+              ViewClientTest<SE3>::check_correctness(
                   test_se3,
                   std::get<SE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SO3 &test_so3) {
-              LibcurlClientTest<SO3>::check_correctness(
+              ViewClientTest<SO3>::check_correctness(
                   test_so3,
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSE3 &test_fse3) {
-              LibcurlClientTest<FSE3>::check_correctness(
+              ViewClientTest<FSE3>::check_correctness(
                   test_fse3,
                   std::get<FSE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSO3 &test_fso3) {
-              LibcurlClientTest<FSO3>::check_correctness(
+              ViewClientTest<FSO3>::check_correctness(
                   test_fso3,
                   std::get<FSO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
-              LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
                   test_d_curve_fse3,
                   std::get<curves::DCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
                   test_t_curve_fse3,
                   std::get<curves::TCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
-              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+              ViewClientTest<actor::state::Trajectory>::check_correctness(
                   test_trajectory,
                   std::get<actor::state::Trajectory>(
                       expected_update.primitives.at(update_id).payload));
@@ -359,8 +359,8 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
@@ -371,7 +371,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientView) {
   }
 }
 
-TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName) {
+TYPED_TEST(ViewClientTest, TestViewClientViewCustomName) {
   // SET UP
   ViewUpdate expected_update;
   const UUID expected_session_id{UUID::new_uuid()};
@@ -406,55 +406,55 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName) {
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
-              LibcurlClientTest<Frame>::check_correctness(
+              ViewClientTest<Frame>::check_correctness(
                   test_frame,
                   std::get<Frame>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SE3 &test_se3) {
-              LibcurlClientTest<SE3>::check_correctness(
+              ViewClientTest<SE3>::check_correctness(
                   test_se3,
                   std::get<SE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SO3 &test_so3) {
-              LibcurlClientTest<SO3>::check_correctness(
+              ViewClientTest<SO3>::check_correctness(
                   test_so3,
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSE3 &test_fse3) {
-              LibcurlClientTest<FSE3>::check_correctness(
+              ViewClientTest<FSE3>::check_correctness(
                   test_fse3,
                   std::get<FSE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSO3 &test_fso3) {
-              LibcurlClientTest<FSO3>::check_correctness(
+              ViewClientTest<FSO3>::check_correctness(
                   test_fso3,
                   std::get<FSO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
-              LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
                   test_d_curve_fse3,
                   std::get<curves::DCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
                   test_t_curve_fse3,
                   std::get<curves::TCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
-              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+              ViewClientTest<actor::state::Trajectory>::check_correctness(
                   test_trajectory,
                   std::get<actor::state::Trajectory>(
                       expected_update.primitives.at(update_id).payload));
@@ -462,8 +462,8 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
@@ -474,7 +474,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName) {
   }
 }
 
-TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt) {
+TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
   // SET UP
   ViewUpdate expected_update;
   const UUID expected_session_id{UUID::new_uuid()};
@@ -506,55 +506,55 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt) {
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
-              LibcurlClientTest<Frame>::check_correctness(
+              ViewClientTest<Frame>::check_correctness(
                   test_frame,
                   std::get<Frame>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SE3 &test_se3) {
-              LibcurlClientTest<SE3>::check_correctness(
+              ViewClientTest<SE3>::check_correctness(
                   test_se3,
                   std::get<SE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const SO3 &test_so3) {
-              LibcurlClientTest<SO3>::check_correctness(
+              ViewClientTest<SO3>::check_correctness(
                   test_so3,
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSE3 &test_fse3) {
-              LibcurlClientTest<FSE3>::check_correctness(
+              ViewClientTest<FSE3>::check_correctness(
                   test_fse3,
                   std::get<FSE3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const FSO3 &test_fso3) {
-              LibcurlClientTest<FSO3>::check_correctness(
+              ViewClientTest<FSO3>::check_correctness(
                   test_fso3,
                   std::get<FSO3>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
-              LibcurlClientTest<curves::DCurve<SE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              LibcurlClientTest<curves::DCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
                   test_d_curve_fse3,
                   std::get<curves::DCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              LibcurlClientTest<curves::TCurve<FSE3>>::check_correctness(
+              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
                   test_t_curve_fse3,
                   std::get<curves::TCurve<FSE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
-              LibcurlClientTest<actor::state::Trajectory>::check_correctness(
+              ViewClientTest<actor::state::Trajectory>::check_correctness(
                   test_trajectory,
                   std::get<actor::state::Trajectory>(
                       expected_update.primitives.at(update_id).payload));
@@ -562,8 +562,8 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
@@ -574,7 +574,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt) {
   }
 }
 
-TYPED_TEST(LibcurlClientTest, TestLibcurlClientLogging) {
+TYPED_TEST(ViewClientTest, TestViewClientLogging) {
   // SETUP
   //  Create a separate test instance of glog.
   google::InitGoogleLogging("test_logging");
@@ -589,8 +589,8 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientLogging) {
                                return response;
                              }};
   // Setup a minimal mock client.
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
 
@@ -631,7 +631,7 @@ TYPED_TEST(LibcurlClientTest, TestLibcurlClientLogging) {
 }
 
 template <typename T>
-class ViewTest : public LibcurlClientTest<T> {
+class ViewTest : public ViewClientTest<T> {
  public:
   static std::unique_ptr<MockViewClient> mock_single_thread_client(
       std::vector<T> &result_elements);
@@ -775,7 +775,7 @@ TYPED_TEST(ViewTest, TestViewSingleThread) {
   // VERIFICATION
   ASSERT_EQ(result_elements.size(), test_elements.size());
   for (std::size_t ii = 0U; ii < test_elements.size(); ++ii) {
-    LibcurlClientTest<TypeParam>::check_correctness(
+    ViewClientTest<TypeParam>::check_correctness(
         test_elements.at(ii),
         result_elements.at(ii));
   }
@@ -810,7 +810,7 @@ TYPED_TEST(ViewTest, TestViewMultiThread) {
   ViewTest<TypeParam>::sort_elements(test_elements);
 
   for (std::size_t ii = 0U; ii < test_elements.size(); ++ii) {
-    LibcurlClientTest<TypeParam>::check_correctness(
+    ViewClientTest<TypeParam>::check_correctness(
         test_elements.at(ii),
         result_elements.at(ii));
   }
@@ -850,7 +850,7 @@ TYPED_TEST(ViewTest, TestFailedSend) {
 // NOLINTEND(readability-function-cognitive-complexity)
 
 template <typename T>
-class ViewObjectTest : public LibcurlClientTest<T> {};
+class ViewObjectTest : public ViewClientTest<T> {};
 
 TYPED_TEST_SUITE(ViewObjectTest, PayloadTypes);
 
@@ -886,8 +886,8 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
                                return response;
                              }};
   // Setup a minimal mock client.
-  auto mock_client = std::make_unique<LibcurlClient>(
-      fmt::format("localhost:{}", server.port()));
+  auto mock_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
   mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
   view.set_client(std::move(mock_client));
   // Generate the test data
@@ -912,20 +912,18 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
   }
 }
 
-TEST(LibcurlClientTest, TokenPathCoverage) {
+TEST(ViewClientTest, TokenPathCoverage) {
   char *tmpdir_cstr = getenv("TEST_TMPDIR");
   ASSERT_NE(nullptr, tmpdir_cstr);
   std::string tmpdir(tmpdir_cstr);
   EXPECT_EQ(
-      LibcurlClient::determine_token_root(nullptr).string().substr(
+      ViewClient::determine_token_root(nullptr).string().substr(
           0,
           tmpdir.size()),
       tmpdir);
   std::string home = "/home";
   EXPECT_EQ(
-      LibcurlClient::determine_token_root("/home").string().substr(
-          0,
-          home.size()),
+      ViewClient::determine_token_root("/home").string().substr(0, home.size()),
       home);
 }
 

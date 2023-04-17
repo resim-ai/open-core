@@ -13,8 +13,7 @@
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/status.hh"
-#include "resim_core/visualization/client/view_client_libcurl.hh"
-#include "resim_core/visualization/view_client.hh"
+#include "resim_core/visualization/client/view_client.hh"
 #include "resim_core/visualization/view_update.hh"
 
 namespace resim::visualization {
@@ -28,7 +27,7 @@ using Frame = transforms::Frame<3>;
 }  // namespace
 
 View::View() {
-  client_ = std::make_unique<LibcurlClient>("http://api.resim.ai:8080");
+  client_ = std::make_unique<ViewClient>("http://api.resim.ai:8080");
 }
 
 // We need this since we're using the PIMPL idiom so this must appear after
@@ -102,7 +101,7 @@ void View::flush() {
   primitives_.clear();
 }
 
-void View::set_client(std::unique_ptr<ViewClient> &&client) {
+void View::set_client(std::unique_ptr<ViewClientInterface> &&client) {
   std::lock_guard<std::mutex> guard{primitives_mutex_};
   primitives_.clear();
   client_ = std::move(client);

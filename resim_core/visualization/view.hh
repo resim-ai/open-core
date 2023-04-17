@@ -15,7 +15,7 @@ namespace resim {
 namespace visualization {
 
 // Forward declaration of the ViewClient interface.
-class ViewClient;
+class ViewClientInterface;
 
 // This class holds the data that a view statement can generate and acts
 // as the implementation of the logic behind the desired synax:
@@ -86,16 +86,16 @@ class View {
  private:
 #ifdef RESIM_TESTING
   template <typename T>
-  FRIEND_TEST(LibcurlClientTest, TestLibcurlClientView);
+  FRIEND_TEST(ViewClientTest, TestViewClientView);
 
   template <typename T>
-  FRIEND_TEST(LibcurlClientTest, TestLibcurlClientViewCustomName);
+  FRIEND_TEST(ViewClientTest, TestViewClientViewCustomName);
 
   template <typename T>
-  FRIEND_TEST(LibcurlClientTest, TestLibcurlClientViewCustomNameAlt);
+  FRIEND_TEST(ViewClientTest, TestViewClientViewCustomNameAlt);
 
   template <typename T>
-  FRIEND_TEST(LibcurlClientTest, TestLibcurlClientLogging);
+  FRIEND_TEST(ViewClientTest, TestViewClientLogging);
 
   template <typename T>
   FRIEND_TEST(ViewTest, TestViewSingleThread);
@@ -121,9 +121,9 @@ class View {
 
   // Set the client pointer
   // @param[in] The new client.
-  void set_client(std::unique_ptr<ViewClient> &&client);
+  void set_client(std::unique_ptr<ViewClientInterface> &&client);
 
-  std::unique_ptr<ViewClient> client_;
+  std::unique_ptr<ViewClientInterface> client_;
 
   std::vector<ViewPrimitive> primitives_;
   std::mutex primitives_mutex_;

@@ -16,7 +16,7 @@ cc_library(
         "//resim_core/assert",
         "//resim_core/auth/proto:auth_messages_proto_cc",
         "@com_google_protobuf//:protobuf",
-        "@httplib",
+        "@cpr",
     ],
 )
 
@@ -42,7 +42,7 @@ cc_library(
         "//resim_core/utils:http_response",
         "//resim_core/utils:inout",
         "@com_google_protobuf//:protobuf",
-        "@curl",
+        "@cpr",
     ],
 )
 
