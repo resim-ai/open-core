@@ -912,4 +912,21 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
   }
 }
 
+TEST(LibcurlClientTest, TokenPathCoverage) {
+  char *tmpdir_cstr = getenv("TEST_TMPDIR");
+  ASSERT_NE(nullptr, tmpdir_cstr);
+  std::string tmpdir(tmpdir_cstr);
+  EXPECT_EQ(
+      LibcurlClient::determine_token_root(nullptr).string().substr(
+          0,
+          tmpdir.size()),
+      tmpdir);
+  std::string home = "/home";
+  EXPECT_EQ(
+      LibcurlClient::determine_token_root("/home").string().substr(
+          0,
+          home.size()),
+      home);
+}
+
 }  // namespace resim::visualization
