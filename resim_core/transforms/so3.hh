@@ -80,6 +80,9 @@ class SO3 : public LieGroup<3, 3> {
   // Create an SO3 from an element of the LieGroup algebra.
   static SO3 exp(const TangentVector &alg);
 
+  // Get the differential of the exponential map at alg.
+  static TangentMapping exp_diff(const TangentVector &alg);
+
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
   TangentVector log() const;

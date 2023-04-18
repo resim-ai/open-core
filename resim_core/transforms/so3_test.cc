@@ -173,4 +173,25 @@ TEST(SO3Quaterniond, TestGetQuaternion) {
   }
 }
 
+// Test that the differential of the exponential is correct using finite
+// differences.
+TEST(SO3Test, TestExpDiff) {
+  for (const SO3::TangentVector &vec : make_test_algebra_elements<SO3>()) {
+    constexpr double EPS = 1e-9;
+    const SO3 unperturbed{SO3::exp(vec)};
+
+    const SO3::TangentMapping d_exp{SO3::exp_diff(vec)};
+    for (int ii = 0; ii < SO3::DOF; ++ii) {
+      const SO3::TangentVector delta{EPS * SO3::TangentVector::Unit(ii)};
+      const SO3 perturbed{SO3::exp(vec + delta)};
+      const SO3::TangentVector expected_derivative{
+          (perturbed * unperturbed.inverse()).log() / EPS};
+
+      constexpr double TOLERANCE = 1e-6;
+      EXPECT_TRUE((expected_derivative - d_exp * SO3::TangentVector::Unit(ii))
+                      .isZero(TOLERANCE));
+    }
+  }
+}
+
 }  // namespace resim::transforms

@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "resim_core/transforms/cross_matrix.hh"
+#include "resim_core/transforms/liegroup_exp_diff.hh"
 
 namespace resim::transforms {
 
@@ -43,6 +44,13 @@ SO3 SO3::interp(const double fraction) const {
 
 SO3 SO3::exp(const TangentVector &alg) {
   return SO3(Eigen::AngleAxisd(alg.norm(), alg.normalized()));
+}
+
+SO3::TangentMapping SO3::exp_diff(const TangentVector &alg) {
+  const double theta_sq = alg.squaredNorm();
+  const ExpDiffCoeffs coeffs{derivative_of_exp_so3(theta_sq)};
+  return coeffs.a * SO3::TangentMapping::Identity() +
+         coeffs.b * cross_matrix(alg) + coeffs.c * alg * alg.transpose();
 }
 
 TangentVector SO3::log() const {

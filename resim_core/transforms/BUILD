@@ -218,6 +218,7 @@ cc_library(
         ":cross_matrix",
         ":liegroup",
         ":liegroup_concepts",
+        ":liegroup_exp_diff",
         "@libeigen//:eigen",
     ],
 )
