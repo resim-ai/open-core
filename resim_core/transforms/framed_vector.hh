@@ -55,6 +55,14 @@ class FramedVector : public Eigen::Matrix<double, dims, 1> {
     return FramedVector<dims>(Vector::operator+(other), frame_);
   }
 
+  FramedVector<dims> operator*(double d) const {
+    return FramedVector<dims>(Vector::operator*(d), frame_);
+  }
+
+  friend FramedVector<dims> operator*(double d, const FramedVector &v) {
+    return FramedVector<dims>(d * v.vector(), v.frame());
+  }
+
   // Summing with a matching unframed vector returns another unframed vector
   // @param[in] other - An unframed Vector to add to this one.
   // @returns - An unframed Vector representing the sum.

@@ -128,6 +128,22 @@ TYPED_TEST(FramedVectorTest, SetFrame) {
   EXPECT_EQ(test_frame, test_framed_vector.frame());
 }
 
+TYPED_TEST(FramedVectorTest, ScalarMulitply) {
+  // SETUP
+  constexpr unsigned D = TypeParam::value;
+  const Eigen::Matrix<double, D, 1> test_vector = this->generate_test_vector();
+
+  // ACTION
+  const FramedVector<D> test_framed_vector(test_vector);
+  const FramedVector<D> result_framed_vector_right = test_framed_vector * 0.5;
+  const FramedVector<D> result_framed_vector_left = 0.5 * test_framed_vector;
+
+  // VERIFICATION
+  EXPECT_EQ(result_framed_vector_right.frame(), test_framed_vector.frame());
+  EXPECT_EQ(result_framed_vector_left.frame(), test_framed_vector.frame());
+  EXPECT_EQ(result_framed_vector_left, result_framed_vector_right);
+}
+
 template <typename T>
 using FramedVectorAssertionTest = FramedVectorTest<T>;
 TYPED_TEST_SUITE(FramedVectorAssertionTest, DimensionalityTypes);
