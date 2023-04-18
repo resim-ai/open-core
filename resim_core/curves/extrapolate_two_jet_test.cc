@@ -54,7 +54,8 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
   void test_frame_overload(const double dt) {
     if constexpr (transforms::FramedGroupType<Group>) {
       // SETUP
-      const transforms::Frame<Group::DIMS> frame;
+      const transforms::Frame<Group::DIMS> frame =
+          transforms::Frame<Group::DIMS>::new_frame();
       const TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
 
       // ACTION
@@ -64,9 +65,15 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
       // VERIFICATION
       // Verify using the other overload tested above
       TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+      // But now manually set the frame.
+      auto two_jet_transform = extrapolated_two_jet.frame_from_ref();
+      two_jet_transform.set_into(frame);
+      extrapolated_two_jet.set_frame_from_ref(two_jet_transform);
+      // Compare the two TwoJets.
       EXPECT_TRUE(
           extrapolated_two_jet.is_approx(extrapolated_two_jet_explicit));
 
+      // Explicitly check the frames.
       EXPECT_EQ(extrapolated_two_jet_explicit.frame_from_ref().into(), frame);
       EXPECT_EQ(
           extrapolated_two_jet_explicit.frame_from_ref().from(),

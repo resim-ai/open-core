@@ -91,6 +91,7 @@ TEST(StateTest, TestSubtract) {
 
     // These have to match
     state_b.reference_from_body.set_into(state_a.reference_from_body.into());
+    state_b.reference_from_body.set_from(state_a.reference_from_body.from());
 
     // ACTION
     const State should_match_b{(state_b - state_a) + state_a};

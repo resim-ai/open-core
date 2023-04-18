@@ -8,6 +8,7 @@
 #include "resim_core/curves/two_jet_concepts.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -24,15 +25,6 @@ typename TwoJet::GroupType::TangentVector test_vector(Rng &rng) {
   return testing::random_vector<typename TwoJet::GroupType::TangentVector>(rng);
 }
 
-template <typename TwoJet, typename Rng>
-TwoJet test_two_jet(Rng &rng) {
-  using Group = typename TwoJet::GroupType;
-  return TwoJet(
-      Group::exp(test_vector<TwoJet>(rng)),
-      test_vector<TwoJet>(rng),
-      test_vector<TwoJet>(rng));
-}
-
 }  // namespace
 
 template <curves::TwoJetType TwoJet>
@@ -42,7 +34,16 @@ TwoJetTestHelper<TwoJet>::TwoJetTestHelper(const unsigned int seed) {
 
 template <curves::TwoJetType TwoJet>
 TwoJet TwoJetTestHelper<TwoJet>::make_test_two_jet() {
-  return test_two_jet<TwoJet>(rng());
+  using Group = typename TwoJet::GroupType;
+  auto point_from_ref = Group::exp(test_vector<TwoJet>(rng()));
+  if constexpr (transforms::FramedGroupType<typename TwoJet::GroupType>) {
+    point_from_ref.set_into(INTO_FRAME);
+    point_from_ref.set_from(FROM_FRAME);
+  }
+  return TwoJet(
+      point_from_ref,
+      test_vector<TwoJet>(rng()),
+      test_vector<TwoJet>(rng()));
 }
 
 template <curves::TwoJetType TwoJet>

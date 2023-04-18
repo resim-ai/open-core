@@ -46,8 +46,10 @@ RigidBodyState<Group>::RigidBodyState(curves::TwoJetR<Group> ref_from_body)
     : ref_from_body_{std::move(ref_from_body)} {};
 
 template <transforms::LieGroupType Group>
-RigidBodyState<Group> RigidBodyState<Group>::identity() {
-  return RigidBodyState{curves::TwoJetR<Group>::identity()};
+template <typename... Args>
+RigidBodyState<Group> RigidBodyState<Group>::identity(Args &&...args) {
+  return RigidBodyState{
+      curves::TwoJetR<Group>::identity(std::forward<Args>(args)...)};
 }
 
 template <transforms::LieGroupType Group>
@@ -157,6 +159,14 @@ void RigidBodyState<Group>::set_body_angular_acceleration_radpss(
 }
 
 template class RigidBodyState<transforms::FSE3>;
+template RigidBodyState<transforms::FSE3>
+RigidBodyState<transforms::FSE3>::identity();
+template RigidBodyState<transforms::FSE3>
+RigidBodyState<transforms::FSE3>::identity(
+    const transforms::Frame<transforms::FSE3::DIMS> &,
+    const transforms::Frame<transforms::FSE3::DIMS> &);
 template class RigidBodyState<transforms::SE3>;
+template RigidBodyState<transforms::SE3>
+RigidBodyState<transforms::SE3>::identity();
 
 }  // namespace resim::actor::state

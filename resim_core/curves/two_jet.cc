@@ -1,5 +1,6 @@
 #include "resim_core/curves/two_jet.hh"
 
+#include <cstdio>
 #include <utility>
 
 #include "resim_core/transforms/framed_group.hh"
@@ -34,9 +35,10 @@ void TwoJetL<Group>::set_d2_frame_from_ref(TangentVector d2_frame_from_ref) {
 }
 
 template <transforms::LieGroupType Group>
-TwoJetL<Group> TwoJetL<Group>::identity() {
+template <typename... Args>
+TwoJetL<Group> TwoJetL<Group>::identity(Args &&...args) {
   return TwoJetL<Group>(
-      Group::identity(),
+      Group::identity(std::forward<Args>(args)...),
       Group::TangentVector::Zero(),
       Group::TangentVector::Zero());
 }
@@ -96,11 +98,16 @@ bool TwoJetL<Group>::is_approx(const TwoJetL<Group> &other) const {
       d2_frame_from_ref_.isApprox(other.d2_frame_from_ref_));
 }
 
-// TODO(https://app.asana.com/0/1202178773526279/1203608723315721/f)
 template class TwoJetL<transforms::SE3>;
 template class TwoJetL<transforms::SO3>;
 template class TwoJetL<transforms::FSE3>;
+template TwoJetL<transforms::FSE3> TwoJetL<transforms::FSE3>::identity(
+    const transforms::Frame<transforms::FSE3::DIMS> &,
+    const transforms::Frame<transforms::FSE3::DIMS> &);
 template class TwoJetL<transforms::FSO3>;
+template TwoJetL<transforms::FSO3> TwoJetL<transforms::FSO3>::identity(
+    const transforms::Frame<transforms::FSO3::DIMS> &,
+    const transforms::Frame<transforms::FSO3::DIMS> &);
 
 template <transforms::LieGroupType Group>
 TwoJetR<Group>::TwoJetR(
@@ -127,9 +134,10 @@ void TwoJetR<Group>::set_d2_ref_from_frame(TangentVector d2_ref_from_frame) {
 }
 
 template <transforms::LieGroupType Group>
-TwoJetR<Group> TwoJetR<Group>::identity() {
+template <typename... Args>
+TwoJetR<Group> TwoJetR<Group>::identity(Args &&...args) {
   return TwoJetR<Group>(
-      Group::identity(),
+      Group::identity(std::forward<Args>(args)...),
       Group::TangentVector::Zero(),
       Group::TangentVector::Zero());
 }
@@ -192,6 +200,12 @@ bool TwoJetR<Group>::is_approx(const TwoJetR<Group> &other) const {
 template class TwoJetR<transforms::SE3>;
 template class TwoJetR<transforms::SO3>;
 template class TwoJetR<transforms::FSE3>;
+template TwoJetR<transforms::FSE3> TwoJetR<transforms::FSE3>::identity(
+    const transforms::Frame<transforms::FSE3::DIMS> &,
+    const transforms::Frame<transforms::FSE3::DIMS> &);
 template class TwoJetR<transforms::FSO3>;
+template TwoJetR<transforms::FSO3> TwoJetR<transforms::FSO3>::identity(
+    const transforms::Frame<transforms::FSO3::DIMS> &,
+    const transforms::Frame<transforms::FSO3::DIMS> &);
 
 }  // namespace resim::curves

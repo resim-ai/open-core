@@ -97,7 +97,7 @@ TYPED_TEST(RigidBodyStateTests, TestTwoJetConstruction) {
   EXPECT_TRUE(rigid_body_state.ref_from_body_two_jet().is_approx(test_two_jet));
 }
 
-TYPED_TEST(RigidBodyStateTests, TestIdentity) {
+TYPED_TEST(UnframedRigidBodyStateTests, TestIdentity) {
   const auto identity_state = RigidBodyState<TypeParam>::identity();
 
   // Twojet is identity
@@ -259,6 +259,15 @@ TYPED_TEST(FramedRigidBodyStateTests, InverseTimes) {
   EXPECT_EQ(state_c.ref_from_body().into(), FRAME_B);
   EXPECT_EQ(state_c.ref_from_body().from(), FRAME_C);
   EXPECT_NE(state_c.ref_from_body().from(), FRAME_A);
+}
+
+TYPED_TEST(FramedRigidBodyStateTests, IdentityFrames) {
+  const auto FRAME_A = transforms::Frame<TypeParam::DIMS>::new_frame();
+  const auto FRAME_B = transforms::Frame<TypeParam::DIMS>::new_frame();
+  const RigidBodyState<TypeParam> framed_state =
+      RigidBodyState<TypeParam>::identity(FRAME_A, FRAME_B);
+  EXPECT_EQ(framed_state.ref_from_body().into(), FRAME_A);
+  EXPECT_EQ(framed_state.ref_from_body().from(), FRAME_B);
 }
 
 }  // namespace resim::actor::state

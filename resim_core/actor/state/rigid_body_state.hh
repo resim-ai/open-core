@@ -69,7 +69,8 @@ class RigidBodyState {
 
   // Construct a RigidBodyState containing the identity transform and zero
   // derivatives.
-  static RigidBodyState identity();
+  template <typename... Args>
+  static RigidBodyState<Group> identity(Args &&...args);
 
   // Compose this RigidBodState with another.
   // Composition behaves very similarly to LieGroup composition. It is

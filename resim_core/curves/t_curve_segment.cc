@@ -26,10 +26,12 @@ TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
       dest_(std::move(dest)) {
   if constexpr (transforms::FramedGroupType<Group>) {
     constexpr auto ERROR_MESSAGE =
-        "Origin and destination TwoJets must have the same reference frame.";
-    const bool frame_equality_test =
-        (orig_.frame_from_ref().from() == dest_.frame_from_ref().from());
-    REASSERT(frame_equality_test, ERROR_MESSAGE);
+        "Origin and destination TwoJets must have matching frames.";
+    REASSERT(
+        orig_.frame_from_ref().verify_frames(
+            dest_.frame_from_ref().into(),
+            dest_.frame_from_ref().from()),
+        ERROR_MESSAGE);
   }
 }
 

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "resim_core/curves/two_jet_concepts.hh"
+#include "resim_core/transforms/frame.hh"
 
 namespace resim::curves {
 
@@ -21,6 +22,9 @@ class TwoJetTestHelper {
   std::mt19937 rng_;
 
  public:
+  using Frame = transforms::Frame<TwoJet::GroupType::DIMS>;
+  inline static const Frame INTO_FRAME = Frame::new_frame();
+  inline static const Frame FROM_FRAME = Frame::new_frame();
   TwoJetTestHelper() = default;
 
   // Construct a helper class that can spin up random TwoJets

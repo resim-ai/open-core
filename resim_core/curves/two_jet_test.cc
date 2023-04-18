@@ -128,7 +128,13 @@ class UnframedTwoJetLTests : public TwoJetLTests<T> {};
 using UnframedTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(UnframedTwoJetLTests, UnframedTypes);
 
-TYPED_TEST(TwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
+template <typename T>
+class FramedTwoJetLTests : public TwoJetLTests<T> {};
+
+using FramedTypes = ::testing::Types<FSE3, FSO3>;
+TYPED_TEST_SUITE(FramedTwoJetLTests, FramedTypes);
+
+TYPED_TEST(UnframedTwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
   std::vector<TwoJetL<TypeParam>> test_elements =
       TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   for (const TwoJetL<TypeParam> &test_tj : test_elements) {
@@ -203,6 +209,16 @@ TYPED_TEST(TwoJetLTests, IsApproxTest) {
   EXPECT_TRUE(test_two_jet_0.is_approx(test_two_jet_1));
 }
 
+TYPED_TEST(FramedTwoJetLTests, IdentityFrames) {
+  using Frame = transforms::Frame<TypeParam::DIMS>;
+  const Frame INTO = Frame::new_frame();
+  const Frame FROM = Frame::new_frame();
+  const TwoJetL<TypeParam> framed_two_jet =
+      TwoJetL<TypeParam>::identity(INTO, FROM);
+  EXPECT_EQ(framed_two_jet.frame_from_ref().into(), INTO);
+  EXPECT_EQ(framed_two_jet.frame_from_ref().from(), FROM);
+}
+
 // TwoJetR specific tests. These tests use methods only defined in TwoJetR
 // and must be tested separately.
 template <typename Group>
@@ -226,7 +242,12 @@ class UnframedTwoJetRTests : public TwoJetRTests<T> {};
 
 TYPED_TEST_SUITE(UnframedTwoJetRTests, UnframedTypes);
 
-TYPED_TEST(TwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
+template <typename T>
+class FramedTwoJetRTests : public TwoJetRTests<T> {};
+
+TYPED_TEST_SUITE(FramedTwoJetRTests, FramedTypes);
+
+TYPED_TEST(UnframedTwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
   std::vector<TwoJetR<TypeParam>> test_elements =
       TestFixture::tj_helper().make_test_two_jet_elements(NUM_TRIES);
   for (const auto &test_tj : test_elements) {
@@ -299,6 +320,16 @@ TYPED_TEST(TwoJetRTests, IsApproxTest) {
   EXPECT_FALSE(test_two_jet_0.is_approx(test_two_jet_1));
   test_two_jet_0.set_d2_ref_from_frame(test_two_jet_1.d2_ref_from_frame());
   EXPECT_TRUE(test_two_jet_0.is_approx(test_two_jet_1));
+}
+
+TYPED_TEST(FramedTwoJetRTests, IdentityFrames) {
+  using Frame = transforms::Frame<TypeParam::DIMS>;
+  const Frame INTO = Frame::new_frame();
+  const Frame FROM = Frame::new_frame();
+  const TwoJetR<TypeParam> framed_two_jet =
+      TwoJetR<TypeParam>::identity(INTO, FROM);
+  EXPECT_EQ(framed_two_jet.ref_from_frame().into(), INTO);
+  EXPECT_EQ(framed_two_jet.ref_from_frame().from(), FROM);
 }
 
 }  // namespace resim::curves

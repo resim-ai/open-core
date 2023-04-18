@@ -66,8 +66,9 @@ class TwoJetL {
   void set_d_frame_from_ref(TangentVector d_frame_from_ref);
   void set_d2_frame_from_ref(TangentVector d2_frame_from_ref);
 
-  // Get and identity TwoJetL.
-  static TwoJetL<Group> identity();
+  // Get an identity TwoJetL.
+  template <typename... Args>
+  static TwoJetL<Group> identity(Args &&...args);
 
   // Invert this TwoJetL.
   TwoJetL<Group> inverse() const;
@@ -138,8 +139,9 @@ class TwoJetR {
   void set_d_ref_from_frame(TangentVector d_ref_from_frame);
   void set_d2_ref_from_frame(TangentVector d2_ref_from_frame);
 
-  // Get and identity TwoJetR.
-  static TwoJetR<Group> identity();
+  // Get an identity TwoJetR.
+  template <typename... Args>
+  static TwoJetR<Group> identity(Args &&...args);
 
   // Invert this TwoJetR.
   TwoJetR<Group> inverse() const;

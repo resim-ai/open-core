@@ -165,6 +165,7 @@ cc_test(
         ":two_jet_test_helpers",
         "//resim_core/testing:random_matrix",
         "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
