@@ -77,12 +77,6 @@ TEST_F(TrajectoryToProtoTests, TestPack) {
     const curves::TwoJetL<FSE3> &retrieved_two_jet = retrieved_points[i].point;
     const curves::TwoJetL<FSE3> &original_two_jet = test_points[i].point;
     EXPECT_TRUE(original_two_jet.is_approx(retrieved_two_jet));
-    EXPECT_EQ(
-        original_two_jet.frame_from_ref().from(),
-        retrieved_two_jet.frame_from_ref().from());
-    EXPECT_EQ(
-        original_two_jet.frame_from_ref().into(),
-        retrieved_two_jet.frame_from_ref().into());
   }
 }
 

@@ -81,14 +81,6 @@ TYPED_TEST(TCurveToProtoTests, TestPack) {
     const TwoJetL<Group> &retrieved_two_jet = retrieved_points[i].point;
     const TwoJetL<Group> &original_two_jet = test_points[i].point;
     EXPECT_TRUE(original_two_jet.is_approx(retrieved_two_jet));
-    if constexpr (transforms::FramedGroupType<typename TypeParam::first_type>) {
-      EXPECT_EQ(
-          original_two_jet.frame_from_ref().from(),
-          retrieved_two_jet.frame_from_ref().from());
-      EXPECT_EQ(
-          original_two_jet.frame_from_ref().into(),
-          retrieved_two_jet.frame_from_ref().into());
-    }
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

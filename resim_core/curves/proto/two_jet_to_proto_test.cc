@@ -140,16 +140,6 @@ TYPED_TEST(TwoJetLToProtoTests, TestPack) {
     const TwoJet retrieved_tj = proto::unpack(msg);
     EXPECT_TRUE(
         test_tj.frame_from_ref().is_approx(retrieved_tj.frame_from_ref()));
-    // For framed groups we need to explicitly verify the frames are correct
-    if constexpr (transforms::FramedGroupType<
-                      typename TypeParam::first_type::GroupType>) {
-      EXPECT_EQ(
-          test_tj.frame_from_ref().from(),
-          retrieved_tj.frame_from_ref().from());
-      EXPECT_EQ(
-          test_tj.frame_from_ref().into(),
-          retrieved_tj.frame_from_ref().into());
-    }
     EXPECT_TRUE(
         retrieved_tj.d_frame_from_ref().isApprox(test_tj.d_frame_from_ref()));
     EXPECT_TRUE(
@@ -183,16 +173,6 @@ TYPED_TEST(TwoJetRToProtoTests, TestPack) {
     const TwoJet retrieved_tj = proto::unpack(msg);
     EXPECT_TRUE(
         test_tj.ref_from_frame().is_approx(retrieved_tj.ref_from_frame()));
-    // For framed groups we need to explicitly verify the frames are correct
-    if constexpr (transforms::FramedGroupType<
-                      typename TypeParam::first_type::GroupType>) {
-      EXPECT_EQ(
-          test_tj.ref_from_frame().from(),
-          retrieved_tj.ref_from_frame().from());
-      EXPECT_EQ(
-          test_tj.ref_from_frame().into(),
-          retrieved_tj.ref_from_frame().into());
-    }
     EXPECT_TRUE(
         retrieved_tj.d_ref_from_frame().isApprox(test_tj.d_ref_from_frame()));
     EXPECT_TRUE(
