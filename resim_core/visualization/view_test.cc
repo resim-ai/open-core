@@ -59,6 +59,11 @@ const std::array<std::string, NUM_PAYLOADS> NAME_RANGE =
         "name_9",
         "name_10",
 };
+
+constexpr auto DEFAULT_FILE_NAME = "Unknown file";
+constexpr auto TEST_FILE_NAME = __FILE__;
+constexpr int DEFAULT_LINE_NUMBER = 0;
+
 // A simple mock of the view client that calls the observer given on
 // construction when send_view_update is called.
 class MockViewClient : public ViewClientInterface {
@@ -224,6 +229,8 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunction) {
         .id = UUID::new_uuid(),
         .payload = test_elements.at(ii),
         .user_defined_name = NAME_RANGE.at(ii),
+        .file_name = DEFAULT_FILE_NAME,
+        .line_number = DEFAULT_LINE_NUMBER,
     });
   }
 
@@ -252,6 +259,8 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunctionFail) {
         .id = UUID::new_uuid(),
         .payload = test_elements.at(ii),
         .user_defined_name = NAME_RANGE.at(ii),
+        .file_name = DEFAULT_FILE_NAME,
+        .line_number = DEFAULT_LINE_NUMBER,
     });
   }
 
@@ -272,6 +281,7 @@ TYPED_TEST(ViewClientTest, TestFail) {
   EXPECT_FALSE(status.ok());
 }
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TYPED_TEST(ViewClientTest, TestViewClientView) {
   // SET UP
   ViewUpdate expected_update;
@@ -285,6 +295,10 @@ TYPED_TEST(ViewClientTest, TestViewClientView) {
     expected_update.primitives.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
         .payload = test_elements.at(ii),
+        // Since we are using the basic version of view statement, we omit the
+        // user defined name
+        .file_name = DEFAULT_FILE_NAME,
+        .line_number = DEFAULT_LINE_NUMBER,
     });
   }
 
@@ -300,6 +314,19 @@ TYPED_TEST(ViewClientTest, TestViewClientView) {
         // Since we feed views one at a time, update.primitives will always only
         // have one element, but it should correspond with the expected_update
         // at index update_id.
+
+        // Check the name and metadata. Since we do not supply a name, the None
+        // part of std::optional should be in the ViewPrimitive.
+        EXPECT_EQ(
+            std::nullopt,
+            expected_update.primitives.at(update_id).user_defined_name);
+        EXPECT_EQ(
+            update.primitives.at(0).file_name,
+            expected_update.primitives.at(update_id).file_name);
+        EXPECT_EQ(
+            update.primitives.at(0).line_number,
+            expected_update.primitives.at(update_id).line_number);
+        // Check the payload.
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
@@ -385,6 +412,8 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomName) {
         .id = UUID::new_uuid(),
         .payload = test_elements.at(ii),
         .user_defined_name = NAME_RANGE.at(ii),
+        .file_name = TEST_FILE_NAME,
+        // Since it is very brittle to check line numbers, we omit.
     });
   }
 
@@ -403,6 +432,13 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomName) {
         EXPECT_EQ(
             expected_update.primitives.at(update_id).user_defined_name,
             update.primitives.at(0).user_defined_name);
+        // This is a bit of a cludge, but we can't check the line number
+        // without making the test impossibly brittle, so instead we make a
+        // resonable ball-park approximation.
+        EXPECT_LT(__LINE__, update.primitives.at(0).line_number);
+        EXPECT_EQ(
+            expected_update.primitives.at(update_id).file_name,
+            update.primitives.at(0).file_name);
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
@@ -488,6 +524,8 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
         .id = UUID::new_uuid(),
         .payload = test_elements.at(ii),
         .user_defined_name = NAME_RANGE.at(ii),
+        .file_name = TEST_FILE_NAME,
+        // Since it is very brittle to check line numbers, we omit.
     });
   }
 
@@ -503,6 +541,16 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
         // Since we feed views one at a time, update.primitives will always only
         // have one element, but it should correspond with the expected_update
         // at index update_id.
+        EXPECT_EQ(
+            expected_update.primitives.at(update_id).user_defined_name,
+            update.primitives.at(0).user_defined_name);
+        // This is a bit of a cludge, but we can't check the line number
+        // without making the test impossibly brittle, so instead we make a
+        // resonable ball-park approximation.
+        EXPECT_LT(__LINE__, update.primitives.at(0).line_number);
+        EXPECT_EQ(
+            expected_update.primitives.at(update_id).file_name,
+            update.primitives.at(0).file_name);
         match(
             update.primitives.at(0).payload,
             [&](const Frame &test_frame) {
@@ -573,6 +621,7 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
     expected_update_id++;
   }
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 TYPED_TEST(ViewClientTest, TestViewClientLogging) {
   // SETUP
@@ -862,7 +911,8 @@ TYPED_TEST(ViewObjectTest, TestViewObjectConstructor) {
 
   // ACTION
   for (const auto &element : test_elements) {
-    ViewObject<TypeParam> view_object = view_impl(element);
+    ViewObject<TypeParam> view_object =
+        view_impl(element, DEFAULT_FILE_NAME, DEFAULT_LINE_NUMBER);
     result_elements.push_back(view_object);
   }
 
@@ -873,6 +923,8 @@ TYPED_TEST(ViewObjectTest, TestViewObjectConstructor) {
     ViewTest<TypeParam>::check_correctness(
         test_elements.at(ii),
         result_elements.at(ii).the_object);
+    ASSERT_EQ(result_elements.at(ii).file_name, DEFAULT_FILE_NAME);
+    ASSERT_EQ(result_elements.at(ii).line_number, DEFAULT_LINE_NUMBER);
   }
 }
 
@@ -898,7 +950,8 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
 
   // ACTION
   for (const auto &element : test_elements) {
-    ViewObject<TypeParam> view_object = view_impl(element, TEST_NAME);
+    ViewObject<TypeParam> view_object =
+        view_impl(element, TEST_NAME, DEFAULT_FILE_NAME, DEFAULT_LINE_NUMBER);
     result_elements.push_back(view_object);
   }
 
@@ -909,6 +962,8 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
         test_elements.at(ii),
         result_elements.at(ii).the_object);
     EXPECT_EQ(result_elements.at(ii).user_defined_name, TEST_NAME);
+    EXPECT_EQ(result_elements.at(ii).file_name, DEFAULT_FILE_NAME);
+    EXPECT_EQ(result_elements.at(ii).line_number, DEFAULT_LINE_NUMBER);
   }
 }
 

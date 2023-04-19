@@ -29,4 +29,6 @@ message ViewPrimitive {
     }
 
     string user_defined_name = 11;
+    string file_name         = 12;
+    int32  line_number       = 13;
 }

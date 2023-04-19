@@ -24,6 +24,7 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+constexpr auto UNKNOWN_FILE = "Unknown file";
 }  // namespace
 
 View::View() {
@@ -43,8 +44,9 @@ View &View::get_instance() {
 
 template <typename T>
 View &View::operator<<(const T &subject) {
-  // Generate a ViewObject without a name, then view it.
-  const ViewObject<T> &the_view_object{subject};
+  // Generate a ViewObject without a name, then view it. Since we don't use a
+  // macro, we cannot supply an accurate file name and line number.
+  const ViewObject<T> &the_view_object{subject, UNKNOWN_FILE, 0};
   view_object(the_view_object);
   return *this;
 }
@@ -84,7 +86,10 @@ void View::view_object(ViewObject<T> view_object) {
     primitives_.emplace_back(ViewPrimitive{
         .id = UUID::new_uuid(),
         .payload = view_object.the_object,
-        .user_defined_name = view_object.user_defined_name});
+        .user_defined_name = view_object.user_defined_name,
+        .file_name = view_object.file_name,
+        .line_number = view_object.line_number,
+    });
   }
   // Currently, we pack each primitive into its own update and send eagerly to
   // the view server.
@@ -109,12 +114,22 @@ void View::set_client(std::unique_ptr<ViewClientInterface> &&client) {
 
 // Implementation for ViewObject
 template <typename T>
-ViewObject<T>::ViewObject(T object) : the_object(std::move(object)) {}
+ViewObject<T>::ViewObject(T object, const char *file_name, int line_number)
+    : the_object(std::move(object)),
+      file_name(file_name),
+      line_number(line_number) {}
 
 template <typename T>
-ViewObject<T>::ViewObject(T object, std::string name)
+ViewObject<T>::ViewObject(
+    T object,
+    std::string name,
+    const char *file_name,
+    int line_number)
     : the_object(std::move(object)),
-      user_defined_name(std::move(name)) {
+      user_defined_name(std::move(name)),
+      file_name(file_name),
+      line_number(line_number) {
+  // Eagerly view the object, since we have all the required information
   resim::view.view_object(*this);
 }
 

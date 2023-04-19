@@ -51,6 +51,8 @@ const std::vector<std::optional<std::string>> NAME_RANGE = {
     "first_name",
     "second_name",
     std::nullopt};
+constexpr auto TEST_FILE_NAME = "test_file_name";
+constexpr int TEST_LINE_NUMBER = 42;
 }  // namespace
 
 template <typename T>
@@ -163,6 +165,8 @@ ViewPrimitive ViewPrimitiveToProtoTypedTest<T>::generate_test_primitive(
       .id = UUID::new_uuid(),
       .payload = generate_test_object(),
       .user_defined_name = name,
+      .file_name = TEST_FILE_NAME,
+      .line_number = TEST_LINE_NUMBER,
   };
 
   return test_primitive;
@@ -197,7 +201,8 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
     // Expect the value to be encoded as an empty field in protobuf
     // if it has no value.
     EXPECT_EQ(name.value_or(""), primitive_msg.user_defined_name());
-
+    EXPECT_EQ(TEST_FILE_NAME, primitive_msg.file_name());
+    EXPECT_EQ(TEST_LINE_NUMBER, primitive_msg.line_number());
     match(
         test_primitive.payload,
         [&](const Frame &test_frame) {
@@ -294,6 +299,8 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
     // VERIFICATION
     EXPECT_EQ(test_primitive.id, unpacked.id);
     EXPECT_EQ(test_primitive.user_defined_name, unpacked.user_defined_name);
+    EXPECT_EQ(test_primitive.file_name, unpacked.file_name);
+    EXPECT_EQ(test_primitive.line_number, unpacked.line_number);
     match(
         test_primitive.payload,
         [&](const Frame &test_frame) {

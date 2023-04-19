@@ -17,7 +17,8 @@
 namespace resim::visualization {
 
 // A struct representing a single visualizable piece of data (e.g. a transform,
-// curve, box, etc.) and its optional, user-supplied name.
+// curve, box, etc.), its optional, user-supplied name and metadata about that
+// view object.
 struct ViewPrimitive {
   UUID id;
   std::variant<
@@ -32,6 +33,9 @@ struct ViewPrimitive {
       transforms::Frame<3>>
       payload;
   std::optional<std::string> user_defined_name = {};
+  // The file name and line number where this view primitive was created.
+  std::string file_name;
+  int line_number;
 };
 
 }  // namespace resim::visualization

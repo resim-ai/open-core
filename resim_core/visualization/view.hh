@@ -40,13 +40,23 @@ struct ViewObject {
   T the_object;
   // The optional name provided for the object
   std::optional<std::string> user_defined_name;
+  // The file name of the source file where the view statement was placed
+  const char *file_name;
+  // The line number of the source file where the view statement was placed
+  const int line_number;
   // Constructor
   // Creates an, as of yet unnamed ViewObject: needs to be combined with the
-  // stream operator to generate a view.
-  explicit ViewObject(T object);
+  // stream operator to generate a view. Includes the file name and line number
+  // where the view object was generated.
+  ViewObject(T object, const char *file_name, int line_number);
   // Constructor
-  // Creates and flushes a view object eagerly.
-  ViewObject(T object, std::string user_defined_name);
+  // Creates and flushes a view object eagerly, alongside the file and line
+  // number where it was generated.
+  ViewObject(
+      T object,
+      std::string user_defined_name,
+      const char *file_name,
+      int line_number);
   // Streams in a name for the object. Returns void as
   // we do not allow composite names with a streaming operator.
   void operator<<(const std::string &user_defined_name);
@@ -129,16 +139,22 @@ class View {
   std::mutex primitives_mutex_;
 };
 
-// Implementation of the VIEW macro, for single parameter
+// Implementation of the VIEW macro, without a message. Currently just calls the
+// constructor for a view object.
 template <typename T>
-ViewObject<T> view_impl(const T &object) {
-  return ViewObject<T>(object);
+ViewObject<T> view_impl(const T &object, const char *file, const int line) {
+  return ViewObject<T>(object, file, line);
 }
 
-// Implementation of the VIEW macro, for two parameters
+// Implementation of the VIEW macro, with a message. Currently just calls the
+// constructor for a view object.
 template <typename T>
-ViewObject<T> view_impl(const T &object, std::string message) {
-  return ViewObject<T>(object, message);
+ViewObject<T> view_impl(
+    const T &object,
+    std::string message,
+    const char *file,
+    const int line) {
+  return ViewObject<T>(object, message, file, line);
 }
 
 }  // namespace visualization
@@ -157,10 +173,12 @@ static visualization::View &view{visualization::View::get_instance()};
 
 // "Overload" for standard case when no message is provided and must be streamed
 // in:
-#define VIEW_1(object) resim::visualization::view_impl(object)
+#define VIEW_1(object) \
+  resim::visualization::view_impl(object, __FILE__, __LINE__)
 
 // "Overload" for the case where a message is provided in macro.
-#define VIEW_2(object, message) resim::visualization::view_impl(object, message)
+#define VIEW_2(object, message) \
+  resim::visualization::view_impl(object, message, __FILE__, __LINE__)
 
 // The main VIEW macro that users should use.
 #define VIEW(...) SELECT_VIEWER(__VA_ARGS__, VIEW_2, VIEW_1)(__VA_ARGS__)
