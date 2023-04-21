@@ -45,7 +45,21 @@ class MockServer {
   std::string host() const;
   int port() const;
 
+  // Returns a valid JWT for authorization.  Note that this is the ONLY
+  // token that the server will accept.
+  static std::string valid_token() { return VALID_TOKEN_; }
+  // Returns a token that will be rejected as Unauthorized (401).
+  // An unauthorized token could be expired, malformed, or otherwise invalid.
+  static std::string unauthorized_token() { return UNAUTHORIZED_TOKEN_; }
+  // Returns a valid token that does not have permission to the endpoint
+  // (for example, insufficient scopes).
+  static std::string forbidden_token() { return FORBIDDEN_TOKEN_; }
+
  private:
+  static const std::string VALID_TOKEN_;
+  static const std::string UNAUTHORIZED_TOKEN_;
+  static const std::string FORBIDDEN_TOKEN_;
+
   Receiver receiver_;
   HttpResponse view_update_response_code_{HttpResponse::CREATED};
   UUID session_id_;

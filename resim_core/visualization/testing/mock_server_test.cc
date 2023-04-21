@@ -1,8 +1,8 @@
 #include "resim_core/visualization/testing/mock_server.hh"
 
+#include <cpr/cpr.h>
 #include <fmt/core.h>
 #include <gtest/gtest.h>
-#include <httplib.h>
 
 #include <cstdint>
 
@@ -23,7 +23,6 @@ using TangentVector = SE3::TangentVector;
 
 namespace {
 
-constexpr int CREATED = 201;
 constexpr auto HOST = "localhost";
 
 const TangentVector test_tangent{
@@ -82,16 +81,18 @@ TEST(MockServerTest, TestConstruction) {
 
   ASSERT_NE(server.port(), 0);
   ASSERT_EQ(server.host(), HOST);
-
-  httplib::Client cli{HOST, server.port()};
-  httplib::Headers headers{{"Authorization", "Bearer test"}};
+  const std::string address = fmt::format("{}:{}", HOST, server.port());
 
   // ACTION
-  httplib::Result res{cli.Post("/view/sessions", headers, "", "text/plain")};
+  const cpr::Response session_response = cpr::Post(
+      cpr::Url{address + "/view/sessions"},
+      cpr::Bearer{MockServer::valid_token()});
 
   // VERIFICATION
-  EXPECT_EQ(UUID{res.value().body}, test_session_id);
-  EXPECT_EQ(res->status, CREATED);
+  EXPECT_EQ(UUID{session_response.text}, test_session_id);
+  EXPECT_EQ(
+      session_response.status_code,
+      static_cast<int>(HttpResponse::CREATED));
 
   // ACTION
   const std::string endpoint{fmt::format(
@@ -100,14 +101,17 @@ TEST(MockServerTest, TestConstruction) {
       UPDATE_ID)};
   proto::ViewUpdate update_msg;
   pack(test_update, &update_msg);
-  res = cli.Post(
-      endpoint,
-      headers,
-      update_msg.SerializeAsString(),
-      "application/octet-stream");
+
+  const cpr::Response update_response = cpr::Post(
+      cpr::Url{address + endpoint},
+      cpr::Bearer{MockServer::valid_token()},
+      cpr::Body{update_msg.SerializeAsString()},
+      cpr::Header{{"Content-Type", "application/octet-stream"}});
 
   // VERIFICATION
-  EXPECT_EQ(res->status, CREATED);
+  EXPECT_EQ(
+      update_response.status_code,
+      static_cast<int>(HttpResponse::CREATED));
   EXPECT_TRUE(checks_have_run);
 }
 
@@ -128,70 +132,96 @@ TEST(MockServerTest, TestReturnsRequestedCode) {
   ASSERT_EQ(server.host(), HOST);
 
   // Get the session
-  httplib::Client cli{HOST, server.port()};
-
+  const std::string address = fmt::format("{}:{}", HOST, server.port());
   const std::string endpoint{fmt::format(
       "/view/sessions/{:s}/updates/{:d}",
       test_session_id.to_string(),
       UPDATE_ID)};
+
   proto::ViewUpdate update_msg;
   pack(test_update, &update_msg);
 
-  httplib::Headers headers{{"Authorization", "Bearer test"}};
-
   // ACTION
-  const httplib::Result res = cli.Post(
-      endpoint,
-      headers,
-      update_msg.SerializeAsString(),
-      "application/octet-stream");
+  const cpr::Response session_response = cpr::Post(
+      cpr::Url{address + endpoint},
+      cpr::Bearer{MockServer::valid_token()},
+      cpr::Body(update_msg.SerializeAsString()));
 
   // VERIFICATION
-  EXPECT_EQ(res->status, static_cast<int>(HttpResponse::NOT_FOUND));
+  EXPECT_EQ(
+      session_response.status_code,
+      static_cast<int>(HttpResponse::NOT_FOUND));
   EXPECT_TRUE(checks_have_run);
 }
 
-TEST(MockServerTest, TestChecksAuthorization) {
-  // SETUP
-  const UUID test_session_id{UUID::new_uuid()};
-  constexpr uint64_t UPDATE_ID = 2U;
-  MockServer server{
-      HOST,
-      test_session_id,
-      [](const ViewUpdate &, UUID, uint64_t) {
-        return ViewSessionUpdateResponse();
-      }};
-
-  ASSERT_NE(server.port(), 0);
-  ASSERT_EQ(server.host(), HOST);
-
-  httplib::Client cli{HOST, server.port()};
-
-  const std::vector<std::string> endpoints{
-      "/view/sessions",
-      fmt::format(
-          "/view/sessions/{:s}/updates/{:d}",
-          test_session_id.to_string(),
-          UPDATE_ID)};
-  const std::vector<std::pair<httplib::Headers, HttpResponse>> cases{
-      {{{"Authorization", "Bearer foo"}}, HttpResponse::CREATED},
-      {{{"Authorization", "Bearer"}}, HttpResponse::FORBIDDEN},
-      {{{"Authorization", "Bear"}}, HttpResponse::FORBIDDEN},
-      {{}, HttpResponse::UNAUTHORIZED},
-  };
-
-  for (const auto &endpoint : endpoints) {
-    for (const auto &c : cases) {
-      const httplib::Headers &headers = c.first;
-      const HttpResponse &return_code = c.second;
-
-      // ACTION
-      httplib::Result res = cli.Post(endpoint, headers, "", "text/plain");
-
-      // VERIFICATION
-      EXPECT_EQ(res->status, static_cast<int>(return_code));
-    }
+class MockServerHeadersTest
+    : public ::testing::TestWithParam<
+          std::tuple<std::string, std::pair<cpr::Header, HttpResponse>>> {
+ public:
+  MockServerHeadersTest()
+      : server_{
+            HOST,
+            TEST_SESSION_ID,
+            [](const ViewUpdate &update,
+               const UUID &session_id,
+               const uint64_t update_id) {
+              return ViewSessionUpdateResponse();
+            }} {}
+  void SetUp() override {
+    ASSERT_NE(server_.port(), 0);
+    ASSERT_EQ(server_.host(), HOST);
   }
-}
 
+  const MockServer &server() const { return server_; }
+
+  static uint64_t update_id() { return UPDATE_ID; }
+  static UUID test_session_id() { return TEST_SESSION_ID; }
+
+ private:
+  static const UUID TEST_SESSION_ID;
+  static constexpr uint64_t UPDATE_ID = 2U;
+  const MockServer server_;
+};
+
+const UUID MockServerHeadersTest::TEST_SESSION_ID = UUID::new_uuid();
+
+const std::vector<std::string> endpoints{
+    "/view/sessions",
+    fmt::format(
+        "/view/sessions/{:s}/updates/{:d}",
+        MockServerHeadersTest::test_session_id().to_string(),
+        MockServerHeadersTest::update_id())};
+
+const std::vector<std::pair<cpr::Header, HttpResponse>> header_cases{
+    {{{"Authorization", "Bearer " + MockServer::valid_token()}},
+     HttpResponse::CREATED},
+    {{{"Authorization", "Bearer gibberish"}}, HttpResponse::UNAUTHORIZED},
+    {{{"Authorization", "Bearer"}}, HttpResponse::UNAUTHORIZED},
+    {{{"Authorization", "Bear"}}, HttpResponse::UNAUTHORIZED},
+    {{{"Authorization", "Bear misspelled"}}, HttpResponse::UNAUTHORIZED},
+    {{{"Authorization", "Bearer " + MockServer::unauthorized_token()}},
+     HttpResponse::UNAUTHORIZED},
+    {{{"Authorization", "Bearer " + MockServer::forbidden_token()}},
+     HttpResponse::FORBIDDEN},
+    {{}, HttpResponse::UNAUTHORIZED},
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    EndpointsAndTokens,
+    MockServerHeadersTest,
+    ::testing::Combine(
+        ::testing::ValuesIn(endpoints),
+        ::testing::ValuesIn(header_cases)));
+
+TEST_P(MockServerHeadersTest, TestChecksAuthorization) {
+  // SETUP
+  const std::string address = fmt::format("{}:{}", HOST, server().port());
+  const auto [endpoint, header_case] = GetParam();
+  const auto [headers, return_code] = header_case;
+
+  // ACTION
+  const cpr::Response response =
+      cpr::Post(cpr::Url{address + endpoint}, headers);
+  EXPECT_EQ(response.status_code, static_cast<int>(return_code));
+}
 }  // namespace resim::visualization::testing

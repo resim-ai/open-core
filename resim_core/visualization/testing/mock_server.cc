@@ -13,9 +13,50 @@
 
 namespace resim::visualization::testing {
 
+const std::string MockServer::VALID_TOKEN_ = "valid token";
+const std::string MockServer::UNAUTHORIZED_TOKEN_ = "unauthorized token";
+const std::string MockServer::FORBIDDEN_TOKEN_ = "forbidden token";
+
 struct ServerHandle {
   httplib::Server server;
 };
+
+namespace {
+
+bool validate_headers(
+    const std::multimap<std::string, std::string> &headers,
+    InOut<::resim::testing::MockServer::Response> response) {
+  if (not headers.contains("Authorization")) {
+    response->status = HttpResponse::UNAUTHORIZED;
+    return false;
+  }
+  bool found = false;
+  const auto &range = headers.equal_range("Authorization");
+  std::string token;
+  for (auto it = range.first; it != range.second; ++it) {
+    const size_t loc = it->second.find("Bearer ");
+    if (loc == 0) {
+      found = true;
+      token = it->second.substr(std::string("Bearer ").size());
+      break;
+    }
+  }
+  if (!found || token == MockServer::unauthorized_token()) {
+    response->status = HttpResponse::UNAUTHORIZED;
+    return false;
+  }
+  if (token == MockServer::forbidden_token()) {
+    response->status = HttpResponse::FORBIDDEN;
+    return false;
+  }
+  if (token == MockServer::valid_token()) {
+    return true;
+  }
+  response->status = HttpResponse::UNAUTHORIZED;
+  return false;
+}
+
+}  // namespace
 
 MockServer::MockServer(
     std::string host,
@@ -34,20 +75,7 @@ MockServer::MockServer(
           const std::string &body,
           const std::smatch &,
           InOut<::resim::testing::MockServer::Response> response) {
-        if (not headers.contains("Authorization")) {
-          response->status = HttpResponse::UNAUTHORIZED;
-          return;
-        }
-        bool found = false;
-        const auto &range = headers.equal_range("Authorization");
-        for (auto it = range.first; it != range.second; ++it) {
-          if (it->second.find("Bearer ") == 0) {
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          response->status = HttpResponse::FORBIDDEN;
+        if (!validate_headers(headers, response)) {
           return;
         }
 
@@ -65,20 +93,7 @@ MockServer::MockServer(
           const std::string &body,
           const std::smatch &matches,
           InOut<::resim::testing::MockServer::Response> response) {
-        if (not headers.contains("Authorization")) {
-          response->status = HttpResponse::UNAUTHORIZED;
-          return;
-        }
-        bool found = false;
-        const auto &range = headers.equal_range("Authorization");
-        for (auto it = range.first; it != range.second; ++it) {
-          if (it->second.find("Bearer ") == 0) {
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          response->status = HttpResponse::FORBIDDEN;
+        if (!validate_headers(headers, response)) {
           return;
         }
 

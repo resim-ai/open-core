@@ -34,16 +34,25 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
   REASSERT(!base_url_.empty(), "Endpoint URL must not be empty!");
 
   if (session_id_.empty()) {
-    const cpr::Response response = cpr::Post(
+    cpr::Response response = cpr::Post(
         cpr::Url{base_url_ + "/view/sessions"},
         cpr::Bearer{auth_client_->get_jwt()});
 
-    // If the session_id_ is still empty, then we cannot do anything.
-    session_id_ = response.text;
-    if (session_id_.empty()) {
-      return MAKE_STATUS("Empty session ID.");
+    if (response.status_code == static_cast<int>(HttpResponse::UNAUTHORIZED)) {
+      auth_client_->refresh();
+      response = cpr::Post(
+          cpr::Url{base_url_ + "/view/sessions"},
+          cpr::Bearer{auth_client_->get_jwt()});
     }
 
+    if (response.status_code != static_cast<int>(HttpResponse::CREATED)) {
+      LOG(ERROR) << "Could not create session.  HTTP Status: "
+                 << response.status_code;
+      LOG(ERROR) << response.text;
+      return MAKE_STATUS("Could not create session.");
+    }
+
+    session_id_ = response.text;
     // Parse the string to remove double quotes and newline character.
     session_id_.erase(
         std::remove(session_id_.begin(), session_id_.end(), '\"'),
@@ -67,7 +76,7 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
   // Increment the update_id_.
   update_id_++;
 
-  const cpr::Response response = cpr::Post(
+  cpr::Response response = cpr::Post(
       url,
       cpr::Header{
           {"Content-Type", "application/octet-stream"},
@@ -75,8 +84,19 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
       cpr::Bearer(auth_client_->get_jwt()),
       cpr::Body{serialized_output});
 
+  if (response.status_code == static_cast<int>(HttpResponse::UNAUTHORIZED)) {
+    auth_client_->refresh();
+    response = cpr::Post(
+        url,
+        cpr::Header{
+            {"Content-Type", "application/octet-stream"},
+        },
+        cpr::Bearer(auth_client_->get_jwt()),
+        cpr::Body{serialized_output});
+  }
+
   if (response.status_code != static_cast<int>(HttpResponse::CREATED)) {
-    LOG(ERROR) << "Could not send view update.  HTTP Response code: "
+    LOG(ERROR) << "Could not send view update.  HTTP Status code: "
                << response.status_code;
     LOG(ERROR) << response.text;
     return MAKE_STATUS("Could not send view update.");

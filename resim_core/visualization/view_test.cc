@@ -215,9 +215,10 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunction) {
   testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
                                return ViewSessionUpdateResponse{};
                              }};
-  auto mock_client =
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
@@ -235,7 +236,7 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunction) {
   }
 
   // ACTION
-  Status status = mock_client->send_view_update(update);
+  Status status = view_client->send_view_update(update);
   EXPECT_TRUE(status.ok());
 }
 
@@ -246,9 +247,10 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunctionFail) {
       UUID::new_uuid(),
       [](auto &&...) { return ViewSessionUpdateResponse{}; },
       HttpResponse::NOT_FOUND};
-  auto mock_client =
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
 
   // Create objects and corresponding ViewUpdates.
   std::vector<TypeParam> test_elements{
@@ -265,19 +267,20 @@ TYPED_TEST(ViewClientTest, TestClientBasicFunctionFail) {
   }
 
   // ACTION
-  Status status = mock_client->send_view_update(update);
+  Status status = view_client->send_view_update(update);
   EXPECT_FALSE(status.ok());
 }
 
 TYPED_TEST(ViewClientTest, TestFail) {
   // Do not set up a server
-  auto mock_client = std::make_unique<ViewClient>("zzzz");
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
+  auto view_client = std::make_unique<ViewClient>("zzzz");
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
 
   ViewUpdate update;
 
   // ACTION
-  Status status = mock_client->send_view_update(update);
+  Status status = view_client->send_view_update(update);
   EXPECT_FALSE(status.ok());
 }
 
@@ -386,10 +389,11 @@ TYPED_TEST(ViewClientTest, TestViewClientView) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client =
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
-  view.set_client(std::move(mock_client));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
+  view.set_client(std::move(view_client));
 
   // ACTION & VERIFICATION
   for (const auto &element : test_elements) {
@@ -498,10 +502,11 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomName) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client =
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
-  view.set_client(std::move(mock_client));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
+  view.set_client(std::move(view_client));
 
   // ACTION & VERIFICATION
   for (const auto &element : test_elements) {
@@ -610,10 +615,11 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
         return ViewSessionUpdateResponse{};
       }};
 
-  auto mock_client =
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
-  view.set_client(std::move(mock_client));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
+  view.set_client(std::move(view_client));
 
   // ACTION & VERIFICATION
   for (const auto &element : test_elements) {
@@ -637,11 +643,12 @@ TYPED_TEST(ViewClientTest, TestViewClientLogging) {
                                response.set_view("app.resim.ai/view");
                                return response;
                              }};
-  // Setup a minimal mock client.
-  auto mock_client =
+  // Setup a minimal client.
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
-  view.set_client(std::move(mock_client));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
+  view.set_client(std::move(view_client));
 
   // ACTION
   // Send viewable types to view.
@@ -937,11 +944,12 @@ TYPED_TEST(ViewObjectTest, TestViewObjectNamedConstructor) {
                                response.set_view("app.resim.ai/view");
                                return response;
                              }};
-  // Setup a minimal mock client.
-  auto mock_client =
+  // Setup a minimal client.
+  auto view_client =
       std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
-  mock_client->set_auth_client(std::make_unique<auth::MockAuthClient>());
-  view.set_client(std::move(mock_client));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::valid_token()));
+  view.set_client(std::move(view_client));
   // Generate the test data
   const std::string TEST_NAME = "test_name";
   std::vector<TypeParam> test_elements{
@@ -980,6 +988,90 @@ TEST(ViewClientTest, TokenPathCoverage) {
   EXPECT_EQ(
       ViewClient::determine_token_root("/home").string().substr(0, home.size()),
       home);
+}
+
+TEST(ViewClientTest, TestTokenUnauthorized) {
+  // SET UP
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               return ViewSessionUpdateResponse{};
+                             }};
+  auto view_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token()));
+
+  ViewUpdate update;
+
+  // ACTION
+  Status status = view_client->send_view_update(update);
+  EXPECT_FALSE(status.ok());
+}
+
+TEST(ViewClientTest, TestTokenUnauthorizedRefresh) {
+  // SET UP
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               return ViewSessionUpdateResponse{};
+                             }};
+  auto view_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token(),
+      testing::MockServer::valid_token()));
+
+  ViewUpdate update;
+
+  // ACTION
+  Status status = view_client->send_view_update(update);
+  EXPECT_TRUE(status.ok());
+}
+
+TEST(ViewClientTest, TestTokenExpiresBetweenCalls) {
+  // SET UP
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               return ViewSessionUpdateResponse{};
+                             }};
+  auto view_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token(),
+      testing::MockServer::valid_token()));
+
+  ViewUpdate update;
+
+  // ACTION
+  Status status = view_client->send_view_update(update);
+  EXPECT_TRUE(status.ok());
+
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token(),
+      testing::MockServer::valid_token()));
+
+  status = view_client->send_view_update(update);
+  EXPECT_TRUE(status.ok());
+}
+
+TEST(ViewClientTest, TestTokenInvalidatedBetweenCalls) {
+  // SET UP
+  testing::MockServer server{"localhost", UUID::new_uuid(), [](auto &&...) {
+                               return ViewSessionUpdateResponse{};
+                             }};
+  auto view_client =
+      std::make_unique<ViewClient>(fmt::format("localhost:{}", server.port()));
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token(),
+      testing::MockServer::valid_token()));
+
+  ViewUpdate update;
+
+  // ACTION
+  Status status = view_client->send_view_update(update);
+  EXPECT_TRUE(status.ok());
+
+  view_client->set_auth_client(std::make_unique<auth::MockAuthClient>(
+      testing::MockServer::unauthorized_token()));
+
+  status = view_client->send_view_update(update);
+  EXPECT_FALSE(status.ok());
 }
 
 }  // namespace resim::visualization
