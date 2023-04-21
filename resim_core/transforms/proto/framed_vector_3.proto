@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package resim.transforms.proto;
+import "resim_core/transforms/proto/frame_3.proto";
+
+message FramedVector_3 {
+    repeated double algebra = 1;
+    Frame_3         frame   = 2;
+}

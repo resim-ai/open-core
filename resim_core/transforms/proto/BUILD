@@ -92,6 +92,48 @@ cc_library(
     ],
 )
 
+proto_library(
+    name = "framed_vector_3_proto",
+    srcs = ["framed_vector_3.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":frame_3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "framed_vector_3_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":framed_vector_3_proto"],
+)
+
+cc_library(
+    name = "framed_vector_3_to_proto",
+    srcs = ["framed_vector_3_to_proto.cc"],
+    hdrs = ["framed_vector_3_to_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":frame_3_to_proto",
+        ":framed_vector_3_proto_cc",
+        "//resim_core/assert",
+        "//resim_core/math/proto:matrix_to_proto",
+        "//resim_core/transforms:framed_vector",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "framed_vector_3_to_proto_test",
+    srcs = ["framed_vector_3_to_proto_test.cc"],
+    deps = [
+        ":framed_vector_3_to_proto",
+        "//resim_core/assert",
+        "//resim_core/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
 cc_test(
     name = "framed_group_to_proto_test",
     srcs = ["framed_group_to_proto_test.cc"],

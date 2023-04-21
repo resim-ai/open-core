@@ -10,7 +10,6 @@
 namespace resim::transforms {
 
 namespace {
-constexpr unsigned TWO_D = 2;
 constexpr unsigned THREE_D = 3;
 }  // namespace
 
@@ -25,9 +24,8 @@ class FramedVectorTest : public ::testing::Test {
   std::mt19937 rng_;
 };
 
-using DimensionalityTypes = ::testing::Types<
-    std::integral_constant<unsigned int, TWO_D>,
-    std::integral_constant<unsigned int, THREE_D>>;
+using DimensionalityTypes =
+    ::testing::Types<std::integral_constant<unsigned int, THREE_D>>;
 
 TYPED_TEST_SUITE(FramedVectorTest, DimensionalityTypes);
 
