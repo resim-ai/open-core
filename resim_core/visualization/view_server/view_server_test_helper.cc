@@ -1,12 +1,16 @@
 #include "resim_core/visualization/view_server/view_server_test_helper.hh"
 
+#include <Eigen/Dense>
+
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/curves/t_curve.hh"
+#include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -20,12 +24,20 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+using FramedVector = transforms::FramedVector<3>;
 
 constexpr auto LOW_COUNT =
     "The minimum number of test elements you can request is seven. Please "
     "increase the count.";
 
 constexpr time::Timestamp ZERO_TIME;
+
+Eigen::Matrix<double, 3, 1> generate_test_vector_3D() {
+  constexpr unsigned seed = 101;
+  std::mt19937 rng{seed};
+  return testing::random_vector<Eigen::Matrix<double, 3, 1>>(rng);
+}
+
 }  // namespace
 
 template <>
@@ -146,6 +158,19 @@ std::vector<actor::state::Trajectory> generate_payload_type(
   }
 
   return trajectories;
+}
+
+template <>
+std::vector<FramedVector> generate_payload_type(const unsigned count) {
+  std::vector<FramedVector> framed_vectors;
+  framed_vectors.reserve(count);
+
+  for (int i = 0; i < count; i++) {
+    FramedVector test_vector(generate_test_vector_3D());
+    framed_vectors.push_back(test_vector);
+  }
+
+  return framed_vectors;
 }
 
 }  // namespace resim::visualization::view_server

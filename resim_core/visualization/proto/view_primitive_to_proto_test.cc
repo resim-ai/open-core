@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <Eigen/Dense>
 #include <optional>
 #include <random>
 #include <variant>
@@ -17,6 +18,7 @@
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/proto/frame_3_to_proto.hh"
+#include "resim_core/transforms/proto/framed_vector_3_to_proto.hh"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -39,6 +41,8 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+using FramedVector = transforms::FramedVector<3>;
+
 const std::vector<std::optional<std::string>> NAME_RANGE = {
     "first_name",
     "second_name",
@@ -57,7 +61,9 @@ using PayloadTypes = ::testing::Types<
     curves::DCurve<SE3>,
     curves::DCurve<FSE3>,
     curves::TCurve<FSE3>,
-    actor::state::Trajectory>;
+    actor::state::Trajectory,
+    Frame,
+    FramedVector>;
 
 TYPED_TEST_SUITE(ViewPrimitiveToProtoTypedTest, PayloadTypes);
 
@@ -158,6 +164,13 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
             EXPECT_EQ(control.time, unpacked_control.time);
             EXPECT_TRUE(control.point.is_approx(unpacked_control.point));
           }
+        },
+        [&](const FramedVector &framed_vector) {
+          const auto &unpacked_framed_vector =
+              unpack(primitive_msg.framed_vector());
+
+          EXPECT_TRUE(unpacked_framed_vector.frame() == framed_vector.frame());
+          EXPECT_EQ(unpacked_framed_vector.vector(), framed_vector.vector());
         });
   }
 }
@@ -274,6 +287,10 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
             EXPECT_EQ(control.time, unpacked_control.time);
             EXPECT_TRUE(control.point.is_approx(unpacked_control.point));
           }
+        },
+        [&](const FramedVector &framed_vector) {
+          ASSERT_TRUE(std::holds_alternative<FramedVector>(unpacked.payload));
+          ASSERT_EQ(framed_vector, std::get<FramedVector>(unpacked.payload));
         });
   }
 }

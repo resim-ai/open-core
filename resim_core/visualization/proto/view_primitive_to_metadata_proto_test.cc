@@ -7,6 +7,7 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/match.hh"
@@ -22,6 +23,7 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+using FramedVector = transforms::FramedVector<3>;
 constexpr int NUMBER_TESTS = 3;
 
 const std::array<std::string, NUMBER_TESTS> NAME_RANGE = {
@@ -91,7 +93,8 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestPack) {
         },
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_TRAJECTORY);
-        });
+        },
+        [&](const transforms::FramedVector<3> &framed_vector) {});
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
@@ -171,7 +174,8 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestListPack) {
         },
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_TRAJECTORY);
-        });
+        },
+        [&](const transforms::FramedVector<3> &framed_vector) {});
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

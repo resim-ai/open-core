@@ -10,6 +10,7 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/uuid.hh"
@@ -30,7 +31,8 @@ struct ViewPrimitive {
       curves::DCurve<transforms::FSE3>,
       curves::TCurve<transforms::FSE3>,
       actor::state::Trajectory,
-      transforms::Frame<3>>
+      transforms::Frame<3>,
+      transforms::FramedVector<3>>
       payload;
   std::optional<std::string> user_defined_name = {};
   // The file name and line number where this view primitive was created.

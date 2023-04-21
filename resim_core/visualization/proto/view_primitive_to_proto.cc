@@ -10,7 +10,9 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/proto/frame_3_to_proto.hh"
+#include "resim_core/transforms/proto/framed_vector_3_to_proto.hh"
 #include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
@@ -54,6 +56,9 @@ void pack(const visualization::ViewPrimitive &in, ViewPrimitive *const out) {
       },
       [out](const actor::state::Trajectory &trajectory) {
         pack(trajectory, out->mutable_trajectory());
+      },
+      [out](const transforms::FramedVector<3> &framed_vector) {
+        pack(framed_vector, out->mutable_framed_vector());
       });
 }
 
@@ -104,6 +109,9 @@ StatusValue<visualization::ViewPrimitive> unpack(const ViewPrimitive &in) {
       break;
     case ViewPrimitive::kTrajectory:
       unpacked.payload = unpack(in.trajectory());
+      break;
+    case ViewPrimitive::kFramedVector:
+      unpacked.payload = unpack(in.framed_vector());
       break;
     default:
       return StatusValue{MAKE_STATUS("Can't unpack unset ViewPrimitive!")};

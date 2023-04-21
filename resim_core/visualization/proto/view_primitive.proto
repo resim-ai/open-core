@@ -7,25 +7,28 @@ import "resim_core/actor/state/proto/trajectory.proto";
 import "resim_core/curves/proto/d_curve.proto";
 import "resim_core/curves/proto/t_curve.proto";
 import "resim_core/transforms/proto/frame_3.proto";
+import "resim_core/transforms/proto/framed_vector_3.proto";
 import "resim_core/transforms/proto/fse3.proto";
 import "resim_core/transforms/proto/fso3.proto";
 import "resim_core/transforms/proto/se3.proto";
 import "resim_core/transforms/proto/so3.proto";
 import "resim_core/utils/proto/uuid.proto";
 
+// Next Field: 15
 message ViewPrimitive {
     resim.proto.UUID id = 1;
 
     oneof payload {
-        resim.transforms.proto.SE3         se3          = 2;
-        resim.transforms.proto.SO3         so3          = 3;
-        resim.transforms.proto.FSE3        fse3         = 4;
-        resim.transforms.proto.FSO3        fso3         = 5;
-        resim.curves.proto.DCurve_SE3      d_curve_se3  = 6;
-        resim.curves.proto.DCurve_FSE3     d_curve_fse3 = 7;
-        resim.curves.proto.TCurve_FSE3     t_curve_fse3 = 8;
-        resim.actor.state.proto.Trajectory trajectory   = 9;
-        resim.transforms.proto.Frame_3     frame        = 10;
+        resim.transforms.proto.SE3            se3           = 2;
+        resim.transforms.proto.SO3            so3           = 3;
+        resim.transforms.proto.FSE3           fse3          = 4;
+        resim.transforms.proto.FSO3           fso3          = 5;
+        resim.curves.proto.DCurve_SE3         d_curve_se3   = 6;
+        resim.curves.proto.DCurve_FSE3        d_curve_fse3  = 7;
+        resim.curves.proto.TCurve_FSE3        t_curve_fse3  = 8;
+        resim.actor.state.proto.Trajectory    trajectory    = 9;
+        resim.transforms.proto.Frame_3        frame         = 10;
+        resim.transforms.proto.FramedVector_3 framed_vector = 14;
     }
 
     string user_defined_name = 11;

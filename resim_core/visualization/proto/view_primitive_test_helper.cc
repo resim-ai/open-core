@@ -11,6 +11,7 @@
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -25,6 +26,7 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+using FramedVector = transforms::FramedVector<3>;
 constexpr unsigned int SEED = 42;
 constexpr unsigned int NUM_GROUP_POINTS = 10;
 constexpr time::Timestamp ZERO_TIME;
@@ -122,6 +124,12 @@ curves::TCurve<FSE3> generate_test_object() {
 }
 
 template <>
+FramedVector generate_test_object() {
+  std::mt19937 rng{SEED};
+  return FramedVector{testing::random_vector<Eigen::Matrix<double, 3, 1>>(rng)};
+}
+
+template <>
 actor::state::Trajectory generate_test_object() {
   // Make random seed deterministic
   std::mt19937 rng{SEED};
@@ -159,5 +167,7 @@ template ViewPrimitive generate_test_primitive<curves::DCurve<FSE3>>(
 template ViewPrimitive generate_test_primitive<curves::TCurve<FSE3>>(
     const std::optional<std::string>& name);
 template ViewPrimitive generate_test_primitive<actor::state::Trajectory>(
+    const std::optional<std::string>& name);
+template ViewPrimitive generate_test_primitive<FramedVector>(
     const std::optional<std::string>& name);
 }  // namespace resim::visualization

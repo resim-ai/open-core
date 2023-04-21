@@ -10,6 +10,7 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/status.hh"
@@ -24,6 +25,7 @@ using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+using FramedVector = transforms::FramedVector<3>;
 constexpr auto UNKNOWN_FILE = "Unknown file";
 }  // namespace
 
@@ -72,6 +74,8 @@ template View &View::operator<< <curves::TCurve<FSE3>>(
 
 template View &View::operator<< <actor::state::Trajectory>(
     const actor::state::Trajectory &subject);
+
+template View &View::operator<< <FramedVector>(const FramedVector &subject);
 
 template <typename T>
 void View::view_object(ViewObject<T> view_object) {
@@ -149,5 +153,6 @@ template struct ViewObject<curves::DCurve<transforms::SE3>>;
 template struct ViewObject<curves::DCurve<transforms::FSE3>>;
 template struct ViewObject<curves::TCurve<transforms::FSE3>>;
 template struct ViewObject<actor::state::Trajectory>;
+template struct ViewObject<transforms::FramedVector<3>>;
 
 }  // namespace resim::visualization

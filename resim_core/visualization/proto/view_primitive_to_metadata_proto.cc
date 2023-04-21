@@ -6,6 +6,7 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/match.hh"
@@ -55,7 +56,8 @@ void pack_metadata(
       },
       [out](const actor::state::Trajectory &trajectory) {
         out->set_type(proto::ReSimType::TYPE_TRAJECTORY);
-      });
+      },
+      [](const transforms::FramedVector<3> &framed_vector) {});
 }
 
 void pack_metadata_list(
