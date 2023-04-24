@@ -63,3 +63,14 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "observable_state",
+    hdrs = ["observable_state.hh"],
+    deps = [
+        "//resim_core/actor:actor_id",
+        "//resim_core/actor/state:rigid_body_state",
+        "//resim_core/time:timestamp",
+        "//resim_core/transforms:framed_group",
+    ],
+)
