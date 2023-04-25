@@ -8,6 +8,7 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/simulator/executor_builder.hh"
+#include "resim_core/simulator/standard_topics.hh"
 #include "resim_core/simulator/step_executor.hh"
 #include "resim_core/utils/inout.hh"
 
@@ -20,8 +21,8 @@ TEST(TimeLordTest, TestTimeLord) {
   bool received_time = false;
   executor_builder.add_task<time::Timestamp>(
       "expect_times_match",
-      TimeLord::TIME_TOPIC,
-      ExecutorBuilder::NULL_TOPIC,
+      TIME_TOPIC,
+      NULL_TOPIC,
       [&](const time::Timestamp current_time) {
         EXPECT_EQ(current_time, expected_time);
         received_time = true;

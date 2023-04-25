@@ -67,6 +67,7 @@ cc_test(
 cc_library(
     name = "observable_state",
     hdrs = ["observable_state.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/actor:actor_id",
         "//resim_core/actor/state:rigid_body_state",

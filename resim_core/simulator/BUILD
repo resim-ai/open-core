@@ -73,7 +73,7 @@ cc_library(
     name = "executor_builder",
     srcs = ["executor_builder.cc"],
     hdrs = ["executor_builder.hh"],
-    visibility = ["//resim_core/simulator:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":channel_registry",
         ":simple_step_executor",
@@ -96,9 +96,17 @@ cc_test(
 )
 
 cc_library(
+    name = "standard_topics",
+    hdrs = ["standard_topics.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_library(
     name = "simulation_unit",
     hdrs = ["simulation_unit.hh"],
-    visibility = ["//resim_core/simulator:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [],
 )
 
@@ -119,6 +127,7 @@ cc_library(
     deps = [
         ":executor_builder",
         ":simulation_unit",
+        ":standard_topics",
         "//resim_core/assert",
         "//resim_core/time:timestamp",
         "//resim_core/utils:inout",
@@ -129,6 +138,7 @@ cc_test(
     name = "time_lord_test",
     srcs = ["time_lord_test.cc"],
     deps = [
+        ":standard_topics",
         ":step_executor",
         ":time_lord",
         "//resim_core/assert",

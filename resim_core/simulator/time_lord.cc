@@ -2,6 +2,7 @@
 #include "resim_core/simulator/time_lord.hh"
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/simulator/standard_topics.hh"
 
 namespace resim::simulator {
 
