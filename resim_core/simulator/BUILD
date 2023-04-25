@@ -136,3 +136,13 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "standard_frames",
+    hdrs = ["standard_frames.hh"],
+    visibility = ["//resim_core:__subpackages__"],
+    deps = [
+        "//resim_core/transforms:frame",
+        "//resim_core/utils:uuid",
+    ],
+)
