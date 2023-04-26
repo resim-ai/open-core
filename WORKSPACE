@@ -198,6 +198,14 @@ http_archive(
     urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.0.zip"],
 )
 
+http_archive(
+    name = "flamegraph",
+    build_file = "//resim_core/third_party/flamegraph:flamegraph.BUILD",
+    sha256 = "831673a8a130792cd8ad0f2300d3e420dde7430d50d9ae5c3985f03f86d3e7db",
+    strip_prefix = "FlameGraph-1.0.0",
+    urls = ["https://github.com/resim-ai/FlameGraph/archive/refs/tags/v1.0.0.zip"],
+)
+
 # Hedron's Bazel Rules for C++ HTTPS Requests
 # Makes @cpr, @curl, and @boringssl available for use
 # https://github.com/hedronvision/bazel-make-cc-https-easy
