@@ -3,15 +3,16 @@ syntax = "proto3";
 package resim.visualization.proto;
 
 enum ReSimType {
-    TYPE_FRAME       = 0;
-    TYPE_SE3         = 1;
-    TYPE_SO3         = 2;
-    TYPE_FSE3        = 3;
-    TYPE_FSO3        = 4;
-    TYPE_DCURVE_SE3  = 5;
-    TYPE_DCURVE_FSE3 = 6;
-    TYPE_TCURVE_FSE3 = 7;
-    TYPE_TRAJECTORY  = 8;
+    NONE             = 0;
+    TYPE_FRAME       = 1;
+    TYPE_SE3         = 2;
+    TYPE_SO3         = 3;
+    TYPE_FSE3        = 4;
+    TYPE_FSO3        = 5;
+    TYPE_DCURVE_SE3  = 6;
+    TYPE_DCURVE_FSE3 = 7;
+    TYPE_TCURVE_FSE3 = 8;
+    TYPE_TRAJECTORY  = 9;
 }
 message ViewObjectMetadata {
     string    name        = 1;
