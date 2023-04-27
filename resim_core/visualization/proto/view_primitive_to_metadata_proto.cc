@@ -57,7 +57,9 @@ void pack_metadata(
       [out](const actor::state::Trajectory &trajectory) {
         out->set_type(proto::ReSimType::TYPE_TRAJECTORY);
       },
-      [](const transforms::FramedVector<3> &framed_vector) {});
+      [out](const transforms::FramedVector<3> &framed_vector) {
+        out->set_type(proto::ReSimType::TYPE_FRAMED_VECTOR);
+      });
 }
 
 void pack_metadata_list(

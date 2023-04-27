@@ -94,7 +94,11 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestPack) {
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_TRAJECTORY);
         },
-        [&](const transforms::FramedVector<3> &framed_vector) {});
+        [&](const transforms::FramedVector<3> &framed_vector) {
+          EXPECT_EQ(
+              metadata_proto.type(),
+              proto::ReSimType::TYPE_FRAMED_VECTOR);
+        });
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
@@ -175,7 +179,11 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestListPack) {
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_TRAJECTORY);
         },
-        [&](const transforms::FramedVector<3> &framed_vector) {});
+        [&](const transforms::FramedVector<3> &framed_vector) {
+          EXPECT_EQ(
+              metadata.at(i).type(),
+              proto::ReSimType::TYPE_FRAMED_VECTOR);
+        });
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)
