@@ -7,6 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <mcap/reader.hpp>
+#include <memory>
 #include <sstream>
 
 #include "resim_core/assert/assert.hh"
@@ -36,6 +37,7 @@ void expect_file_contains_string(
 
 }  // namespace
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST(McapLoggerTest, TestAddProtoChannel) {
   // SETUP
   const testing::TestDirectoryRAII test_directory;
@@ -45,9 +47,10 @@ TEST(McapLoggerTest, TestAddProtoChannel) {
   constexpr auto TOPIC_A = "/topic_a";
   constexpr auto TOPIC_B = "/topic_b";
   {
-    McapLogger logger{test_mcap};
-    logger.add_proto_channel<TestMsg>(TOPIC_A);
-    logger.add_proto_channel<TestMsg>(TOPIC_B);
+    const std::unique_ptr<LoggerInterface> logger{
+        std::make_unique<McapLogger>(test_mcap)};
+    logger->add_proto_channel<TestMsg>(TOPIC_A);
+    logger->add_proto_channel<TestMsg>(TOPIC_B);
   }
   mcap::McapReader reader;
   ASSERT_TRUE(reader.open(test_mcap.string()).ok());
@@ -95,6 +98,7 @@ TEST(McapLoggerTest, TestAddProtoChannel) {
   // Clean up the mcap
   reader.close();
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 TEST(McapLoggerTest, TestLogProto) {
   // SETUP
@@ -112,14 +116,15 @@ TEST(McapLoggerTest, TestLogProto) {
 
   // ACTION
   const auto &log_test_messages = [&](auto &&...logger_args) {
-    McapLogger logger{std::forward<decltype(logger_args)>(logger_args)...};
-    logger.add_proto_channel<TestMsg>(TOPIC_A);
-    logger.add_proto_channel<MessageA>(TOPIC_B);
-    logger.add_proto_channel<MessageA>(TOPIC_C);
+    const std::unique_ptr<LoggerInterface> logger{std::make_unique<McapLogger>(
+        std::forward<decltype(logger_args)>(logger_args)...)};
+    logger->add_proto_channel<TestMsg>(TOPIC_A);
+    logger->add_proto_channel<MessageA>(TOPIC_B);
+    logger->add_proto_channel<MessageA>(TOPIC_C);
     for (int ii = 0; ii < MESSAGES_PER_CHANNEL; ++ii) {
-      logger.log_proto(TOPIC_A, LOG_TIME, TestMsg{});
-      logger.log_proto(TOPIC_B, LOG_TIME, MessageA{});
-      logger.log_proto(TOPIC_C, LOG_TIME, MessageA{});
+      logger->log_proto(TOPIC_A, LOG_TIME, TestMsg{});
+      logger->log_proto(TOPIC_B, LOG_TIME, MessageA{});
+      logger->log_proto(TOPIC_C, LOG_TIME, MessageA{});
     }
   };
 
@@ -154,22 +159,24 @@ TEST(McapLoggerDeathTest, TestDoubleAddChannel) {
   const testing::TestDirectoryRAII test_directory;
   const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
 
-  McapLogger logger{test_mcap};
-  logger.add_proto_channel<proto::testing::Test>(CHANNEL);
-  logger.add_proto_channel<proto::testing::Test>(CHANNEL);  // Double add.
+  const std::unique_ptr<LoggerInterface> logger{
+      std::make_unique<McapLogger>(test_mcap)};
+
+  logger->add_proto_channel<proto::testing::Test>(CHANNEL);
+  logger->add_proto_channel<proto::testing::Test>(CHANNEL);  // Double add.
 
   // Try adding "channel" but haven't seen type MessageA.
   EXPECT_THROW(
-      { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
+      { logger->add_proto_channel<proto::testing::MessageA>(CHANNEL); },
       AssertException);
 
   // Adding a channel of type MessageA.
-  logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);
-  logger.add_proto_channel<proto::testing::MessageA>(TOPIC_A);  // Double add.
+  logger->add_proto_channel<proto::testing::MessageA>(TOPIC_A);
+  logger->add_proto_channel<proto::testing::MessageA>(TOPIC_A);  // Double add.
 
   // Try adding "channel" of type MessageA.
   EXPECT_THROW(
-      { logger.add_proto_channel<proto::testing::MessageA>(CHANNEL); },
+      { logger->add_proto_channel<proto::testing::MessageA>(CHANNEL); },
       AssertException);
 }
 
@@ -189,16 +196,17 @@ TEST(McapLoggerDeathTest, TestBadLogProto) {
   constexpr time::Timestamp LOG_TIME{3s};
 
   // ACTION
-  McapLogger logger{test_mcap};
-  logger.add_proto_channel<TestMsg>(TOPIC);
+  const std::unique_ptr<LoggerInterface> logger{
+      std::make_unique<McapLogger>(test_mcap)};
+  logger->add_proto_channel<TestMsg>(TOPIC);
 
   EXPECT_THROW(
-      logger.log_proto(BAD_TOPIC, LOG_TIME, TestMsg{}),
+      logger->log_proto(BAD_TOPIC, LOG_TIME, TestMsg{}),
       AssertException);
-  EXPECT_THROW(logger.log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
+  EXPECT_THROW(logger->log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
   constexpr auto TOPIC_A = "/topic_a";
-  logger.add_proto_channel<MessageA>(TOPIC_A);
-  EXPECT_THROW(logger.log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
+  logger->add_proto_channel<MessageA>(TOPIC_A);
+  EXPECT_THROW(logger->log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
 }
 
 }  // namespace resim

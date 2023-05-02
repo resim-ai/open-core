@@ -57,4 +57,48 @@ void McapLogger::log_proto(
   REASSERT(success.ok(), "Failed to write message!");
 }
 
+void McapLogger::add_proto_channel_impl(
+    const ::google::protobuf::Descriptor &message_descriptor,
+    const std::string &channel_name) {
+  const std::string &message_name{message_descriptor.full_name()};
+
+  // If channel_name exists, error if of different MessageType.
+  if (channels_.contains(channel_name)) {
+    {
+      constexpr auto ERR_MSG = "Schema does not exist.";
+      REASSERT(schemas_.contains(message_name), ERR_MSG);
+    }
+
+    {
+      const mcap::SchemaId expected_schema_id =
+          channel_to_schema_map_.at(channels_.at(channel_name));
+      constexpr auto ERR_MSG =
+          "Channel with name but different MessageType already added!";
+      REASSERT(expected_schema_id == schemas_.at(message_name), ERR_MSG);
+    }
+
+    return;
+  }
+
+  add_proto_schema(message_descriptor, message_name);
+  constexpr auto ENCODING = "protobuf";
+  mcap::Channel channel{channel_name, ENCODING, schemas_.at(message_name)};
+  writer_.addChannel(channel);
+  channels_.emplace(channel_name, channel.id);
+  channel_to_schema_map_.emplace(channel.id, schemas_.at(message_name));
+}
+
+void McapLogger::add_proto_schema(
+    const ::google::protobuf::Descriptor &message_descriptor,
+    const std::string &message_name) {
+  if (not schemas_.contains(message_name)) {
+    mcap::Schema schema{
+        message_name,
+        "protobuf",
+        dependency_file_descriptor_set(message_descriptor)};
+    writer_.addSchema(schema);
+    schemas_.emplace(message_name, schema.id);
+  }
+}
+
 }  // namespace resim
