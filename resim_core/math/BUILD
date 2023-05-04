@@ -77,3 +77,22 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "vector_partition",
+    hdrs = ["vector_partition.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "vector_partition_test",
+    srcs = ["vector_partition_test.cc"],
+    deps = [
+        ":vector_partition",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
