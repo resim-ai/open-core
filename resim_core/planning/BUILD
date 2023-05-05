@@ -19,6 +19,27 @@ cc_library(
 )
 
 cc_library(
+    name = "cost_building_blocks",
+    hdrs = ["cost_building_blocks.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim_core/utils:nullable_reference",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "cost_building_blocks_test",
+    srcs = ["cost_building_blocks_test.cc"],
+    deps = [
+        ":cost_building_blocks",
+        "//resim_core/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "ilqr",
     hdrs = ["ilqr.hh"],
     visibility = ["//visibility:public"],
