@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resim_core/actor/actor_id.hh"
+#include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/time/timestamp.hh"
 
@@ -34,7 +35,11 @@ class Actor {
   // compute it when requested.
   virtual state::ObservableState observable_state() const = 0;
 
- protected:
+  // Get the current geometry of the actor. This should normally contain
+  // Geometry::NoUpdate for the actor's frame, but should update the geometry
+  // when the actor spawns and Geometry::Clear it when the actor despawns.
+  virtual Geometry geometry() const = 0;
+
   // Get the current time of this actor (i.e. the last time with which
   // simulate_forward was called.
   virtual time::Timestamp current_time() const = 0;

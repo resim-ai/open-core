@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "resim_core/actor/actor.hh"
+#include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/time/timestamp.hh"
 
@@ -16,6 +17,9 @@ class TestActor : public Actor {
   // Set the state that will be returned from observable_state().
   void set_state(const state::ObservableState &state);
 
+  // Set the geometry of this actor that will be returned from geometry().
+  void set_geometry(const Geometry &geometry);
+
   // Set the function that will be called as simulate_forward.
   void set_simulate_forward(
       std::function<void(const time::Timestamp)> sim_forward);
@@ -24,11 +28,13 @@ class TestActor : public Actor {
 
   state::ObservableState observable_state() const override;
 
- protected:
+  Geometry geometry() const override;
+
   time::Timestamp current_time() const override;
 
  private:
   state::ObservableState state_;
+  Geometry geometry_;
   std::function<void(const time::Timestamp)> simulate_forward_;
 };
 

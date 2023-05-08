@@ -20,6 +20,10 @@ class ActorUnit : public simulator::SimulationUnit {
 
  private:
   std::unique_ptr<Actor> actor_;
+
+  // A private dependency string used to enforce that simulate forward always
+  // runs before actor state and geometry publication.
+  const std::string simulate_forward_dependency_;
 };
 
 }  // namespace resim::actor
