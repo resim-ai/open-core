@@ -154,6 +154,7 @@ cc_library(
     deps = [
         ":standard_frames",
         ":standard_topics",
+        "//resim_core/actor:geometry",
         "//resim_core/actor/state:observable_state",
         "//resim_core/assert",
         "//resim_core/simulator:executor_builder",
@@ -162,6 +163,7 @@ cc_library(
         "//resim_core/transforms:framed_group",
         "//resim_core/utils:inout",
         "//resim_core/utils:mcap_logger",
+        "//resim_core/visualization/foxglove:actor_geometry_to_foxglove",
         "//resim_core/visualization/foxglove:frame_transform_to_foxglove",
         "@fmt",
         "@foxglove_schemas",
@@ -177,6 +179,7 @@ cc_test(
         ":standard_frames",
         ":standard_topics",
         ":step_executor",
+        "//resim_core/actor:geometry",
         "//resim_core/actor/state:observable_state",
         "//resim_core/actor/state:rigid_body_state",
         "//resim_core/time:timestamp",
@@ -189,6 +192,7 @@ cc_test(
         "//resim_core/utils:uuid",
         "//resim_core/visualization/foxglove:frame_transform_to_foxglove",
         "@com_google_googletest//:gtest_main",
+        "@foxglove_schemas",
     ],
 )
 
