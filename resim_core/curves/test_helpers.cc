@@ -1,5 +1,5 @@
 
-#include "resim_core/visualization/curve/test_helpers.hh"
+#include "resim_core/curves/test_helpers.hh"
 
 #include <Eigen/Dense>
 #include <cmath>
@@ -7,7 +7,7 @@
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
-namespace resim::visualization::curve::testing {
+namespace resim::curves::testing {
 using transforms::FSE3;
 using transforms::SE3;
 using transforms::SO3;
@@ -44,4 +44,4 @@ curves::TCurve<transforms::FSE3> make_circle_curve(
   return curves::TCurve<transforms::FSE3>{control_points};
 }
 
-}  // namespace resim::visualization::curve::testing
+}  // namespace resim::curves::testing

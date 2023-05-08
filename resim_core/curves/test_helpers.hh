@@ -5,7 +5,7 @@
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 
-namespace resim::visualization::curve::testing {
+namespace resim::curves::testing {
 
 // This helper creates a circular TCurve that follows the unit circle with
 // control points at (1, 0), (0, 1), (-1, 0), (0, -1), and back at (1.0). The
@@ -21,4 +21,4 @@ curves::TCurve<transforms::FSE3> make_circle_curve(
     const transforms::Frame<transforms::FSE3::DIMS> &from =
         transforms::Frame<transforms::FSE3::DIMS>::new_frame());
 
-}  // namespace resim::visualization::curve::testing
+}  // namespace resim::curves::testing

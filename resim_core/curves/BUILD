@@ -287,3 +287,32 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "test_helpers",
+    testonly = True,
+    srcs = ["test_helpers.cc"],
+    hdrs = ["test_helpers.hh"],
+    visibility = ["//resim_core:__subpackages__"],
+    deps = [
+        ":t_curve",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
+        "//resim_core/transforms:so3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "test_helpers_test",
+    srcs = ["test_helpers_test.cc"],
+    deps = [
+        ":test_helpers",
+        "//resim_core/curves:t_curve",
+        "//resim_core/transforms:frame",
+        "//resim_core/transforms:framed_group",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)

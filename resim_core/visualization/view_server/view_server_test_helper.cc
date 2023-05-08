@@ -7,6 +7,7 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/curves/t_curve.hh"
+#include "resim_core/curves/test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
@@ -14,7 +15,6 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
-#include "resim_core/visualization/curve/test_helpers.hh"
 
 namespace resim::visualization::view_server {
 
@@ -136,7 +136,7 @@ std::vector<curves::TCurve<transforms::FSE3>> generate_payload_type(
 
   for (int i = 0; i < count; i++) {
     const curves::TCurve<transforms::FSE3> test_curve{
-        curve::testing::make_circle_curve(into, from)};
+        curves::testing::make_circle_curve(into, from)};
     t_curves.push_back(test_curve);
   }
 

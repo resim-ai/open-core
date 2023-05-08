@@ -1,5 +1,5 @@
 
-#include "resim_core/visualization/curve/test_helpers.hh"
+#include "resim_core/curves/test_helpers.hh"
 
 #include <gtest/gtest.h>
 
@@ -7,7 +7,7 @@
 #include "resim_core/transforms/frame.hh"
 #include "resim_core/transforms/framed_group.hh"
 
-namespace resim::visualization::curve::testing {
+namespace resim::curves::testing {
 
 using Frame = transforms::Frame<3>;
 using transforms::FSE3;
@@ -17,6 +17,7 @@ using TwoJetL = curves::TwoJetL<FSE3>;
 
 // Sample the curve along its length to verify that it has the right translation
 // and orientation along the length.
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST(TestHelpersTest, TestMakeCircleCurve) {
   // SETUP
   const Frame into{Frame::new_frame()};
@@ -63,5 +64,6 @@ TEST(TestHelpersTest, TestMakeCircleCurve) {
     EXPECT_TRUE(expected_origin.isZero());
   }
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
-}  // namespace resim::visualization::curve::testing
+}  // namespace resim::curves::testing
