@@ -5,6 +5,7 @@
 #include <chrono>
 #include <variant>
 
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/actor/state/trajectory.hh"
@@ -17,6 +18,24 @@
 
 namespace resim::actor {
 
+TEST(TrajectoryActorTest, TestConstruction) {
+  // SETUP
+  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
+  const curves::TCurve<transforms::FSE3> curve{
+      curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
+
+  constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
+
+  const state::Trajectory trajectory{curve, START_TIME};
+  const ActorId id{ActorId::new_uuid()};
+
+  // ACTION
+  TrajectoryActor actor{id, trajectory};
+
+  // VERIFICATION
+  EXPECT_EQ(actor.id(), id);
+}
+
 TEST(TrajectoryActorTest, TestSimulateForwardBeforeSpawn) {
   // SETUP
   const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
@@ -26,7 +45,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardBeforeSpawn) {
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
 
   const state::Trajectory trajectory{curve, START_TIME};
-  TrajectoryActor actor{trajectory};
+  const ActorId id{ActorId::new_uuid()};
+  TrajectoryActor actor{id, trajectory};
 
   // ACTION
   constexpr time::Timestamp BEFORE_SPAWN{
@@ -50,7 +70,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardAfterSpawn) {
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
 
   const state::Trajectory trajectory{curve, START_TIME};
-  TrajectoryActor actor{trajectory};
+  const ActorId id{ActorId::new_uuid()};
+  TrajectoryActor actor{id, trajectory};
 
   // ACTION
   const time::Timestamp in_trajectory{
@@ -76,7 +97,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardAfterDespawn) {
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
 
   const state::Trajectory trajectory{curve, START_TIME};
-  TrajectoryActor actor{trajectory};
+  const ActorId id{ActorId::new_uuid()};
+  TrajectoryActor actor{id, trajectory};
 
   // ACTION
   const time::Timestamp after_despawn{
@@ -100,7 +122,8 @@ TEST(TrajectoryActorTest, TestGeometry) {
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
 
   const state::Trajectory trajectory{curve, START_TIME};
-  TrajectoryActor actor{trajectory};
+  const ActorId id{ActorId::new_uuid()};
+  TrajectoryActor actor{id, trajectory};
   actor.simulate_forward(START_TIME);
 
   // ACTION

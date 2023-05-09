@@ -11,7 +11,7 @@ namespace resim::actor {
 // which has an observable rigid body state.
 class Actor {
  public:
-  Actor();
+  explicit Actor(ActorId id);
   Actor(const Actor &) = default;
   Actor(Actor &&) = default;
   Actor &operator=(const Actor &) = default;

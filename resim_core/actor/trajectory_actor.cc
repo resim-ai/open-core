@@ -9,8 +9,9 @@
 
 namespace resim::actor {
 
-TrajectoryActor::TrajectoryActor(state::Trajectory trajectory)
-    : trajectory_{std::move(trajectory)} {}
+TrajectoryActor::TrajectoryActor(const ActorId id, state::Trajectory trajectory)
+    : Actor{id},
+      trajectory_{std::move(trajectory)} {}
 
 void TrajectoryActor::simulate_forward(const time::Timestamp time) {
   current_time_ = time;

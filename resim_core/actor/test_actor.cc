@@ -1,9 +1,13 @@
 #include "resim_core/actor/test_actor.hh"
 
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/assert/assert.hh"
 
 namespace resim::actor {
+
+TestActor::TestActor(const ActorId id) : Actor{id} {}
+
 void TestActor::set_state(const state::ObservableState &state) {
   state_ = state;
 }

@@ -5,7 +5,7 @@
 
 namespace resim::actor {
 
-Actor::Actor() : id_{UUID::new_uuid()} {}
+Actor::Actor(const ActorId id) : id_{id} {}
 
 ActorId Actor::id() const { return id_; }
 

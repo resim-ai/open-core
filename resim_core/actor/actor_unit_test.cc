@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "resim_core/actor/actor.hh"
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/actor/test_actor.hh"
@@ -24,7 +25,8 @@ namespace resim::actor {
 // GTEST macros end up causing clang-tidy to overestimate the complexity
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 void test_actor_unit_valid_state(const transforms::FSE3 &pose) {
-  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>()};
+  const ActorId id{ActorId::new_uuid()};
+  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>(id)};
 
   bool simulated_forward = false;
   actor->set_simulate_forward([actor = actor.get(), &pose, &simulated_forward](
@@ -103,7 +105,8 @@ TEST(ActorUnitTest, TestActorUnitValidState) {
 void test_actor_unit_bad_state_time(const transforms::FSE3 &pose) {}
 
 TEST(ActorUnitTest, TestActorUnitBadStateTime) {
-  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>()};
+  const ActorId id{ActorId::new_uuid()};
+  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>(id)};
 
   actor->set_simulate_forward(
       [actor = actor.get()](const time::Timestamp time) {
@@ -133,7 +136,8 @@ TEST(ActorUnitTest, TestActorUnitBadStateTime) {
 }
 
 TEST(ActorUnitTest, TestActorUnitBadStateId) {
-  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>()};
+  const ActorId id{ActorId::new_uuid()};
+  std::unique_ptr<TestActor> actor{std::make_unique<TestActor>(id)};
 
   actor->set_simulate_forward(
       [actor = actor.get()](const time::Timestamp time) {

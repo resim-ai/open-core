@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "resim_core/actor/actor.hh"
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/time/timestamp.hh"
@@ -14,6 +15,8 @@ namespace resim::actor {
 // as simulate_forward()
 class TestActor : public Actor {
  public:
+  explicit TestActor(ActorId id);
+
   // Set the state that will be returned from observable_state().
   void set_state(const state::ObservableState &state);
 

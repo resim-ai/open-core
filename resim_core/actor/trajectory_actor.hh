@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resim_core/actor/actor.hh"
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/time/timestamp.hh"
 
@@ -10,7 +11,7 @@ namespace resim::actor {
 // given Trajectory, follows the trajectory, and despawns at its end.
 class TrajectoryActor : public Actor {
  public:
-  explicit TrajectoryActor(state::Trajectory trajectory);
+  explicit TrajectoryActor(ActorId id, state::Trajectory trajectory);
 
   void simulate_forward(time::Timestamp time) override;
 
