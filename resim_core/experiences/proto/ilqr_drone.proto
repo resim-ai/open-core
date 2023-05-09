@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package resim.experiences.proto;
+
+// TODO(Michael): add the appropriate parameters
+message ILQRDrone {}

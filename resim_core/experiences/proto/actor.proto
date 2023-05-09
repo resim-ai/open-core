@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package resim.experiences.proto;
+
+import "resim_core/utils/proto/uuid.proto";
+
+// A single dynamic object in the experience
+message Actor {
+    // A reference to the object.
+    message Reference {
+        // Mandatory unique id for the object.
+        resim.proto.UUID id = 1;
+    }
+    // The type of an actor: simulation controlled or considered a
+    // system-under-test.
+    enum ActorType {
+        INVALID           = 0;
+        SYSTEM_UNDER_TEST = 1;
+        SIMULATION_ACTOR  = 2;
+    }
+    resim.proto.UUID id         = 1;
+    string           name       = 2;
+    ActorType        actor_type = 3;
+}

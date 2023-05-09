@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package resim.experiences.proto;
+
+// Standard version number representation.
+message Revision {
+    uint32 major_revision = 1;
+    uint32 minor_revision = 2;
+}
