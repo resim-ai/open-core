@@ -1,0 +1,27 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "indicators",
+    hdrs = [
+        "include/indicators/block_progress_bar.hpp",
+        "include/indicators/color.hpp",
+        "include/indicators/cursor_control.hpp",
+        "include/indicators/cursor_movement.hpp",
+        "include/indicators/details",
+        "include/indicators/display_width.hpp",
+        "include/indicators/dynamic_progress.hpp",
+        "include/indicators/font_style.hpp",
+        "include/indicators/indeterminate_progress_bar.hpp",
+        "include/indicators/multi_progress.hpp",
+        "include/indicators/progress_bar.hpp",
+        "include/indicators/progress_spinner.hpp",
+        "include/indicators/progress_type.hpp",
+        "include/indicators/setting.hpp",
+        "include/indicators/termcolor.hpp",
+        "include/indicators/terminal_size.hpp",
+    ],
+    includes = [
+        "include",
+    ],
+    visibility = ["//visibility:public"],
+)

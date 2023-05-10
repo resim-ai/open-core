@@ -206,6 +206,14 @@ http_archive(
     urls = ["https://github.com/resim-ai/FlameGraph/archive/refs/tags/v1.0.0.zip"],
 )
 
+http_archive(
+    name = "indicators",
+    build_file = "//resim_core/third_party/indicators:indicators.BUILD",
+    sha256 = "c1deca4b72d655ba457882a5d1b75011f99253c6a2cc8d2f5bc7c49324b2e4ff",
+    strip_prefix = "indicators-2.3",
+    urls = ["https://github.com/p-ranav/indicators/archive/refs/tags/v2.3.zip"],
+)
+
 # Dependency for cxxopts below
 http_archive(
     name = "rules_fuzzing",
