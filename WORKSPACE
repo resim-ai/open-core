@@ -206,6 +206,29 @@ http_archive(
     urls = ["https://github.com/resim-ai/FlameGraph/archive/refs/tags/v1.0.0.zip"],
 )
 
+# Dependency for cxxopts below
+http_archive(
+    name = "rules_fuzzing",
+    sha256 = "d9002dd3cd6437017f08593124fdd1b13b3473c7b929ceb0e60d317cb9346118",
+    strip_prefix = "rules_fuzzing-0.3.2",
+    urls = ["https://github.com/bazelbuild/rules_fuzzing/archive/v0.3.2.zip"],
+)
+
+load("@rules_fuzzing//fuzzing:repositories.bzl", "rules_fuzzing_dependencies")
+
+rules_fuzzing_dependencies()
+
+load("@rules_fuzzing//fuzzing:init.bzl", "rules_fuzzing_init")
+
+rules_fuzzing_init()
+
+http_archive(
+    name = "cxxopts",
+    sha256 = "25b644a2bfa9c6704d723be51b026bc02420dfdee1277a49bfe5df3f19b0eaa4",
+    strip_prefix = "cxxopts-3.1.1",
+    urls = ["https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.1.1.zip"],
+)
+
 # Hedron's Bazel Rules for C++ HTTPS Requests
 # Makes @cpr, @curl, and @boringssl available for use
 # https://github.com/hedronvision/bazel-make-cc-https-easy
