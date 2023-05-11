@@ -209,3 +209,44 @@ cc_library(
         "//resim_core/utils:uuid",
     ],
 )
+
+cc_library(
+    name = "simulate",
+    srcs = ["simulate.cc"],
+    hdrs = ["simulate.hh"],
+    deps = [
+        ":executor_builder",
+        ":logger_unit",
+        ":step_executor",
+        "//resim_core/actor:actor_unit",
+        "//resim_core/actor:factory",
+        "//resim_core/experiences:experience",
+        "//resim_core/simulator:time_lord",
+        "//resim_core/time:timestamp",
+        "//resim_core/utils:inout",
+        "//resim_core/utils:mcap_logger",
+    ],
+)
+
+cc_test(
+    name = "simulate_test",
+    srcs = ["simulate_test.cc"],
+    deps = [
+        ":simulate",
+        ":standard_frames",
+        "//resim_core/actor:actor_id",
+        "//resim_core/actor/state:trajectory",
+        "//resim_core/curves:test_helpers",
+        "//resim_core/experiences:actor",
+        "//resim_core/experiences:completion_criteria",
+        "//resim_core/experiences:dynamic_behavior",
+        "//resim_core/experiences:experience",
+        "//resim_core/experiences:storyboard",
+        "//resim_core/testing:test_directory",
+        "//resim_core/time:timestamp",
+        "//resim_core/transforms:frame",
+        "@com_google_googletest//:gtest_main",
+        "@fmt",
+        "@mcap",
+    ],
+)
