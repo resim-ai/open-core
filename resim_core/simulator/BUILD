@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 cc_library(
     name = "step_executor",
@@ -248,5 +248,19 @@ cc_test(
         "@com_google_googletest//:gtest_main",
         "@fmt",
         "@mcap",
+    ],
+)
+
+cc_binary(
+    name = "sim_run_sim",
+    srcs = ["sim_run_sim.cc"],
+    deps = [
+        ":simulate",
+        "//resim_core/assert",
+        "//resim_core/experiences:experience",
+        "//resim_core/experiences/proto:experience_proto_cc",
+        "//resim_core/experiences/proto:experience_to_proto",
+        "@com_google_protobuf//:protobuf",
+        "@cxxopts",
     ],
 )
