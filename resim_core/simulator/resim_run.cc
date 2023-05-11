@@ -1,3 +1,5 @@
+#include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
 #include <cstdlib>
@@ -37,9 +39,7 @@ experiences::Experience load_experience(const std::filesystem::path &exp_path) {
 }  // namespace
 
 void run_sim(int argc, char **argv) {
-  cxxopts::Options options{
-      "SimRunSim",
-      "A simple program for running sim runs."};
+  cxxopts::Options options{"ReSim Run", "A simple program for running sims."};
   // clang-format off
   options.add_options()
     ("l,log", "Log location (required)", cxxopts::value<std::string>())

@@ -252,8 +252,8 @@ cc_test(
 )
 
 cc_binary(
-    name = "sim_run_sim",
-    srcs = ["sim_run_sim.cc"],
+    name = "resim_run",
+    srcs = ["resim_run.cc"],
     deps = [
         ":simulate",
         "//resim_core/assert",
