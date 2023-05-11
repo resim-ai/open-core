@@ -5,7 +5,7 @@ import "google/protobuf/timestamp.proto";
 package resim.metrics.proto;
 
 message SimpleMetric {
-    string                    name  = 1;
-    google.protobuf.Timestamp time  = 2;
-    repeated double           value = 3;
+    string                    name         = 1;
+    google.protobuf.Timestamp time         = 2;
+    optional double           metric_value = 3;
 }

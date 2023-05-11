@@ -254,3 +254,12 @@ hedron_make_cc_https_easy()
 load("@hedron_make_cc_https_easy//:transitive_workspace_setup.bzl", "hedron_keep_cc_https_easy")
 
 hedron_keep_cc_https_easy()
+
+http_archive(
+    name = "nlohmann_json",
+    # This build file is required because bazel BUILD support is in a version *after* the latest release...
+    build_file = "//resim_core/third_party/nlohmann_json:nlohmann_json.BUILD",
+    sha256 = "95651d7d1fcf2e5c3163c3d37df6d6b3e9e5027299e6bd050d157322ceda9ac9",
+    strip_prefix = "json-3.11.2",
+    url = "https://github.com/nlohmann/json/archive/refs/tags/v3.11.2.zip",
+)
