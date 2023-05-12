@@ -29,9 +29,7 @@ using FramedVector = transforms::FramedVector<3>;
 constexpr auto UNKNOWN_FILE = "Unknown file";
 }  // namespace
 
-View::View() {
-  client_ = std::make_unique<ViewClient>("http://api.resim.ai:8080");
-}
+View::View() { client_ = std::make_unique<ViewClient>("https://api.resim.ai"); }
 
 // We need this since we're using the PIMPL idiom so this must appear after
 // ViewClient is declared.
