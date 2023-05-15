@@ -72,3 +72,35 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "gravity",
+    srcs = ["gravity.cc"],
+    hdrs = ["gravity.hh"],
+    deps = [
+        ":state",
+        "//resim_core/assert",
+        "//resim_core/dynamics:constants",
+        "//resim_core/dynamics:controller",
+        "//resim_core/time:timestamp",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/utils:nullable_reference",
+        "@au//au",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "gravity_test",
+    srcs = ["gravity_test.cc"],
+    deps = [
+        ":gravity",
+        ":state",
+        "//resim_core/dynamics:controller",
+        "//resim_core/testing:random_matrix",
+        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:liegroup_test_helpers",
+        "@au//au",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

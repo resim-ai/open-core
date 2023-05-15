@@ -73,3 +73,12 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "constants",
+    hdrs = ["constants.hh"],
+    visibility = ["//resim_core/dynamics:__subpackages__"],
+    deps = [
+        "@au//au",
+    ],
+)
