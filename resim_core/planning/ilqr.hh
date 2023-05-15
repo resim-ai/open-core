@@ -272,9 +272,14 @@ bool ILQR<State, Control>::try_backward_pass() {
     // Equations 5a-e
     const VecX Q_x = cost_x + f_x.transpose() * V_x;
     const VecU Q_u = cost_u + f_u.transpose() * V_x;
-    const MatXX Q_xx = cost_xx + f_x.transpose() * V_xx * f_x;
+    MatXX Q_xx = cost_xx + f_x.transpose() * V_xx * f_x;
     const MatUX Q_ux = cost_ux + f_u.transpose() * V_xx * f_x;
-    const MatUU Q_uu = cost_uu + f_u.transpose() * V_xx * f_u;
+    MatUU Q_uu = cost_uu + f_u.transpose() * V_xx * f_u;
+
+    // Enforce symmetry
+    constexpr double HALF = 0.5;
+    Q_xx = HALF * Q_xx + HALF * Q_xx.transpose().eval();
+    Q_uu = HALF * Q_uu + HALF * Q_uu.transpose().eval();
 
     // Regularization-specific quantities
     // Equations 10a-b
@@ -284,7 +289,6 @@ bool ILQR<State, Control>::try_backward_pass() {
     MatUU Q_uu_tilde = cost_uu + f_u.transpose() * V_xx_reg * f_u;
 
     // Enforce symmetry
-    constexpr double HALF = 0.5;
     Q_uu_tilde = HALF * Q_uu_tilde + HALF * Q_uu_tilde.transpose().eval();
     const auto llt = Q_uu_tilde.template selfadjointView<Eigen::Upper>().llt();
     if (llt.info() == Eigen::NumericalIssue) {
@@ -304,6 +308,9 @@ bool ILQR<State, Control>::try_backward_pass() {
           Q_ux.transpose() * k;
     V_xx = Q_xx + K.transpose() * Q_uu * K + K.transpose() * Q_ux +
            Q_ux.transpose() * K;
+
+    // Enforce symmetry
+    V_xx = HALF * V_xx + HALF * V_xx.transpose().eval();
   }
   return true;
 }
