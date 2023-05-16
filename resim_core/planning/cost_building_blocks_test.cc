@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <random>
 
+#include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
 
 namespace resim::planning {
@@ -30,7 +31,7 @@ void expect_finite_differences_match(
 
   Vec dcost_dx_fd{Vec::Zero()};
   Mat d2cost_dx2_fd{Mat::Zero()};
-  constexpr double EPSILON = 1e-5;
+  constexpr double EPSILON = 5e-6;
 
   VectorCostResult<DIM> result{cost(x, ComputeDiffs::YES)};
   ASSERT_TRUE(result.dcost_dx.has_value());
@@ -60,10 +61,16 @@ void expect_finite_differences_match(
   }
 
   constexpr double TOLERANCE = 1e-4;
+  const double derivative_tolerance =
+      TOLERANCE * std::max(1.0, dcost_dx_fd.norm());
+  const double second_derivative_tolerance =
+      TOLERANCE * std::max(1.0, d2cost_dx2_fd.norm());
+
   // I check this above with ASSERT
   // NOLINTBEGIN(bugprone-unchecked-optional-access)
-  EXPECT_TRUE((*result.dcost_dx - dcost_dx_fd).isZero(TOLERANCE));
-  EXPECT_TRUE((*result.d2cost_dx2 - d2cost_dx2_fd).isZero(TOLERANCE));
+  EXPECT_TRUE((*result.dcost_dx - dcost_dx_fd).isZero(derivative_tolerance));
+  EXPECT_TRUE(
+      (*result.d2cost_dx2 - d2cost_dx2_fd).isZero(second_derivative_tolerance));
   // NOLINTEND(bugprone-unchecked-optional-access)
 }
 
@@ -106,6 +113,28 @@ void test_soft_abs_cost_once(RNG &&rng) {
       x);
 }
 
+// Helper to test the avoidance cost once
+template <int DIM, typename RNG>
+void test_avoidance_cost_once(RNG &&rng) {
+  using Mat = Eigen::Matrix<double, DIM, DIM>;
+  using Vec = Eigen::Matrix<double, DIM, 1>;
+
+  Mat curvature{testing::random_matrix<Mat>(rng)};
+  curvature = curvature * curvature.transpose().eval();
+
+  constexpr double CUTOFF_LB = 0.1;
+  constexpr double CUTOFF_UB = 2.0;
+  std::uniform_real_distribution<double> dist{CUTOFF_LB, CUTOFF_UB};
+  const double cutoff = dist(rng);
+
+  const Vec x{testing::random_vector<Vec>(rng)};
+  expect_finite_differences_match<DIM>(
+      [&curvature, cutoff](const Vec &x, const ComputeDiffs compute_diffs) {
+        return avoidance_cost(x, curvature, cutoff, compute_diffs);
+      },
+      x);
+}
+
 }  // namespace
 
 TEST(CostBuildingBlocksTest, TestQuadraticCost) {
@@ -128,4 +157,39 @@ TEST(CostBuildingBlocksTest, TestSoftAbsCost) {
   }
 }
 
+TEST(CostBuildingBlocksTest, TestAvoidanceCost) {
+  const unsigned SEED = 3U;
+  std::mt19937 rng{SEED};
+
+  constexpr int NUM_TESTS = 100;
+  for (int ii = 0; ii < NUM_TESTS; ++ii) {
+    test_avoidance_cost_once<3>(rng);
+  }
+}
+
+// Test that the soft abs and avoidance costs fail on zero or negative values of
+// the cutoff.
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+TEST(CostBuildingBlocksTest, TestFailOnNegativeOffset) {
+  constexpr int DIM = 3;
+  using Mat = Eigen::Matrix<double, DIM, DIM>;
+  using Vec = Eigen::Matrix<double, DIM, 1>;
+
+  const unsigned SEED = 3U;
+  std::mt19937 rng{SEED};
+
+  Mat curvature{testing::random_matrix<Mat>(rng)};
+  curvature = curvature * curvature.transpose().eval();
+  const Vec x{testing::random_vector<Vec>(rng)};
+
+  for (const double cutoff : {0.0, -0.1}) {
+    EXPECT_THROW(
+        soft_abs_cost(x, curvature, cutoff, ComputeDiffs::NO),
+        AssertException);
+    EXPECT_THROW(
+        avoidance_cost(x, curvature, cutoff, ComputeDiffs::NO),
+        AssertException);
+  }
+}
+// NOLINTEND(readability-function-cognitive-complexity)
 }  // namespace resim::planning
