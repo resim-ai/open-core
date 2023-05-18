@@ -4,6 +4,7 @@ cc_library(
     name = "state",
     srcs = ["state.cc"],
     hdrs = ["state.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim_core/transforms:framed_group",
     ],
