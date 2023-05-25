@@ -6,40 +6,60 @@
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/utils/match.hh"
 
 namespace resim::actor {
 
-TrajectoryActor::TrajectoryActor(const ActorId id, state::Trajectory trajectory)
+TrajectoryActor::TrajectoryActor(
+    const ActorId id,
+    state::Trajectory trajectory,
+    std::optional<experiences::Geometry> geometry)
     : Actor{id},
-      trajectory_{std::move(trajectory)} {}
+      trajectory_{std::move(trajectory)},
+      geometry_{std::move(geometry)} {}
 
 void TrajectoryActor::simulate_forward(const time::Timestamp time) {
   current_time_ = time;
 }
 
 state::ObservableState TrajectoryActor::observable_state() const {
-  const bool time_in_bounds = current_time() >= trajectory_.start_time() and
-                              current_time() <= trajectory_.end_time();
   state::ObservableState state{
       .id = id(),
-      .is_spawned = time_in_bounds,
+      .is_spawned = is_spawned(),
       .time_of_validity = current_time(),
   };
-  if (time_in_bounds) {
+  if (state.is_spawned) {
     state.state = trajectory_.point_at(current_time_);
   }
   return state;
 }
 
 Geometry TrajectoryActor::geometry() const {
-  return Geometry{
+  Geometry result{
       .frame = trajectory_.body_frame(),
       .time_of_validity = current_time(),
-      // TODO(michael) Add geometries to this actor
-      .visible_geometry = Geometry::NoUpdate(),
   };
+  const bool spawned = is_spawned();
+  if (geometry_.has_value()) {
+    if (not has_published_geometry_ and spawned) {
+      match(geometry_->model, [&](const geometry::Wireframe &wireframe) {
+        result.visible_geometry = wireframe;
+        has_published_geometry_ = true;
+      });
+    } else if (has_published_geometry_ and not spawned) {
+      result.visible_geometry = Geometry::Clear{};
+      has_published_geometry_ = false;
+    }
+  }
+  // NoUpdate is the default
+  return result;
 }
 
 time::Timestamp TrajectoryActor::current_time() const { return current_time_; }
+
+bool TrajectoryActor::is_spawned() const {
+  return current_time() >= trajectory_.start_time() and
+         current_time() <= trajectory_.end_time();
+}
 
 }  // namespace resim::actor
