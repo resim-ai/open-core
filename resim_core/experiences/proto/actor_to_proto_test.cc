@@ -10,6 +10,7 @@
 
 namespace resim::experiences {
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST(ActorToProtoTest, TestPack) {
   // SETUP
   Actor simulation_actor = make_test_actor();
@@ -35,7 +36,17 @@ TEST(ActorToProtoTest, TestPack) {
   ASSERT_EQ(
       sut_actor_msg.actor_type(),
       proto::Actor_ActorType_SYSTEM_UNDER_TEST);
+
+  ASSERT_EQ(
+      simulation_actor.geometries.size(),
+      sim_actor_msg.geometries_size());
+  for (int ii = 0; ii < sim_actor_msg.geometries_size(); ++ii) {
+    EXPECT_EQ(
+        simulation_actor.geometries.at(ii).geometry_id.to_string(),
+        sim_actor_msg.geometries(ii).geometry_id().data());
+  }
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 TEST(ActorToProtoTest, TestRoundTrip) {
   // SETUP

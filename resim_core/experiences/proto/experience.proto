@@ -4,6 +4,7 @@ package resim.experiences.proto;
 
 import "resim_core/experiences/proto/revision.proto";
 import "resim_core/experiences/proto/dynamic_behavior.proto";
+import "resim_core/experiences/proto/geometry.proto";
 
 // Describes a robot experience (often called a scenario).
 message Experience {
@@ -22,4 +23,6 @@ message Experience {
     Header header = 1;
     // The dynamic behavior of the experience
     DynamicBehavior dynamic_behavior = 2;
+    // The geometries referenced or used in this experience
+    repeated Geometry geometries = 3;
 }

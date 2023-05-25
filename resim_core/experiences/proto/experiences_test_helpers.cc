@@ -1,5 +1,8 @@
 #include "resim_core/experiences/proto/experiences_test_helpers.hh"
 
+#include <algorithm>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "resim_core/actor/state/trajectory.hh"
@@ -7,9 +10,12 @@
 #include "resim_core/curves/test_helpers.hh"
 #include "resim_core/experiences/actor.hh"
 #include "resim_core/experiences/completion_criteria.hh"
+#include "resim_core/experiences/geometry.hh"
 #include "resim_core/experiences/ilqr_drone.hh"
 #include "resim_core/experiences/location_condition.hh"
 #include "resim_core/experiences/storyboard.hh"
+#include "resim_core/geometry/drone_wireframe.hh"
+#include "resim_core/geometry/wireframe.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/framed_group.hh"
 #include "resim_core/utils/match.hh"
@@ -29,7 +35,11 @@ Actor make_test_actor(ActorType actor_type) {
   return {
       .id = UUID::new_uuid(),
       .name = TEST_ACTOR_NAME,
-      .actor_type = actor_type};
+      .actor_type = actor_type,
+      .geometries = {{
+          .geometry_id = UUID::new_uuid(),
+      }},
+  };
 }
 
 bool test_actor_equality(
@@ -37,7 +47,8 @@ bool test_actor_equality(
     const Actor& actual_actor) {
   return expected_actor.id == actual_actor.id &&
          expected_actor.name == actual_actor.name &&
-         expected_actor.actor_type == actual_actor.actor_type;
+         expected_actor.actor_type == actual_actor.actor_type &&
+         expected_actor.geometries == actual_actor.geometries;
 }
 
 LocationCondition make_test_location_condition() {
@@ -267,10 +278,61 @@ bool test_header_equality(
              actual_header.parent_experience_name;
 }
 
+Geometry make_test_geometry() {
+  constexpr double CHASSIS_RADIUS_M = 1.;
+  constexpr double ROTOR_LATERAL_OFFSET_M = 0.3;
+  constexpr double ROTOR_VERTICAL_OFFSET_M = 0.3;
+  constexpr double ROTOR_RADIUS_M = 0.5;
+  constexpr std::size_t SAMPLES_PER_ROTOR = 2;
+
+  const geometry::DroneExtents extents{
+      .chassis_radius_m = CHASSIS_RADIUS_M,
+      .rotor_lateral_offset_m = ROTOR_LATERAL_OFFSET_M,
+      .rotor_vertical_offset_m = ROTOR_VERTICAL_OFFSET_M,
+      .rotor_radius_m = ROTOR_RADIUS_M,
+      .samples_per_rotor = SAMPLES_PER_ROTOR,
+  };
+  return Geometry{
+      .id = UUID::new_uuid(),
+      .model = geometry::drone_wireframe(extents),
+  };
+}
+
+bool test_geometry_equality(const Geometry& a, const Geometry& b) {
+  if (a.id != b.id) {
+    return false;
+  }
+  return match(a.model, [&](const geometry::Wireframe& wireframe_a) {
+    // Only alternative for now so we REASSERT this to please codecov
+    REASSERT(std::holds_alternative<geometry::Wireframe>(b.model));
+    const geometry::Wireframe& wireframe_b{
+        std::get<geometry::Wireframe>(b.model)};
+    return wireframe_a == wireframe_b;
+  });
+}
+
+std::unordered_map<UUID, Geometry> make_test_geometries() {
+  const Geometry wireframe_geometry{make_test_geometry()};
+  return {{wireframe_geometry.id, wireframe_geometry}};
+}
+
+bool test_geometries_equality(
+    const std::unordered_map<UUID, Geometry>& a,
+    const std::unordered_map<UUID, Geometry>& b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  return std::all_of(a.cbegin(), a.cend(), [&](const auto& key_and_value) {
+    const auto& [k, v] = key_and_value;
+    return b.contains(k) and test_geometry_equality(v, b.at(k));
+  });
+}
+
 Experience make_test_experience() {
   return {
       .header = make_test_header(),
       .dynamic_behavior = make_test_dynamic_behavior(),
+      .geometries = make_test_geometries(),
   };
 }
 
@@ -282,7 +344,10 @@ bool test_experience_equality(
              actual_experience.header) &&
          test_dynamic_behavior_equality(
              expected_experience.dynamic_behavior,
-             actual_experience.dynamic_behavior);
+             actual_experience.dynamic_behavior) &&
+         test_geometries_equality(
+             expected_experience.geometries,
+             actual_experience.geometries);
 }
 
 }  // namespace resim::experiences

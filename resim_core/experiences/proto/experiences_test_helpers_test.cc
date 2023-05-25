@@ -8,11 +8,14 @@
 #include "resim_core/experiences/completion_criteria.hh"
 #include "resim_core/experiences/dynamic_behavior.hh"
 #include "resim_core/experiences/experience.hh"
+#include "resim_core/experiences/geometry.hh"
 #include "resim_core/experiences/ilqr_drone.hh"
 #include "resim_core/experiences/location_condition.hh"
 #include "resim_core/experiences/storyboard.hh"
+#include "resim_core/geometry/wireframe.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/framed_group.hh"
+#include "resim_core/utils/uuid.hh"
 
 namespace resim::experiences {
 
@@ -37,6 +40,9 @@ TEST(ExperienceTestHelpersTest, TestActorEquality) {
   Actor test_actor_4{test_actor_1};
   test_actor_4.actor_type = ActorType::SYSTEM_UNDER_TEST;
   EXPECT_FALSE(test_actor_equality(test_actor_1, test_actor_4));
+  Actor test_actor_5{test_actor_1};
+  test_actor_5.geometries = {};
+  EXPECT_FALSE(test_actor_equality(test_actor_1, test_actor_5));
 }
 
 TEST(ExperienceTestHelpersTest, TestLocationConditionEquality) {
@@ -198,6 +204,16 @@ TEST(ExperienceTestHelpersTest, TestDynamicBehaviorEquality) {
       test_dynamic_behavior_5));
 }
 
+TEST(ExperienceTestHelpersTest, TestGeometryEquality) {
+  // SETUP/ACTION
+  const Geometry geometry_1 = make_test_geometry();
+  const Geometry geometry_2 = make_test_geometry();
+  // VERIFICATION
+  EXPECT_TRUE(test_geometry_equality(geometry_1, geometry_1));
+  EXPECT_TRUE(test_geometry_equality(geometry_2, geometry_2));
+  EXPECT_FALSE(test_geometry_equality(geometry_1, geometry_2));
+}
+
 TEST(ExperienceTestHelpersTest, TestExperienceEquality) {
   // SETUP/ACTION
   const Experience test_experience_1 = make_test_experience();
@@ -222,6 +238,18 @@ TEST(ExperienceTestHelpersTest, TestExperienceEquality) {
   Experience test_experience_7{test_experience_1};
   test_experience_7.header.revision.minor = 1;
   EXPECT_FALSE(test_experience_equality(test_experience_1, test_experience_7));
+  Experience test_experience_8{test_experience_1};
+  test_experience_8.geometries = {};
+  EXPECT_FALSE(test_experience_equality(test_experience_1, test_experience_8));
+  Experience test_experience_9{test_experience_1};
+  const UUID new_geometry_id{UUID::new_uuid()};
+  test_experience_9.geometries = {
+      {new_geometry_id, test_experience_1.geometries.cbegin()->second}};
+  test_experience_9.geometries.begin()->second.id = new_geometry_id;
+  EXPECT_FALSE(test_experience_equality(test_experience_1, test_experience_9));
+  Experience test_experience_10{test_experience_1};
+  test_experience_10.geometries.begin()->second.model = geometry::Wireframe();
+  EXPECT_FALSE(test_experience_equality(test_experience_1, test_experience_10));
 }
 
 TEST(ExperienceTestHelpersTest, TestMovementModelEquality) {

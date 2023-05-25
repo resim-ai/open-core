@@ -4,6 +4,7 @@
 #include "resim_core/experiences/experience.hh"
 #include "resim_core/experiences/proto/dynamic_behavior_to_proto.hh"
 #include "resim_core/experiences/proto/experience.pb.h"
+#include "resim_core/experiences/proto/geometry_to_proto.hh"
 
 namespace resim::experiences::proto {
 
@@ -18,6 +19,10 @@ void pack(const experiences::Experience &in, Experience *const out) {
   revision->set_major_revision(in.header.revision.major);
   revision->set_minor_revision(in.header.revision.minor);
   pack(in.dynamic_behavior, out->mutable_dynamic_behavior());
+
+  for (const auto &[_, geometry] : in.geometries) {
+    pack(geometry, out->add_geometries());
+  }
 }
 
 experiences::Experience unpack(const Experience &in) {
@@ -34,6 +39,11 @@ experiences::Experience unpack(const Experience &in) {
       .parent_experience_name = in.header().parent_experience_name(),
   };
   result.header = header;
+
+  for (const auto &geometry_msg : in.geometries()) {
+    const experiences::Geometry geometry{unpack(geometry_msg)};
+    result.geometries.emplace(geometry.id, geometry);
+  }
   return result;
 }
 

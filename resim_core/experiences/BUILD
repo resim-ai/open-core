@@ -62,5 +62,19 @@ cc_library(
     name = "experience",
     hdrs = ["experience.hh"],
     visibility = ["//visibility:public"],
-    deps = [":dynamic_behavior"],
+    deps = [
+        ":dynamic_behavior",
+        ":geometry",
+        "//resim_core/utils:uuid",
+    ],
+)
+
+cc_library(
+    name = "geometry",
+    hdrs = ["geometry.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim_core/geometry:wireframe",
+        "//resim_core/utils:uuid",
+    ],
 )

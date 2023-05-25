@@ -24,6 +24,9 @@ void pack(const experiences::Actor &in, Actor *const out) {
       REASSERT(false);
       out->set_actor_type(Actor_ActorType_INVALID);
   }
+  for (const auto &geometry : in.geometries) {
+    pack(geometry.geometry_id, out->add_geometries()->mutable_geometry_id());
+  }
 }
 
 experiences::Actor unpack(const Actor &in) {
@@ -41,6 +44,12 @@ experiences::Actor unpack(const Actor &in) {
       // This should never happen
       REASSERT(false);
       result.actor_type = ActorType::INVALID;
+  }
+  result.geometries.reserve(in.geometries_size());
+  for (const auto &geometry_msg : in.geometries()) {
+    result.geometries.push_back({
+        .geometry_id = unpack(geometry_msg.geometry_id()),
+    });
   }
   return result;
 }

@@ -18,7 +18,11 @@ message Actor {
         SYSTEM_UNDER_TEST = 1;
         SIMULATION_ACTOR  = 2;
     }
-    resim.proto.UUID id         = 1;
-    string           name       = 2;
-    ActorType        actor_type = 3;
+    message GeometryReference {
+        resim.proto.UUID geometry_id = 1;
+    }
+    resim.proto.UUID           id         = 1;
+    string                     name       = 2;
+    ActorType                  actor_type = 3;
+    repeated GeometryReference geometries = 4;
 }

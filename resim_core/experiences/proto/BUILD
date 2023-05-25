@@ -104,6 +104,7 @@ proto_library(
     srcs = ["experience.proto"],
     deps = [
         ":dynamic_behavior_proto",
+        ":geometry_proto",
         ":revision_proto",
     ],
 )
@@ -127,9 +128,12 @@ cc_library(
         "//resim_core/experiences:completion_criteria",
         "//resim_core/experiences:dynamic_behavior",
         "//resim_core/experiences:experience",
+        "//resim_core/experiences:geometry",
         "//resim_core/experiences:ilqr_drone",
         "//resim_core/experiences:location_condition",
         "//resim_core/experiences:storyboard",
+        "//resim_core/geometry:drone_wireframe",
+        "//resim_core/geometry:wireframe",
         "//resim_core/time:timestamp",
         "//resim_core/transforms:framed_group",
         "//resim_core/utils:match",
@@ -147,6 +151,7 @@ cc_test(
         "//resim_core/experiences:completion_criteria",
         "//resim_core/experiences:dynamic_behavior",
         "//resim_core/experiences:experience",
+        "//resim_core/experiences:geometry",
         "//resim_core/experiences:ilqr_drone",
         "//resim_core/experiences:location_condition",
         "//resim_core/experiences:storyboard",
@@ -350,6 +355,7 @@ cc_library(
     deps = [
         ":dynamic_behavior_to_proto",
         ":experience_proto_cc",
+        ":geometry_to_proto",
         "//resim_core/assert",
         "//resim_core/experiences:experience",
     ],
@@ -364,8 +370,57 @@ cc_test(
         ":experience_proto_cc",
         ":experience_to_proto",
         ":experiences_test_helpers",
+        ":geometry_to_proto",
         "//resim_core/assert",
         "//resim_core/experiences:experience",
+        "//resim_core/experiences:geometry",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+proto_library(
+    name = "geometry_proto",
+    srcs = ["geometry.proto"],
+    deps = [
+        "//resim_core/geometry/proto:wireframe_proto",
+        "//resim_core/utils/proto:uuid_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "geometry_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":geometry_proto"],
+)
+
+cc_library(
+    name = "geometry_to_proto",
+    srcs = ["geometry_to_proto.cc"],
+    hdrs = ["geometry_to_proto.hh"],
+    deps = [
+        ":geometry_proto_cc",
+        "//resim_core/assert",
+        "//resim_core/experiences:geometry",
+        "//resim_core/geometry:wireframe",
+        "//resim_core/geometry/proto:wireframe_to_proto",
+        "//resim_core/utils:match",
+        "//resim_core/utils/proto:uuid_to_proto",
+    ],
+)
+
+cc_test(
+    name = "geometry_to_proto_test",
+    srcs = ["geometry_to_proto_test.cc"],
+    deps = [
+        ":geometry_proto_cc",
+        ":geometry_to_proto",
+        "//resim_core/assert",
+        "//resim_core/experiences:geometry",
+        "//resim_core/geometry:drone_wireframe",
+        "//resim_core/geometry:wireframe",
+        "//resim_core/geometry/proto:wireframe_to_proto",
+        "//resim_core/utils:uuid",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
     ],
 )

@@ -5,6 +5,7 @@
 #include "resim_core/experiences/completion_criteria.hh"
 #include "resim_core/experiences/dynamic_behavior.hh"
 #include "resim_core/experiences/experience.hh"
+#include "resim_core/experiences/geometry.hh"
 #include "resim_core/experiences/ilqr_drone.hh"
 #include "resim_core/experiences/location_condition.hh"
 #include "resim_core/experiences/storyboard.hh"
@@ -59,6 +60,10 @@ DynamicBehavior make_test_dynamic_behavior();
 bool test_dynamic_behavior_equality(
     const DynamicBehavior& expected_dynamic_behavior,
     const DynamicBehavior& actual_dynamic_behavior);
+
+Geometry make_test_geometry();
+
+bool test_geometry_equality(const Geometry& a, const Geometry& b);
 
 Experience make_test_experience();
 

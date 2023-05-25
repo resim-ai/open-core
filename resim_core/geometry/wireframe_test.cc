@@ -6,7 +6,7 @@
 
 namespace resim::geometry {
 
-class WireFrameTest : public ::testing::Test {
+class WireframeTest : public ::testing::Test {
  protected:
   const std::vector<Wireframe::Point> points_{
       {-0.25, -0.5, 0.0},
@@ -25,7 +25,7 @@ class WireFrameTest : public ::testing::Test {
   };
 };
 
-TEST_F(WireFrameTest, TestConstruction) {
+TEST_F(WireframeTest, TestConstruction) {
   // ACTION
   const std::size_t invalid_index = points_.size();
   const Wireframe good_wireframe{points_, edges_};
@@ -38,7 +38,7 @@ TEST_F(WireFrameTest, TestConstruction) {
   EXPECT_FALSE(duplicate_containing_wireframe.is_valid());
 }
 
-TEST_F(WireFrameTest, TestGetters) {
+TEST_F(WireframeTest, TestGetters) {
   // SETUP
   const Wireframe wireframe{points_, edges_};
   // ACTION / VERIFICATION
@@ -46,7 +46,7 @@ TEST_F(WireFrameTest, TestGetters) {
   EXPECT_EQ(wireframe.edges(), edges_);
 }
 
-TEST_F(WireFrameTest, TestAdders) {
+TEST_F(WireframeTest, TestAdders) {
   // SETUP
   Wireframe wireframe;
 
@@ -68,6 +68,22 @@ TEST_F(WireFrameTest, TestAdders) {
   EXPECT_TRUE(wireframe.is_valid());
   EXPECT_EQ(wireframe.points(), points_);
   EXPECT_EQ(wireframe.edges(), edges_);
+}
+
+TEST_F(WireframeTest, TestEquality) {
+  const Wireframe wireframe_a{points_, edges_};
+  Wireframe wireframe_b = wireframe_a;
+
+  EXPECT_EQ(wireframe_a, wireframe_b);
+
+  wireframe_b.add_point(Eigen::Vector3d::Ones());
+  EXPECT_NE(wireframe_a, wireframe_b);
+  EXPECT_NE(wireframe_b, wireframe_a);
+
+  wireframe_b = wireframe_a;
+  wireframe_b.add_edge({0, 1});
+  EXPECT_NE(wireframe_a, wireframe_b);
+  EXPECT_NE(wireframe_b, wireframe_a);
 }
 
 }  // namespace resim::geometry

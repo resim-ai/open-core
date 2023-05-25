@@ -17,6 +17,7 @@ cc_library(
     name = "wireframe_to_proto",
     srcs = ["wireframe_to_proto.cc"],
     hdrs = ["wireframe_to_proto.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":wireframe_proto_cc",
         "//resim_core/assert",

@@ -44,4 +44,8 @@ class Wireframe {
   std::vector<Edge> edges_;
 };
 
+inline bool operator==(const Wireframe &a, const Wireframe &b) {
+  return a.points() == b.points() and a.edges() == b.edges();
+}
+
 }  // namespace resim::geometry
