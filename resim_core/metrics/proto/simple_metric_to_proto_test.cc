@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/metrics/proto/simple_metric.pb.h"
 #include "resim_core/metrics/simple_metric.hh"
 #include "resim_core/time/random_duration.hh"
@@ -16,6 +17,7 @@ namespace resim::metrics::proto {
 
 namespace {
 using time::Timestamp;
+const actor::ActorId ACTOR_ID{UUID::new_uuid()};
 }  // namespace
 
 TEST(SimpleMetricToProtoTests, DoubleRoundTrip) {
@@ -26,6 +28,7 @@ TEST(SimpleMetricToProtoTests, DoubleRoundTrip) {
   metrics::SimpleMetric simple_metric(
       UUID::new_uuid().to_string(),
       time::Timestamp(time::random_duration(InOut(rng))),
+      ACTOR_ID,
       std::make_optional<double>(DOUBLE_VALUE));
 
   SimpleMetric simple_metric_proto;
@@ -43,6 +46,7 @@ TEST(SimpleMetricToProtoTests, EmptyRoundTrip) {
   metrics::SimpleMetric simple_metric(
       UUID::new_uuid().to_string(),
       time::Timestamp(time::random_duration(InOut(rng))),
+      std::nullopt,
       std::nullopt);
 
   SimpleMetric simple_metric_proto;
@@ -60,6 +64,7 @@ TEST(SimpleMetricToProtoTests, DoublePack) {
   metrics::SimpleMetric simple_metric(
       UUID::new_uuid().to_string(),
       time::Timestamp(time::random_duration(InOut(rng))),
+      ACTOR_ID,
       std::make_optional<double>(DOUBLE_VALUE));
 
   SimpleMetric simple_metric_proto;
@@ -82,6 +87,7 @@ TEST(SimpleMetricToProtoTests, EmptyPack) {
   metrics::SimpleMetric simple_metric(
       UUID::new_uuid().to_string(),
       time::Timestamp(time::random_duration(InOut(rng))),
+      std::nullopt,
       std::nullopt);
 
   SimpleMetric simple_metric_proto;

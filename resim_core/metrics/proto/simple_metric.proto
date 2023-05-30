@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "resim_core/utils/proto/uuid.proto";
 
 package resim.metrics.proto;
 
@@ -8,4 +9,5 @@ message SimpleMetric {
     string                    name         = 1;
     google.protobuf.Timestamp time         = 2;
     optional double           metric_value = 3;
+    optional resim.proto.UUID actor_id     = 4;
 }

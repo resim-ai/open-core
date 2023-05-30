@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 
+#include "resim_core/actor/actor_id.hh"
 #include "resim_core/time/timestamp.hh"
 
 namespace resim::metrics {
@@ -19,12 +20,19 @@ namespace resim::metrics {
 struct SimpleMetric {
   std::string name;
   time::Timestamp time;
+  std::optional<actor::ActorId> actor_id;
+
   std::optional<double> metric_value;
 
   SimpleMetric() = default;
-  SimpleMetric(std::string n, time::Timestamp t, std::optional<double> v)
+  SimpleMetric(
+      std::string n,
+      time::Timestamp t,
+      std::optional<actor::ActorId> id,
+      std::optional<double> v)
       : name(std::move(n)),
         time(t),
+        actor_id(id),
         metric_value(v){};
 
   bool operator==(const SimpleMetric&) const = default;

@@ -28,7 +28,7 @@ namespace resim::simulator {
 
 namespace {
 
-constexpr time::Timestamp START_TIME;
+constexpr time::Timestamp START_TIME{std::chrono::seconds(0)};
 constexpr time::Duration DURATION{std::chrono::seconds(30)};
 
 const actor::ActorId actor_id{actor::ActorId::new_uuid()};
@@ -84,7 +84,10 @@ TEST(SimulateTest, TestRunSim) {
 
   ASSERT_TRUE(reader.readSummary(mcap::ReadSummaryMethod::NoFallbackScan).ok());
   const auto &channels = reader.channels();
-  ASSERT_EQ(channels.size(), 2U);
+
+  // TODO(tknowles): Currently this includes the single metric_min_distance
+  // channel, which will likely change.
+  ASSERT_EQ(channels.size(), 3U);
 
   time::Timestamp max_time{time::Duration::min()};
   time::Timestamp min_time{time::Duration::max()};

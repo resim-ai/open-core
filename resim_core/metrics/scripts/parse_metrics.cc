@@ -62,6 +62,13 @@ int parse_metrics(
       const SimpleMetric m = unpack(msg);
       json metric_entry{};
       metric_entry["time_s"] = time::as_seconds(m.time.time_since_epoch());
+
+      if (m.actor_id.has_value()) {
+        metric_entry["actor_id"] = m.actor_id.value().to_string();
+      } else {
+        metric_entry["actor_id"] = nullptr;
+      }
+
       if (m.metric_value.has_value()) {
         metric_entry["metric_value"] = m.metric_value.value();
         metric_entry["reported"] = true;

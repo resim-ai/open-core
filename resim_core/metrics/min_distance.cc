@@ -14,7 +14,9 @@ namespace resim::metrics {
 std::optional<double> min_distance(
     const actor::state::ObservableState& target_state,
     const std::vector<actor::state::ObservableState>& states) {
-  REASSERT(target_state.is_spawned, "Target actor not spawned");
+  if (!target_state.is_spawned) {
+    return std::nullopt;
+  }
 
   return std::accumulate(
       states.begin(),

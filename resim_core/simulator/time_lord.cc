@@ -2,11 +2,15 @@
 #include "resim_core/simulator/time_lord.hh"
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/simulator/simulation_unit.hh"
 #include "resim_core/simulator/standard_topics.hh"
 
 namespace resim::simulator {
 
-TimeLord::TimeLord(InOut<ExecutorBuilder> executor_builder) {
+TimeLord::TimeLord(
+    std::shared_ptr<LoggerInterface> logger_interface,
+    InOut<ExecutorBuilder> executor_builder)
+    : SimulationUnit(std::move(logger_interface)) {
   executor_builder->add_independent_task<time::Timestamp>(
       "publish_time",
       TIME_TOPIC,

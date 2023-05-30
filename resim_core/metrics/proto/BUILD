@@ -6,6 +6,7 @@ proto_library(
     srcs = ["simple_metric.proto"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim_core/utils/proto:uuid_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
 )
@@ -23,8 +24,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":simple_metric_proto_cc",
+        "//resim_core/actor:actor_id",
         "//resim_core/assert",
         "//resim_core/metrics:simple_metric",
+        "//resim_core/utils/proto:uuid_to_proto",
     ],
 )
 

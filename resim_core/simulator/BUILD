@@ -107,7 +107,9 @@ cc_library(
     name = "simulation_unit",
     hdrs = ["simulation_unit.hh"],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        "//resim_core/utils:mcap_logger",
+    ],
 )
 
 cc_test(
@@ -148,59 +150,6 @@ cc_test(
 )
 
 cc_library(
-    name = "logger_unit",
-    srcs = ["logger_unit.cc"],
-    hdrs = ["logger_unit.hh"],
-    deps = [
-        ":standard_frames",
-        ":standard_topics",
-        "//resim_core/actor:geometry",
-        "//resim_core/actor/state:observable_state",
-        "//resim_core/assert",
-        "//resim_core/metrics:min_distance",
-        "//resim_core/metrics:simple_metric",
-        "//resim_core/metrics/proto:simple_metric_proto_cc",
-        "//resim_core/metrics/proto:simple_metric_to_proto",
-        "//resim_core/simulator:executor_builder",
-        "//resim_core/simulator:simulation_unit",
-        "//resim_core/time:timestamp",
-        "//resim_core/transforms:framed_group",
-        "//resim_core/utils:inout",
-        "//resim_core/utils:mcap_logger",
-        "//resim_core/visualization/foxglove:actor_geometry_to_foxglove",
-        "//resim_core/visualization/foxglove:frame_transform_to_foxglove",
-        "@fmt",
-        "@foxglove_schemas",
-    ],
-)
-
-cc_test(
-    name = "logger_unit_test",
-    srcs = ["logger_unit_test.cc"],
-    deps = [
-        ":executor_builder",
-        ":logger_unit",
-        ":standard_frames",
-        ":standard_topics",
-        ":step_executor",
-        "//resim_core/actor:geometry",
-        "//resim_core/actor/state:observable_state",
-        "//resim_core/actor/state:rigid_body_state",
-        "//resim_core/time:timestamp",
-        "//resim_core/transforms:frame",
-        "//resim_core/transforms:framed_group",
-        "//resim_core/transforms:liegroup_test_helpers",
-        "//resim_core/transforms:se3",
-        "//resim_core/utils:inout",
-        "//resim_core/utils:mcap_logger",
-        "//resim_core/utils:uuid",
-        "//resim_core/visualization/foxglove:frame_transform_to_foxglove",
-        "@com_google_googletest//:gtest_main",
-        "@foxglove_schemas",
-    ],
-)
-
-cc_library(
     name = "standard_frames",
     hdrs = ["standard_frames.hh"],
     visibility = ["//resim_core:__subpackages__"],
@@ -216,11 +165,11 @@ cc_library(
     hdrs = ["simulate.hh"],
     deps = [
         ":executor_builder",
-        ":logger_unit",
         ":step_executor",
         "//resim_core/actor:actor_unit",
         "//resim_core/actor:factory",
         "//resim_core/experiences:experience",
+        "//resim_core/metrics:actor_metrics_unit",
         "//resim_core/simulator:time_lord",
         "//resim_core/time:timestamp",
         "//resim_core/utils:inout",

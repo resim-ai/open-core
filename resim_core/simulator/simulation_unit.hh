@@ -1,4 +1,5 @@
 #pragma once
+#include "resim_core/utils/mcap_logger.hh"
 
 namespace resim::simulator {
 
@@ -7,12 +8,19 @@ namespace resim::simulator {
 // the course of a simulation.
 class SimulationUnit {
  public:
-  SimulationUnit() = default;
+  explicit SimulationUnit(std::shared_ptr<LoggerInterface> logger_interface)
+      : logger_(std::move(logger_interface)){};
   SimulationUnit(const SimulationUnit &) = default;
   SimulationUnit(SimulationUnit &&) noexcept = default;
   SimulationUnit &operator=(SimulationUnit &&) noexcept = default;
   SimulationUnit &operator=(const SimulationUnit &) = default;
   virtual ~SimulationUnit() = default;
+
+ protected:
+  std::shared_ptr<LoggerInterface> logger() const { return logger_; };
+
+ private:
+  std::shared_ptr<LoggerInterface> logger_;
 };
 
 }  // namespace resim::simulator

@@ -281,7 +281,7 @@ TEST(MinDistanceTests, TargetUnspawned) {
       TEST_STATE_2};
 
   // TEST + VERIFY
-  EXPECT_THROW(min_distance(unspawned_target, states), AssertException);
-  EXPECT_THROW(min_distance(unspawned_target.id, states), AssertException);
+  EXPECT_EQ(min_distance(unspawned_target, states), std::nullopt);
+  EXPECT_EQ(min_distance(unspawned_target.id, states), std::nullopt);
 }
 }  // namespace resim::metrics

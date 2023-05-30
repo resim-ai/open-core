@@ -6,6 +6,7 @@
 #include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
+#include "resim_core/simulator/standard_frames.hh"
 #include "resim_core/time/timestamp.hh"
 
 namespace resim::actor {
@@ -40,5 +41,24 @@ class TestActor : public Actor {
   Geometry geometry_;
   std::function<void(const time::Timestamp)> simulate_forward_;
 };
+
+// Helper to set up a vector of test actor states and geometries
+std::vector<std::pair<state::ObservableState, Geometry>>
+get_test_actor_components(time::Timestamp time);
+
+// Helper to set up a vector of test actor states
+std::vector<state::ObservableState> get_test_actor_states(time::Timestamp time);
+
+// Helper to set up a vector of test actor geometries
+std::vector<Geometry> get_test_actor_geometries(
+    time::Timestamp time,
+    bool inconsistent_times = false);
+
+state::RigidBodyState<transforms::FSE3> make_default_actor_state() {
+  return state::RigidBodyState<transforms::FSE3>(transforms::FSE3(
+      transforms::SE3::identity(),
+      simulator::SCENE_FRAME,
+      transforms::Frame<transforms::FSE3::DIMS>::new_frame()));
+}
 
 }  // namespace resim::actor

@@ -29,7 +29,7 @@ TEST(TimeLordTest, TestTimeLord) {
       });
 
   // ACTION
-  TimeLord time_lord{InOut{executor_builder}};
+  TimeLord time_lord{nullptr, InOut{executor_builder}};
 
   const std::unique_ptr<StepExecutor> executor{executor_builder.build()};
 
@@ -49,7 +49,7 @@ TEST(TimeLordTest, TestTimeLord) {
 TEST(TimeLordDeathTest, TestTimeLordBadDT) {
   // SETUP
   ExecutorBuilder executor_builder;
-  TimeLord time_lord{InOut{executor_builder}};
+  TimeLord time_lord{nullptr, InOut{executor_builder}};
   constexpr time::Duration DT{-std::chrono::seconds(1)};
 
   // ACTION / VERIFICATION

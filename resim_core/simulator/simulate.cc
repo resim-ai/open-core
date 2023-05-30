@@ -8,8 +8,8 @@
 
 #include "resim_core/actor/actor_unit.hh"
 #include "resim_core/actor/factory.hh"
+#include "resim_core/metrics/actor_metrics_unit.hh"
 #include "resim_core/simulator/executor_builder.hh"
-#include "resim_core/simulator/logger_unit.hh"
 #include "resim_core/simulator/step_executor.hh"
 #include "resim_core/simulator/time_lord.hh"
 #include "resim_core/time/timestamp.hh"
@@ -26,21 +26,35 @@ void simulate(
 
   REASSERT(time_limit > time::Timestamp(), "Time limit must be positive!");
 
+  // Setup logger
+  std::shared_ptr<LoggerInterface> logger{
+      std::make_shared<McapLogger>(mcap_path)};
   // Setup units
   ExecutorBuilder executor_builder;
 
-  auto time_lord = std::make_unique<TimeLord>(InOut{executor_builder});
-  std::unique_ptr<LoggerInterface> logger{
-      std::make_unique<McapLogger>(mcap_path)};
-  auto logger_unit =
-      std::make_unique<LoggerUnit>(std::move(logger), InOut{executor_builder});
+  auto time_lord = std::make_unique<TimeLord>(logger, InOut{executor_builder});
 
-  std::vector<actor::ActorUnit> actor_units;
+  auto actor_logger_unit =
+      std::make_unique<actor::ActorLoggerUnit>(logger, InOut{executor_builder});
+
+  std::vector<std::unique_ptr<actor::ActorUnit>> actor_units;
   std::vector<std::unique_ptr<actor::Actor>> actors{
       actor::factory(experience.dynamic_behavior)};
+
+  // TODO(tknowles): For now, add an actor metrics unit for the first actor
+  if (not actors.empty()) {
+    metrics::ActorMetricsUnit ego_metrics_unit{
+        logger,
+        InOut{executor_builder},
+        actors.front()->id()};
+  }
+
   actor_units.reserve(actors.size());
   for (auto &actor : actors) {
-    actor_units.emplace_back(std::move(actor), InOut{executor_builder});
+    actor_units.push_back(std::make_unique<actor::ActorUnit>(
+        logger,
+        std::move(actor),
+        InOut{executor_builder}));
   }
   std::unique_ptr<StepExecutor> executor = executor_builder.build();
 

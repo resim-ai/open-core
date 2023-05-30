@@ -24,7 +24,8 @@ void add_file_descriptor(google::protobuf::FileDescriptorSet& fds) {
 
 }  // namespace
 
-TEST(DepdendencyFileDescriptorFileSetTest, TestMakeDependencySet) {
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+TEST(DependencyFileDescriptorFileSetTest, TestMakeDependencySet) {
   // ACTION
   const std::string result = dependency_file_descriptor_set(
       *proto::testing::MessageD::GetDescriptor());
@@ -52,4 +53,6 @@ TEST(DepdendencyFileDescriptorFileSetTest, TestMakeDependencySet) {
   EXPECT_TRUE(
       observed.contains("resim_core/utils/proto/testing/message_d.proto"));
 }
+// NOLINTEND(readability-function-cognitive-complexity)
+
 }  // namespace resim
