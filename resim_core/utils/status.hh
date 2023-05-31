@@ -84,6 +84,16 @@ constexpr Status OKAY_STATUS{};
     REASSERT((status).ok(), err_msg); \
   })
 
+// Return from the enclosing function if the given status result is not ok.
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define RETURN_IF_NOT_OK(status)              \
+  do {                                        \
+    const Status evaluated_status = (status); \
+    if (not evaluated_status.ok()) {          \
+      return evaluated_status;                \
+    }                                         \
+  } while (0)
+
 constexpr Status
 Status::make_at_line(const char *file, int line, const char *message) {
   return Status{StatusVariant{ErrType{

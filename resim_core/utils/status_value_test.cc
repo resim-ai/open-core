@@ -7,6 +7,7 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/testing/move_copy_tracker.hh"
+#include "resim_core/utils/status.hh"
 
 namespace resim {
 
@@ -41,7 +42,7 @@ void expect_matches_tracker_value(const T &tracker_status_value) {
 // A helper function which calls RETURN_IF_NOT_OK() so we can test it.
 template <typename T>
 Status return_if_not_ok_function(const StatusValue<T> &sv) {
-  RETURN_IF_NOT_OK(sv);
+  RETURN_IF_NOT_OK(sv.status());
   return OKAY_STATUS;
 }
 
@@ -486,6 +487,37 @@ TEST(StatusValueTest, TestReturnOrAssignGoodStatus) {
     EXPECT_EQ(
         return_or_assign_function(std::move(good_sv)).what(),
         OKAY_STATUS.what());
+  }
+}
+
+// Ensure that the RETURN_OR_ASSIGN() macro evaluates its argument exactly
+// once.
+TEST(StatusValueTest, TestReturnOrAssignCallsOnce) {
+  int call_count = 0;
+  enum class Arg {
+    GOOD = 0,
+    BAD,
+  };
+
+  const auto f = [&](const Arg arg) -> StatusValue<int> {
+    ++call_count;
+
+    if (arg == Arg::GOOD) {
+      return 0;
+    }
+    return MAKE_STATUS("Bad Status");
+  };
+
+  for (const auto &arg : {Arg::GOOD, Arg::BAD}) {
+    // Reset the call count
+    call_count = 0;
+    // Create and instantly call the lambda
+    [&]() -> Status {
+      RETURN_OR_ASSIGN(f(arg));
+      return OKAY_STATUS;
+    }();
+
+    EXPECT_EQ(call_count, 1);
   }
 }
 

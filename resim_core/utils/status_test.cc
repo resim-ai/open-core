@@ -43,6 +43,12 @@ const std::string expected_bad_status_what{fmt::format(
     bad_status_line,
     BAD_STATUS_MESSAGE)};
 
+// A helper function which calls RETURN_IF_NOT_OK() so we can test it.
+Status return_if_not_ok_function(const Status &s) {
+  RETURN_IF_NOT_OK(s);
+  return OKAY_STATUS;
+}
+
 }  // namespace
 
 TEST(StatusTest, TestOk) {
@@ -81,5 +87,46 @@ TEST(StatusDeathTest, TestCheckStatus) {
   EXPECT_THROW(make_check(), AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
+
+// Test RETURN_IF_NOT_OK to make sure it correctly returns when we pass a bad
+// status.
+TEST(StatusValueTest, TestReturnIfNotOK) {
+  const Status bad_status = MAKE_STATUS("Test Status!");
+  EXPECT_EQ(return_if_not_ok_function(bad_status).what(), bad_status.what());
+
+  const Status good_status{OKAY_STATUS};
+  EXPECT_EQ(return_if_not_ok_function(good_status).what(), OKAY_STATUS.what());
+}
+
+// Ensure that the RETURN_IF_NOT_OK() macro evaluates its argument exactly
+// once.
+TEST(StatusValueTest, TestReturnIfNotOKCallsOnce) {
+  int call_count = 0;
+  enum class Arg {
+    GOOD = 0,
+    BAD,
+  };
+
+  const auto f = [&](const Arg arg) -> Status {
+    ++call_count;
+
+    if (arg == Arg::GOOD) {
+      return OKAY_STATUS;
+    }
+    return MAKE_STATUS("Bad Status");
+  };
+
+  for (const auto &arg : {Arg::GOOD, Arg::BAD}) {
+    // Reset the call count
+    call_count = 0;
+    // Create and instantly call the lambda
+    [&]() -> Status {
+      RETURN_IF_NOT_OK(f(arg));
+      return OKAY_STATUS;
+    }();
+
+    EXPECT_EQ(call_count, 1);
+  }
+}
 
 }  // namespace resim

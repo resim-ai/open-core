@@ -18,6 +18,27 @@ class StatusValue {
 
   using ValueType = T;
 
+  // We claim that this is one of the few places where the benefits of allowing
+  // implicit conversions is worth the cost. In particular, we want to allow
+  // implicit conversions from Status objects, and from the value type held in
+  // this StatusValue. The argument for implicit conversions from Status and T
+  // is that we want this type to have the same semantics as std::variant, so
+  // we can do things like:
+  //
+  // StatusValue<int> my_function() {
+  //   if (failed()) {
+  //     return MAKE_STATUS("Oh no!");
+  //   }
+  //   return 3;
+  // }
+  //
+  // The implicit conversion from Status also allows RETURN_IF_NOT_OK() and
+  // RETURN_OR_ASSIGN() (defined below) to be employed in functions returning
+  // StatusResult<T> for any type T. Otherwise, the desired return type would
+  // have to somehow be passed into the macros as well.
+  //
+  // NOLINTBEGIN(google-explicit-constructor)
+
   // Perfect forwarding constructor for the value held in this StatusValue. We
   // require that ValueT to have the same decayed type as T to keep this from
   // competing with the other constructors for overload preference. We could use
@@ -29,9 +50,10 @@ class StatusValue {
       typename ValueT,
       typename = std::enable_if_t<
           std::is_same_v<std::decay_t<ValueT>, std::decay_t<T>>>>
-  explicit constexpr StatusValue(ValueT &&value);
+  constexpr StatusValue(ValueT &&value);
 
-  explicit constexpr StatusValue(const Status &status);
+  constexpr StatusValue(const Status &status);
+  // NOLINTEND(google-explicit-constructor)
 
   constexpr StatusValue();
   ~StatusValue() = default;
@@ -118,25 +140,22 @@ constexpr const Status &StatusValue<T>::status() const {
       [](const Status &status) -> const Status & { return status; });
 }
 
-// Return from the enclosing function if the given status result is not ok.
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define RETURN_IF_NOT_OK(status_value) \
-  do {                                 \
-    if (not(status_value).ok()) {      \
-      return (status_value).status();  \
-    }                                  \
-  } while (0)
-
 // Return from the enclosing function if the given status result is not
 // ok. Otherwise, assign the value as the value of this expression.  We don't
 // really have a choice but to use the GNU statement expression extension here
 // unless we pass the assignment target in too. We use the lambda because
 // otherwise the statement expression doesn't preserve references.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define RETURN_OR_ASSIGN(status_value)                          \
-  ({                                                            \
-    RETURN_IF_NOT_OK(status_value);                             \
-    [&]() -> decltype(auto) { return (status_value).value(); }; \
+#define RETURN_OR_ASSIGN(status_value)                        \
+  ({                                                          \
+    auto &&evalutated_status_value =                          \
+        std::forward<decltype(status_value)>(status_value);   \
+    RETURN_IF_NOT_OK(evalutated_status_value.status());       \
+    [&]() -> decltype(auto) {                                 \
+      return std::forward<decltype(evalutated_status_value)>( \
+                 evalutated_status_value)                     \
+          .value();                                           \
+    };                                                        \
   })()
 
 }  // namespace resim
