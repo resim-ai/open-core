@@ -10,10 +10,10 @@ class SimulationUnit {
  public:
   explicit SimulationUnit(std::shared_ptr<LoggerInterface> logger_interface)
       : logger_(std::move(logger_interface)){};
-  SimulationUnit(const SimulationUnit &) = default;
-  SimulationUnit(SimulationUnit &&) noexcept = default;
-  SimulationUnit &operator=(SimulationUnit &&) noexcept = default;
-  SimulationUnit &operator=(const SimulationUnit &) = default;
+  SimulationUnit(const SimulationUnit &) = delete;
+  SimulationUnit(SimulationUnit &&) noexcept = delete;
+  SimulationUnit &operator=(SimulationUnit &&) noexcept = delete;
+  SimulationUnit &operator=(const SimulationUnit &) = delete;
   virtual ~SimulationUnit() = default;
 
  protected:

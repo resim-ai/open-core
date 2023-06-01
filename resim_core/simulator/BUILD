@@ -112,15 +112,6 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "simulation_unit_test",
-    srcs = ["simulation_unit_test.cc"],
-    deps = [
-        ":simulation_unit",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
 cc_library(
     name = "time_lord",
     srcs = ["time_lord.cc"],
