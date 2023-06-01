@@ -248,8 +248,12 @@ template SE3::SE3(SO3, Eigen::Vector3d, Frame3, Frame3);
 
 template SE3 SE3::identity();
 template SE3 SE3::identity(const Frame3 &, const Frame3 &);
+template SE3 SE3::identity(Frame3 &&, Frame3 &&);
 
 template SE3 SE3::exp(const TangentVector &);
 template SE3 SE3::exp(const TangentVector &, const Frame3 &, const Frame3 &);
+template SE3 SE3::exp(const TangentVector &, Frame3 &&, Frame3 &&);
+template SE3 SE3::exp(const TangentVector &, const Frame3 &, Frame3 &&);
+template SE3 SE3::exp(const TangentVector &, Frame3 &&, const Frame3 &);
 
 }  // namespace resim::transforms
