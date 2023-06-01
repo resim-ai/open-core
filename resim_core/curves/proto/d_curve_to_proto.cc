@@ -2,7 +2,6 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve.pb.h"
-#include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -33,12 +32,8 @@ void unpack_d_curve(const Msg &in, InOut<DCurve<Group>> out) {
 }
 
 template void pack_d_curve(const DCurve<transforms::SE3> &, DCurve_SE3 *);
-template void pack_d_curve(const DCurve<transforms::FSE3> &, DCurve_FSE3 *);
 template void unpack_d_curve(
     const DCurve_SE3 &,
     InOut<DCurve<transforms::SE3>>);
-template void unpack_d_curve(
-    const DCurve_FSE3 &,
-    InOut<DCurve<transforms::FSE3>>);
 
 }  // namespace resim::curves::proto

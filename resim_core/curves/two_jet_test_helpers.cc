@@ -68,5 +68,7 @@ std::vector<TwoJet> TwoJetTestHelper<TwoJet>::make_test_two_jet_elements(
 
 template class TwoJetTestHelper<TwoJetL<transforms::SE3>>;
 template class TwoJetTestHelper<TwoJetL<transforms::SO3>>;
+template class TwoJetTestHelper<TwoJetR<transforms::SE3>>;
+template class TwoJetTestHelper<TwoJetR<transforms::SO3>>;
 
 }  // namespace resim::curves

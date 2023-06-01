@@ -4,10 +4,8 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/d_curve.pb.h"
-#include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
-#include "resim_core/transforms/proto/fse3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -28,9 +26,8 @@ std::vector<T> DCurveToProtoTests<T>::generate_control_points() {
   return transforms::make_test_group_elements<T>(NUM_GROUP_POINTS);
 }
 
-using GroupTypePairs = ::testing::Types<
-    std::pair<transforms::SE3, proto::DCurve_SE3>,
-    std::pair<transforms::FSE3, proto::DCurve_FSE3>>;
+using GroupTypePairs =
+    ::testing::Types<std::pair<transforms::SE3, proto::DCurve_SE3>>;
 
 TYPED_TEST_SUITE(DCurveToProtoTests, GroupTypePairs);
 

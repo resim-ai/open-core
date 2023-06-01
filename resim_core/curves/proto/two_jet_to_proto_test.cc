@@ -7,22 +7,14 @@
 #include "random"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/two_jet.pb.h"
-#include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetr_fse3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetr_fso3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetr_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetr_so3_to_proto.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/math/proto/matrix_to_proto.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
-#include "resim_core/transforms/proto/fse3_to_proto.hh"
-#include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/proto/so3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
@@ -33,13 +25,9 @@ namespace resim::curves {
 namespace {
 using TwoJetLSE3 = curves::TwoJetL<transforms::SE3>;
 using TwoJetLSO3 = curves::TwoJetL<transforms::SO3>;
-using TwoJetLFSE3 = curves::TwoJetL<transforms::FSE3>;
-using TwoJetLFSO3 = curves::TwoJetL<transforms::FSO3>;
 
 using TwoJetRSE3 = curves::TwoJetR<transforms::SE3>;
 using TwoJetRSO3 = curves::TwoJetR<transforms::SO3>;
-using TwoJetRFSE3 = curves::TwoJetR<transforms::FSE3>;
-using TwoJetRFSO3 = curves::TwoJetR<transforms::FSO3>;
 
 // For each test below we employ (deterministic) randomly generated TwoJet
 // objects. We desire to test a few different generated TwoJets in order to
@@ -73,12 +61,8 @@ class TwoJetToProtoCommonTests : public TwoJetToProtoTestsBase<Pair> {};
 using TwoJetTypePairs = ::testing::Types<
     std::pair<TwoJetLSE3, proto::TwoJetL_SE3>,
     std::pair<TwoJetLSO3, proto::TwoJetL_SO3>,
-    std::pair<TwoJetLFSO3, proto::TwoJetL_FSO3>,
-    std::pair<TwoJetLFSE3, proto::TwoJetL_FSE3>,
     std::pair<TwoJetRSE3, proto::TwoJetR_SE3>,
-    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>,
-    std::pair<TwoJetRFSO3, proto::TwoJetR_FSO3>,
-    std::pair<TwoJetRFSE3, proto::TwoJetR_FSE3>>;
+    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>>;
 
 TYPED_TEST_SUITE(TwoJetToProtoCommonTests, TwoJetTypePairs);
 
@@ -119,9 +103,7 @@ class TwoJetLToProtoTests : public TwoJetToProtoTestsBase<Pair> {};
 
 using TwoJetLTypePairs = ::testing::Types<
     std::pair<TwoJetLSE3, proto::TwoJetL_SE3>,
-    std::pair<TwoJetLSO3, proto::TwoJetL_SO3>,
-    std::pair<TwoJetLFSO3, proto::TwoJetL_FSO3>,
-    std::pair<TwoJetLFSE3, proto::TwoJetL_FSE3>>;
+    std::pair<TwoJetLSO3, proto::TwoJetL_SO3>>;
 
 TYPED_TEST_SUITE(TwoJetLToProtoTests, TwoJetLTypePairs);
 
@@ -153,9 +135,7 @@ class TwoJetRToProtoTests : public TwoJetToProtoTestsBase<Pair> {};
 
 using TwoJetRTypePairs = ::testing::Types<
     std::pair<TwoJetRSE3, proto::TwoJetR_SE3>,
-    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>,
-    std::pair<TwoJetRFSO3, proto::TwoJetR_FSO3>,
-    std::pair<TwoJetRFSE3, proto::TwoJetR_FSE3>>;
+    std::pair<TwoJetRSO3, proto::TwoJetR_SO3>>;
 
 TYPED_TEST_SUITE(TwoJetRToProtoTests, TwoJetRTypePairs);
 

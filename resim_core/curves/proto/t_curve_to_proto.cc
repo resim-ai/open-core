@@ -4,11 +4,8 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/t_curve.pb.h"
-#include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -28,8 +25,6 @@ void pack_t_curve(const TCurve<Group> &in, Msg *out) {
 
 template void pack_t_curve(const TCurve<transforms::SE3> &, TCurve_SE3 *);
 template void pack_t_curve(const TCurve<transforms::SO3> &, TCurve_SO3 *);
-template void pack_t_curve(const TCurve<transforms::FSE3> &, TCurve_FSE3 *);
-template void pack_t_curve(const TCurve<transforms::FSO3> &, TCurve_FSO3 *);
 
 template <typename Group, typename Msg>
 void unpack_t_curve(const Msg &in, InOut<TCurve<Group>> out) {
@@ -47,11 +42,5 @@ template void unpack_t_curve(
 template void unpack_t_curve(
     const TCurve_SO3 &,
     InOut<TCurve<transforms::SO3>>);
-template void unpack_t_curve(
-    const TCurve_FSE3 &,
-    InOut<TCurve<transforms::FSE3>>);
-template void unpack_t_curve(
-    const TCurve_FSO3 &,
-    InOut<TCurve<transforms::FSO3>>);
 
 }  // namespace resim::curves::proto
