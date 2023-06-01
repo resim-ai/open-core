@@ -7,7 +7,6 @@
 #include "resim_core/curves/two_jet_concepts.hh"
 #include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -17,8 +16,6 @@ namespace resim::curves {
 namespace {
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
-using FSE3 = transforms::FSE3;
-using FSO3 = transforms::FSO3;
 
 // For each test below we employ (deterministic) randomly generated TwoJet
 // objects. We desire to test a few different generated TwoJets in order to
@@ -49,15 +46,8 @@ class TwoJetTestsBase : public ::testing::Test {
 template <typename T>
 class TwoJetCommonTests : public TwoJetTestsBase<T> {};
 
-using TwoJetTypes = ::testing::Types<
-    TwoJetL<SE3>,
-    TwoJetL<SO3>,
-    TwoJetL<FSE3>,
-    TwoJetL<FSO3>,
-    TwoJetR<SE3>,
-    TwoJetR<SO3>,
-    TwoJetR<FSE3>,
-    TwoJetR<FSO3>>;
+using TwoJetTypes =
+    ::testing::Types<TwoJetL<SE3>, TwoJetL<SO3>, TwoJetR<SE3>, TwoJetR<SO3>>;
 TYPED_TEST_SUITE(TwoJetCommonTests, TwoJetTypes);
 
 template <typename T>
@@ -119,7 +109,7 @@ class TwoJetLTests : public TwoJetTestsBase<TwoJetL<Group>> {
   }
 };
 
-using LieGroupTypes = ::testing::Types<SE3, SO3, FSE3, FSO3>;
+using LieGroupTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(TwoJetLTests, LieGroupTypes);
 
 template <typename T>
@@ -206,7 +196,7 @@ TYPED_TEST(TwoJetLTests, IsApproxTest) {
 template <typename T>
 class FramedTwoJetLTests : public TwoJetLTests<T> {};
 
-using FramedTypes = ::testing::Types<FSE3, FSO3>;
+using FramedTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(FramedTwoJetLTests, FramedTypes);
 
 TYPED_TEST(FramedTwoJetLTests, IdentityFrames) {
