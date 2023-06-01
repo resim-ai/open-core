@@ -1,14 +1,12 @@
 #include "resim_core/curves/d_curve.hh"
 
 #include "resim_core/assert/assert.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::curves {
 
 namespace {
 using SE3 = transforms::SE3;
-using FSE3 = transforms::FSE3;
 
 constexpr auto EMPTY_ERR =
     "Cannot query the frames of a curve with no control points";
@@ -28,14 +26,12 @@ DCurve<Group>::DCurve(std::initializer_list<Group> points) {
 
 template <typename Group>
 void DCurve<Group>::append(Group ref_from_control) {
-  if constexpr (transforms::FramedGroupType<Group>) {
-    if (!control_pts_.empty()) {
-      REASSERT(
-          ref_from_control.verify_frames(
-              this->reference_frame(),
-              this->point_frame()),
-          "Control points must have the same reference and point frames.");
-    }
+  if (!control_pts_.empty() and this->is_framed()) {
+    REASSERT(
+        ref_from_control.verify_frames(
+            this->reference_frame(),
+            this->point_frame()),
+        "Control points must have the same reference and point frames.");
   }
   constexpr double ZERO_LENGTH_M = 0;
   auto ref_from_control_ptr =
@@ -97,14 +93,20 @@ double DCurve<Group>::curve_length() const {
   return control_pts_.back().arc_length;
 }
 
-template <>
-const transforms::Frame<FSE3::DIMS> &DCurve<FSE3>::point_frame() const {
+template <typename Group>
+bool DCurve<Group>::is_framed() const {
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
+  return control_pts_.front().ref_from_control->is_framed();
+}
+
+template <typename Group>
+const transforms::Frame<Group::DIMS> &DCurve<Group>::point_frame() const {
   REASSERT(!control_pts_.empty(), EMPTY_ERR);
   return control_pts_.front().ref_from_control->from();
 }
 
-template <>
-const transforms::Frame<FSE3::DIMS> &DCurve<FSE3>::reference_frame() const {
+template <typename Group>
+const transforms::Frame<Group::DIMS> &DCurve<Group>::reference_frame() const {
   REASSERT(!control_pts_.empty(), EMPTY_ERR);
   return control_pts_.front().ref_from_control->into();
 }
@@ -132,6 +134,5 @@ typename DCurve<Group>::PointAtData DCurve<Group>::point_at_impl(
 }
 
 template class DCurve<SE3>;
-template class DCurve<FSE3>;
 
 }  // namespace resim::curves

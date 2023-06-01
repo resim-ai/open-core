@@ -24,8 +24,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim_core/assert",
-        "//resim_core/transforms:framed_group",
-        "//resim_core/transforms:framed_group_concept",
         "//resim_core/transforms:se3",
     ],
 )
@@ -40,7 +38,6 @@ cc_library(
         ":d_curve",
         "//resim_core/assert",
         "//resim_core/transforms:frame",
-        "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "@com_google_googletest//:gtest_main",
