@@ -1,6 +1,10 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <utility>
+
+#include "resim_core/assert/assert.hh"
+#include "resim_core/transforms/frame.hh"
 
 namespace resim::transforms {
 
@@ -22,6 +26,16 @@ class LieGroup {
   LieGroup &operator=(const LieGroup &) = default;
   virtual ~LieGroup() = default;
 
+  LieGroup(Frame<dims> into, Frame<dims> from)
+      : into_(std::move(into)),
+        from_(std::move(from)) {
+    const bool not_semi_framed = into_.is_null() == from_.is_null();
+    constexpr auto SEMI_FRAMED_ERR =
+        "We currently do not support semi-framed "
+        "LieGroups. Neither or both frames can be null, but one null frame "
+        "results in this error.";
+    REASSERT(not_semi_framed, SEMI_FRAMED_ERR);
+  }
   // Degrees of freedom of the LieGroup.
   static constexpr unsigned int DOF = dof;
   // Spatial Dimensionality of the LieGroup action.
@@ -32,6 +46,53 @@ class LieGroup {
 
   // For representing mappings between tangent spaces
   using TangentMapping = Eigen::Matrix<double, DOF, DOF>;
+
+  // Set frames
+  void set_frames(const Frame<DIMS> &into, const Frame<DIMS> &from) {
+    constexpr auto NULL_FRAME_ERR =
+        "Cannot set frames as null {0}. If you want to make this group "
+        "unframed "
+        "use set_unframed()";
+    REASSERT(!(into.is_null() or from.is_null()), NULL_FRAME_ERR);
+    into_ = into;
+    from_ = from;
+  }
+
+  void set_unframed() {
+    into_ = Frame<dims>();
+    from_ = Frame<dims>();
+  }
+
+  // Retrieve the into Frame.
+  const Frame<DIMS> &into() const { return into_; }
+
+  // Retrieve the from Frame.
+  const Frame<DIMS> &from() const { return from_; }
+
+  // Is this liegroup strongly framed? Note, we check one because semi-unframed
+  // should be impossible.
+  bool is_framed() const { return !into_.is_null(); }
+
+  // Test whether the into frame matches the user's expectation.
+  bool verify_into(const Frame<DIMS> &candidate) const {
+    return into_ == candidate;
+  }
+
+  // Test whether the from frame matches the user's expectation.
+  bool verify_from(const Frame<DIMS> &candidate) const {
+    return from_ == candidate;
+  }
+
+  // Test whether both frames match the user's expectation.
+  bool verify_frames(
+      const Frame<DIMS> &candidate_into,
+      const Frame<DIMS> &candidate_from) const {
+    return verify_into(candidate_into) && verify_from(candidate_from);
+  }
+
+ private:
+  Frame<DIMS> into_;
+  Frame<DIMS> from_;
 };
 
 }  // namespace resim::transforms

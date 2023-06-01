@@ -34,19 +34,33 @@ class SE3 : public LieGroup<3, 6> {
 
   // Constructor
   // Create an SE3 with rotation only from an SO3.
+  // Please note: if you provide a framed SO3 the frames will be stripped. SE3
+  // is the owner of the transform frames and they should be set explicitly.
   explicit SE3(SO3 rotation);
 
   // Constructor
+  // Create a framed  SE3 with rotation only from an SO3.
+  // Please note: if you provide a framed SO3 the frames will be stripped. SE3
+  // is the owner of the transform frames and they should be set explicitly.
+  SE3(SO3 rotation, Frame<SE3::DIMS> into, Frame<SE3::DIMS> from);
+
+  // Constructor
   // Create an SE3 with translation only from a 3-Vector.
-  explicit SE3(Eigen::Vector3d translation);
+  template <typename... Args>
+  explicit SE3(Eigen::Vector3d translation, Args... args);
 
   // Constructor
   // Create an SE3 with both a rotation and translation component.
-  SE3(SO3 rotation, Eigen::Vector3d translation);
+  // Please note: if you provide a framed SO3 the frames will be stripped. SE3
+  // is the owner of the transform frames and they should be set explicitly.
+  template <typename... Args>
+  SE3(SO3 rotation, Eigen::Vector3d translation, Args... args);
 
   // Get an identity SE3
-  static SE3 identity();
+  template <typename... Args>
+  static SE3 identity(Args &&...args);
 
+  // TODO(https://app.asana.com/0/1203294986954613/1204516240910819/f)
   // Operator*
   // Compose this SE3 with another (multiplication)
   virtual SE3 operator*(const SE3 &other) const;
@@ -60,6 +74,12 @@ class SE3 : public LieGroup<3, 6> {
   // Providing an explicit interface to apply only the rotation part of the
   // transformation action to a vector.
   Eigen::Vector3d rotate(const Eigen::Vector3d &source_vector) const;
+
+  // Apply the Group rotation to a FramedVector, this will change the frame
+  // of the vector accordingly. This method will fail if the source_vector
+  // frame does not match from_;
+  FramedVector<SE3::DIMS> rotate(
+      const FramedVector<SE3::DIMS> &source_vector) const;
 
   // Return the inverse of this SE3.
   SE3 inverse() const;
@@ -75,8 +95,13 @@ class SE3 : public LieGroup<3, 6> {
   // or less than 0, a linear extrapolation will be returned.
   SE3 interp(double fraction) const;
 
+  // Interpolate the SE3 returning a framed SE3 with a user provided
+  // from Frame.
+  SE3 interp(double fraction, const Frame<SE3::DIMS> &new_from) const;
+
   // Create an SE3 from an element of the LieGroup algebra.
-  static SE3 exp(const TangentVector &alg);
+  template <typename... Args>
+  static SE3 exp(const TangentVector &alg, Args &&...args);
 
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
@@ -98,6 +123,9 @@ class SE3 : public LieGroup<3, 6> {
 
   // Test for floating-point equality with another SE3.
   bool is_approx(const SE3 &other) const;
+
+  // Test for floating-point equality with another SE3, ignoring frames.
+  bool is_approx_transform(const SE3 &other) const;
 
   // Getter
   // Return the rotational part of the transform.

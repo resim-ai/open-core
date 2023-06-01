@@ -26,6 +26,8 @@ class Frame {
   // Is this frame the same as another?
   bool operator==(const Frame<DIMS> &other) const { return id_ == other.id_; }
   bool operator!=(const Frame<DIMS> &other) const { return id_ != other.id_; }
+  // Test is this frame is a NULL frame (id_ = {0})
+  bool is_null() const { return id_.is_null(); }
   // Retrieve the id of the frame.
   const UUID &id() const { return id_; }
 

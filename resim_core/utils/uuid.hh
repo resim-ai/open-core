@@ -32,6 +32,9 @@ class UUID {
   bool operator==(const UUID &other) const;
   bool operator!=(const UUID &other) const;
 
+  // Test whether this uuid is null (i.e {0})
+  bool is_null() const;
+
   // Access the raw underlying id.
   const std::array<unsigned char, ARRAY_SIZE> &id() const;
 

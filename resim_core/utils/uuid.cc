@@ -7,10 +7,10 @@ namespace resim {
 namespace {
 
 constexpr unsigned int ARRAY_SIZE = UUID::ARRAY_SIZE;
-
+const std::array<unsigned char, ARRAY_SIZE> NULL_ID{0};
 }  // namespace
 
-UUID::UUID() : id_{{0}} {}
+UUID::UUID() : id_{NULL_ID} {}
 
 UUID::UUID(std::array<unsigned char, ARRAY_SIZE> id) : id_(id) {}
 
@@ -38,6 +38,8 @@ std::string UUID::to_string() const {
 bool UUID::operator==(const UUID &other) const { return id_ == other.id_; }
 
 bool UUID::operator!=(const UUID &other) const { return id_ != other.id_; }
+
+bool UUID::is_null() const { return id_ == NULL_ID; }
 
 const std::array<unsigned char, ARRAY_SIZE> &UUID::id() const { return id_; }
 

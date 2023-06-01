@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include "resim_core/transforms/frame.hh"
+#include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/liegroup.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 
@@ -34,25 +36,31 @@ class SO3 : public LieGroup<3, 3> {
   // Create an SO3 from an Eigen AngleAxisd object, which describes a
   // rotation as a right-handed rotation of 'angle' about a specified unit
   // axis.
-  explicit SO3(const Eigen::AngleAxisd &angle_axis);
+  template <typename... Args>
+  explicit SO3(const Eigen::AngleAxisd &angle_axis, Args... args);
 
   // Constructor
   // Create an SO3 from an explicit angle and axis, which describes a
   // rotation as a right-handed rotation of 'angle' about a specified unit
   // 'axis'.
-  SO3(double angle, const Eigen::Vector3d &axis);
+  template <typename... Args>
+  SO3(double angle, const Eigen::Vector3d &axis, Args... args);
 
   // Constructor
   // Create an SO3 from a quaternion.
-  explicit SO3(const Eigen::Quaterniond &quaternion);
+  template <typename... Args>
+  explicit SO3(const Eigen::Quaterniond &quaternion, Args... args);
 
   // Constructor
   // Create and SO3 from a 3x3 rotation matrix.
-  explicit SO3(Eigen::Matrix3d rotation_matrix);
+  template <typename... Args>
+  explicit SO3(Eigen::Matrix3d rotation_matrix, Args... args);
 
   // Get an identity SO3
-  static SO3 identity();
+  template <typename... Args>
+  static SO3 identity(Args &&...args);
 
+  // TODO(https://app.asana.com/0/1203294986954613/1204516240910819/f)
   // Operator*
   // Compose this SO3 with another (multiplication)
   virtual SO3 operator*(const SO3 &other) const;
@@ -67,6 +75,12 @@ class SO3 : public LieGroup<3, 3> {
   // e.g. SE3.
   Eigen::Vector3d rotate(const Eigen::Vector3d &source_vector) const;
 
+  // Apply the Group rotation to a FramedVector, this will change the frame
+  // of the vector accordingly. This method will fail if the source_vector
+  // frame does not match from_;
+  FramedVector<SO3::DIMS> rotate(
+      const FramedVector<SO3::DIMS> &source_vector) const;
+
   // Return the inverse of this SO3.
   SO3 inverse() const;
 
@@ -77,8 +91,13 @@ class SO3 : public LieGroup<3, 3> {
   // or less than 0, a linear extrapolation will be returned.
   SO3 interp(double fraction) const;
 
+  // Interpolate the FramedGroup returning a FramedGroup with a user provided
+  // from Frame.
+  SO3 interp(double fraction, const Frame<SO3::DIMS> &new_from) const;
+
   // Create an SO3 from an element of the LieGroup algebra.
-  static SO3 exp(const TangentVector &alg);
+  template <typename... Args>
+  static SO3 exp(const TangentVector &alg, Args &&...args);
 
   // Get the differential of the exponential map at alg.
   static TangentMapping exp_diff(const TangentVector &alg);
@@ -103,6 +122,9 @@ class SO3 : public LieGroup<3, 3> {
 
   // Test for floating-point equality with another SO3.
   bool is_approx(const SO3 &other) const;
+
+  // Test for floating-point equality with another SO3, ignoring frames.
+  bool is_approx_transform(const SO3 &other) const;
 
   // Getter
   // Retrieve a reference to the 3x3 rotation matrix that represents the
