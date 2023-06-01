@@ -6,8 +6,7 @@
 #include "resim_core/experiences/location_condition.hh"
 #include "resim_core/experiences/proto/experiences_test_helpers.hh"
 #include "resim_core/experiences/proto/location_condition.pb.h"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/proto/fse3_to_proto.hh"
+#include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/utils/proto/uuid_to_proto.hh"
 
 namespace resim::experiences {

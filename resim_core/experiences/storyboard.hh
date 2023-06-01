@@ -5,7 +5,6 @@
 
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/experiences/ilqr_drone.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/utils/uuid.hh"
 
 namespace resim::experiences {

@@ -3,7 +3,7 @@ syntax = "proto3";
 package resim.experiences.proto;
 
 import "resim_core/experiences/proto/actor.proto";
-import "resim_core/transforms/proto/fse3.proto";
+import "resim_core/transforms/proto/se3.proto";
 
 // A location-based condition for termination: flags
 // true whenever the referenced entity reaches the given
@@ -13,7 +13,7 @@ message LocationCondition {
     // The actor to check against.
     Actor.Reference triggering_actor = 1;
     // The target position and its frame.
-    resim.transforms.proto.FSE3 target_position = 2;
+    resim.transforms.proto.SE3 target_position = 2;
     // Sphere in [m] to the target position
     double tolerance_m = 3;
 }
