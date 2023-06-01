@@ -19,7 +19,6 @@
 #include "resim_core/simulator/step_executor.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/inout.hh"
 #include "resim_core/utils/mcap_logger.hh"
@@ -35,7 +34,7 @@ const std::string MIN_DISTANCE_TOPIC_NAME = "metric_min_distance";
 const resim::UUID EGO_UUID = UUID::new_uuid();
 constexpr std::size_t EGO_INDEX = 0;
 
-using Frame = transforms::Frame<transforms::FSE3::DIMS>;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 using actor::state::ObservableState;
 using testing::MockLogger;
 }  // namespace
@@ -112,10 +111,8 @@ TEST(ActorMetricsUnitTest, TestLogMinDistanceMetricEmpty) {
           .is_spawned = true,
           .time_of_validity = TIME,
           .state =
-              actor::state::RigidBodyState<transforms::FSE3>{
-                  transforms::FSE3::identity(
-                      simulator::SCENE_FRAME,
-                      EGO_FRAME)},
+              actor::state::RigidBodyState<transforms::SE3>{
+                  transforms::SE3::identity(simulator::SCENE_FRAME, EGO_FRAME)},
       }};
   for (const auto &state : test_states) {
     executor_builder.add_independent_task<actor::state::ObservableState>(

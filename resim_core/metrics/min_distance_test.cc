@@ -14,17 +14,15 @@
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::metrics {
 
 namespace {
 using time::Timestamp;
-using transforms::FSE3;
 using transforms::SE3;
-using Frame = transforms::Frame<FSE3::DIMS>;
-using RigidBodyState = actor::state::RigidBodyState<FSE3>;
+using Frame = transforms::Frame<SE3::DIMS>;
+using RigidBodyState = actor::state::RigidBodyState<SE3>;
 using actor::ActorId;
 using actor::state::ObservableState;
 
@@ -38,17 +36,17 @@ const Frame TEST_FRAME_2 = Frame::new_frame();
 
 constexpr Timestamp TIME{std::chrono::seconds(982)};
 template <typename Rng>
-FSE3 random_fse3(Rng&& rng) {
-  return FSE3(
-      SE3::exp(testing::random_vector<typename SE3::TangentVector>(
-          std::forward<Rng>(rng))),
+SE3 random_se3_into_ref(Rng&& rng) {
+  return SE3::exp(
+      testing::random_vector<typename SE3::TangentVector>(
+          std::forward<Rng>(rng)),
       REF_FRAME,
       Frame::new_frame());
 }
 
 ObservableState make_observable_state(
     const time::Timestamp& time,
-    const FSE3& ref_from_body,
+    const SE3& ref_from_body,
     const bool is_spawned = true) {
   ObservableState state{};
   state.id = ActorId::new_uuid();
@@ -61,19 +59,19 @@ ObservableState make_observable_state(
 
 template <typename Rng>
 ObservableState random_observable_state(Rng&& rng) {
-  return make_observable_state(TIME, random_fse3(rng));
+  return make_observable_state(TIME, random_se3_into_ref(rng));
 }
 
 const ObservableState TARGET_STATE =
-    make_observable_state(TIME, FSE3::identity(REF_FRAME, TARGET_FRAME));
+    make_observable_state(TIME, SE3::identity(REF_FRAME, TARGET_FRAME));
 
 const ObservableState TEST_STATE_1 = make_observable_state(
     TIME,
-    FSE3(SE3(Eigen::Vector3d::UnitX()), REF_FRAME, TEST_FRAME_1));
+    SE3(Eigen::Vector3d::UnitX(), REF_FRAME, TEST_FRAME_1));
 
 const ObservableState TEST_STATE_2 = make_observable_state(
     TIME,
-    FSE3(SE3(Eigen::Vector3d{0.0, 2.0, 0.0}), REF_FRAME, TEST_FRAME_2));
+    SE3(Eigen::Vector3d{0.0, 2.0, 0.0}, REF_FRAME, TEST_FRAME_2));
 
 }  // namespace
 
@@ -158,7 +156,7 @@ TEST(MinDistanceTests, RandomStates) {
     if (state.id == TARGET_STATE.id) {
       continue;
     }
-    const double state_distance = transforms::fse3_inverse_distance(
+    const double state_distance = transforms::se3_inverse_distance(
         state.state.ref_from_body(),
         TARGET_STATE.state.ref_from_body());
     // We expect all distances to be greater than or equal to the
@@ -216,8 +214,7 @@ TEST(MinDistanceTests, BadTime) {
 TEST(MinDistanceTests, BadFrame) {
   // SETUP
   ObservableState bad_state{TEST_STATE_1};
-  bad_state.state.set_ref_from_body(
-      FSE3(SE3::identity(), TARGET_FRAME, REF_FRAME));
+  bad_state.state.set_ref_from_body(SE3::identity(TARGET_FRAME, REF_FRAME));
   const std::vector<ObservableState> states{
       TEST_STATE_1,
       bad_state,
