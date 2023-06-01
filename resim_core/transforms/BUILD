@@ -7,13 +7,11 @@ exports_files(
         "liegroup_concepts.hh",
         "se3.hh",
         "so3.hh",
-        "framed_group.hh",
         "frame.cc",
         "liegroup.cc",
         "liegroup_concepts.cc",
         "se3.cc",
         "so3.cc",
-        "framed_group.cc",
     ],
 )
 
@@ -52,37 +50,6 @@ cc_test(
     deps = [
         ":frame",
         "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "framed_group",
-    srcs = ["framed_group.cc"],
-    hdrs = ["framed_group.hh"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":frame",
-        ":framed_vector",
-        ":liegroup",
-        ":se3",
-        ":so3",
-        "//resim_core/assert",
-        "@libeigen//:eigen",
-    ],
-)
-
-cc_test(
-    name = "framed_group_test",
-    srcs = ["framed_group_test.cc"],
-    deps = [
-        ":frame",
-        ":framed_group",
-        ":liegroup_test_helpers",
-        ":se3",
-        ":so3",
-        "//resim_core/assert",
-        "@com_google_googletest//:gtest_main",
-        "@libeigen//:eigen",
     ],
 )
 
@@ -146,8 +113,6 @@ cc_library(
     hdrs = ["liegroup_test_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        ":framed_group",
-        ":framed_group_concept",
         ":se3",
         ":so3",
         "//resim_core/assert",
@@ -161,7 +126,6 @@ cc_test(
     name = "liegroup_test_helpers_test",
     srcs = ["liegroup_test_helpers_test.cc"],
     deps = [
-        ":framed_group",
         ":liegroup_test_helpers",
         ":se3",
         ":so3",
@@ -252,29 +216,7 @@ cc_test(
     name = "liegroup_concepts_test",
     srcs = ["liegroup_concepts_test.cc"],
     deps = [
-        ":framed_group",
         ":liegroup_concepts",
-        ":se3",
-        ":so3",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "framed_group_concept",
-    hdrs = ["framed_group_concept.hh"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":framed_group",
-    ],
-)
-
-cc_test(
-    name = "framed_group_concept_test",
-    srcs = ["framed_group_concept_test.cc"],
-    deps = [
-        ":framed_group",
-        ":framed_group_concept",
         ":se3",
         ":so3",
         "@com_google_googletest//:gtest_main",
