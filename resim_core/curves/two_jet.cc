@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <utility>
 
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -100,14 +99,12 @@ bool TwoJetL<Group>::is_approx(const TwoJetL<Group> &other) const {
 
 template class TwoJetL<transforms::SE3>;
 template class TwoJetL<transforms::SO3>;
-template class TwoJetL<transforms::FSE3>;
-template TwoJetL<transforms::FSE3> TwoJetL<transforms::FSE3>::identity(
-    const transforms::Frame<transforms::FSE3::DIMS> &,
-    const transforms::Frame<transforms::FSE3::DIMS> &);
-template class TwoJetL<transforms::FSO3>;
-template TwoJetL<transforms::FSO3> TwoJetL<transforms::FSO3>::identity(
-    const transforms::Frame<transforms::FSO3::DIMS> &,
-    const transforms::Frame<transforms::FSO3::DIMS> &);
+template TwoJetL<transforms::SE3> TwoJetL<transforms::SE3>::identity(
+    const transforms::Frame<transforms::SE3::DIMS> &,
+    const transforms::Frame<transforms::SE3::DIMS> &);
+template TwoJetL<transforms::SO3> TwoJetL<transforms::SO3>::identity(
+    const transforms::Frame<transforms::SO3::DIMS> &,
+    const transforms::Frame<transforms::SO3::DIMS> &);
 
 template <transforms::LieGroupType Group>
 TwoJetR<Group>::TwoJetR(
@@ -199,13 +196,11 @@ bool TwoJetR<Group>::is_approx(const TwoJetR<Group> &other) const {
 
 template class TwoJetR<transforms::SE3>;
 template class TwoJetR<transforms::SO3>;
-template class TwoJetR<transforms::FSE3>;
-template TwoJetR<transforms::FSE3> TwoJetR<transforms::FSE3>::identity(
-    const transforms::Frame<transforms::FSE3::DIMS> &,
-    const transforms::Frame<transforms::FSE3::DIMS> &);
-template class TwoJetR<transforms::FSO3>;
-template TwoJetR<transforms::FSO3> TwoJetR<transforms::FSO3>::identity(
-    const transforms::Frame<transforms::FSO3::DIMS> &,
-    const transforms::Frame<transforms::FSO3::DIMS> &);
+template TwoJetR<transforms::SE3> TwoJetR<transforms::SE3>::identity(
+    const transforms::Frame<transforms::SE3::DIMS> &,
+    const transforms::Frame<transforms::SE3::DIMS> &);
+template TwoJetR<transforms::SO3> TwoJetR<transforms::SO3>::identity(
+    const transforms::Frame<transforms::SO3::DIMS> &,
+    const transforms::Frame<transforms::SO3::DIMS> &);
 
 }  // namespace resim::curves

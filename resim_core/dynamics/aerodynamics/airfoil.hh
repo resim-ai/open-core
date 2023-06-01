@@ -6,8 +6,8 @@
 #include "resim_core/dynamics/aerodynamics/drag_coefficients.hh"
 #include "resim_core/dynamics/aerodynamics/rigid_body_aerodynamics.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::aerodynamics {
 
@@ -64,14 +64,14 @@ struct AirfoilElementState : public AerodynamicElementState {
 //
 // TODO(tknowles): As of right now, we do *not* support the pitching moment.
 // This will be supported when we move to AerodynamicElements providing
-// FSE3::TangentVectors.
+// SE3::TangentVectors.
 class AirfoilElement
     : public AerodynamicElementImpl<AirfoilElement, AirfoilElementState> {
  public:
   static constexpr double AIR_DENSITY_KG_PER_M_CUBED =
       1.204;  // At 20 deg C, and 101.325 kPA.
 
-  AirfoilElement(transforms::FSE3 com_from_cop, AirfoilElementConfig config);
+  AirfoilElement(transforms::SE3 com_from_cop, AirfoilElementConfig config);
 
  protected:
   FramedVector aerodynamics_impl_(

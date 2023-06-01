@@ -7,11 +7,11 @@ cc_library(
     hdrs = ["liegroup_to_proto.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":frame_3_to_proto",
         ":se3_proto_cc",
         ":so3_proto_cc",
         "//resim_core/assert",
         "//resim_core/math/proto:matrix_to_proto",
-        "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",
@@ -199,6 +199,7 @@ proto_library(
     name = "so3_proto",
     srcs = ["so3.proto"],
     visibility = ["//visibility:public"],
+    deps = [":frame_3_proto"],
 )
 
 cc_library(
@@ -236,6 +237,7 @@ proto_library(
     name = "se3_proto",
     srcs = ["se3.proto"],
     visibility = ["//visibility:public"],
+    deps = [":frame_3_proto"],
 )
 
 cc_proto_library(

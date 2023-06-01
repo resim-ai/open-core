@@ -5,22 +5,19 @@
 #include <Eigen/Dense>
 
 #include "resim_core/assert/assert.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::geometry {
 
 using Vec3 = Eigen::Vector3d;
-using transforms::FramedGroupType;
-using transforms::FSE3;
 using transforms::LieGroupType;
 using transforms::SE3;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 
 template <LieGroupType T>
 class BoxesCollideTest : public ::testing::Test {};
 
-using GroupTypes = ::testing::Types<SE3, FSE3>;
+using GroupTypes = ::testing::Types<SE3>;
 
 TYPED_TEST_SUITE(BoxesCollideTest, GroupTypes);
 
@@ -32,16 +29,20 @@ TYPED_TEST(BoxesCollideTest, TestBoxCollisions) {
   constexpr double MAX_X = 5.0;
   constexpr int NUM_POINTS = 100;
 
-  const OrientedBox<TypeParam> box_a{TypeParam::identity(), Vec3::Ones()};
-  OrientedBox<TypeParam> box_b{TypeParam::identity(), Vec3::Ones()};
+  const OrientedBox<TypeParam> box_a{
+      TypeParam::identity(Frame::new_frame(), Frame::new_frame()),
+      Vec3::Ones()};
+  OrientedBox<TypeParam> box_b{
+      TypeParam::identity(Frame::new_frame(), Frame::new_frame()),
+      Vec3::Ones()};
 
   for (int ii = 0; ii < NUM_POINTS; ++ii) {
     const double fraction = static_cast<double>(ii) / (NUM_POINTS - 1);
     const double x = fraction * MAX_X * (1 - fraction) * MIN_X;
     TypeParam reference_from_b{SE3{x * Vec3::UnitX()}};
-    if constexpr (FramedGroupType<TypeParam>) {
-      reference_from_b.set_into(box_a.reference_from_box().into());
-    }
+    reference_from_b.set_frames(
+        box_a.reference_from_box().into(),
+        Frame::new_frame());
     box_b.set_reference_from_box(reference_from_b);
 
     // ACTION
@@ -57,11 +58,14 @@ TYPED_TEST(BoxesCollideTest, TestBoxCollisions) {
 // Test that we fail on bad frame pairs
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 TYPED_TEST(BoxesCollideTest, TestFailOnBadFrame) {
-  if constexpr (FramedGroupType<TypeParam>) {
-    const OrientedBox<TypeParam> box_a{TypeParam::identity(), Vec3::Ones()};
-    OrientedBox<TypeParam> box_b{TypeParam::identity(), Vec3::Ones()};
-    EXPECT_THROW(boxes_collide(box_a, box_b), AssertException);
-  }
+  const Frame FROM_FRAME{Frame::new_frame()};
+  const OrientedBox<TypeParam> box_a{
+      TypeParam::identity(Frame::new_frame(), FROM_FRAME),
+      Vec3::Ones()};
+  OrientedBox<TypeParam> box_b{
+      TypeParam::identity(Frame::new_frame(), FROM_FRAME),
+      Vec3::Ones()};
+  EXPECT_THROW(boxes_collide(box_a, box_b), AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 

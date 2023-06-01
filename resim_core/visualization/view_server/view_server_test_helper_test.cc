@@ -8,18 +8,18 @@
 #include "resim_core/curves/d_curve_test_helpers.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
 namespace resim::visualization::view_server {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
+
+constexpr bool FRAMED = true;
+constexpr bool UNFRAMED = false;
 }  // namespace
 
 template <typename Viewable>
@@ -28,11 +28,8 @@ class ViewServerHelperTests : public ::testing::Test {};
 using ViewableTypes = ::testing::Types<
     SE3,
     SO3,
-    FSE3,
-    FSO3,
     curves::DCurve<SE3>,
-    curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>,
+    curves::TCurve<SE3>,
     actor::state::Trajectory,
     Frame>;
 
@@ -61,5 +58,84 @@ TYPED_TEST(ViewServerHelperDeathTests, TooFewElementsRequested) {
       },
       AssertException);
 }
+
+template <typename T>
+void test_framed() {}
+
+template <>
+void test_framed<SO3>() {
+  std::vector<SO3> framed_payloads =
+      generate_payload_type<SO3>(detail::MIN_TEST_ELEMENTS, FRAMED);
+  for (const auto &payload : framed_payloads) {
+    EXPECT_TRUE(payload.is_framed());
+  }
+
+  std::vector<SO3> unframed_payloads =
+      generate_payload_type<SO3>(detail::MIN_TEST_ELEMENTS, UNFRAMED);
+  for (const auto &payload : unframed_payloads) {
+    EXPECT_FALSE(payload.is_framed());
+  }
+}
+
+template <>
+void test_framed<SE3>() {
+  std::vector<SE3> framed_payloads =
+      generate_payload_type<SE3>(detail::MIN_TEST_ELEMENTS, FRAMED);
+  for (const auto &payload : framed_payloads) {
+    EXPECT_TRUE(payload.is_framed());
+  }
+
+  std::vector<SE3> unframed_payloads =
+      generate_payload_type<SE3>(detail::MIN_TEST_ELEMENTS, UNFRAMED);
+  for (const auto &payload : unframed_payloads) {
+    EXPECT_FALSE(payload.is_framed());
+  }
+}
+
+template <>
+void test_framed<curves::DCurve<SE3>>() {
+  std::vector<curves::DCurve<SE3>> framed_payloads =
+      generate_payload_type<curves::DCurve<SE3>>(
+          detail::MIN_TEST_ELEMENTS,
+          FRAMED);
+  for (const auto &payload : framed_payloads) {
+    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
+    EXPECT_TRUE(payload.control_pts().front().ref_from_control->is_framed());
+  }
+
+  std::vector<curves::DCurve<SE3>> unframed_payloads =
+      generate_payload_type<curves::DCurve<SE3>>(
+          detail::MIN_TEST_ELEMENTS,
+          UNFRAMED);
+  for (const auto &payload : unframed_payloads) {
+    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
+    EXPECT_FALSE(payload.control_pts().front().ref_from_control->is_framed());
+  }
+}
+
+template <>
+void test_framed<curves::TCurve<SE3>>() {
+  std::vector<curves::TCurve<SE3>> framed_payloads =
+      generate_payload_type<curves::TCurve<SE3>>(
+          detail::MIN_TEST_ELEMENTS,
+          FRAMED);
+  for (const auto &payload : framed_payloads) {
+    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
+    EXPECT_TRUE(
+        payload.control_pts().front().point.frame_from_ref().is_framed());
+  }
+
+  std::vector<curves::TCurve<SE3>> unframed_payloads =
+      generate_payload_type<curves::TCurve<SE3>>(
+          detail::MIN_TEST_ELEMENTS,
+          UNFRAMED);
+  for (const auto &payload : unframed_payloads) {
+    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
+    EXPECT_FALSE(
+        payload.control_pts().front().point.frame_from_ref().is_framed());
+  }
+}
+
+TYPED_TEST(ViewServerHelperTests, TestFramed) { test_framed<TypeParam>(); }
 
 }  // namespace resim::visualization::view_server

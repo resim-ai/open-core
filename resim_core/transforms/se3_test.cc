@@ -5,8 +5,16 @@
 #include <Eigen/Dense>
 
 #include "resim_core/transforms/liegroup_test_helpers.hh"
+#include "resim_core/transforms/so3.hh"
 
 namespace resim::transforms {
+
+namespace {
+// Create some test frames.
+constexpr unsigned int DIMS = 3;
+const Frame<DIMS> A = Frame<DIMS>::new_frame();
+const Frame<DIMS> B = Frame<DIMS>::new_frame();
+const Frame<DIMS> C = Frame<DIMS>::new_frame();
 
 // Test that an SE3 objects has the expected rotation and translation
 // components.
@@ -21,6 +29,7 @@ void check_se3_rotation_and_translation(
   EXPECT_TRUE(se3.rotation().is_approx(rotation));
   EXPECT_TRUE(se3.translation().isApprox(translation));
 }
+}  // namespace
 
 TEST(SE3ConstructorTest, RotationOnly) {
   for (const SO3 &a_from_b_rot : make_test_group_elements<SO3>()) {
@@ -32,6 +41,17 @@ TEST(SE3ConstructorTest, RotationOnly) {
   }
 }
 
+TEST(SE3FramedConstructorTest, RotationOnly) {
+  for (const SO3 &a_from_b_rot : make_test_group_elements<SO3>()) {
+    const SE3 a_from_b(a_from_b_rot, A, B);
+    check_se3_rotation_and_translation(
+        a_from_b,
+        a_from_b_rot,
+        Eigen::Vector3d::Zero());
+    EXPECT_TRUE(a_from_b.verify_frames(A, B));
+  }
+}
+
 TEST(SE3ConstructorTest, TranslationOnly) {
   for (const Eigen::Vector3d &a_from_b_trans :
        make_test_vectors<Eigen::Vector3d>()) {
@@ -40,6 +60,18 @@ TEST(SE3ConstructorTest, TranslationOnly) {
         a_from_b,
         SO3::identity(),
         a_from_b_trans);
+  }
+}
+
+TEST(SE3FramedConstructorTest, TranslationOnly) {
+  for (const Eigen::Vector3d &a_from_b_trans :
+       make_test_vectors<Eigen::Vector3d>()) {
+    const SE3 a_from_b(a_from_b_trans, A, B);
+    check_se3_rotation_and_translation(
+        a_from_b,
+        SO3::identity(),
+        a_from_b_trans);
+    EXPECT_TRUE(a_from_b.verify_frames(A, B));
   }
 }
 
@@ -55,6 +87,43 @@ TEST(SE3ConstructorTest, RotationAndTranslation) {
         rot_elements.at(i),
         trans_elements.at(i));
   }
+}
+
+TEST(SE3FramedConstructorTest, RotationAndTranslation) {
+  const auto trans_elements = make_test_vectors<Eigen::Vector3d>();
+  const auto rot_elements = make_test_group_elements<SO3>();
+  const unsigned int element_count = trans_elements.size();
+  EXPECT_EQ(element_count, rot_elements.size());
+  for (int i = 0; i < element_count; ++i) {
+    const SE3 a_from_b(rot_elements.at(i), trans_elements.at(i), A, B);
+    check_se3_rotation_and_translation(
+        a_from_b,
+        rot_elements.at(i),
+        trans_elements.at(i));
+    EXPECT_TRUE(a_from_b.verify_frames(A, B));
+  }
+}
+
+TEST(SE3FramedConstructorTest, SO3FramesAreStripped) {
+  const SO3 framed_rotation = SO3::identity(A, B);
+
+  // Try setting the framed rotation in relevant SE3 constructors, then test
+  // that the frames are stripped.
+
+  const SE3 test_se3_1(framed_rotation);
+  EXPECT_FALSE(test_se3_1.rotation().is_framed());
+
+  const SE3 test_se3_2(framed_rotation, A, B);
+  EXPECT_TRUE(test_se3_2.is_framed());
+  EXPECT_FALSE(test_se3_2.rotation().is_framed());
+
+  const SE3 test_se3_3(Eigen::Vector3d::Ones(), A, B);
+  EXPECT_TRUE(test_se3_3.is_framed());
+  EXPECT_FALSE(test_se3_3.rotation().is_framed());
+
+  const SE3 test_se3_4(framed_rotation, Eigen::Vector3d::Ones(), A, B);
+  EXPECT_TRUE(test_se3_4.is_framed());
+  EXPECT_FALSE(test_se3_4.rotation().is_framed());
 }
 
 TEST(SE3OperatorTest, ActionOnVector) {
@@ -153,6 +222,42 @@ TEST(TangentVectorHelpers, VectorPartMutation) {
   const SE3::TangentVector expected_alg{
       SE3::tangent_vector_from_parts(new_alg_rot, new_alg_trans)};
   EXPECT_EQ(alg, expected_alg);
+}
+
+TEST(DistanceTest, SE3DistanceSucceeds) {
+  constexpr double TWO = 2.0;
+
+  SE3 a_from_c = SE3::exp(SE3::TangentVector::Ones(), A, C);
+  SE3 b_from_c = SE3::exp(TWO * SE3::TangentVector::Ones(), B, C);
+
+  const double d = se3_distance(a_from_c, b_from_c);
+
+  EXPECT_NEAR(d, (b_from_c * a_from_c.inverse()).translation().norm(), 1e-7);
+}
+
+TEST(DistanceTest, SE3DistanceWrongFrame) {
+  SE3 a_from_c = SE3::exp(SE3::TangentVector::Ones(), A, C);
+  SE3 a_from_b = SE3::exp(SE3::TangentVector::Ones(), A, B);
+
+  EXPECT_THROW(se3_distance(a_from_c, a_from_b), AssertException);
+}
+
+TEST(DistanceTest, SE3InverseDistanceSucceeds) {
+  constexpr double TWO = 2.0;
+
+  SE3 c_from_a = SE3::exp(SE3::TangentVector::Ones(), C, A);
+  SE3 c_from_b = SE3::exp(TWO * SE3::TangentVector::Ones(), C, B);
+
+  const double d = se3_inverse_distance(c_from_a, c_from_b);
+
+  EXPECT_NEAR(d, (c_from_a.inverse() * c_from_b).translation().norm(), 1e-7);
+}
+
+TEST(DistanceTest, SE3InverseDistanceWrongFrame) {
+  SE3 c_from_a = SE3::exp(SE3::TangentVector::Ones(), C, A);
+  SE3 b_from_a = SE3::exp(SE3::TangentVector::Ones(), B, A);
+
+  EXPECT_THROW(se3_inverse_distance(c_from_a, b_from_a), AssertException);
 }
 
 }  // namespace resim::transforms

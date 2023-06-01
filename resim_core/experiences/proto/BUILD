@@ -31,7 +31,7 @@ proto_library(
     srcs = ["location_condition.proto"],
     deps = [
         ":actor_proto",
-        "//resim_core/transforms/proto:fse3_proto",
+        "//resim_core/transforms/proto:se3_proto",
     ],
 )
 
@@ -135,7 +135,7 @@ cc_library(
         "//resim_core/geometry:drone_wireframe",
         "//resim_core/geometry:wireframe",
         "//resim_core/time:timestamp",
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "//resim_core/utils:match",
         "//resim_core/utils:uuid",
     ],
@@ -156,7 +156,7 @@ cc_test(
         "//resim_core/experiences:location_condition",
         "//resim_core/experiences:storyboard",
         "//resim_core/time:timestamp",
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -253,7 +253,7 @@ cc_library(
         ":location_condition_proto_cc",
         "//resim_core/assert",
         "//resim_core/experiences:location_condition",
-        "//resim_core/transforms/proto:fse3_to_proto",
+        "//resim_core/transforms/proto:se3_to_proto",
         "//resim_core/utils/proto:uuid_to_proto",
     ],
 )
@@ -268,8 +268,7 @@ cc_test(
         ":location_condition_to_proto",
         "//resim_core/assert",
         "//resim_core/experiences:location_condition",
-        "//resim_core/transforms:framed_group",
-        "//resim_core/transforms/proto:fse3_to_proto",
+        "//resim_core/transforms/proto:se3_to_proto",
         "//resim_core/utils/proto:uuid_to_proto",
         "@com_google_googletest//:gtest_main",
     ],

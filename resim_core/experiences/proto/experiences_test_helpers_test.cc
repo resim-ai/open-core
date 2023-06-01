@@ -14,7 +14,7 @@
 #include "resim_core/experiences/storyboard.hh"
 #include "resim_core/geometry/wireframe.hh"
 #include "resim_core/time/timestamp.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/uuid.hh"
 
 namespace resim::experiences {
@@ -63,8 +63,10 @@ TEST(ExperienceTestHelpersTest, TestLocationConditionEquality) {
       test_location_condition_2));
   // Branch tests
   LocationCondition test_location_condition_3{test_location_condition_1};
-  transforms::FSE3 different_position = transforms::FSE3::identity();
-  different_position.set_from(transforms::Frame<3>::new_frame());
+  transforms::SE3 different_position = transforms::SE3::identity();
+  different_position.set_frames(
+      transforms::Frame<3>::new_frame(),
+      transforms::Frame<3>::new_frame());
   test_location_condition_3.target_position = different_position;
   EXPECT_FALSE(test_location_condition_equality(
       test_location_condition_1,
@@ -129,7 +131,7 @@ TEST(ExperienceTestHelpersTest, TestCompletionCriteriaEquality) {
 
 TEST(ExperienceTestHelpersTest, TestTrajectoryEquality) {
   // SETUP/ACTION
-  curves::TCurve<transforms::FSE3> test_curve =
+  curves::TCurve<transforms::SE3> test_curve =
       curves::testing::make_circle_curve();
   const actor::state::Trajectory test_trajectory_1{test_curve, ZERO_TIME};
   const actor::state::Trajectory test_trajectory_2{
@@ -139,18 +141,18 @@ TEST(ExperienceTestHelpersTest, TestTrajectoryEquality) {
   EXPECT_TRUE(test_trajectory_equality(test_trajectory_1, test_trajectory_1));
   EXPECT_TRUE(test_trajectory_equality(test_trajectory_2, test_trajectory_2));
   EXPECT_FALSE(test_trajectory_equality(test_trajectory_1, test_trajectory_2));
-  curves::TCurve<transforms::FSE3> empty_curve;
+  curves::TCurve<transforms::SE3> empty_curve;
   const actor::state::Trajectory test_trajectory_3{empty_curve, ZERO_TIME};
   EXPECT_FALSE(test_trajectory_equality(test_trajectory_1, test_trajectory_3));
   actor::state::Trajectory test_trajectory_4{test_curve, NON_ZERO_TIME};
   EXPECT_FALSE(test_trajectory_equality(test_trajectory_1, test_trajectory_4));
-  curves::TCurve<transforms::FSE3> empty_curve_2;
-  empty_curve.append(curves::TCurve<transforms::FSE3>::Control{
+  curves::TCurve<transforms::SE3> empty_curve_2;
+  empty_curve.append(curves::TCurve<transforms::SE3>::Control{
       0.0,
-      curves::TwoJetL<transforms::FSE3>()});
-  empty_curve_2.append(curves::TCurve<transforms::FSE3>::Control{
+      curves::TwoJetL<transforms::SE3>()});
+  empty_curve_2.append(curves::TCurve<transforms::SE3>::Control{
       DIFFERENT_NUMBER,
-      curves::TwoJetL<transforms::FSE3>()});
+      curves::TwoJetL<transforms::SE3>()});
   actor::state::Trajectory test_trajectory_5{empty_curve, NON_ZERO_TIME};
   actor::state::Trajectory test_trajectory_6{empty_curve_2, NON_ZERO_TIME};
   EXPECT_FALSE(test_trajectory_equality(test_trajectory_5, test_trajectory_6));

@@ -21,21 +21,3 @@ message TCurve_SO3 {
         resim.curves.proto.TwoJetL_SO3 point = 2;
     }
 }
-
-message TCurve_FSE3 {
-    repeated Control points = 1;
-
-    message Control {
-        double                          time  = 1;
-        resim.curves.proto.TwoJetL_FSE3 point = 2;
-    }
-}
-
-message TCurve_FSO3 {
-    repeated Control points = 1;
-
-    message Control {
-        double                          time  = 1;
-        resim.curves.proto.TwoJetL_FSO3 point = 2;
-    }
-}

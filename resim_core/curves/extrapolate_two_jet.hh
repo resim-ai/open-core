@@ -2,7 +2,6 @@
 
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 
 namespace resim::curves {
@@ -24,8 +23,8 @@ TwoJetL<Group> extrapolate_two_jet(const TwoJetL<Group> &two_jet, double dt);
 // @param[in] return_frame - The into frame we want the resulting two jet to
 //                           have.
 template <transforms::LieGroupType Group>
-TwoJetL<transforms::FramedGroup<Group>> extrapolate_two_jet(
-    const TwoJetL<transforms::FramedGroup<Group>> &two_jet,
+TwoJetL<Group> extrapolate_two_jet(
+    const TwoJetL<Group> &two_jet,
     double dt,
     const transforms::Frame<Group::DIMS> &return_frame);
 

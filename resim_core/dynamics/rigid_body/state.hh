@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
 
@@ -15,14 +15,14 @@ namespace resim::dynamics::rigid_body {
 //
 struct State {
   // Double the group DOF because we have position and velocity
-  static constexpr int DOF = 2 * transforms::FSE3::DOF;
+  static constexpr int DOF = 2 * transforms::SE3::DOF;
 
   // A vector type representing the difference between two rigid_body::State's
   using Delta = Eigen::Matrix<double, DOF, 1>;
 
-  transforms::FSE3 reference_from_body;
-  transforms::FSE3::TangentVector d_reference_from_body{
-      transforms::FSE3::TangentVector::Zero()};
+  transforms::SE3 reference_from_body;
+  transforms::SE3::TangentVector d_reference_from_body{
+      transforms::SE3::TangentVector::Zero()};
 };
 
 // Addition operator required for working with the Integrator framework. We

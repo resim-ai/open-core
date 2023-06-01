@@ -4,7 +4,6 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve_test_helpers.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::curves {
@@ -12,7 +11,6 @@ namespace resim::curves {
 namespace {
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
-using FSE3 = transforms::FSE3;
 }  // namespace
 
 template <typename T>
@@ -26,14 +24,8 @@ class DCurveTests : public ::testing::Test {
 
 template <>
 SE3 DCurveTests<SE3>::point_to_append() {
-  SE3 ref_from_000deg(Eigen::Vector3d::UnitX());
+  SE3 ref_from_000deg(Eigen::Vector3d::UnitX(), REF_FRAME, PNT_FRAME);
   return ref_from_000deg;
-}
-
-template <>
-FSE3 DCurveTests<FSE3>::point_to_append() {
-  const SE3 ref_from_000deg = DCurveTests<SE3>::point_to_append();
-  return FSE3(ref_from_000deg, REF_FRAME, PNT_FRAME);
 }
 
 template <>
@@ -41,12 +33,7 @@ double DCurveTests<SE3>::rotation_angle_rad(const SE3 &ref_from_point) const {
   return ref_from_point.rotation().log().norm();
 }
 
-template <>
-double DCurveTests<FSE3>::rotation_angle_rad(const FSE3 &ref_from_point) const {
-  return ref_from_point.rotation().log().norm();
-}
-
-using LieGroupTypes = ::testing::Types<FSE3, SE3>;
+using LieGroupTypes = ::testing::Types<SE3>;
 TYPED_TEST_SUITE(DCurveTests, LieGroupTypes);
 
 TYPED_TEST(DCurveTests, EmptyCurveConstruction) {
@@ -214,10 +201,10 @@ TYPED_TEST(DCurveTests, InvalidQueries) {
       AssertException);
 }
 
-TEST(DCurveFSE3Tests, CheckReferenceFrame) {
-  const DCurve<FSE3> curve_a(
-      DCurveCircle<FSE3>::points(DCurveTests<FSE3>::REF_FRAME));
-  EXPECT_EQ(curve_a.reference_frame(), DCurveTests<FSE3>::REF_FRAME);
+TYPED_TEST(DCurveTests, CheckReferenceFrame) {
+  const DCurve<TypeParam> curve_a(
+      DCurveCircle<TypeParam>::points(DCurveTests<TypeParam>::REF_FRAME));
+  EXPECT_EQ(curve_a.reference_frame(), DCurveTests<TypeParam>::REF_FRAME);
 }
 
 }  // namespace resim::curves

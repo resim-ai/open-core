@@ -6,7 +6,7 @@ cc_library(
     hdrs = ["state.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
     ],
 )
 
@@ -16,7 +16,7 @@ cc_test(
     deps = [
         ":state",
         "//resim_core/testing:random_matrix",
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -26,7 +26,7 @@ cc_library(
     srcs = ["inertia.cc"],
     hdrs = ["inertia.hh"],
     deps = [
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "@libeigen//:eigen",
     ],
 )
@@ -37,7 +37,7 @@ cc_test(
     deps = [
         ":inertia",
         "//resim_core/testing:random_matrix",
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
@@ -53,6 +53,7 @@ cc_library(
         "//resim_core/assert",
         "//resim_core/dynamics",
         "//resim_core/time:timestamp",
+        "//resim_core/transforms:se3",
         "@libeigen//:eigen",
     ],
 )
@@ -69,6 +70,7 @@ cc_test(
         "//resim_core/time:sample_interval",
         "//resim_core/time:timestamp",
         "//resim_core/transforms:liegroup_test_helpers",
+        "//resim_core/transforms:se3",
         "//resim_core/utils:nullable_reference",
         "@com_google_googletest//:gtest_main",
     ],
@@ -84,7 +86,7 @@ cc_library(
         "//resim_core/dynamics:constants",
         "//resim_core/dynamics:controller",
         "//resim_core/time:timestamp",
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "//resim_core/utils:nullable_reference",
         "@au//au",
         "@libeigen//:eigen",
@@ -99,8 +101,8 @@ cc_test(
         ":state",
         "//resim_core/dynamics:controller",
         "//resim_core/testing:random_matrix",
-        "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_test_helpers",
+        "//resim_core/transforms:se3",
         "@au//au",
         "@com_google_googletest//:gtest_main",
     ],

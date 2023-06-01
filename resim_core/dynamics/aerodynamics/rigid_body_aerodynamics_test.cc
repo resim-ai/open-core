@@ -12,16 +12,14 @@
 namespace resim::dynamics::aerodynamics {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
-using Frame = transforms::Frame<FSE3::DIMS>;
-using RigidBodyState = actor::state::RigidBodyState<FSE3>;
+using Frame = transforms::Frame<SE3::DIMS>;
+using RigidBodyState = actor::state::RigidBodyState<SE3>;
 const Frame COM_FRAME = Frame::new_frame();
 const Frame COP_FRAME = Frame::new_frame();
 const Frame REF_FRAME = Frame::new_frame();
-using FramedVector = transforms::FramedVector<FSE3::DIMS>;
+using FramedVector = transforms::FramedVector<SE3::DIMS>;
 constexpr double HALF = 0.5;
 constexpr double BLADE_CANT_ANGLE = M_PI_4 / 2;
 constexpr double BLADE_COP_RADIUS = 2.5;
@@ -96,21 +94,21 @@ class WindmillAerodynamicElement : public AerodynamicElementImpl<
 
 RigidBodyAerodynamics build_windmill() {
   // Create separate COP frames for each blade.
-  Frame blade_1_cop = Frame::new_frame();
-  Frame blade_2_cop = Frame::new_frame();
+  Frame blade_1_cop_frame = Frame::new_frame();
+  Frame blade_2_cop_frame = Frame::new_frame();
   // Make the blade transforms.
   const std::shared_ptr<AerodynamicElement> blade_1 =
-      std::make_shared<WindmillAerodynamicElement>(FSE3(
-          SE3(SO3(-BLADE_CANT_ANGLE, Eigen::Vector3d::UnitY()),
-              {0., -BLADE_COP_RADIUS, 0.}),
+      std::make_shared<WindmillAerodynamicElement>(SE3(
+          SO3(Eigen::AngleAxisd(-BLADE_CANT_ANGLE, Eigen::Vector3d::UnitY())),
+          {0., -BLADE_COP_RADIUS, 0.},
           COM_FRAME,
-          blade_1_cop));
+          blade_1_cop_frame));
   const std::shared_ptr<AerodynamicElement> blade_2 =
-      std::make_shared<WindmillAerodynamicElement>(FSE3(
-          SE3(SO3(BLADE_CANT_ANGLE, Eigen::Vector3d::UnitY()),
-              {0., BLADE_COP_RADIUS, 0.}),
+      std::make_shared<WindmillAerodynamicElement>(SE3(
+          SO3(Eigen::AngleAxisd(BLADE_CANT_ANGLE, Eigen::Vector3d::UnitY())),
+          {0., BLADE_COP_RADIUS, 0.},
           COM_FRAME,
-          blade_2_cop));
+          blade_2_cop_frame));
   // Add blades to a RigidBodyAerodynamics object.
   RigidBodyAerodynamics windmill{blade_1, blade_2};
   return windmill;
@@ -138,7 +136,7 @@ TEST(AerodynamicElementTests, ConstructStates) {
   EXPECT_EQ(state_ptr->blade_area, BLADE_AREA);
 }
 TEST(AerodynamicElementTests, ConstructAerodynamicElement) {
-  const FSE3 identity = FSE3::identity(COM_FRAME, COP_FRAME);
+  const SE3 identity = SE3::identity(COM_FRAME, COP_FRAME);
   const DummyAerodynamicElement test_element(identity);
   EXPECT_TRUE(test_element.com_from_cop().is_approx(identity));
   EXPECT_EQ(test_element.com_frame(), COM_FRAME);
@@ -147,12 +145,12 @@ TEST(AerodynamicElementTests, ConstructAerodynamicElement) {
 
 TEST(AerodynamicElementAssertionTests, BadFrames) {
   const Frame BAD_FRAME = Frame::new_frame();
-  const FSE3 identity = FSE3::identity(COM_FRAME, COP_FRAME);
+  const SE3 identity = SE3::identity(COM_FRAME, COP_FRAME);
   const DummyAerodynamicElement test_element(identity);
   // Create a body with correct frames
-  RigidBodyState good_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState good_state(SE3::identity(REF_FRAME, COM_FRAME));
   // Create a body with incorrect frames
-  RigidBodyState bad_state(FSE3::identity(REF_FRAME, BAD_FRAME));
+  RigidBodyState bad_state(SE3::identity(REF_FRAME, BAD_FRAME));
   FramedVector good_wind(Eigen::Vector3d::Zero(), REF_FRAME);
   FramedVector bad_wind(Eigen::Vector3d::Zero(), BAD_FRAME);
   EXPECT_THROW(
@@ -170,7 +168,7 @@ TEST(AerodynamicElementAssertionTests, BadFrames) {
 }
 TEST(AerodynamicElementTest, PureRotationTest) {
   // Create a body aligned with the reference frame.
-  RigidBodyState test_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState test_state(SE3::identity(REF_FRAME, COM_FRAME));
   ASSERT_EQ(test_state.ref_from_body().into(), REF_FRAME);
   ASSERT_EQ(test_state.ref_from_body().from(), COM_FRAME);
   ASSERT_TRUE(test_state.body_angular_velocity_radps().isZero());
@@ -181,7 +179,7 @@ TEST(AerodynamicElementTest, PureRotationTest) {
   // Create an aerodynamic element with centre of pressure displaced one meter
   // in the Y-axis.
   DummyAerodynamicElement test_element(
-      FSE3(SE3(Eigen::Vector3d::UnitY()), COM_FRAME, COP_FRAME));
+      SE3(Eigen::Vector3d::UnitY(), COM_FRAME, COP_FRAME));
   // Zero ambient wind
   const FramedVector ref_local_wind(Eigen::Vector3d::Zero(), REF_FRAME);
   // Expected COP local wind.
@@ -200,8 +198,7 @@ TEST(AerodynamicElementTest, PureRotationTest) {
   // Because the wind is in the COP frame we expect it to be independent of the
   // rotational pose of the rotation body. For example:
   const SO3 ref_from_body_rot(M_PI_2, Eigen::Vector3d::UnitX());
-  test_state.set_ref_from_body(
-      FSE3(SE3(ref_from_body_rot), REF_FRAME, COM_FRAME));
+  test_state.set_ref_from_body(SE3(ref_from_body_rot, REF_FRAME, COM_FRAME));
 
   // Repeat the same verification
   EXPECT_TRUE(test_element.cop_local_wind(test_state, ref_local_wind)
@@ -210,7 +207,7 @@ TEST(AerodynamicElementTest, PureRotationTest) {
 
 TEST(AerodynamicElementTest, HelicalMotionTest) {
   // Create a body aligned with the reference frame.
-  RigidBodyState test_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState test_state(SE3::identity(REF_FRAME, COM_FRAME));
   // Apply an angular velocity of 1 rad/s about the X-axis;
   test_state.set_body_angular_velocity_radps(Eigen::Vector3d::UnitX());
   // Apply a (forward) linear velocity of 1 m/s in the X-axis direction;
@@ -218,7 +215,7 @@ TEST(AerodynamicElementTest, HelicalMotionTest) {
   // Create an aerodynamic element with centre of pressure displaced one meter
   // in the Y-axis.
   DummyAerodynamicElement test_element(
-      FSE3(SE3(Eigen::Vector3d::UnitY()), COM_FRAME, COP_FRAME));
+      SE3(Eigen::Vector3d::UnitY(), COM_FRAME, COP_FRAME));
   // Zero ambient wind
   FramedVector ref_local_wind(Eigen::Vector3d::Zero(), REF_FRAME);
   // Expected COP local wind.
@@ -248,8 +245,7 @@ TEST(AerodynamicElementTest, HelicalMotionTest) {
   // Because the wind is in the COP frame we expect it to be independent of the
   // rotational pose of the rotation body. For example:
   const SO3 ref_from_body_rot(M_PI_2, Eigen::Vector3d::UnitX());
-  test_state.set_ref_from_body(
-      FSE3(SE3(ref_from_body_rot), REF_FRAME, COM_FRAME));
+  test_state.set_ref_from_body(SE3(ref_from_body_rot, REF_FRAME, COM_FRAME));
 
   // Repeat the same verification
   EXPECT_TRUE(test_element.cop_local_wind(test_state, ref_local_wind)
@@ -259,8 +255,8 @@ TEST(AerodynamicElementTest, HelicalMotionTest) {
 TEST(WindmillBladeTest, ZeroAngleOfAttack) {
   // Test wind vectors in the X-Y plane -(all should yield zero force).
   FramedVector wind(Eigen::Vector3d::UnitX(), COP_FRAME);
-  const FSO3 current_from_incremented(
-      SO3(M_PI_4, Eigen::Vector3d::UnitZ()),
+  const SO3 current_from_incremented(
+      Eigen::AngleAxisd(M_PI_4, Eigen::Vector3d::UnitZ()),
       COP_FRAME,
       COP_FRAME);
   constexpr unsigned VECTOR_COUNT = 8;
@@ -275,8 +271,8 @@ TEST(WindmillBladeTest, PositiveAngleOfAttack) {
   // Test wind vectors with a positive Z component, that is, blowing the
   // underside of the blade.
   FramedVector wind({1., 0., HALF}, COP_FRAME);
-  const FSO3 current_from_incremented(
-      SO3(M_PI_4, Eigen::Vector3d::UnitZ()),
+  const SO3 current_from_incremented(
+      Eigen::AngleAxisd(M_PI_4, Eigen::Vector3d::UnitZ()),
       COP_FRAME,
       COP_FRAME);
   double last_force_cos = 0.;
@@ -302,8 +298,8 @@ TEST(WindmillBladeTest, NegativeAngleOfAttack) {
   // Test Wind vectors with a negative Z component, that is, blowing atop the
   // blade.
   FramedVector wind({1., 0., -HALF}, COP_FRAME);
-  const FSO3 current_from_incremented(
-      SO3(M_PI_4, Eigen::Vector3d::UnitZ()),
+  const SO3 current_from_incremented(
+      Eigen::AngleAxisd(M_PI_4, Eigen::Vector3d::UnitZ()),
       COP_FRAME,
       COP_FRAME);
   double last_force_cos = 0.;
@@ -326,7 +322,7 @@ TEST(WindmillBladeTest, NegativeAngleOfAttack) {
 }
 
 TEST(RigidBodyAerodynamicsTest, ConstructionFromVector) {
-  const FSE3 com_from_cop = FSE3::identity(COM_FRAME, COP_FRAME);
+  const SE3 com_from_cop = SE3::identity(COM_FRAME, COP_FRAME);
   std::vector<std::shared_ptr<AerodynamicElement>> components{
       std::make_shared<DummyAerodynamicElement>(com_from_cop),
       std::make_shared<DummyAerodynamicElement>(com_from_cop),
@@ -338,8 +334,8 @@ TEST(RigidBodyAerodynamicsTest, ConstructionFromVector) {
 }
 
 TEST(RigidBodyAerodynamicsAssertionTest, ConstructionWithBadFrames) {
-  const FSE3 com_from_cop = FSE3::identity(COM_FRAME, COP_FRAME);
-  const FSE3 bad_transform = FSE3::identity(COP_FRAME, COM_FRAME);
+  const SE3 com_from_cop = SE3::identity(COM_FRAME, COP_FRAME);
+  const SE3 bad_transform = SE3::identity(COP_FRAME, COM_FRAME);
   RigidBodyAerodynamics body{
       std::make_shared<DummyAerodynamicElement>(com_from_cop)};
   EXPECT_THROW(
@@ -351,7 +347,7 @@ TEST(RigidBodyAerodynamicsAssertionTest, ConstructionWithBadFrames) {
 
 TEST(RigidBodyAerodynamicsTest, StaticWindmill) {
   // Create a body aligned with the reference frame.
-  RigidBodyState windmill_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState windmill_state(SE3::identity(REF_FRAME, COM_FRAME));
 
   // Create a 1m/s headwind.
   FramedVector ref_local_wind(-Eigen::Vector3d::UnitX(), REF_FRAME);
@@ -381,7 +377,7 @@ TEST(RigidBodyAerodynamicsTest, StaticWindmill) {
   // Z component of forces should cancel.
   EXPECT_DOUBLE_EQ((blade_1_force.z() + blade_2_force.z()), 0.);
 
-  typename FSE3::TangentVector pressure_force = windmill.body_pressure_force(
+  typename SE3::TangentVector pressure_force = windmill.body_pressure_force(
       windmill_state,
       ref_local_wind,
       windmill_states);
@@ -397,7 +393,7 @@ TEST(RigidBodyAerodynamicsTest, StaticWindmill) {
 
 TEST(RigidBodyAerodynamicsTest, RotatingWindmill) {
   // Create a body aligned with the reference frame.
-  RigidBodyState windmill_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState windmill_state(SE3::identity(REF_FRAME, COM_FRAME));
   // Create a 1m/s headwind.
   FramedVector ref_local_wind(-Eigen::Vector3d::UnitX(), REF_FRAME);
   // Build the windmill
@@ -411,7 +407,7 @@ TEST(RigidBodyAerodynamicsTest, RotatingWindmill) {
   // Apply the max speed to the windmill in the clockwise direction.
   windmill_state.set_body_angular_velocity_radps({-max_omega, 0., 0.});
   // Obtain the new pressure force at this speed
-  typename FSE3::TangentVector pressure_force = windmill.body_pressure_force(
+  typename SE3::TangentVector pressure_force = windmill.body_pressure_force(
       windmill_state,
       ref_local_wind,
       windmill_states);
@@ -420,7 +416,7 @@ TEST(RigidBodyAerodynamicsTest, RotatingWindmill) {
 }
 
 TEST(RigidBodyAerodynamicsTest, BadDynamicCast) {
-  RigidBodyState windmill_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState windmill_state(SE3::identity(REF_FRAME, COM_FRAME));
   FramedVector ref_local_wind(-Eigen::Vector3d::UnitX(), REF_FRAME);
   // Build the windmill
   RigidBodyAerodynamics windmill = build_windmill();
@@ -439,7 +435,7 @@ TEST(RigidBodyAerodynamicsTest, BadDynamicCast) {
 }
 
 TEST(RigidBodyAerodynamicsTest, BadLength) {
-  RigidBodyState windmill_state(FSE3::identity(REF_FRAME, COM_FRAME));
+  RigidBodyState windmill_state(SE3::identity(REF_FRAME, COM_FRAME));
   FramedVector ref_local_wind(-Eigen::Vector3d::UnitX(), REF_FRAME);
   // Build the windmill
   RigidBodyAerodynamics windmill = build_windmill();

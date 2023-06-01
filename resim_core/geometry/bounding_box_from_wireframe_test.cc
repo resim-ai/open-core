@@ -8,13 +8,13 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::geometry {
 
-using transforms::FSE3;
+using transforms::SE3;
 using Vec3 = Eigen::Vector3d;
-using Frame3 = transforms::Frame<3>;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 
 // Test that we fail when an empty wireframe is passed in.
 TEST(BoundingBoxFromWireframeDeathTest, TestEmptyWireframe) {
@@ -53,8 +53,8 @@ TEST(BoundingBoxFromWireframeTest, TestBoundingBoxComputation) {
 
   constexpr int NUM_TESTS = 100;
   for (int ii = 0; ii < NUM_TESTS; ++ii) {
-    const Frame3 reference_frame{Frame3::new_frame()};
-    const Frame3 box_frame{Frame3::new_frame()};
+    const Frame reference_frame{Frame::new_frame()};
+    const Frame box_frame{Frame::new_frame()};
 
     const Vec3 expected_extents{testing::random_vector<Vec3>(rng, dist)};
     const Vec3 expected_translation{testing::random_vector<Vec3>(rng, dist)};
@@ -70,7 +70,7 @@ TEST(BoundingBoxFromWireframeTest, TestBoundingBoxComputation) {
     const Wireframe wireframe{wireframe_points, {}};
 
     // ACTION
-    const OrientedBox<FSE3> bounding_box{
+    const OrientedBox<SE3> bounding_box{
         bounding_box_from_wireframe(wireframe, reference_frame, box_frame)};
 
     // VERIFICATION

@@ -54,11 +54,10 @@ std::vector<Geometry> get_test_actor_geometries(
     time::Timestamp time,
     bool inconsistent_times = false);
 
-state::RigidBodyState<transforms::FSE3> make_default_actor_state() {
-  return state::RigidBodyState<transforms::FSE3>(transforms::FSE3(
-      transforms::SE3::identity(),
+state::RigidBodyState<transforms::SE3> make_default_actor_state() {
+  return state::RigidBodyState<transforms::SE3>(transforms::SE3::identity(
       simulator::SCENE_FRAME,
-      transforms::Frame<transforms::FSE3::DIMS>::new_frame()));
+      transforms::Frame<transforms::SE3::DIMS>::new_frame()));
 }
 
 }  // namespace resim::actor

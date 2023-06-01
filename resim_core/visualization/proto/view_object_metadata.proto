@@ -7,13 +7,10 @@ enum ReSimType {
     TYPE_FRAME         = 1;
     TYPE_SE3           = 2;
     TYPE_SO3           = 3;
-    TYPE_FSE3          = 4;
-    TYPE_FSO3          = 5;
-    TYPE_DCURVE_SE3    = 6;
-    TYPE_DCURVE_FSE3   = 7;
-    TYPE_TCURVE_FSE3   = 8;
-    TYPE_TRAJECTORY    = 9;
-    TYPE_FRAMED_VECTOR = 10;
+    TYPE_DCURVE_SE3    = 4;
+    TYPE_TCURVE_SE3    = 5;
+    TYPE_TRAJECTORY    = 6;
+    TYPE_FRAMED_VECTOR = 7;
 }
 
 message ViewObjectMetadata {

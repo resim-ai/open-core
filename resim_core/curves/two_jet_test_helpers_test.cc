@@ -4,7 +4,6 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -19,11 +18,8 @@ class TwoJetTestHelperTests : public ::testing::Test {
   TwoJetTestHelper<TwoJet> tj_helper = TwoJetTestHelper<TwoJet>(SEED);
 };
 
-using TwoJetTypes = ::testing::Types<
-    TwoJetL<transforms::SO3>,
-    TwoJetL<transforms::SE3>,
-    TwoJetL<transforms::FSO3>,
-    TwoJetL<transforms::FSE3>>;
+using TwoJetTypes =
+    ::testing::Types<TwoJetL<transforms::SO3>, TwoJetL<transforms::SE3>>;
 
 TYPED_TEST_SUITE(TwoJetTestHelperTests, TwoJetTypes);
 

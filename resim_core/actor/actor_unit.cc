@@ -14,6 +14,7 @@
 #include "resim_core/simulator/standard_frames.hh"
 #include "resim_core/simulator/standard_topics.hh"
 #include "resim_core/time/timestamp.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/mcap_logger.hh"
 #include "resim_core/visualization/foxglove/actor_geometry_to_foxglove.hh"
 #include "resim_core/visualization/foxglove/frame_transform_to_foxglove.hh"
@@ -33,7 +34,7 @@ void validate_observable_state(
   REASSERT(time == state.time_of_validity, "Invalid state time!");
 }
 
-std::string get_transform_name(const transforms::FSE3 &ref_from_body) {
+std::string get_transform_name(const transforms::SE3 &ref_from_body) {
   REASSERT(
       ref_from_body.into() == simulator::SCENE_FRAME,
       "Actors must be relative to scene frame!");
@@ -111,7 +112,7 @@ void ActorLoggerUnit::log_actor_states(
     if (not actor_state.is_spawned) {
       continue;
     }
-    const transforms::FSE3 &scene_from_actor{actor_state.state.ref_from_body()};
+    const transforms::SE3 &scene_from_actor{actor_state.state.ref_from_body()};
 
     ::foxglove::FrameTransform frame_transform;
     visualization::foxglove::pack_into_foxglove(

@@ -15,15 +15,16 @@
 #include "resim_core/time/sample_interval.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/nullable_reference.hh"
 
 namespace resim::dynamics::rigid_body {
 
 namespace {
-using transforms::FSE3;
-using TangentVector = FSE3::TangentVector;
+using transforms::SE3;
+using TangentVector = SE3::TangentVector;
 
-constexpr int CONTROL_DIM = FSE3::DOF;
+constexpr int CONTROL_DIM = SE3::DOF;
 
 //
 // This controller is defined for test purposes to generate a constant
@@ -130,9 +131,9 @@ TEST(RigidBodyDynamicsTest, TestRigidBodyDynamics) {
   const Inertia inertia{
       inertia_from_mass_and_moments_of_inertia(MASS, moments_of_inertia)};
 
-  const auto test_forces{transforms::make_test_algebra_elements<FSE3>()};
+  const auto test_forces{transforms::make_test_algebra_elements<SE3>()};
   const auto test_initial_d_references_from_body{
-      transforms::make_test_algebra_elements<FSE3>()};
+      transforms::make_test_algebra_elements<SE3>()};
 
   for (TangentVector force : test_forces) {
     for (TangentVector initial_d_reference_from_body :

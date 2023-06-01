@@ -4,7 +4,7 @@
 #include "resim_core/actor/state/proto/trajectory.pb.h"
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
-#include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
+#include "resim_core/curves/proto/t_curve_se3_to_proto.hh"
 #include "resim_core/time/timestamp.hh"
 
 namespace resim::actor::state::proto {

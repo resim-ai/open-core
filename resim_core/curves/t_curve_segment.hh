@@ -32,7 +32,8 @@ class TCurveSegment {
 
   // Retrieve a point on the curve at normalized time time_nrm.
   TwoJetL<Group> point_at(double time_nrm) const;
-
+  // Test id this curve segment is build from framed liegroups
+  bool is_framed() const;
   // Retrieve the reference frame of the curve segment.
   // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;

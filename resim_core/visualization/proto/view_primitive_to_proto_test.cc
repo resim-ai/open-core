@@ -11,16 +11,12 @@
 #include "resim_core/actor/state/proto/trajectory_to_proto.hh"
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/curves/d_curve.hh"
-#include "resim_core/curves/proto/d_curve_fse3_to_proto.hh"
 #include "resim_core/curves/proto/d_curve_se3_to_proto.hh"
-#include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
+#include "resim_core/curves/proto/t_curve_se3_to_proto.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/proto/frame_3_to_proto.hh"
 #include "resim_core/transforms/proto/framed_vector_3_to_proto.hh"
-#include "resim_core/transforms/proto/fse3_to_proto.hh"
-#include "resim_core/transforms/proto/fso3_to_proto.hh"
 #include "resim_core/transforms/proto/se3_to_proto.hh"
 #include "resim_core/transforms/proto/so3_to_proto.hh"
 #include "resim_core/transforms/se3.hh"
@@ -36,8 +32,6 @@
 namespace resim::visualization {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
@@ -56,11 +50,8 @@ class ViewPrimitiveToProtoTypedTest : public ::testing::Test {};
 using PayloadTypes = ::testing::Types<
     SE3,
     SO3,
-    FSE3,
-    FSO3,
     curves::DCurve<SE3>,
-    curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>,
+    curves::TCurve<SE3>,
     actor::state::Trajectory,
     Frame,
     FramedVector>;
@@ -97,12 +88,6 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
         [&](const SO3 &test_so3) {
           EXPECT_TRUE(unpack(primitive_msg.so3()).is_approx(test_so3));
         },
-        [&](const FSE3 &test_fse3) {
-          EXPECT_TRUE(unpack(primitive_msg.fse3()).is_approx(test_fse3));
-        },
-        [&](const FSO3 &test_fso3) {
-          EXPECT_TRUE(unpack(primitive_msg.fso3()).is_approx(test_fso3));
-        },
         [&](const curves::DCurve<SE3> &test_d_curve_se3) {
           const auto &control_points = test_d_curve_se3.control_pts();
           const auto unpacked_control_points =
@@ -119,26 +104,10 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestPack) {
             EXPECT_TRUE(ref_from_control.is_approx(unpacked_ref_from_control));
           }
         },
-        [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-          const auto &control_points = test_d_curve_fse3.control_pts();
+        [&](const curves::TCurve<SE3> &test_t_curve_se3) {
+          const auto &control_points = test_t_curve_se3.control_pts();
           const auto unpacked_control_points =
-              unpack(primitive_msg.d_curve_fse3()).control_pts();
-
-          ASSERT_EQ(unpacked_control_points.size(), control_points.size());
-
-          for (int i = 0; i < control_points.size(); i++) {
-            const auto &ref_from_control =
-                *(control_points[i].ref_from_control);
-            const auto &unpacked_ref_from_control =
-                *(unpacked_control_points[i].ref_from_control);
-
-            EXPECT_TRUE(ref_from_control.is_approx(unpacked_ref_from_control));
-          }
-        },
-        [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-          const auto &control_points = test_t_curve_fse3.control_pts();
-          const auto unpacked_control_points =
-              unpack(primitive_msg.t_curve_fse3()).control_pts();
+              unpack(primitive_msg.t_curve_se3()).control_pts();
 
           ASSERT_EQ(control_points.size(), unpacked_control_points.size());
 
@@ -205,14 +174,6 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
           ASSERT_TRUE(std::holds_alternative<SO3>(unpacked.payload));
           ASSERT_TRUE(test_so3.is_approx(std::get<SO3>(unpacked.payload)));
         },
-        [&](const FSE3 &test_fse3) {
-          ASSERT_TRUE(std::holds_alternative<FSE3>(unpacked.payload));
-          ASSERT_TRUE(test_fse3.is_approx(std::get<FSE3>(unpacked.payload)));
-        },
-        [&](const FSO3 &test_fso3) {
-          ASSERT_TRUE(std::holds_alternative<FSO3>(unpacked.payload));
-          ASSERT_TRUE(test_fso3.is_approx(std::get<FSO3>(unpacked.payload)));
-        },
         [&](const curves::DCurve<SE3> &test_d_curve_se3) {
           ASSERT_TRUE(
               std::holds_alternative<curves::DCurve<SE3>>(unpacked.payload));
@@ -232,31 +193,12 @@ TYPED_TEST(ViewPrimitiveToProtoTypedTest, TestRoundTrip) {
                 *(unpacked_control_points.at(i).ref_from_control)));
           }
         },
-        [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
+        [&](const curves::TCurve<SE3> &test_t_curve_se3) {
           ASSERT_TRUE(
-              std::holds_alternative<curves::DCurve<FSE3>>(unpacked.payload));
-
-          const auto &unpacked_dcurve =
-              std::get<curves::DCurve<FSE3>>(unpacked.payload);
-          const auto &unpacked_control_points = unpacked_dcurve.control_pts();
-
-          ASSERT_EQ(
-              unpacked_control_points.size(),
-              test_d_curve_fse3.control_pts().size());
-
-          for (int i = 0; i < unpacked_control_points.size(); i++) {
-            const auto test_ref_from_control =
-                test_d_curve_fse3.control_pts().at(i).ref_from_control;
-            EXPECT_TRUE(test_ref_from_control->is_approx(
-                *(unpacked_control_points.at(i).ref_from_control)));
-          }
-        },
-        [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-          ASSERT_TRUE(
-              std::holds_alternative<curves::TCurve<FSE3>>(unpacked.payload));
-          const auto &control_points = test_t_curve_fse3.control_pts();
-          const curves::TCurve<FSE3> unpacked_t_curve{
-              std::get<curves::TCurve<FSE3>>(unpacked.payload)};
+              std::holds_alternative<curves::TCurve<SE3>>(unpacked.payload));
+          const auto &control_points = test_t_curve_se3.control_pts();
+          const curves::TCurve<SE3> unpacked_t_curve{
+              std::get<curves::TCurve<SE3>>(unpacked.payload)};
           const auto &unpacked_control_points = unpacked_t_curve.control_pts();
 
           ASSERT_EQ(control_points.size(), unpacked_control_points.size());

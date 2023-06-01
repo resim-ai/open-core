@@ -20,7 +20,7 @@ cc_library(
     hdrs = ["location_condition.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim_core/transforms:framed_group",
+        "//resim_core/transforms:se3",
         "//resim_core/utils:uuid",
     ],
 )
@@ -42,7 +42,6 @@ cc_library(
     deps = [
         ":ilqr_drone",
         "//resim_core/actor/state:trajectory",
-        "//resim_core/transforms:framed_group",
         "//resim_core/utils:uuid",
     ],
 )

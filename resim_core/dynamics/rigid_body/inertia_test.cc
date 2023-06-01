@@ -5,11 +5,11 @@
 #include <Eigen/Dense>
 
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
-using transforms::FSE3;
-using TangentVector = FSE3::TangentVector;
+using transforms::SE3;
+using TangentVector = SE3::TangentVector;
 
 // Test that we can construct an inertia matrix from mass and moments.
 TEST(InertiaTest, TestInertiaFromMassAndMoments) {
@@ -33,8 +33,8 @@ TEST(InertiaTest, TestInertiaFromMassAndMoments) {
 
     const double kinetic_energy = V.transpose() * inertia * V;
 
-    const Eigen::Vector3d w{FSE3::tangent_vector_rotation_part(V)};
-    const Eigen::Vector3d v{FSE3::tangent_vector_translation_part(V)};
+    const Eigen::Vector3d w{SE3::tangent_vector_rotation_part(V)};
+    const Eigen::Vector3d v{SE3::tangent_vector_translation_part(V)};
     const double expected_kinetic_energy =
         w.transpose() * moments_of_inertia.asDiagonal() * w +
         v.squaredNorm() * MASS;

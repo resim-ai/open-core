@@ -54,6 +54,8 @@ class DCurve {
   const std::vector<Segment> &segments() const;
   // Retrieve the total length of the curve.
   double curve_length() const;
+  // Is this curve built using framed Groups?
+  bool is_framed() const;
   // Retrieve the point frame of the curve's control points.
   // Note, this method is only valid for FramedGroup<T> types
   const transforms::Frame<Group::DIMS> &point_frame() const;

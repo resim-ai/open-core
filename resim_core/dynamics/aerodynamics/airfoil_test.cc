@@ -10,17 +10,14 @@
 namespace resim::dynamics::aerodynamics {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
-using transforms::SO3;
-using Frame = transforms::Frame<FSE3::DIMS>;
-using RigidBodyState = actor::state::RigidBodyState<FSE3>;
+using Frame = transforms::Frame<SE3::DIMS>;
+using RigidBodyState = actor::state::RigidBodyState<SE3>;
 using Control = Eigen::VectorXd;
 const Frame COM_FRAME = Frame::new_frame();
 const Frame COP_FRAME = Frame::new_frame();
 const Frame REF_FRAME = Frame::new_frame();
-using FramedVector = transforms::FramedVector<FSE3::DIMS>;
+using FramedVector = transforms::FramedVector<SE3::DIMS>;
 
 constexpr double DEG_TO_RAD = (1.0 / 360.0) * 2.0 * M_PI;
 constexpr int NINETY_DEG = 90;
@@ -40,7 +37,7 @@ constexpr double AREA_M_SQ = SPAN_M * TOTAL_CHORD_M;
 
 AirfoilElement make_test_airfoil() {
   return AirfoilElement(
-      FSE3::identity(COM_FRAME, COP_FRAME),
+      SE3::identity(COM_FRAME, COP_FRAME),
       AirfoilElementConfig(
           LIFT_CURVE_SLOPE_COEFF,
           SKIN_FRICTION_COEFF,
@@ -63,7 +60,7 @@ TEST(AirfoilTests, LiftAndDragNoDeflection) {
   // SETUP
   AirfoilElement test_airfoil = make_test_airfoil();
   AirfoilElementState test_element_state{0.0};
-  RigidBodyState test_state{FSE3::identity(REF_FRAME, COM_FRAME)};
+  RigidBodyState test_state{SE3::identity(REF_FRAME, COM_FRAME)};
 
   constexpr std::array<double, TEST_COUNT> test_lift_coeffs = {
       -3.35766e-16, -0.0213682, -0.042724, -0.0640548, -0.0853482, -0.106591,
@@ -164,7 +161,7 @@ TEST(AirfoilTests, LiftAndDragPosDeflection) {
   AirfoilElement test_airfoil = make_test_airfoil();
   constexpr double TEST_ANGLE_DEG = 25.0;
   AirfoilElementState test_element_state{TEST_ANGLE_DEG * DEG_TO_RAD};
-  RigidBodyState test_state{FSE3::identity(REF_FRAME, COM_FRAME)};
+  RigidBodyState test_state{SE3::identity(REF_FRAME, COM_FRAME)};
 
   constexpr std::array<double, TEST_COUNT> test_lift_coeffs = {
       -0.160916,  -0.182382,  -0.203744, -0.224988,  -0.246101,  -0.267071,
@@ -265,7 +262,7 @@ TEST(AirfoilTests, LiftAndDragNegDeflection) {
   AirfoilElement test_airfoil = make_test_airfoil();
   constexpr double TEST_ANGLE_DEG = -25.0;
   AirfoilElementState test_element_state{TEST_ANGLE_DEG * DEG_TO_RAD};
-  RigidBodyState test_state{FSE3::identity(REF_FRAME, COM_FRAME)};
+  RigidBodyState test_state{SE3::identity(REF_FRAME, COM_FRAME)};
 
   constexpr std::array<double, TEST_COUNT> test_lift_coeffs = {
       0.14651,   0.126127,   0.105666,   0.0851412, 0.0645644,  0.0439483,

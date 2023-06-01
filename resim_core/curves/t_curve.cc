@@ -5,8 +5,6 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -17,20 +15,18 @@ namespace resim::curves {
 namespace {
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
-using FSE3 = transforms::FSE3;
-using FSO3 = transforms::FSO3;
 
 constexpr auto EMPTY_ERR =
     "Cannot query the frame of a curve with no control points";
 
-template <transforms::FramedGroupType Group>
+template <transforms::LieGroupType Group>
 const transforms::Frame<Group::DIMS> &reference_frame_impl(
     const std::vector<typename TCurve<Group>::Control> &control_pts) {
   REASSERT(!control_pts.empty(), EMPTY_ERR);
   return control_pts.back().point.frame_from_ref().from();
 }
 
-template <transforms::FramedGroupType Group>
+template <transforms::LieGroupType Group>
 const transforms::Frame<Group::DIMS> &point_frame_impl(
     const std::vector<typename TCurve<Group>::Control> &control_pts) {
   REASSERT(!control_pts.empty(), EMPTY_ERR);
@@ -60,14 +56,12 @@ void TCurve<Group>::append(Control point) {
         "Control points must have strictly increasing time";
     REASSERT(point.time > control_pts_.back().time, TIME_ERR);
     // Check that both control point frames match.
-    if constexpr (transforms::FramedGroupType<Group>) {
-      constexpr auto FRAME_ERR =
-          "Control points must all have the same ref and point frame";
-      const bool frame_test = point.point.frame_from_ref().verify_frames(
-          this->point_frame(),
-          this->reference_frame());
-      REASSERT(frame_test, FRAME_ERR);
-    }
+    constexpr auto FRAME_ERR =
+        "Control points must all have the same ref and point frame";
+    const bool frame_test = point.point.frame_from_ref().verify_frames(
+        this->point_frame(),
+        this->reference_frame());
+    REASSERT(frame_test, FRAME_ERR);
     // Build a segment, note segments are time normalized so we need
     // to create new control points with scaled derivatives.
     const double dt = point.time - control_pts_.back().time;
@@ -95,46 +89,26 @@ void TCurve<Group>::append(std::initializer_list<Control> points) {
   }
 }
 
-template <>
-const transforms::Frame<FSE3::DIMS> &TCurve<FSE3>::reference_frame() const {
-  return reference_frame_impl<FSE3>(control_pts_);
+template <transforms::LieGroupType Group>
+bool TCurve<Group>::is_framed() const {
+  REASSERT(!control_pts_.empty(), EMPTY_ERR);
+  return control_pts_.back().point.frame_from_ref().is_framed();
 }
 
-template <>
-const transforms::Frame<FSO3::DIMS> &TCurve<FSO3>::reference_frame() const {
-  return reference_frame_impl<FSO3>(control_pts_);
+template <transforms::LieGroupType Group>
+const transforms::Frame<Group::DIMS> &TCurve<Group>::reference_frame() const {
+  return reference_frame_impl<Group>(control_pts_);
 }
 
-template <>
-const transforms::Frame<FSE3::DIMS> &TCurve<FSE3>::point_frame() const {
-  return point_frame_impl<FSE3>(control_pts_);
-}
-
-template <>
-const transforms::Frame<FSO3::DIMS> &TCurve<FSO3>::point_frame() const {
-  return point_frame_impl<FSO3>(control_pts_);
+template <transforms::LieGroupType Group>
+const transforms::Frame<Group::DIMS> &TCurve<Group>::point_frame() const {
+  return point_frame_impl<Group>(control_pts_);
 }
 
 template <transforms::LieGroupType Group>
 TwoJetL<Group> TCurve<Group>::point_at(const double time) const {
   const PointAtData pd = point_at_impl(time);
   TwoJetL<Group> point = pd.in_segment.curve.point_at(pd.time_nrm);
-  unnormalize_derivatives(pd.inv_dt, InOut(point));
-  return point;
-}
-
-template <>
-TwoJetL<FSE3> TCurve<FSE3>::point_at(const double time) const {
-  const PointAtData pd = point_at_impl(time);
-  TwoJetL<FSE3> point = pd.in_segment.curve.point_at(pd.time_nrm);
-  unnormalize_derivatives(pd.inv_dt, InOut(point));
-  return point;
-}
-
-template <>
-TwoJetL<FSO3> TCurve<FSO3>::point_at(const double time) const {
-  const PointAtData pd = point_at_impl(time);
-  TwoJetL<FSO3> point = pd.in_segment.curve.point_at(pd.time_nrm);
   unnormalize_derivatives(pd.inv_dt, InOut(point));
   return point;
 }
@@ -195,8 +169,6 @@ double TCurve<Group>::start_time() const {
   return control_pts_.front().time;
 }
 
-template class TCurve<FSO3>;
-template class TCurve<FSE3>;
 template class TCurve<SE3>;
 template class TCurve<SO3>;
 

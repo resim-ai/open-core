@@ -39,6 +39,8 @@ TEST(UUIDTest, ConstructEmptyUUID) {
   const UUID empty_uuid;
   const std::array<unsigned char, ARRAY_SIZE> null_id{{0}};
   EXPECT_EQ(empty_uuid.id(), null_id);
+  const UUID another_empty_uuid;
+  EXPECT_EQ(empty_uuid, another_empty_uuid);
 }
 
 TEST(UUIDTest, ConstructUUID) {
@@ -99,6 +101,13 @@ TEST(UUIDTest, UUIDHashEquality) {
   std::string uuid_string = uuid_a.to_string();
   EXPECT_EQ(std::hash<std::string>()(uuid_string), std::hash<UUID>()(uuid_a));
   EXPECT_EQ(std::hash<UUID>()(uuid_a), std::hash<UUID>()(uuid_b));
+}
+
+TEST(UUIDTest, NullId) {
+  UUID uuid_a = UUID::new_uuid();
+  UUID uuid_null;
+  EXPECT_TRUE(uuid_null.is_null());
+  EXPECT_FALSE(uuid_a.is_null());
 }
 
 }  // namespace resim

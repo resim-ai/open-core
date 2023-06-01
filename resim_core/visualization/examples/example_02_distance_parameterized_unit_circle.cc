@@ -3,14 +3,12 @@
 #include <random>
 
 #include "resim_core/curves/d_curve.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/visualization/view.hh"
 
-using resim::transforms::FSE3;  // ReSim's framed 6 d.o.f. rigid xform.
-using resim::transforms::SE3;   // ReSim's 6 d.o.f. rigid xform.
-using resim::transforms::SO3;   // ReSim's 3 d.o.f. rotation.
+using resim::transforms::SE3;  // ReSim's 6 d.o.f. rigid xform.
+using resim::transforms::SO3;  // ReSim's 3 d.o.f. rotation.
 
 using Frame = resim::transforms::Frame<3>;  // ReSim's frame identifier.
 
@@ -54,7 +52,7 @@ std::vector<SE3> unit_circle(
   return points;
 }
 
-std::vector<FSE3> framed_unit_circle(
+std::vector<SE3> framed_unit_circle(
     const Frame& into_frame,
     const Frame& out_frame,
     double translation_x = 0.0,
@@ -66,10 +64,11 @@ std::vector<FSE3> framed_unit_circle(
       unit_circle(translation_x, translation_y, translation_z, scale_factor);
 
   // We can add a frame to the SE3 points (into from out).
-  std::vector<FSE3> points;
+  std::vector<SE3> points;
   points.reserve(raw_se3_points.size());
   for (auto& point : raw_se3_points) {
-    points.emplace_back(std::move(point), into_frame, out_frame);
+    point.set_frames(into_frame, out_frame);
+    points.emplace_back(std::move(point));
   }
 
   return points;
@@ -105,18 +104,19 @@ int main(int argc, char* argv[]) {
   const double SENSOR_X = 1;
   const double SENSOR_Y = 0.0;
   const double SENSOR_Z = 1;
-  const FSE3 robot_from_sensor_transform(
-      SE3(SO3(M_PI_2, {0, 0, 1.0}), {SENSOR_X, SENSOR_Y, SENSOR_Z}),
+  const SE3 robot_from_sensor_transform(
+      SO3(M_PI_2, {0, 0, 1.0}),
+      {SENSOR_X, SENSOR_Y, SENSOR_Z},
       robot,
       sensor);
   VIEW(robot_from_sensor_transform) << "robot_from_sensor";
 
   // Now, what if we wanted to know what the world from sensor looked like? We
   // should compute the transform using robot_from_sensor_transform.
-  std::vector<FSE3> world_from_sensor_points;
+  std::vector<SE3> world_from_sensor_points;
   world_from_sensor_points.reserve(world_from_robot_points.size());
   for (const auto& world_from_robot : world_from_robot_points) {
-    FSE3 world_from_sensor_point =
+    SE3 world_from_sensor_point =
         world_from_robot * robot_from_sensor_transform;
     world_from_sensor_points.push_back(world_from_sensor_point);
   }

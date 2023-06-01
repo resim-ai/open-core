@@ -6,21 +6,20 @@
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::actor::state {
 
 namespace {
-using FSE3 = transforms::FSE3;
-using Frame = transforms::Frame<FSE3::DIMS>;
+using SE3 = transforms::SE3;
+using Frame = transforms::Frame<SE3::DIMS>;
 }  // namespace
 
 Trajectory::Trajectory(std::initializer_list<Control> points) {
   append(points);
 }
 
-Trajectory::Trajectory(curves::TCurve<FSE3> curve, time::Timestamp start_time)
+Trajectory::Trajectory(curves::TCurve<SE3> curve, time::Timestamp start_time)
     : curve_(std::move(curve)),
       start_time_(start_time){};
 
@@ -50,16 +49,15 @@ void Trajectory::append(std::initializer_list<Control> points) {
   }
 }
 
-RigidBodyState<FSE3> Trajectory::point_at(
-    const time::Timestamp &at_time) const {
+RigidBodyState<SE3> Trajectory::point_at(const time::Timestamp &at_time) const {
   const double time = time::as_seconds(at_time - start_time());
-  return RigidBodyState<FSE3>(curve_.point_at(time).right_two_jet());
+  return RigidBodyState<SE3>(curve_.point_at(time).right_two_jet());
 }
 
-RigidBodyState<FSE3> Trajectory::point_at(
+RigidBodyState<SE3> Trajectory::point_at(
     const time::Duration &from_start) const {
   const double time = time::as_seconds(from_start);
-  return RigidBodyState<FSE3>(curve_.point_at(time).right_two_jet());
+  return RigidBodyState<SE3>(curve_.point_at(time).right_two_jet());
 }
 
 const time::Timestamp &Trajectory::start_time() const { return start_time_; }

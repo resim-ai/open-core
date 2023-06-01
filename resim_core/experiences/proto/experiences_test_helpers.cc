@@ -17,7 +17,7 @@
 #include "resim_core/geometry/drone_wireframe.hh"
 #include "resim_core/geometry/wireframe.hh"
 #include "resim_core/time/timestamp.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/match.hh"
 #include "resim_core/utils/uuid.hh"
 
@@ -54,7 +54,7 @@ bool test_actor_equality(
 LocationCondition make_test_location_condition() {
   return {
       .triggering_actor = UUID::new_uuid(),
-      .target_position = transforms::FSE3::identity(),
+      .target_position = transforms::SE3::identity(),
       .tolerance_m = TEST_TOLERANCE,
   };
 }
@@ -127,7 +127,7 @@ MovementModel make_test_ilqr_movement_model() {
 }
 
 MovementModel make_test_trajectory_movement_model() {
-  curves::TCurve<transforms::FSE3> test_curve =
+  curves::TCurve<transforms::SE3> test_curve =
       curves::testing::make_circle_curve();
 
   actor::state::Trajectory test_trajectory{test_curve, ZERO_TIME};
@@ -140,9 +140,9 @@ MovementModel make_test_trajectory_movement_model() {
 bool test_trajectory_equality(
     const actor::state::Trajectory& expected_trajectory,
     const actor::state::Trajectory& actual_trajectory) {
-  const std::vector<typename curves::TCurve<transforms::FSE3>::Control>&
+  const std::vector<typename curves::TCurve<transforms::SE3>::Control>&
       expected_points = expected_trajectory.curve().control_pts();
-  const std::vector<typename curves::TCurve<transforms::FSE3>::Control>&
+  const std::vector<typename curves::TCurve<transforms::SE3>::Control>&
       actual_points = actual_trajectory.curve().control_pts();
   if (expected_points.size() != actual_points.size()) {
     return false;
@@ -150,9 +150,9 @@ bool test_trajectory_equality(
   bool trajectory_equal = true;
   for (unsigned int i = 0; i < expected_points.size(); ++i) {
     trajectory_equal &= expected_points[i].time == actual_points[i].time;
-    const curves::TwoJetL<transforms::FSE3>& expected_two_jet =
+    const curves::TwoJetL<transforms::SE3>& expected_two_jet =
         expected_points[i].point;
-    const curves::TwoJetL<transforms::FSE3>& actual_two_jet =
+    const curves::TwoJetL<transforms::SE3>& actual_two_jet =
         actual_points[i].point;
     trajectory_equal &= expected_two_jet.is_approx(actual_two_jet);
   }

@@ -5,7 +5,6 @@
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/time/timestamp.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/utils/match.hh"
 
 namespace resim::actor {

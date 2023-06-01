@@ -10,7 +10,6 @@
 #include "resim_core/curves/test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
@@ -19,11 +18,9 @@
 namespace resim::visualization::view_server {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
-using Frame = transforms::Frame<3>;
+using Frame = transforms::Frame<SE3::DIMS>;
 using FramedVector = transforms::FramedVector<3>;
 
 constexpr auto LOW_COUNT =
@@ -41,7 +38,7 @@ Eigen::Matrix<double, 3, 1> generate_test_vector_3D() {
 }  // namespace
 
 template <>
-std::vector<Frame> generate_payload_type(const unsigned count) {
+std::vector<Frame> generate_payload_type(const unsigned count, bool framed) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   std::vector<Frame> frames;
@@ -54,88 +51,79 @@ std::vector<Frame> generate_payload_type(const unsigned count) {
 }
 
 template <>
-std::vector<SE3> generate_payload_type(const unsigned count) {
+std::vector<SE3> generate_payload_type(const unsigned count, bool framed) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  return transforms::make_test_group_elements<SE3>(count);
-}
-
-template <>
-std::vector<SO3> generate_payload_type(const unsigned count) {
-  // How many test elements to make.
-  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  return transforms::make_test_group_elements<SO3>(count);
-}
-
-template <>
-std::vector<FSE3> generate_payload_type(const unsigned count) {
-  // How many test elements to make.
-  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  std::vector<transforms::FSE3> points;
-  for (auto &element : transforms::make_test_group_elements<FSE3>(count)) {
+  std::vector<transforms::SE3> points;
+  for (auto &element : transforms::make_test_group_elements<SE3>(count)) {
     // Ensure each element has a unique frame
-    const auto pt_frame = transforms::Frame<SE3::DIMS>::new_frame();
-    element.set_from(pt_frame);
+    if (framed) {
+      const auto pt_frame = Frame::new_frame();
+      const auto ref_frame = Frame::new_frame();
+      element.set_frames(ref_frame, pt_frame);
+    } else {
+      element.set_unframed();
+    }
     points.emplace_back(element);
   }
   return points;
 }
 
 template <>
-std::vector<FSO3> generate_payload_type(const unsigned count) {
+std::vector<SO3> generate_payload_type(const unsigned count, bool framed) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  std::vector<transforms::FSO3> points;
-  for (auto &element : transforms::make_test_group_elements<FSO3>(count)) {
+  std::vector<transforms::SO3> points;
+  for (auto &element : transforms::make_test_group_elements<SO3>(count)) {
     // Ensure each element has a unique frame
-    const auto pt_frame = transforms::Frame<SO3::DIMS>::new_frame();
-    element.set_from(pt_frame);
+    if (framed) {
+      const auto pt_frame = Frame::new_frame();
+      const auto ref_frame = Frame::new_frame();
+      element.set_frames(ref_frame, pt_frame);
+    } else {
+      element.set_unframed();
+    }
     points.emplace_back(element);
   }
   return points;
 }
 
 template <>
-std::vector<curves::DCurve<SE3>> generate_payload_type(const unsigned count) {
+std::vector<curves::DCurve<SE3>> generate_payload_type(
+    const unsigned count,
+    bool framed) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   std::vector<curves::DCurve<SE3>> d_curves;
   d_curves.reserve(count);
 
   for (int i = 0; i < count; i++) {
-    curves::DCurve<SE3> curve(curves::DCurveCircle<SE3>::points());
-    d_curves.push_back(curve);
-  }
-
-  return d_curves;
-}
-
-template <>
-std::vector<curves::DCurve<FSE3>> generate_payload_type(const unsigned count) {
-  // How many test elements to make.
-  REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  std::vector<curves::DCurve<FSE3>> d_curves;
-  d_curves.reserve(count);
-
-  for (int i = 0; i < count; i++) {
-    curves::DCurve<FSE3> curve(curves::DCurveCircle<FSE3>::points());
-    d_curves.push_back(curve);
+    // Make sure we get both framed and unframed curves:
+    if (framed) {
+      curves::DCurve<SE3> curve(curves::DCurveCircle<SE3>::points());
+      d_curves.push_back(curve);
+    } else {
+      curves::DCurve<SE3> curve(
+          curves::DCurveCircle<SE3>::points(Frame(), Frame()));
+      d_curves.push_back(curve);
+    }
   }
   return d_curves;
 }
 
 template <>
-std::vector<curves::TCurve<transforms::FSE3>> generate_payload_type(
-    const unsigned count) {
+std::vector<curves::TCurve<transforms::SE3>> generate_payload_type(
+    const unsigned count,
+    bool framed) {
   // How many test elements to make.
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
-  std::vector<curves::TCurve<transforms::FSE3>> t_curves;
-  const transforms::Frame<3> into{transforms::Frame<3>::new_frame()};
-  const transforms::Frame<3> from{transforms::Frame<3>::new_frame()};
+  std::vector<curves::TCurve<transforms::SE3>> t_curves;
+  const Frame into{framed ? Frame::new_frame() : Frame()};
+  const Frame from{framed ? Frame::new_frame() : Frame()};
   t_curves.reserve(count);
 
   for (int i = 0; i < count; i++) {
-    const curves::TCurve<transforms::FSE3> test_curve{
+    const curves::TCurve<transforms::SE3> test_curve{
         curves::testing::make_circle_curve(into, from)};
     t_curves.push_back(test_curve);
   }
@@ -145,11 +133,15 @@ std::vector<curves::TCurve<transforms::FSE3>> generate_payload_type(
 
 template <>
 std::vector<actor::state::Trajectory> generate_payload_type(
-    const unsigned count) {
+    const unsigned count,
+    bool framed /* unused */) {
   REASSERT(count >= detail::MIN_TEST_ELEMENTS, LOW_COUNT);
   std::vector<actor::state::Trajectory> trajectories;
-  std::vector<curves::TCurve<transforms::FSE3>> t_curves =
-      generate_payload_type<curves::TCurve<transforms::FSE3>>(count);
+  constexpr bool TRAJECTORIES_ALWAYS_FRAMED = true;
+  std::vector<curves::TCurve<transforms::SE3>> t_curves =
+      generate_payload_type<curves::TCurve<transforms::SE3>>(
+          count,
+          TRAJECTORIES_ALWAYS_FRAMED);
   trajectories.reserve(count);
 
   for (int i = 0; i < count; i++) {
@@ -161,7 +153,10 @@ std::vector<actor::state::Trajectory> generate_payload_type(
 }
 
 template <>
-std::vector<FramedVector> generate_payload_type(const unsigned count) {
+std::vector<FramedVector> generate_payload_type(
+    const unsigned count,
+    bool framed /* unused */) {  // We don't support regular vectors, so this
+                                 // argument is unused.
   std::vector<FramedVector> framed_vectors;
   framed_vectors.reserve(count);
 

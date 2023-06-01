@@ -23,4 +23,15 @@ TEST(FramedTest, CopyConstructionAndAssignment) {
   EXPECT_NE(C, D);
 }
 
+TEST(FramedTest, NullFrames) {
+  const Frame<3> A = Frame<3>();
+  const Frame<3> B = Frame<3>();
+  const Frame<3> C = Frame<3>::new_frame();
+  EXPECT_EQ(A, B);
+  EXPECT_NE(A, C);
+  EXPECT_TRUE(A.is_null());
+  EXPECT_TRUE(B.is_null());
+  EXPECT_FALSE(C.is_null());
+}
+
 }  // namespace resim::transforms

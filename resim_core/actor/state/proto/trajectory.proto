@@ -6,6 +6,6 @@ import "resim_core/curves/proto/t_curve.proto";
 package resim.actor.state.proto;
 
 message Trajectory {
-    google.protobuf.Timestamp      start_time = 1;
-    resim.curves.proto.TCurve_FSE3 curve      = 2;
+    google.protobuf.Timestamp     start_time = 1;
+    resim.curves.proto.TCurve_SE3 curve      = 2;
 }

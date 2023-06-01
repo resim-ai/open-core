@@ -6,8 +6,6 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/quintic_poly_coeffs.hh"
 #include "resim_core/curves/two_jet.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -16,36 +14,32 @@
 namespace resim::curves {
 
 namespace {
-using FSE3 = transforms::FSE3;
-using FSO3 = transforms::FSO3;
+using SE3 = transforms::SE3;
+using SO3 = transforms::SO3;
 }  // namespace
 
 template <transforms::LieGroupType Group>
 TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
     : orig_(std::move(orig)),
       dest_(std::move(dest)) {
-  if constexpr (transforms::FramedGroupType<Group>) {
-    constexpr auto ERROR_MESSAGE =
-        "Origin and destination TwoJets must have matching frames.";
-    REASSERT(
-        orig_.frame_from_ref().verify_frames(
-            dest_.frame_from_ref().into(),
-            dest_.frame_from_ref().from()),
-        ERROR_MESSAGE);
-  }
+  constexpr auto ERROR_MESSAGE =
+      "Origin and destination TwoJets must have matching frames.";
+  REASSERT(
+      orig_.frame_from_ref().verify_frames(
+          dest_.frame_from_ref().into(),
+          dest_.frame_from_ref().from()),
+      ERROR_MESSAGE);
 }
 
 template <transforms::LieGroupType Group>
 TwoJetL<Group> TCurveSegment<Group>::point_at(const double time_nrm) const {
   TwoJetL<Group> point = TwoJetL<Group>::identity();
-  if constexpr (transforms::FramedGroupType<Group>) {
-    // Note that we accumlate the point transform relative to the origin point
-    // before composing this with the origin point at the end of this function
-    // to get point_from_ref. Therefore, the point starts out as
-    // point_from_point.
-    // TODO(https://app.asana.com/0/0/1202833644049385/f)
-    point.set_frame_from_ref(Group::identity(point_frame(), point_frame()));
-  }
+  // Note that we accumlate the point transform relative to the origin point
+  // before composing this with the origin point at the end of this function
+  // to get point_from_ref. Therefore, the point starts out as
+  // point_from_point.
+  // TODO(https://app.asana.com/0/0/1202833644049385/f)
+  point.set_frame_from_ref(Group::identity(point_frame(), point_frame()));
 
   // dest_from_orig
   const Group dest_from_orig =
@@ -91,25 +85,20 @@ TwoJetL<Group> TCurveSegment<Group>::point_at(const double time_nrm) const {
   return point;
 }
 
-template <>
-const transforms::Frame<FSE3::DIMS> &TCurveSegment<FSE3>::reference_frame()
+template <transforms::LieGroupType Group>
+bool TCurveSegment<Group>::is_framed() const {
+  return orig_.frame_from_ref().is_framed();
+}
+
+template <transforms::LieGroupType Group>
+const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::reference_frame()
     const {
   return orig_.frame_from_ref().from();
 }
 
-template <>
-const transforms::Frame<FSO3::DIMS> &TCurveSegment<FSO3>::reference_frame()
+template <transforms::LieGroupType Group>
+const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::point_frame()
     const {
-  return orig_.frame_from_ref().from();
-}
-
-template <>
-const transforms::Frame<FSE3::DIMS> &TCurveSegment<FSE3>::point_frame() const {
-  return orig_.frame_from_ref().into();
-}
-
-template <>
-const transforms::Frame<FSO3::DIMS> &TCurveSegment<FSO3>::point_frame() const {
   return orig_.frame_from_ref().into();
 }
 
@@ -142,17 +131,11 @@ Group TCurveSegment<Group>::increment_group(
     const TangentVector &alg,
     const TwoJetL<Group> &point) const {
   Group increment = Group::identity();
-  if constexpr (transforms::FramedGroupType<Group>) {
-    increment = Group::exp(alg, point_frame(), point_frame());
-  } else {
-    increment = Group::exp(alg);
-  }
+  increment = Group::exp(alg, point_frame(), point_frame());
   return increment;
 }
 
 template class TCurveSegment<transforms::SO3>;
 template class TCurveSegment<transforms::SE3>;
-template class TCurveSegment<transforms::FSO3>;
-template class TCurveSegment<transforms::FSE3>;
 
 }  // namespace resim::curves

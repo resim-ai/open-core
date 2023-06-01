@@ -7,8 +7,6 @@
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/curves/two_jet_test_helpers.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -41,44 +39,40 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
 
     // For framed groups, verify that the frame assignment is done
     // correctly.
-    if constexpr (transforms::FramedGroupType<Group>) {
-      EXPECT_EQ(
-          extrapolated_two_jet.frame_from_ref().into(),
-          two_jet.frame_from_ref().into());
-      EXPECT_EQ(
-          extrapolated_two_jet.frame_from_ref().from(),
-          two_jet.frame_from_ref().from());
-    }
+    EXPECT_EQ(
+        extrapolated_two_jet.frame_from_ref().into(),
+        two_jet.frame_from_ref().into());
+    EXPECT_EQ(
+        extrapolated_two_jet.frame_from_ref().from(),
+        two_jet.frame_from_ref().from());
   }
 
   void test_frame_overload(const double dt) {
-    if constexpr (transforms::FramedGroupType<Group>) {
-      // SETUP
-      const transforms::Frame<Group::DIMS> frame =
-          transforms::Frame<Group::DIMS>::new_frame();
-      const TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
+    // SETUP
+    const transforms::Frame<Group::DIMS> frame =
+        transforms::Frame<Group::DIMS>::new_frame();
 
-      // ACTION
-      TwoJetL<Group> extrapolated_two_jet_explicit{
-          extrapolate_two_jet(two_jet, dt, frame)};
+    TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
 
-      // VERIFICATION
-      // Verify using the other overload tested above
-      TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
-      // But now manually set the frame.
-      auto two_jet_transform = extrapolated_two_jet.frame_from_ref();
-      two_jet_transform.set_into(frame);
-      extrapolated_two_jet.set_frame_from_ref(two_jet_transform);
-      // Compare the two TwoJets.
-      EXPECT_TRUE(
-          extrapolated_two_jet.is_approx(extrapolated_two_jet_explicit));
+    // ACTION
+    TwoJetL<Group> extrapolated_two_jet_explicit{
+        extrapolate_two_jet(two_jet, dt, frame)};
 
-      // Explicitly check the frames.
-      EXPECT_EQ(extrapolated_two_jet_explicit.frame_from_ref().into(), frame);
-      EXPECT_EQ(
-          extrapolated_two_jet_explicit.frame_from_ref().from(),
-          two_jet.frame_from_ref().from());
-    }
+    // VERIFICATION
+    // Verify using the other overload tested above
+    TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
+    // But now manually set the frame.
+    auto two_jet_transform = extrapolated_two_jet.frame_from_ref();
+    two_jet_transform.set_frames(frame, two_jet_transform.from());
+    extrapolated_two_jet.set_frame_from_ref(two_jet_transform);
+    // Compare the two TwoJets.
+    EXPECT_TRUE(extrapolated_two_jet.is_approx(extrapolated_two_jet_explicit));
+
+    // Explicitly check the frames.
+    EXPECT_EQ(extrapolated_two_jet_explicit.frame_from_ref().into(), frame);
+    EXPECT_EQ(
+        extrapolated_two_jet_explicit.frame_from_ref().from(),
+        two_jet.frame_from_ref().from());
   }
 
  private:
@@ -87,8 +81,7 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
       TwoJetTestHelper<TwoJetL<Group>>(SEED);
 };
 
-using LieGroupTypes = ::testing::
-    Types<transforms::SE3, transforms::SO3, transforms::FSE3, transforms::FSO3>;
+using LieGroupTypes = ::testing::Types<transforms::SE3, transforms::SO3>;
 TYPED_TEST_SUITE(ExtrapolateTwoJetTests, LieGroupTypes);
 
 TYPED_TEST(ExtrapolateTwoJetTests, TestExtrapolation) {

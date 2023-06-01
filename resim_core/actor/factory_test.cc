@@ -18,21 +18,20 @@
 #include "resim_core/simulator/standard_frames.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 
 namespace resim::actor {
 namespace {
 
 // Simple helper to make a trajectory
 state::Trajectory trajectory_from_curve(
-    const curves::TCurve<transforms::FSE3> &curve) {
+    const curves::TCurve<transforms::SE3> &curve) {
   constexpr time::Timestamp ZERO_TIME;
   return state::Trajectory{curve, ZERO_TIME};
 }
 
 // Helper to ensure that a given actor follows a given curve
 void expect_actor_matches_curve(
-    const curves::TCurve<transforms::FSE3> &curve,
+    const curves::TCurve<transforms::SE3> &curve,
     Actor &actor) {
   constexpr int NUM_POINTS = 10;
   for (int ii = 0; ii < NUM_POINTS; ++ii) {
@@ -60,7 +59,7 @@ TEST(FactoryTest, TestMakeTrajectoryActor) {
   experiences::DynamicBehavior dynamic_behavior;
   const ActorId id{ActorId::new_uuid()};
   const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> t_curve{
+  const curves::TCurve<transforms::SE3> t_curve{
       curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
   dynamic_behavior.actors.push_back(experiences::Actor{
       .id = id,
@@ -87,7 +86,7 @@ TEST(FactoryTest, TestFailsOnBadMovementModel) {
   experiences::DynamicBehavior dynamic_behavior;
   const ActorId id{ActorId::new_uuid()};
   const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> t_curve{
+  const curves::TCurve<transforms::SE3> t_curve{
       curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
   dynamic_behavior.actors.push_back(experiences::Actor{
       .id = id,
@@ -128,7 +127,7 @@ TEST(FactoryTest, TestFailsOnBadActorType) {
   experiences::DynamicBehavior dynamic_behavior;
   const ActorId id{ActorId::new_uuid()};
   const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> t_curve{
+  const curves::TCurve<transforms::SE3> t_curve{
       curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
   dynamic_behavior.actors.push_back(experiences::Actor{
       .id = id,

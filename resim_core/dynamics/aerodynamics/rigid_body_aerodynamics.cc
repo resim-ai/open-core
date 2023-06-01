@@ -10,13 +10,13 @@
 namespace resim::dynamics::aerodynamics {
 
 namespace {
-using transforms::FSE3;
-using Frame = transforms::Frame<FSE3::DIMS>;
-using FramedVector = transforms::FramedVector<FSE3::DIMS>;
-using RigidBodyState = actor::state::RigidBodyState<FSE3>;
+using transforms::SE3;
+using Frame = transforms::Frame<SE3::DIMS>;
+using FramedVector = transforms::FramedVector<SE3::DIMS>;
+using RigidBodyState = actor::state::RigidBodyState<SE3>;
 }  // namespace
 
-AerodynamicElement::AerodynamicElement(FSE3 com_from_cop)
+AerodynamicElement::AerodynamicElement(SE3 com_from_cop)
     : com_from_cop_(std::move(com_from_cop)) {}
 
 FramedVector AerodynamicElement::cop_local_wind(
@@ -62,7 +62,7 @@ FramedVector AerodynamicElement::cop_local_force(
       aerodynamic_state);
 }
 
-typename FSE3::TangentVector AerodynamicElement::com_force(
+typename SE3::TangentVector AerodynamicElement::com_force(
     const RigidBodyState &body_com_state,
     const FramedVector &ref_local_wind,
     const AerodynamicElementState &aerodynamic_state) const {
@@ -74,12 +74,12 @@ typename FSE3::TangentVector AerodynamicElement::com_force(
   // centers of pressure to aerodynamic centers.
   const FramedVector cop_torque =
       FramedVector(Eigen::Vector3d::Zero(), cop_force.frame());
-  const FSE3::TangentVector cop_joint_force =
-      FSE3::tangent_vector_from_parts(cop_torque, cop_force);
+  const SE3::TangentVector cop_joint_force =
+      SE3::tangent_vector_from_parts(cop_torque, cop_force);
   return com_from_cop_.inverse().adjoint().transpose() * cop_joint_force;
 }
 
-const FSE3 &AerodynamicElement::com_from_cop() const { return com_from_cop_; }
+const SE3 &AerodynamicElement::com_from_cop() const { return com_from_cop_; }
 const Frame &AerodynamicElement::com_frame() const {
   return com_from_cop_.into();
 }
@@ -108,7 +108,7 @@ void RigidBodyAerodynamics::append(
   components_.push_back(std::move(component));
 }
 
-typename FSE3::TangentVector RigidBodyAerodynamics::body_pressure_force(
+typename SE3::TangentVector RigidBodyAerodynamics::body_pressure_force(
     const RigidBodyState &body_com_state,
     const FramedVector &ref_local_wind,
     const std::vector<std::reference_wrapper<const AerodynamicElementState>>

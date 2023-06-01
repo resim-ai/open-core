@@ -3,7 +3,6 @@
 #include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/state/rigid_body_state.hh"
 #include "resim_core/time/timestamp.hh"
-#include "resim_core/transforms/framed_group.hh"
 
 namespace resim::actor::state {
 
@@ -13,7 +12,7 @@ struct ObservableState {
   ActorId id;
   bool is_spawned = false;
   time::Timestamp time_of_validity;
-  RigidBodyState<transforms::FSE3> state;
+  RigidBodyState<transforms::SE3> state;
 };
 
 }  // namespace resim::actor::state

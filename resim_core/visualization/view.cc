@@ -9,7 +9,6 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -20,8 +19,6 @@
 namespace resim::visualization {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
@@ -57,18 +54,11 @@ template View &View::operator<< <SE3>(const SE3 &subject);
 
 template View &View::operator<< <SO3>(const SO3 &subject);
 
-template View &View::operator<< <FSE3>(const FSE3 &subject);
-
-template View &View::operator<< <FSO3>(const FSO3 &subject);
-
 template View &View::operator<< <curves::DCurve<SE3>>(
     const curves::DCurve<SE3> &subject);
 
-template View &View::operator<< <curves::DCurve<FSE3>>(
-    const curves::DCurve<FSE3> &subject);
-
-template View &View::operator<< <curves::TCurve<FSE3>>(
-    const curves::TCurve<FSE3> &subject);
+template View &View::operator<< <curves::TCurve<SE3>>(
+    const curves::TCurve<SE3> &subject);
 
 template View &View::operator<< <actor::state::Trajectory>(
     const actor::state::Trajectory &subject);
@@ -145,11 +135,8 @@ void ViewObject<T>::operator<<(const std::string &name) {
 template struct ViewObject<transforms::Frame<3>>;
 template struct ViewObject<transforms::SE3>;
 template struct ViewObject<transforms::SO3>;
-template struct ViewObject<transforms::FSE3>;
-template struct ViewObject<transforms::FSO3>;
 template struct ViewObject<curves::DCurve<transforms::SE3>>;
-template struct ViewObject<curves::DCurve<transforms::FSE3>>;
-template struct ViewObject<curves::TCurve<transforms::FSE3>>;
+template struct ViewObject<curves::TCurve<transforms::SE3>>;
 template struct ViewObject<actor::state::Trajectory>;
 template struct ViewObject<transforms::FramedVector<3>>;
 

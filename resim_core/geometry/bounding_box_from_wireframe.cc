@@ -3,14 +3,24 @@
 #include <Eigen/Dense>
 
 #include "resim_core/assert/assert.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::geometry {
-using transforms::FSE3;
 using transforms::SE3;
-using Frame3 = transforms::Frame<3>;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 using Vec3 = Eigen::Vector3d;
 
 OrientedBox<SE3> bounding_box_from_wireframe(const Wireframe &wireframe) {
+  return bounding_box_from_wireframe(
+      wireframe,
+      Frame::null_frame(),
+      Frame::null_frame());
+}
+
+OrientedBox<SE3> bounding_box_from_wireframe(
+    const Wireframe &wireframe,
+    const Frame &reference_frame,
+    const Frame &box_frame) {
   constexpr auto EMPTY_WIREFRAME_MSG =
       "Bounding box can't be found for empty or size one wireframe!";
   REASSERT(wireframe.points().size() > 1U, EMPTY_WIREFRAME_MSG);
@@ -35,17 +45,9 @@ OrientedBox<SE3> bounding_box_from_wireframe(const Wireframe &wireframe) {
   const Vec3 box_extents = max_vector - min_vector;
   constexpr auto ZERO_EXTENT_MSG = "Wireframe has at least one zero extent!";
   REASSERT((box_extents.array() > 0.).all(), ZERO_EXTENT_MSG);
-  return OrientedBox{SE3{box_translation}, box_extents};
-}
-
-OrientedBox<FSE3> bounding_box_from_wireframe(
-    const Wireframe &wireframe,
-    const Frame3 &reference_frame,
-    const Frame3 &box_frame) {
-  const auto unframed_box = bounding_box_from_wireframe(wireframe);
-  return OrientedBox<FSE3>{
-      FSE3{unframed_box.reference_from_box(), reference_frame, box_frame},
-      unframed_box.extents()};
+  return OrientedBox{
+      SE3{box_translation, reference_frame, box_frame},
+      box_extents};
 }
 
 }  // namespace resim::geometry

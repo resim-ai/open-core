@@ -7,7 +7,7 @@
 #include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/state/observable_state.hh"
 #include "resim_core/assert/assert.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::metrics {
 
@@ -32,7 +32,7 @@ std::optional<double> min_distance(
           return curr_min_distance;
         }
 
-        const double other_distance = transforms::fse3_inverse_distance(
+        const double other_distance = transforms::se3_inverse_distance(
             target_state.state.ref_from_body(),
             other_state.state.ref_from_body());
 

@@ -42,7 +42,6 @@ cc_library(
     hdrs = ["frame.hh"],
     visibility = ["//visibility:public"],
     deps = [
-        ":liegroup",
         "//resim_core/utils:uuid",
     ],
 )
@@ -115,6 +114,7 @@ cc_library(
     name = "liegroup",
     hdrs = ["liegroup.hh"],
     deps = [
+        ":frame",
         "@libeigen//:eigen",
     ],
 )
@@ -190,6 +190,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cross_matrix",
+        ":frame",
         ":liegroup",
         ":liegroup_concepts",
         ":liegroup_exp_diff",
@@ -216,9 +217,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cross_matrix",
+        ":frame",
+        ":framed_vector",
         ":liegroup",
         ":liegroup_concepts",
         ":liegroup_exp_diff",
+        "//resim_core/assert",
         "@libeigen//:eigen",
     ],
 )

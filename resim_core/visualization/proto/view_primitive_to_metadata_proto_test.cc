@@ -6,7 +6,6 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -18,8 +17,6 @@
 namespace resim::visualization {
 
 namespace {
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
@@ -40,11 +37,8 @@ using PayloadTypes = ::testing::Types<
     Frame,
     SE3,
     SO3,
-    FSE3,
-    FSO3,
     curves::DCurve<SE3>,
-    curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>,
+    curves::TCurve<SE3>,
     actor::state::Trajectory>;
 
 TYPED_TEST_SUITE(ViewPrimitiveToMetadataProtoTypedTest, PayloadTypes);
@@ -76,20 +70,11 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestPack) {
         [&](const SO3 &test_so3) {
           EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_SO3);
         },
-        [&](const FSE3 &test_fse3) {
-          EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_FSE3);
-        },
-        [&](const FSO3 &test_fso3) {
-          EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_FSO3);
-        },
         [&](const curves::DCurve<SE3> &test_d_curve_se3) {
           EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_DCURVE_SE3);
         },
-        [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-          EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_DCURVE_FSE3);
-        },
-        [&](const curves::TCurve<FSE3> &test_t_curve) {
-          EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_TCURVE_FSE3);
+        [&](const curves::TCurve<SE3> &test_t_curve) {
+          EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_TCURVE_SE3);
         },
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata_proto.type(), proto::ReSimType::TYPE_TRAJECTORY);
@@ -161,20 +146,11 @@ TYPED_TEST(ViewPrimitiveToMetadataProtoTypedTest, TestListPack) {
         [&](const SO3 &test_so3) {
           EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_SO3);
         },
-        [&](const FSE3 &test_fse3) {
-          EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_FSE3);
-        },
-        [&](const FSO3 &test_fso3) {
-          EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_FSO3);
-        },
         [&](const curves::DCurve<SE3> &test_d_curve_se3) {
           EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_DCURVE_SE3);
         },
-        [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-          EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_DCURVE_FSE3);
-        },
-        [&](const curves::TCurve<FSE3> &test_t_curve) {
-          EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_TCURVE_FSE3);
+        [&](const curves::TCurve<SE3> &test_t_curve) {
+          EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_TCURVE_SE3);
         },
         [&](const actor::state::Trajectory &test_trajectory) {
           EXPECT_EQ(metadata.at(i).type(), proto::ReSimType::TYPE_TRAJECTORY);

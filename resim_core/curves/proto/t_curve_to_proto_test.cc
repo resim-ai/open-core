@@ -6,26 +6,18 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/proto/t_curve.pb.h"
-#include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
-#include "resim_core/curves/proto/t_curve_fso3_to_proto.hh"
 #include "resim_core/curves/proto/t_curve_se3_to_proto.hh"
 #include "resim_core/curves/proto/t_curve_so3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetl_fse3_to_proto.hh"
-#include "resim_core/curves/proto/two_jetl_fso3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_se3_to_proto.hh"
 #include "resim_core/curves/proto/two_jetl_so3_to_proto.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/t_curve_test_helpers.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
 namespace resim::curves::proto {
 using TCurveSE3 = curves::TCurve<transforms::SE3>;
 using TCurveSO3 = curves::TCurve<transforms::SO3>;
-using TCurveFSE3 = curves::TCurve<transforms::FSE3>;
-using TCurveFSO3 = curves::TCurve<transforms::FSO3>;
 
 // An explicit seed for deterministic generation of test objects.
 constexpr unsigned int SEED = 89;
@@ -53,9 +45,7 @@ class TCurveToProtoTests : public ::testing::Test {
 
 using TCurveTypePairs = ::testing::Types<
     std::pair<transforms::SE3, TCurve_SE3>,
-    std::pair<transforms::SO3, TCurve_SO3>,
-    std::pair<transforms::FSO3, TCurve_FSO3>,
-    std::pair<transforms::FSE3, TCurve_FSE3>>;
+    std::pair<transforms::SO3, TCurve_SO3>>;
 
 TYPED_TEST_SUITE(TCurveToProtoTests, TCurveTypePairs);
 

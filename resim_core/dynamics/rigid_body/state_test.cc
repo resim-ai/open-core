@@ -5,19 +5,22 @@
 #include <random>
 
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/frame.hh"
 
 namespace resim::dynamics::rigid_body {
 
-using transforms::FSE3;
-using TangentVector = FSE3::TangentVector;
+using transforms::SE3;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
+using TangentVector = SE3::TangentVector;
 
 // Helper to get a randomly generated State.
 template <typename RNG>
 State random_state(RNG &&rng) {
   return State{
-      .reference_from_body =
-          FSE3::exp(testing::random_vector<TangentVector>(rng)),
+      .reference_from_body = SE3::exp(
+          testing::random_vector<TangentVector>(rng),
+          Frame::new_frame(),
+          Frame::new_frame()),
       .d_reference_from_body = testing::random_vector<TangentVector>(rng),
   };
 }
@@ -43,12 +46,12 @@ TEST(StateTest, TestAdd) {
     const State sum{state + delta};
 
     // VERIFICATION
-    const FSE3 prev_from_next{
+    const SE3 prev_from_next{
         state.reference_from_body.inverse() * sum.reference_from_body};
 
-    EXPECT_TRUE((prev_from_next.log() - delta.head<FSE3::DOF>()).isZero());
+    EXPECT_TRUE((prev_from_next.log() - delta.head<SE3::DOF>()).isZero());
     EXPECT_TRUE((sum.d_reference_from_body - state.d_reference_from_body)
-                    .isApprox(delta.tail<FSE3::DOF>()));
+                    .isApprox(delta.tail<SE3::DOF>()));
 
     EXPECT_EQ(state.reference_from_body.into(), sum.reference_from_body.into());
     EXPECT_EQ(state.reference_from_body.from(), sum.reference_from_body.from());
@@ -90,8 +93,9 @@ TEST(StateTest, TestSubtract) {
     State state_b{random_state(rng)};
 
     // These have to match
-    state_b.reference_from_body.set_into(state_a.reference_from_body.into());
-    state_b.reference_from_body.set_from(state_a.reference_from_body.from());
+    state_b.reference_from_body.set_frames(
+        state_a.reference_from_body.into(),
+        state_a.reference_from_body.from());
 
     // ACTION
     const State should_match_b{(state_b - state_a) + state_a};

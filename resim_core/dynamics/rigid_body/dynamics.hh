@@ -5,7 +5,7 @@
 #include "resim_core/dynamics/dynamics.hh"
 #include "resim_core/dynamics/rigid_body/inertia.hh"
 #include "resim_core/dynamics/rigid_body/state.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
 
@@ -14,7 +14,7 @@ namespace resim::dynamics::rigid_body {
 // (6-DoF combined torque and linear force) in body coordinates as the control
 // vector.
 //
-class Dynamics : public dynamics::Dynamics<State, transforms::FSE3::DOF> {
+class Dynamics : public dynamics::Dynamics<State, transforms::SE3::DOF> {
  public:
   // Constructor.
   // @param[in] inertia - The 6x6 inertia matrix for this rigid body

@@ -6,7 +6,7 @@
 
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/assert/assert.hh"
-#include "resim_core/curves/proto/t_curve_fse3_to_proto.hh"
+#include "resim_core/curves/proto/t_curve_se3_to_proto.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/t_curve_test_helpers.hh"
 #include "resim_core/curves/two_jet.hh"
@@ -17,9 +17,9 @@
 namespace resim::actor::state {
 
 namespace {
-using FSE3 = transforms::FSE3;
-using TCurve = curves::TCurve<FSE3>;
-using Frame = transforms::Frame<FSE3::DIMS>;
+using SE3 = transforms::SE3;
+using TCurve = curves::TCurve<SE3>;
+using Frame = transforms::Frame<SE3::DIMS>;
 // An explicit seed for deterministic generation of test objects.
 constexpr unsigned int SEED = 347;
 }  // namespace
@@ -30,9 +30,9 @@ class TrajectoryToProtoTests : public ::testing::Test {
   inline static const time::Timestamp ZERO_TIME;
 
   void SetUp() override {
-    t_curve_helper_ = curves::TCurveTestHelper<FSE3>(SEED);
+    t_curve_helper_ = curves::TCurveTestHelper<SE3>(SEED);
   }
-  curves::TCurveTestHelper<FSE3> &t_curve_helper() { return t_curve_helper_; }
+  curves::TCurveTestHelper<SE3> &t_curve_helper() { return t_curve_helper_; }
   std::mt19937 &rng() { return rng_; }
 
   TCurve test_curve_default() {
@@ -46,7 +46,7 @@ class TrajectoryToProtoTests : public ::testing::Test {
   }
 
  private:
-  curves::TCurveTestHelper<FSE3> t_curve_helper_;
+  curves::TCurveTestHelper<SE3> t_curve_helper_;
   std::mt19937 rng_{SEED};
 };
 
@@ -74,8 +74,8 @@ TEST_F(TrajectoryToProtoTests, TestPack) {
   // Ensure that underlying TCurves match
   for (unsigned int i = 0; i < test_points.size(); ++i) {
     EXPECT_DOUBLE_EQ(retrieved_points[i].time, DEFAULT_TIMES.at(i));
-    const curves::TwoJetL<FSE3> &retrieved_two_jet = retrieved_points[i].point;
-    const curves::TwoJetL<FSE3> &original_two_jet = test_points[i].point;
+    const curves::TwoJetL<SE3> &retrieved_two_jet = retrieved_points[i].point;
+    const curves::TwoJetL<SE3> &original_two_jet = test_points[i].point;
     EXPECT_TRUE(original_two_jet.is_approx(retrieved_two_jet));
   }
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/uuid.hh"
 
 namespace resim::experiences {
@@ -9,7 +9,7 @@ namespace resim::experiences {
 // position, within a given tolerance.
 struct LocationCondition {
   UUID triggering_actor;
-  transforms::FSE3 target_position;
+  transforms::SE3 target_position;
   double tolerance_m{};  // default to 0m tolerance
 };
 

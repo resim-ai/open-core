@@ -5,15 +5,15 @@
 
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::curves::testing {
 
 using Frame = transforms::Frame<3>;
-using transforms::FSE3;
-using TangentVector = FSE3::TangentVector;
+using transforms::SE3;
+using TangentVector = SE3::TangentVector;
 using Vec3 = Eigen::Vector3d;
-using TwoJetL = curves::TwoJetL<FSE3>;
+using TwoJetL = curves::TwoJetL<SE3>;
 
 // Sample the curve along its length to verify that it has the right translation
 // and orientation along the length.
@@ -24,7 +24,7 @@ TEST(TestHelpersTest, TestMakeCircleCurve) {
   const Frame from{Frame::new_frame()};
 
   // ACTION
-  const curves::TCurve<FSE3> curve{make_circle_curve(into, from)};
+  const curves::TCurve<SE3> curve{make_circle_curve(into, from)};
 
   // VERIFICATION
   EXPECT_EQ(curve.start_time(), 0.0);
