@@ -54,6 +54,7 @@ TYPED_TEST(LiegroupToProtoTests, TestPackWithNullFrames) {
   }
 }
 
+
 // NOLINTEND(readability-function-cognitive-complexity)
 TYPED_TEST(LiegroupToProtoTests, TestPackWithFrames) {
   // SETUP

@@ -13,14 +13,13 @@
 #include "resim_core/testing/random_matrix.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::actor::state {
 
 namespace {
-using FSE3 = transforms::FSE3;
-using Frame = transforms::Frame<FSE3::DIMS>;
+using SE3 = transforms::SE3;
+using Frame = transforms::Frame<SE3::DIMS>;
 }  // namespace
 
 class TrajectoryTests : public ::testing::Test {
@@ -73,26 +72,26 @@ class TrajectoryTests : public ::testing::Test {
   }
 
   // Generate a random TangentVector for building LieGroups and derivatives.
-  FSE3::TangentVector test_vector() {
-    return testing::random_vector<FSE3::TangentVector>(rng_);
+  SE3::TangentVector test_vector() {
+    return testing::random_vector<SE3::TangentVector>(rng_);
   }
 
   // Generate a random TwoJet given reference and body frames.
-  curves::TwoJetR<FSE3> test_two_jet(const Frame &ref, const Frame &bod) {
-    return curves::TwoJetR<FSE3>(
-        FSE3::exp(test_vector(), ref, bod),
+  curves::TwoJetR<SE3> test_two_jet(const Frame &ref, const Frame &bod) {
+    return curves::TwoJetR<SE3>(
+        SE3::exp(test_vector(), ref, bod),
         test_vector(),
         test_vector());
   }
 
   // Generate a random TwoJet with default frames.
-  curves::TwoJetR<FSE3> test_two_jet() {
+  curves::TwoJetR<SE3> test_two_jet() {
     return test_two_jet(REF_FRAME, BOD_FRAME);
   }
 
   // Generate a random RigidBodyState with default frames.
-  RigidBodyState<FSE3> test_state() {
-    return RigidBodyState<FSE3>(test_two_jet());
+  RigidBodyState<SE3> test_state() {
+    return RigidBodyState<SE3>(test_two_jet());
   }
 
   // Generate a test trajectory from three control points at the default
@@ -112,7 +111,7 @@ class TrajectoryTests : public ::testing::Test {
 TEST_F(TrajectoryTests, TCurveConstructor) {
   // SETUP
   Trajectory standard_test_trajectory = this->test_trajectory();
-  const curves::TCurve<FSE3> &underlying_curve =
+  const curves::TCurve<SE3> &underlying_curve =
       standard_test_trajectory.curve();
   // We assume exactly three control points in this test so let's check.
   ASSERT_EQ(underlying_curve.control_pts().size(), NUM_CTRL);
@@ -250,12 +249,12 @@ TEST_F(TrajectoryDeathTests, InvalidFrames) {
   // Confirm that introducing an imposter frame generates the expected errors.
   EXPECT_THROW(
       {
-        test_trajectory.append({next_ts, RigidBodyState<FSE3>(next_point_a)});
+        test_trajectory.append({next_ts, RigidBodyState<SE3>(next_point_a)});
       },
       AssertException);
   EXPECT_THROW(
       {
-        test_trajectory.append({next_ts, RigidBodyState<FSE3>(next_point_b)});
+        test_trajectory.append({next_ts, RigidBodyState<SE3>(next_point_b)});
       },
       AssertException);
 }

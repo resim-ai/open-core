@@ -19,7 +19,6 @@
 #include "resim_core/simulator/standard_frames.hh"
 #include "resim_core/simulator/standard_topics.hh"
 #include "resim_core/time/timestamp.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/inout.hh"
@@ -31,7 +30,7 @@ namespace resim::actor {
 
 namespace {
 using testing::MockLogger;
-using Frame = transforms::Frame<transforms::FSE3::DIMS>;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 
 // Helper to verify that all of the test states are published into the
 // channel_to_message_map with the given timestamp.

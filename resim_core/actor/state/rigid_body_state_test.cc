@@ -7,7 +7,6 @@
 
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -30,7 +29,6 @@ curves::TwoJetR<Group> random_two_jet(Rng &&rng) {
       testing::random_vector<typename Group::TangentVector>(
           std::forward<Rng>(rng))};
 }
-
 }  // namespace
 
 template <typename T>
@@ -40,18 +38,8 @@ class RigidBodyStateTests : public ::testing::Test {
   std::mt19937 rng_{SEED};
 };
 
-using RigidTransformTypes = ::testing::Types<transforms::FSE3, transforms::SE3>;
+using RigidTransformTypes = ::testing::Types<transforms::SE3>;
 TYPED_TEST_SUITE(RigidBodyStateTests, RigidTransformTypes);
-
-template <typename T>
-class UnframedRigidBodyStateTests : public RigidBodyStateTests<T> {};
-using UnframedTypes = ::testing::Types<transforms::SE3>;
-TYPED_TEST_SUITE(UnframedRigidBodyStateTests, UnframedTypes);
-
-template <typename T>
-class FramedRigidBodyStateTests : public RigidBodyStateTests<T> {};
-using FramedTypes = ::testing::Types<transforms::FSE3>;
-TYPED_TEST_SUITE(FramedRigidBodyStateTests, FramedTypes);
 
 TYPED_TEST(RigidBodyStateTests, TestConstructionFromGroup) {
   // SETUP / ACTION
@@ -97,12 +85,25 @@ TYPED_TEST(RigidBodyStateTests, TestTwoJetConstruction) {
   EXPECT_TRUE(rigid_body_state.ref_from_body_two_jet().is_approx(test_two_jet));
 }
 
-TYPED_TEST(UnframedRigidBodyStateTests, TestIdentity) {
+TYPED_TEST(RigidBodyStateTests, TestIdentityUnframed) {
   const auto identity_state = RigidBodyState<TypeParam>::identity();
 
   // Twojet is identity
   EXPECT_TRUE(identity_state.ref_from_body_two_jet().is_approx(
       curves::TwoJetR<TypeParam>::identity()));
+}
+
+TYPED_TEST(RigidBodyStateTests, TestIdentityFramed) {
+  const auto FRAME_A = transforms::Frame<TypeParam::DIMS>::new_frame();
+  const auto FRAME_B = transforms::Frame<TypeParam::DIMS>::new_frame();
+  const auto identity_state =
+      RigidBodyState<TypeParam>::identity(FRAME_A, FRAME_B);
+  EXPECT_EQ(identity_state.ref_from_body().into(), FRAME_A);
+  EXPECT_EQ(identity_state.ref_from_body().from(), FRAME_B);
+
+  // Twojet is identity
+  EXPECT_TRUE(identity_state.ref_from_body_two_jet().is_approx(
+      curves::TwoJetR<TypeParam>::identity(FRAME_A, FRAME_B)));
 }
 
 TYPED_TEST(RigidBodyStateTests, TestBodyGetters) {
@@ -172,35 +173,20 @@ TYPED_TEST(RigidBodyStateTests, TestSetters) {
       rigid_body_state.body_angular_acceleration_radpss());
 }
 
-TYPED_TEST(UnframedRigidBodyStateTests, OperatorTest) {
-  const curves::TwoJetR<TypeParam> test_two_jet_a{
-      random_two_jet<TypeParam>(this->rng_)};
-  const curves::TwoJetR<TypeParam> test_two_jet_b{
-      random_two_jet<TypeParam>(this->rng_)};
-  const RigidBodyState<TypeParam> state_a{test_two_jet_a};
-  const RigidBodyState<TypeParam> state_b{test_two_jet_b};
-
-  const auto state_c = state_a * state_b;
-
-  EXPECT_TRUE(state_c.ref_from_body_two_jet().is_approx(
-      state_a.ref_from_body_two_jet() * state_b.ref_from_body_two_jet()));
-}
-
-TYPED_TEST(FramedRigidBodyStateTests, OperatorTest) {
+TYPED_TEST(RigidBodyStateTests, OperatorTest) {
   const auto FRAME_A = transforms::Frame<TypeParam::DIMS>::new_frame();
   const auto FRAME_B = transforms::Frame<TypeParam::DIMS>::new_frame();
   const auto FRAME_C = transforms::Frame<TypeParam::DIMS>::new_frame();
+
   curves::TwoJetR<TypeParam> test_two_jet_a{
       random_two_jet<TypeParam>(this->rng_)};
   auto temp_group_a = random_group_member<TypeParam>(this->rng_);
-  temp_group_a.set_into(FRAME_A);
-  temp_group_a.set_from(FRAME_B);
+  temp_group_a.set_frames(FRAME_A, FRAME_B);
   test_two_jet_a.set_ref_from_frame(temp_group_a);
   curves::TwoJetR<TypeParam> test_two_jet_b{
       random_two_jet<TypeParam>(this->rng_)};
   auto temp_group_b = random_group_member<TypeParam>(this->rng_);
-  temp_group_b.set_into(FRAME_B);
-  temp_group_b.set_from(FRAME_C);
+  temp_group_b.set_frames(FRAME_B, FRAME_C);
   test_two_jet_b.set_ref_from_frame(temp_group_b);
   const RigidBodyState<TypeParam> state_a{test_two_jet_a};
   const RigidBodyState<TypeParam> state_b{test_two_jet_b};
@@ -214,39 +200,19 @@ TYPED_TEST(FramedRigidBodyStateTests, OperatorTest) {
   EXPECT_NE(state_c.ref_from_body().from(), FRAME_B);
 }
 
-TYPED_TEST(UnframedRigidBodyStateTests, TestInverseTimes) {
-  // SETUP
-  const curves::TwoJetR<TypeParam> test_two_jet_a{
-      random_two_jet<TypeParam>(this->rng_)};
-  const curves::TwoJetR<TypeParam> test_two_jet_b{
-      random_two_jet<TypeParam>(this->rng_)};
-  const curves::TwoJetR<TypeParam> test_two_jet{
-      random_two_jet<TypeParam>(this->rng_)};
-  const RigidBodyState<TypeParam> state_a{test_two_jet_a};
-  const RigidBodyState<TypeParam> state_b{test_two_jet_b};
-
-  const auto state_c = state_a.inverse_times(state_b);
-
-  // ACTION / VERIFICATION
-  EXPECT_TRUE(state_c.ref_from_body_two_jet().is_approx(
-      test_two_jet_a.inverse() * test_two_jet_b));
-}
-
-TYPED_TEST(FramedRigidBodyStateTests, InverseTimes) {
+TYPED_TEST(RigidBodyStateTests, InverseTimes) {
   const auto FRAME_A = transforms::Frame<TypeParam::DIMS>::new_frame();
   const auto FRAME_B = transforms::Frame<TypeParam::DIMS>::new_frame();
   const auto FRAME_C = transforms::Frame<TypeParam::DIMS>::new_frame();
   curves::TwoJetR<TypeParam> test_two_jet_a{
       random_two_jet<TypeParam>(this->rng_)};
   auto temp_group_a = random_group_member<TypeParam>(this->rng_);
-  temp_group_a.set_into(FRAME_A);
-  temp_group_a.set_from(FRAME_B);
+  temp_group_a.set_frames(FRAME_A, FRAME_B);
   test_two_jet_a.set_ref_from_frame(temp_group_a);
   curves::TwoJetR<TypeParam> test_two_jet_b{
       random_two_jet<TypeParam>(this->rng_)};
   auto temp_group_b = random_group_member<TypeParam>(this->rng_);
-  temp_group_b.set_into(FRAME_A);
-  temp_group_b.set_from(FRAME_C);
+  temp_group_b.set_frames(FRAME_A, FRAME_C);
   test_two_jet_b.set_ref_from_frame(temp_group_b);
   const RigidBodyState<TypeParam> state_a{test_two_jet_a};
   const RigidBodyState<TypeParam> state_b{test_two_jet_b};
@@ -259,15 +225,6 @@ TYPED_TEST(FramedRigidBodyStateTests, InverseTimes) {
   EXPECT_EQ(state_c.ref_from_body().into(), FRAME_B);
   EXPECT_EQ(state_c.ref_from_body().from(), FRAME_C);
   EXPECT_NE(state_c.ref_from_body().from(), FRAME_A);
-}
-
-TYPED_TEST(FramedRigidBodyStateTests, IdentityFrames) {
-  const auto FRAME_A = transforms::Frame<TypeParam::DIMS>::new_frame();
-  const auto FRAME_B = transforms::Frame<TypeParam::DIMS>::new_frame();
-  const RigidBodyState<TypeParam> framed_state =
-      RigidBodyState<TypeParam>::identity(FRAME_A, FRAME_B);
-  EXPECT_EQ(framed_state.ref_from_body().into(), FRAME_A);
-  EXPECT_EQ(framed_state.ref_from_body().from(), FRAME_B);
 }
 
 }  // namespace resim::actor::state

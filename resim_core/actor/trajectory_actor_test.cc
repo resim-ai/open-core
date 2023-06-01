@@ -17,12 +17,13 @@
 #include "resim_core/simulator/standard_frames.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::actor {
 
 namespace {
 
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 constexpr double CHASSIS_RADIUS_M = 1.;
 constexpr double ROTOR_LATERAL_OFFSET_M = 0.3;
 constexpr double ROTOR_VERTICAL_OFFSET_M = 0.3;
@@ -41,8 +42,8 @@ const geometry::DroneExtents extents{
 
 TEST(TrajectoryActorTest, TestConstruction) {
   // SETUP
-  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> curve{
+  const Frame actor_frame{Frame::new_frame()};
+  const curves::TCurve<transforms::SE3> curve{
       curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
 
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
@@ -59,8 +60,8 @@ TEST(TrajectoryActorTest, TestConstruction) {
 
 TEST(TrajectoryActorTest, TestSimulateForwardBeforeSpawn) {
   // SETUP
-  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> curve{
+  const Frame actor_frame{Frame::new_frame()};
+  const curves::TCurve<transforms::SE3> curve{
       curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
 
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
@@ -84,8 +85,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardBeforeSpawn) {
 
 TEST(TrajectoryActorTest, TestSimulateForwardAfterSpawn) {
   // SETUP
-  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> curve{
+  const Frame actor_frame{Frame::new_frame()};
+  const curves::TCurve<transforms::SE3> curve{
       curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
 
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
@@ -111,8 +112,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardAfterSpawn) {
 
 TEST(TrajectoryActorTest, TestSimulateForwardAfterDespawn) {
   // SETUP
-  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::FSE3> curve{
+  const Frame actor_frame{Frame::new_frame()};
+  const curves::TCurve<transforms::SE3> curve{
       curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
 
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
@@ -136,8 +137,8 @@ TEST(TrajectoryActorTest, TestSimulateForwardAfterDespawn) {
 
 TEST(TrajectoryActorTest, TestGeometry) {
   // SETUP
-  const transforms::Frame<3> actor_frame{transforms::Frame<3>::new_frame()};
-  curves::TCurve<transforms::FSE3> curve{
+  const Frame actor_frame{Frame::new_frame()};
+  curves::TCurve<transforms::SE3> curve{
       curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
 
   constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};

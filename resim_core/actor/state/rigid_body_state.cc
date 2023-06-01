@@ -3,7 +3,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::actor::state {
@@ -158,15 +157,12 @@ void RigidBodyState<Group>::set_body_angular_acceleration_radpss(
   ref_from_body_.set_d2_ref_from_frame(d2_ref_from_frame);
 }
 
-template class RigidBodyState<transforms::FSE3>;
-template RigidBodyState<transforms::FSE3>
-RigidBodyState<transforms::FSE3>::identity();
-template RigidBodyState<transforms::FSE3>
-RigidBodyState<transforms::FSE3>::identity(
-    const transforms::Frame<transforms::FSE3::DIMS> &,
-    const transforms::Frame<transforms::FSE3::DIMS> &);
 template class RigidBodyState<transforms::SE3>;
 template RigidBodyState<transforms::SE3>
 RigidBodyState<transforms::SE3>::identity();
+template RigidBodyState<transforms::SE3>
+RigidBodyState<transforms::SE3>::identity(
+    const transforms::Frame<transforms::SE3::DIMS> &,
+    const transforms::Frame<transforms::SE3::DIMS> &);
 
 }  // namespace resim::actor::state

@@ -6,10 +6,11 @@
 #include "resim_core/actor/geometry.hh"
 #include "resim_core/assert/assert.hh"
 #include "resim_core/transforms/liegroup_test_helpers.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::actor {
 namespace {
-using Frame = transforms::Frame<transforms::FSE3::DIMS>;
+using Frame = transforms::Frame<transforms::SE3::DIMS>;
 }
 TestActor::TestActor(const ActorId id) : Actor{id} {}
 
@@ -44,23 +45,20 @@ time::Timestamp TestActor::current_time() const {
 
 std::vector<std::pair<state::ObservableState, Geometry>>
 get_test_actor_components(const time::Timestamp time) {
-  std::vector<transforms::FSE3> test_poses{
-      transforms::make_test_group_elements<transforms::FSE3>()};
+  std::vector<transforms::SE3> test_poses{
+      transforms::make_test_group_elements<transforms::SE3>()};
 
   std::vector<std::pair<state::ObservableState, Geometry>> test_components;
   test_components.reserve(test_poses.size());
   for (auto &pose : test_poses) {
     // Make sure the pose is relative to scene
-    pose = transforms::FSE3{
-        static_cast<const transforms::SE3 &>(pose),
-        simulator::SCENE_FRAME,
-        Frame::new_frame()};
+    pose.set_frames(simulator::SCENE_FRAME, Frame::new_frame());
     test_components.emplace_back(
         state::ObservableState{
             .id = UUID::new_uuid(),
             .is_spawned = true,
             .time_of_validity = time,
-            .state = state::RigidBodyState<transforms::FSE3>{pose},
+            .state = state::RigidBodyState<transforms::SE3>{pose},
         },
         Geometry{
             .frame = pose.from(),
@@ -73,22 +71,19 @@ get_test_actor_components(const time::Timestamp time) {
 
 std::vector<state::ObservableState> get_test_actor_states(
     const time::Timestamp time) {
-  std::vector<transforms::FSE3> test_poses{
-      transforms::make_test_group_elements<transforms::FSE3>()};
+  std::vector<transforms::SE3> test_poses{
+      transforms::make_test_group_elements<transforms::SE3>()};
 
   std::vector<state::ObservableState> test_states;
   test_states.reserve(test_poses.size());
   for (auto &pose : test_poses) {
     // Make sure the pose is relative to scene
-    pose = transforms::FSE3{
-        static_cast<const transforms::SE3 &>(pose),
-        simulator::SCENE_FRAME,
-        Frame::new_frame()};
+    pose.set_frames(simulator::SCENE_FRAME, Frame::new_frame());
     test_states.push_back(state::ObservableState{
         .id = UUID::new_uuid(),
         .is_spawned = true,
         .time_of_validity = time,
-        .state = state::RigidBodyState<transforms::FSE3>{pose},
+        .state = state::RigidBodyState<transforms::SE3>{pose},
     });
   }
 

@@ -75,10 +75,9 @@ class RigidBodyState {
   // Compose this RigidBodState with another.
   // Composition behaves very similarly to LieGroup composition. It is
   // non-commutative and inner-frames must match for a valid composition.
-  // This is enforced if a FramedGroup is used, e.g. RigidBodyState<FSE3>.
   // An example use might be:
-  //    RigidBodyState<FSE3> global_from_robot;
-  //    RigidBodyState<FSE3> robot_from_sensor;
+  //    RigidBodyState<FE3> global_from_robot;
+  //    RigidBodyState<SE3> robot_from_sensor;
   // And we would like to know the state of the sensor with reference to the
   // global frame. In this case we would do:
   // auto global_from_sensor =
@@ -89,17 +88,17 @@ class RigidBodyState {
   // Please note that - by convention - RigidBodyState objects keep the
   // reference frame on the left and the body frame on the right. Therefore,
   // inverting it would create an 'unconventional' object with the
-  // body frame on the left. However A valid case would be when you want the
+  // body frame on the left. However, a valid case would be when you want the
   // body frame of this state to be the reference frame for another.
   // For example, say we have two robots with states:
-  //    RigidBodyState<FSE3> global_from_robot_a;
-  //    RigidBodyState<FSE3> global_from_robot_b;
+  //    RigidBodyState<SE3> global_from_robot_a;
+  //    RigidBodyState<SE3> global_from_robot_b;
   // And we would like to understand robot_b's state from robot_a's perspective,
   // In other words we want robot_b's body state with robot_a's body state as
   // the reference frame. In this case we would do:
   // auto robot_a_from_robot_b =
   //    global_from_robot_a.inverse_times(global_from_robot_b);
-  // Reminder, if you are using the FSE3 group, then the frames will be checked
+  // Reminder, if you are using the SE3 group, then the frames will be checked
   // and invalid compositions will generate errors.
   RigidBodyState<Group> inverse_times(const RigidBodyState<Group> &other) const;
 

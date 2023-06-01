@@ -9,7 +9,6 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/experiences/actor.hh"
 #include "resim_core/experiences/storyboard.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/utils/match.hh"
 
 namespace resim::actor {
