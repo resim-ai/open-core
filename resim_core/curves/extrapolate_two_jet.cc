@@ -1,7 +1,6 @@
 
 #include "resim_core/curves/extrapolate_two_jet.hh"
 
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -35,8 +34,8 @@ TwoJetL<Group> extrapolate_two_jet_impl(
 // without any arguments. In this case, we can use the extrapolate two jet
 // function and default to the pre-existing into frame.
 template <transforms::LieGroupType Group>
-TwoJetL<transforms::FramedGroup<Group>> extrapolate_two_jet_impl(
-    const TwoJetL<transforms::FramedGroup<Group>> &two_jet,
+TwoJetL<Group> extrapolate_two_jet_impl(
+    const TwoJetL<Group> &two_jet,
     double dt) {
   return extrapolate_two_jet(two_jet, dt, two_jet.frame_from_ref().into());
 }

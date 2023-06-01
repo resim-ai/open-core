@@ -6,8 +6,6 @@
 #include "resim_core/curves/t_curve_test_helpers.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -185,24 +183,22 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
                  .make_test_two_jet()});
       },
       AssertException);
-  if constexpr (transforms::FramedGroupType<TypeParam>) {
-    // Make a reference frame reversed control point.
-    TwoJetL<TypeParam> last_point = curve_a.control_pts().back().point;
-    TypeParam last_frame_from_ref = last_point.frame_from_ref();
-    typename TCurveTests<TypeParam>::Frame last_from =
-        last_frame_from_ref.from();
-    last_frame_from_ref.set_from(last_frame_from_ref.into());
-    last_point.set_frame_from_ref(last_frame_from_ref);
-    // Try to add the point to the curve.
-    EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
+  // Make a reference frame reversed control point.
+  TwoJetL<TypeParam> last_point = curve_a.control_pts().back().point;
+  TypeParam last_frame_from_ref = last_point.frame_from_ref();
+  typename TCurveTests<TypeParam>::Frame last_from = last_frame_from_ref.from();
+  last_frame_from_ref.set_frames(
+      last_frame_from_ref.into(),
+      last_frame_from_ref.into());
+  last_point.set_frame_from_ref(last_frame_from_ref);
+  // Try to add the point to the curve.
+  EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
 
-    // Make a point frame reversed control point.
-    last_frame_from_ref.set_from(last_from);
-    last_frame_from_ref.set_into(last_from);
-    last_point.set_frame_from_ref(last_frame_from_ref);
-    // Try to add the point to the curve.
-    EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
-  }
+  // Make a point frame reversed control point.
+  last_frame_from_ref.set_frames(last_from, last_from);
+  last_point.set_frame_from_ref(last_frame_from_ref);
+  // Try to add the point to the curve.
+  EXPECT_THROW({ curve_a.append({HI_TIME, last_point}); }, AssertException);
   // Try querying and empty curve
   TCurve<TypeParam> empty_curve;
   EXPECT_THROW(
@@ -223,23 +219,21 @@ TYPED_TEST(TCurveTests, DeathTestsForChecks) {
         (void)bad_point;  // Avoid unused variable errors.
       },
       AssertException);
-  if constexpr (transforms::FramedGroupType<TypeParam>) {
-    // Empty point and reference frame
-    EXPECT_THROW(
-        {
-          const typename TCurveTests<TypeParam>::Frame bad_frame =
-              empty_curve.point_frame();
-          (void)bad_frame;  // Avoid unused variable errors.
-        },
-        AssertException);
-    EXPECT_THROW(
-        {
-          const typename TCurveTests<TypeParam>::Frame bad_frame =
-              empty_curve.reference_frame();
-          (void)bad_frame;  // Avoid unused variable errors.
-        },
-        AssertException);
-  }
+  // Empty point and reference frame
+  EXPECT_THROW(
+      {
+        const typename TCurveTests<TypeParam>::Frame bad_frame =
+            empty_curve.point_frame();
+        (void)bad_frame;  // Avoid unused variable errors.
+      },
+      AssertException);
+  EXPECT_THROW(
+      {
+        const typename TCurveTests<TypeParam>::Frame bad_frame =
+            empty_curve.reference_frame();
+        (void)bad_frame;  // Avoid unused variable errors.
+      },
+      AssertException);
   // Try querying a curve below its time range.
   EXPECT_THROW(
       {

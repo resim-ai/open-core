@@ -2,7 +2,6 @@
 
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 
 namespace resim::curves {

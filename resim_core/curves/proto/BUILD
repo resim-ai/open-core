@@ -6,7 +6,6 @@ proto_library(
     srcs = ["d_curve.proto"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim_core/transforms/proto:fse3_proto",
         "//resim_core/transforms/proto:se3_proto",
     ],
 )
@@ -102,7 +101,6 @@ cc_library(
         ":two_jet_proto_cc",
         ":two_jet_to_proto",
         "//resim_core/curves:two_jet",
-        "//resim_core/transforms:framed_group",
     ],
 )
 
@@ -115,7 +113,6 @@ cc_library(
         ":two_jet_proto_cc",
         ":two_jet_to_proto",
         "//resim_core/curves:two_jet",
-        "//resim_core/transforms:framed_group",
     ],
 )
 
