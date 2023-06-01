@@ -71,7 +71,7 @@ TYPED_TEST(TwoJetCommonTests, InverseRoundTrip) {
 TYPED_TEST(UnframedTwoJetCommonTests, Associativity) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     TypeParam a_from_b = TestFixture::tj_helper().make_test_two_jet();
-    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet();
+    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet().inverse();
     TypeParam c_from_d = TestFixture::tj_helper().make_test_two_jet();
     TypeParam a_from_d_0 = (a_from_b * b_from_c) * c_from_d;
     TypeParam a_from_d_1 = a_from_b * (b_from_c * c_from_d);
@@ -82,7 +82,7 @@ TYPED_TEST(UnframedTwoJetCommonTests, Associativity) {
 TYPED_TEST(UnframedTwoJetCommonTests, Composition) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     TypeParam a_from_b = TestFixture::tj_helper().make_test_two_jet();
-    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet();
+    TypeParam b_from_c = TestFixture::tj_helper().make_test_two_jet().inverse();
     TypeParam a_from_c = a_from_b * b_from_c;
 
     EXPECT_FALSE(a_from_c.is_approx(a_from_b));
@@ -124,6 +124,10 @@ TYPED_TEST(UnframedTwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
   for (const TwoJetL<TypeParam> &test_tj : test_elements) {
     TwoJetL<TypeParam> id_tj = TwoJetL<TypeParam>::identity();
     TwoJetL<TypeParam> expected_id_tj = test_tj.inverse() * test_tj;
+    TypeParam id_frame_from_ref = expected_id_tj.frame_from_ref();
+    id_frame_from_ref.set_unframed();
+    expected_id_tj.set_frame_from_ref(id_frame_from_ref);
+
     constexpr double TOLERANCE = 1e-9;
     EXPECT_TRUE(
         expected_id_tj.frame_from_ref().is_approx(id_tj.frame_from_ref()));
@@ -135,7 +139,8 @@ TYPED_TEST(UnframedTwoJetLTests, CompositionByInverseIsIdentityAndZeros) {
 TYPED_TEST(UnframedTwoJetLTests, NumericalDerivativesTest) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     TwoJetL<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
-    TwoJetL<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
+    TwoJetL<TypeParam> b_from_c =
+        TestFixture::tj_helper().make_test_two_jet().inverse();
     TwoJetL<TypeParam> a_from_c = a_from_b * b_from_c;
 
     constexpr double h = 1e-8;
@@ -166,7 +171,8 @@ TYPED_TEST(TwoJetLTests, ConversionRoundTrip) {
 }
 
 TYPED_TEST(UnframedTwoJetLTests, ConversionAssociativity) {
-  TwoJetL<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
+  TwoJetL<TypeParam> a_from_b =
+      TestFixture::tj_helper().make_test_two_jet().inverse();
   TwoJetL<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
   TwoJetR<TypeParam> b_from_a = a_from_b.right_two_jet();
   TwoJetR<TypeParam> c_from_b = b_from_c.right_two_jet();
@@ -238,6 +244,10 @@ TYPED_TEST(UnframedTwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
   for (const auto &test_tj : test_elements) {
     TwoJetR<TypeParam> id_tj = TwoJetR<TypeParam>::identity();
     TwoJetR<TypeParam> expected_id_tj = test_tj.inverse() * test_tj;
+    TypeParam id_ref_from_frame = expected_id_tj.ref_from_frame();
+    id_ref_from_frame.set_unframed();
+    expected_id_tj.set_ref_from_frame(id_ref_from_frame);
+
     EXPECT_TRUE(
         expected_id_tj.ref_from_frame().is_approx(id_tj.ref_from_frame()));
     // TwoJetR results in inexact inversions, unlike TwoJetL
@@ -251,7 +261,8 @@ TYPED_TEST(UnframedTwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
 TYPED_TEST(UnframedTwoJetRTests, NumericalDerivativesTest) {
   for (unsigned int i = 0; i < NUM_TRIES; ++i) {
     TwoJetR<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
-    TwoJetR<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
+    TwoJetR<TypeParam> b_from_c =
+        TestFixture::tj_helper().make_test_two_jet().inverse();
     TwoJetR<TypeParam> a_from_c = a_from_b * b_from_c;
 
     constexpr double h = 1e-8;
@@ -283,7 +294,8 @@ TYPED_TEST(TwoJetRTests, ConversionRoundTrip) {
 
 TYPED_TEST(UnframedTwoJetRTests, ConversionAssociativity) {
   TwoJetR<TypeParam> a_from_b = TestFixture::tj_helper().make_test_two_jet();
-  TwoJetR<TypeParam> b_from_c = TestFixture::tj_helper().make_test_two_jet();
+  TwoJetR<TypeParam> b_from_c =
+      TestFixture::tj_helper().make_test_two_jet().inverse();
   TwoJetL<TypeParam> b_from_a = a_from_b.left_two_jet();
   TwoJetL<TypeParam> c_from_b = b_from_c.left_two_jet();
 

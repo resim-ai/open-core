@@ -7,7 +7,6 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/so3.hh"
 
-
 namespace resim::transforms {
 
 namespace {

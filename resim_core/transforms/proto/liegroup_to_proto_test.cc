@@ -53,9 +53,8 @@ TYPED_TEST(LiegroupToProtoTests, TestPackWithNullFrames) {
     EXPECT_EQ(test_group.from().id().to_string(), msg.from().id().data());
   }
 }
-
-
 // NOLINTEND(readability-function-cognitive-complexity)
+
 TYPED_TEST(LiegroupToProtoTests, TestPackWithFrames) {
   // SETUP
   using Group = typename TypeParam::first_type;
