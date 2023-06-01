@@ -7,6 +7,7 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/dynamics/constants.hh"
 #include "resim_core/transforms/framed_vector.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
 
@@ -22,15 +23,15 @@ GravityForce::Control GravityForce::operator()(
 
   // Newton's Second Law
   const auto force = mass_ * GRAVITY_ACCELERATION;
-  const transforms::FramedVector<3> gravity_in_scene_frame{
+  const transforms::FramedVector<transforms::SE3::DIMS> gravity_in_scene_frame{
       -force.in(au::newtons)*Vec3::UnitZ(),
       state.reference_from_body.into()};
 
-  const transforms::FramedVector<3> gravity_in_body_frame{
+  const transforms::FramedVector<transforms::SE3::DIMS> gravity_in_body_frame{
       state.reference_from_body.rotation().inverse() * gravity_in_scene_frame,
       state.reference_from_body.from()};
 
-  return transforms::FSE3::tangent_vector_from_parts(
+  return transforms::SE3::tangent_vector_from_parts(
       Vec3::Zero(),
       gravity_in_body_frame);
 }

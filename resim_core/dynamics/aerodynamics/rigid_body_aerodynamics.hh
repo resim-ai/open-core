@@ -9,8 +9,8 @@
 
 #include "resim_core/actor/state/rigid_body_state.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
+#include "resim_core/transforms/se3.hh"
 #include "resim_core/utils/nullable_reference.hh"
 
 namespace resim::dynamics::aerodynamics {
@@ -50,11 +50,11 @@ struct AerodynamicElementState {
 // AerodynamicElements of different types.
 class AerodynamicElement {
  public:
-  // Supporting only FSE3 for now.
-  static constexpr unsigned DIM = transforms::FSE3::DIMS;
-  static constexpr unsigned DOF = transforms::FSE3::DOF;
+  // Supporting only SE3 for now.
+  static constexpr unsigned DIM = transforms::SE3::DIMS;
+  static constexpr unsigned DOF = transforms::SE3::DOF;
   using FramedVector = transforms::FramedVector<DIM>;
-  using TangentVector = typename transforms::FSE3::TangentVector;
+  using TangentVector = typename transforms::SE3::TangentVector;
 
   AerodynamicElement(AerodynamicElement const &other) = default;
   AerodynamicElement(AerodynamicElement &&other) = default;
@@ -64,48 +64,48 @@ class AerodynamicElement {
   virtual ~AerodynamicElement() = default;
 
   // Construct an aerodynamic element
-  // param[in] com_from_cop - An FSE3 transform between the center-of-pressure
+  // param[in] com_from_cop - An SE3 transform between the center-of-pressure
   //                          (CoP) frame of the element and the center-of-mass
   //                          (CoM) frame of the parent body.
-  explicit AerodynamicElement(transforms::FSE3 com_from_cop);
+  explicit AerodynamicElement(transforms::SE3 com_from_cop);
 
   // Returns the apparent wind vector in the CoP frame given the ambient wind.
   // and the motion of the body as described by the body state.
-  // param[in] body_com_state - The rigid body state represented as an FSE3
+  // param[in] body_com_state - The rigid body state represented as an SE3
   //                            between the body CoM frame and a reference
   //                            frame and also the transform derivatives.
   // param[in] ref_local_wind - The wind speed vector at the CoM,
   //                            expressed in the reference frame.
   FramedVector cop_local_wind(
-      const actor::state::RigidBodyState<transforms::FSE3> &body_com_state,
+      const actor::state::RigidBodyState<transforms::SE3> &body_com_state,
       const FramedVector &ref_local_wind) const;
 
   // Retuns the pressure force vector on the CoP, in the CoP frame.
-  // param[in] body_com_state - The rigid body state represented as an FSE3
+  // param[in] body_com_state - The rigid body state represented as an SE3
   //                            between the body CoM frame and a reference
   //                            frame and also the transform derivatives.
   // param[in] ref_local_wind - The wind speed vector at the CoM,
   //                            expressed in the reference frame.
   // param[in] aerodynamic_state - Abstract state of aerodynamic element.
   FramedVector cop_local_force(
-      const actor::state::RigidBodyState<transforms::FSE3> &body_com_state,
+      const actor::state::RigidBodyState<transforms::SE3> &body_com_state,
       const FramedVector &ref_local_wind,
       const AerodynamicElementState &aerodynamic_state) const;
 
   // Returns the pressure torque & force TangentVector on the body CoM, due
   // to the pressure force on the CoP.
-  // param[in] body_com_state - The rigid body state represented as an FSE3
+  // param[in] body_com_state - The rigid body state represented as an SE3
   //                            between the body CoM frame and a reference
   //                            frame and also the transform derivatives.
   // param[in] ref_local_wind - The wind speed vector at the CoM,
   //                            expressed in the reference frame.
   // param[in] aerodynamic_state - Abstract state of aerodynamic element.
   TangentVector com_force(
-      const actor::state::RigidBodyState<transforms::FSE3> &body_com_state,
+      const actor::state::RigidBodyState<transforms::SE3> &body_com_state,
       const FramedVector &ref_local_wind,
       const AerodynamicElementState &aerodynamic_state) const;
 
-  const transforms::FSE3 &com_from_cop() const;
+  const transforms::SE3 &com_from_cop() const;
   const transforms::Frame<DIM> &com_frame() const;
   const transforms::Frame<DIM> &cop_frame() const;
 
@@ -118,14 +118,14 @@ class AerodynamicElement {
   //
   // In practice, this should be implemented via AerodynamicElementImpl.
   //
-  // TODO(tknowles): In future work, this should return a FSE3::TangentVector,
+  // TODO(tknowles): In future work, this should return a SE3::TangentVector,
   // and CoP should change to aerodynamic center.
   virtual FramedVector aerodynamics_(
       const FramedVector &wind,
       const AerodynamicElementState &aerodynamic_state) const = 0;
 
  private:
-  transforms::FSE3 com_from_cop_;
+  transforms::SE3 com_from_cop_;
 };
 
 // CRTP mix-in, allowing different types of state input to the
@@ -165,11 +165,11 @@ class AerodynamicElementImpl : public AerodynamicElement {
 // of the same type.
 class RigidBodyAerodynamics {
  public:
-  // Supporting only FSE3 for now.
-  static constexpr unsigned DIM = transforms::FSE3::DIMS;
-  static constexpr unsigned DOF = transforms::FSE3::DOF;
+  // Supporting only SE3 for now.
+  static constexpr unsigned DIM = transforms::SE3::DIMS;
+  static constexpr unsigned DOF = transforms::SE3::DOF;
   using FramedVector = transforms::FramedVector<DIM>;
-  using TangentVector = typename transforms::FSE3::TangentVector;
+  using TangentVector = typename transforms::SE3::TangentVector;
   using Control = Eigen::VectorXd;
 
   // Construct a RigidBodyAerodynamics element from a well-formed vector of
@@ -210,7 +210,7 @@ class RigidBodyAerodynamics {
   //                              the RigidBodyAerodynamic components (as
   //                              provided in the constructor.)
   TangentVector body_pressure_force(
-      const actor::state::RigidBodyState<transforms::FSE3> &body_com_state,
+      const actor::state::RigidBodyState<transforms::SE3> &body_com_state,
       const FramedVector &ref_local_wind,
       const std::vector<std::reference_wrapper<const AerodynamicElementState>>
           &component_states) const;

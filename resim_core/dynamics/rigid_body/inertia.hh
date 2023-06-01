@@ -25,12 +25,12 @@
 
 #include <Eigen/Dense>
 
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
 
 using Inertia =
-    Eigen::Matrix<double, transforms::FSE3::DOF, transforms::FSE3::DOF>;
+    Eigen::Matrix<double, transforms::SE3::DOF, transforms::SE3::DOF>;
 
 // Convert a mass and moments of inertia into an Inertia matrix. Essentially,
 // this constructs the matrix shown above.

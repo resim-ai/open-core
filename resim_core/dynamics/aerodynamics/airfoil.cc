@@ -5,7 +5,6 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/dynamics/aerodynamics/rigid_body_aerodynamics.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 
 namespace resim::dynamics::aerodynamics {
@@ -56,7 +55,7 @@ AirfoilElementConfig::AirfoilElementConfig(
 }
 
 AirfoilElement::AirfoilElement(
-    transforms::FSE3 com_from_cop,
+    transforms::SE3 com_from_cop,
     AirfoilElementConfig config)
     : AerodynamicElementImpl<AirfoilElement, AirfoilElementState>(
           std::move(com_from_cop)),

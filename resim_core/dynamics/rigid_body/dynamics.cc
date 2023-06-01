@@ -15,8 +15,8 @@ Dynamics::Delta Dynamics::operator()(
     const Control &control,
     time::Timestamp time,
     NullableReference<Diffs> diffs) const {
-  using transforms::FSE3;
-  using TangentVector = FSE3::TangentVector;
+  using transforms::SE3;
+  using TangentVector = SE3::TangentVector;
 
   // TODO(michael) Add the Jacobian to this
   REASSERT(not diffs.has_value(), "Jacobian not (yet) supported!");
@@ -33,7 +33,7 @@ Dynamics::Delta Dynamics::operator()(
     // be a bottlneck in real sims. To make this faster, one can
     // compute the adjoint term using cross products without having to
     // form a 6x6 matrix. That almost 2x's performance in the unit test.
-    return Iinv * (F + FSE3::adjoint(V).transpose() * I * V);
+    return Iinv * (F + SE3::adjoint(V).transpose() * I * V);
   }();
   return (Delta() << state.d_reference_from_body, acceleration).finished();
 }
