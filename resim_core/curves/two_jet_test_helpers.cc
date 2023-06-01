@@ -33,7 +33,8 @@ TwoJetTestHelper<TwoJet>::TwoJetTestHelper(const unsigned int seed) {
 template <curves::TwoJetType TwoJet>
 TwoJet TwoJetTestHelper<TwoJet>::make_test_two_jet() {
   using Group = typename TwoJet::GroupType;
-  auto point_from_ref = Group::exp(test_vector<TwoJet>(rng()));
+  const auto point_from_ref =
+      Group::exp(test_vector<TwoJet>(rng()), INTO_FRAME, FROM_FRAME);
   return TwoJet(
       point_from_ref,
       test_vector<TwoJet>(rng()),
@@ -56,10 +57,10 @@ std::vector<TwoJet> TwoJetTestHelper<TwoJet>::make_test_two_jet_elements(
       transforms::make_test_algebra_elements<typename TwoJet::GroupType>(count);
   two_jets.reserve(count);
   for (int i = 0; i < count; ++i) {
-    two_jets.push_back(TwoJet(
-        group_elements[i],
-        algebra_elements_1[i],
-        algebra_elements_2[i]));
+    typename TwoJet::GroupType framed_group = group_elements[i];
+    framed_group.set_frames(INTO_FRAME, FROM_FRAME);
+    two_jets.push_back(
+        TwoJet(framed_group, algebra_elements_1[i], algebra_elements_2[i]));
   }
   two_jets.resize(count);
   return two_jets;
@@ -67,7 +68,5 @@ std::vector<TwoJet> TwoJetTestHelper<TwoJet>::make_test_two_jet_elements(
 
 template class TwoJetTestHelper<TwoJetL<transforms::SE3>>;
 template class TwoJetTestHelper<TwoJetL<transforms::SO3>>;
-template class TwoJetTestHelper<TwoJetR<transforms::SE3>>;
-template class TwoJetTestHelper<TwoJetR<transforms::SO3>>;
 
 }  // namespace resim::curves

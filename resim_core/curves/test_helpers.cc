@@ -30,10 +30,10 @@ curves::TCurve<transforms::SE3> make_circle_curve(
         .time = time,
         .point =
             TwoJetL{
-                  SE3{SO3::exp(-(M_PI_2 + time) * Vec3::UnitZ()),
-                      Vec3::UnitY(),
-                      into,
-                      from},
+                SE3{SO3::exp(-(M_PI_2 + time) * Vec3::UnitZ()),
+                    Vec3::UnitY(),
+                    into,
+                    from},
                 velocity,
                 TangentVector::Zero()},
     });

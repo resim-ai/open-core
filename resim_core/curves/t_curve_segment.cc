@@ -90,7 +90,6 @@ bool TCurveSegment<Group>::is_framed() const {
   return orig_.frame_from_ref().is_framed();
 }
 
-
 template <transforms::LieGroupType Group>
 const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::reference_frame()
     const {
@@ -98,7 +97,8 @@ const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::reference_frame()
 }
 
 template <transforms::LieGroupType Group>
-const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::point_frame() const {
+const transforms::Frame<Group::DIMS> &TCurveSegment<Group>::point_frame()
+    const {
   return orig_.frame_from_ref().into();
 }
 
