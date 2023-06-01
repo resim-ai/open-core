@@ -1,8 +1,6 @@
 
 #include "resim_core/dynamics/rigid_body/state.hh"
 
-#include <iostream>
-
 #include "resim_core/transforms/cross_matrix.hh"
 
 namespace resim::dynamics::rigid_body {

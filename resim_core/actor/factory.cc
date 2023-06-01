@@ -1,7 +1,5 @@
 #include "resim_core/actor/factory.hh"
 
-#include <iostream>
-
 #include "resim_core/actor/actor_id.hh"
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/actor/trajectory_actor.hh"
