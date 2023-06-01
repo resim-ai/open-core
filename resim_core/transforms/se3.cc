@@ -249,11 +249,24 @@ template SE3::SE3(SO3, Eigen::Vector3d, Frame3, Frame3);
 template SE3 SE3::identity();
 template SE3 SE3::identity(const Frame3 &, const Frame3 &);
 template SE3 SE3::identity(Frame3 &&, Frame3 &&);
+template SE3 SE3::identity(Frame3 &&, const Frame3 &);
+template SE3 SE3::identity(const Frame3 &, Frame3 &&);
+
 
 template SE3 SE3::exp(const TangentVector &);
 template SE3 SE3::exp(const TangentVector &, const Frame3 &, const Frame3 &);
 template SE3 SE3::exp(const TangentVector &, Frame3 &&, Frame3 &&);
 template SE3 SE3::exp(const TangentVector &, const Frame3 &, Frame3 &&);
 template SE3 SE3::exp(const TangentVector &, Frame3 &&, const Frame3 &);
+
+double se3_distance(const SE3 &a_from_ref, const SE3 &b_from_ref) {
+  REASSERT(a_from_ref.from() == b_from_ref.from(), "From frames must match");
+  return (a_from_ref.translation() - b_from_ref.translation()).norm();
+}
+
+double se3_inverse_distance(const SE3 &ref_from_a, const SE3 &ref_from_b) {
+  REASSERT(ref_from_a.into() == ref_from_b.into(), "Into frames must match");
+  return (ref_from_a.translation() - ref_from_b.translation()).norm();
+}
 
 }  // namespace resim::transforms

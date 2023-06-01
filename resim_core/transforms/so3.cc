@@ -152,6 +152,8 @@ template SO3::SO3(Eigen::Matrix3d, Frame3, Frame3);
 template SO3 SO3::identity();
 template SO3 SO3::identity(const Frame3 &, const Frame3 &);
 template SO3 SO3::identity(Frame3 &&, Frame3 &&);
+template SO3 SO3::identity(const Frame3 &, Frame3 &&);
+template SO3 SO3::identity(Frame3 &&, const Frame3 &);
 
 template SO3 SO3::exp(const TangentVector &);
 template SO3 SO3::exp(const TangentVector &, const Frame3 &, const Frame3 &);

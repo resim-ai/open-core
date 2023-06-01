@@ -75,18 +75,17 @@ As discussed above, Lie group elements are frequently used to represent
 transformations between coordinate frames. In practice, this can often lead to
 mistakes when users of Lie group libraries compose group elements in the wrong
 order (e.g. multiplying `robot_from_sensor` times `scene_from_robot`). These
-small mistakes are simple enough that they should be possible to catch at least
-at runtime. Our approach to this is reflected in the `FramedGroup` wrapper. The
-idea is to assign a unique id to each coordinate frame. Group elements therefore
-have two frame ids that they track (`into` and `from`). When two group elements
+small mistakes are simple enough that they should be possible to catch, at least
+at runtime. We therefore assign a unique id to each coordinate frame. Group elements 
+thus have two frame ids that they track (`into` and `from`). When two elements
 are multiplied, consistency is enforced between them. More precisely, if a pose
 that transforms points in frame B's coordinates to frame A's coordinates (call
 the transform `A_from_B`) and a similar transform `C_from_D` then we should fail
 if the user ever tries to multiply `A_from_B * C_from_D`. However `A_from_B *
-B_from_D` is fine. This wrapper can be applied to any of our implemented Lie
-groups. Furthermore, the `FramedGroup` wrapper inherits from the underlying Lie
-group type so it can be passed to functions for that type as well, although the
-checking is not dynamic, so users should take care in such cases.
+B_from_D` is fine. Unframed groups are supported, by setting the frame to a null 
+(0) id, in which case they are not checked. Be aware that multiplying an unframed
+group by a framed group will always result in an unframed group, so unframed groups
+can propagate quickly!
 
 ## More Information
 
@@ -102,4 +101,3 @@ For more information, please take a look at the following links:
      - [Lie Group Theory - A Completely Naive Introduction](https://jakobschwichtenberg.com/naive-introduction-lie-theory/)
      - [How is a Lie Algebra able to describe a group](https://jakobschwichtenberg.com/lie-algebra-able-describe-group/)
      - [What's so special about the adjoint representation of a Lie group?](https://jakobschwichtenberg.com/adjoint-representation/)
-

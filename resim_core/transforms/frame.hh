@@ -10,9 +10,8 @@ namespace resim::transforms {
 // interest. For example.
 // Frame<3> global_frame = Frame<3>::new_frame();
 // Frame<3> robot_frame = Frame<3>::new_frame();
-// Other libraries (e.g. framed_group.hh) use Frame objects to help explicit
-// checking of Frames, for example in verifying the correctness of transform
-// compositions.
+// Other libraries (e.g. se3.hh) use Frame objects to help explicit checking of
+// Frames, for example in verifying the correctness of transform compositions.
 template <const unsigned int dims>
 class Frame {
  public:

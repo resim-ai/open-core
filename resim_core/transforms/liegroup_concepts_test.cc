@@ -12,7 +12,6 @@
 #include <Eigen/Dense>
 #include <string>
 
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -235,8 +234,6 @@ TEST(LieGroupTraitsTest, TestIsLieGroup) {
   // SETUP / ACTION / VERIFICATION
   static_assert(LieGroupType<SE3>);
   static_assert(LieGroupType<SO3>);
-  static_assert(LieGroupType<FSE3>);
-  static_assert(LieGroupType<FSO3>);
   static_assert(!LieGroupType<int>);
   static_assert(!LieGroupType<std::string>);
 }

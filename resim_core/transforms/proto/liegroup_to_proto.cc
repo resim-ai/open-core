@@ -2,7 +2,6 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/math/proto/matrix_to_proto.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/proto/frame_3_to_proto.hh"
 #include "resim_core/transforms/proto/se3.pb.h"
 #include "resim_core/transforms/proto/so3.pb.h"

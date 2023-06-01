@@ -12,7 +12,6 @@ cc_library(
         ":so3_proto_cc",
         "//resim_core/assert",
         "//resim_core/math/proto:matrix_to_proto",
-        "//resim_core/transforms:framed_group",
         "//resim_core/transforms:liegroup_concepts",
         "//resim_core/transforms:se3",
         "//resim_core/transforms:so3",

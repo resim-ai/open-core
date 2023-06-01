@@ -165,4 +165,28 @@ static_assert(
     LieGroupType<SE3>,
     "SE3 doesn't meet the requirements of a Lie Group.");
 
+// Computes distance between two SE3 elements in the same (checked) "reference"
+// frame, without explicitly composing (for performance reasons.) This is not
+// provided for translation, to reduce risk of sign/direction errors. Null
+// frames are permitted, provided both are null.
+//
+// i.e. given a_from_ref and b_from_ref, this computes:
+//    a_from_b.translation().norm() = b_from_a.translation().norm()
+//
+// Note the ordering of arguments, and specific choice of "reference" frame does
+// not matter to the output here.
+double se3_distance(const SE3 &a_from_ref, const SE3 &b_from_ref);
+
+// Computes distance between the inverse of two SE3 elements in the same
+// (checked) "reference" frame without explicitly composing or inverting (for
+// performance reasons.) This is not provided for translation, to reduce risk of
+// sign/direction errors. Null frames are permitted, provided both are null.
+//
+// i.e. given ref_from_a and ref_from_b, this computes:
+//    a_from_b.translation().norm() = b_from_a.translation().norm()
+//
+// Note the ordering of arguments, and specific choice of "reference" frame does
+// not matter to the output here.
+double se3_inverse_distance(const SE3 &ref_from_a, const SE3 &ref_from_b);
+
 }  // namespace resim::transforms

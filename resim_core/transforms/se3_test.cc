@@ -7,6 +7,7 @@
 #include "resim_core/transforms/liegroup_test_helpers.hh"
 #include "resim_core/transforms/so3.hh"
 
+
 namespace resim::transforms {
 
 namespace {
@@ -14,6 +15,7 @@ namespace {
 constexpr unsigned int DIMS = 3;
 const Frame<DIMS> A = Frame<DIMS>::new_frame();
 const Frame<DIMS> B = Frame<DIMS>::new_frame();
+const Frame<DIMS> C = Frame<DIMS>::new_frame();
 
 // Test that an SE3 objects has the expected rotation and translation
 // components.
@@ -221,6 +223,42 @@ TEST(TangentVectorHelpers, VectorPartMutation) {
   const SE3::TangentVector expected_alg{
       SE3::tangent_vector_from_parts(new_alg_rot, new_alg_trans)};
   EXPECT_EQ(alg, expected_alg);
+}
+
+TEST(DistanceTest, SE3DistanceSucceeds) {
+  constexpr double TWO = 2.0;
+
+  SE3 a_from_c = SE3::exp(SE3::TangentVector::Ones(), A, C);
+  SE3 b_from_c = SE3::exp(TWO * SE3::TangentVector::Ones(), B, C);
+
+  const double d = se3_distance(a_from_c, b_from_c);
+
+  EXPECT_NEAR(d, (b_from_c * a_from_c.inverse()).translation().norm(), 1e-7);
+}
+
+TEST(DistanceTest, SE3DistanceWrongFrame) {
+  SE3 a_from_c = SE3::exp(SE3::TangentVector::Ones(), A, C);
+  SE3 a_from_b = SE3::exp(SE3::TangentVector::Ones(), A, B);
+
+  EXPECT_THROW(se3_distance(a_from_c, a_from_b), AssertException);
+}
+
+TEST(DistanceTest, SE3InverseDistanceSucceeds) {
+  constexpr double TWO = 2.0;
+
+  SE3 c_from_a = SE3::exp(SE3::TangentVector::Ones(), C, A);
+  SE3 c_from_b = SE3::exp(TWO * SE3::TangentVector::Ones(), C, B);
+
+  const double d = se3_inverse_distance(c_from_a, c_from_b);
+
+  EXPECT_NEAR(d, (c_from_a.inverse() * c_from_b).translation().norm(), 1e-7);
+}
+
+TEST(DistanceTest, SE3InverseDistanceWrongFrame) {
+  SE3 c_from_a = SE3::exp(SE3::TangentVector::Ones(), C, A);
+  SE3 b_from_a = SE3::exp(SE3::TangentVector::Ones(), B, A);
+
+  EXPECT_THROW(se3_inverse_distance(c_from_a, b_from_a), AssertException);
 }
 
 }  // namespace resim::transforms
