@@ -16,8 +16,6 @@ namespace resim::curves {
 namespace {
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
-using FSE3 = transforms::FSE3;
-using FSO3 = transforms::FSO3;
 }  // namespace
 
 // An explicit seed for deterministic generation of test objects.
@@ -41,13 +39,13 @@ class TCurveTests : public ::testing::Test {
   TCurveTestHelper<Group> t_curve_helper_;
 };
 
-using LieGroupTypes = ::testing::Types<FSE3, FSO3, SE3, SO3>;
+using LieGroupTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(TCurveTests, LieGroupTypes);
 
 template <typename Group>
 class FramedTCurveTests : public TCurveTests<Group> {};
 
-using FramedTypes = ::testing::Types<FSE3, FSO3>;
+using FramedTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(FramedTCurveTests, FramedTypes);
 
 TYPED_TEST(TCurveTests, EmptyCurveConstruction) {

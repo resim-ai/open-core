@@ -7,8 +7,6 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -17,8 +15,6 @@ namespace resim::curves {
 namespace {
 using SO3 = transforms::SO3;
 using SE3 = transforms::SE3;
-using FSO3 = transforms::FSO3;
-using FSE3 = transforms::FSE3;
 }  // namespace
 
 template <typename T>
@@ -38,26 +34,13 @@ class TCurveSegmentTests : public ::testing::Test {
     return testing::random_vector<typename T::TangentVector>(rng_);
   }
 
-  T test_group() { return T::exp(test_vector()); }
-
-  T test_group() requires transforms::FramedGroupType<T> {
-    return T::exp(test_vector(), POINT_FRAME, REF_FRAME);
-  }
+  T test_group() { return T::exp(test_vector(), POINT_FRAME, REF_FRAME); }
 
   TwoJetL<T> test_two_jet() {
     return TwoJetL<T>(test_group(), test_vector(), test_vector());
   }
 
-  TwoJetL<T> test_two_jet() requires transforms::FramedGroupType<T> {
-    return TwoJetL<T>(test_group(), test_vector(), test_vector());
-  }
-
   TCurveSegment<T> test_t_curve_segment() {
-    return TCurveSegment<T>(this->test_two_jet(), this->test_two_jet());
-  }
-
-  TCurveSegment<T> test_t_curve_segment() requires
-      transforms::FramedGroupType<T> {
     return TCurveSegment<T>(this->test_two_jet(), this->test_two_jet());
   }
 
@@ -75,13 +58,13 @@ namespace {
 constexpr unsigned int NUM_TRIES = 7;
 }  // namespace
 
-using LieGroupTypes = ::testing::Types<SO3, SE3, FSO3, FSE3>;
+using LieGroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(TCurveSegmentTests, LieGroupTypes);
 
 template <typename T>
 class FramedTCurveSegmentTests : public TCurveSegmentTests<T> {};
 
-using FramedTypes = ::testing::Types<FSE3, FSO3>;
+using FramedTypes = ::testing::Types<SE3, SO3>;
 TYPED_TEST_SUITE(FramedTCurveSegmentTests, FramedTypes);
 
 TYPED_TEST(FramedTCurveSegmentTests, ConstructionWithFrames) {

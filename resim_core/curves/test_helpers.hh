@@ -3,7 +3,6 @@
 
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 
 namespace resim::curves::testing {
 
@@ -15,10 +14,10 @@ namespace resim::curves::testing {
 // @param[in] into - The into frame for the control points.
 // @param[in] from - The from frame for the control points (i.e. the reference
 //                   frame for this curve).
-curves::TCurve<transforms::FSE3> make_circle_curve(
-    const transforms::Frame<transforms::FSE3::DIMS> &into =
-        transforms::Frame<transforms::FSE3::DIMS>::new_frame(),
-    const transforms::Frame<transforms::FSE3::DIMS> &from =
-        transforms::Frame<transforms::FSE3::DIMS>::new_frame());
+curves::TCurve<transforms::SE3> make_circle_curve(
+    const transforms::Frame<transforms::SE3::DIMS> &into =
+        transforms::Frame<transforms::SE3::DIMS>::new_frame(),
+    const transforms::Frame<transforms::SE3::DIMS> &from =
+        transforms::Frame<transforms::SE3::DIMS>::new_frame());
 
 }  // namespace resim::curves::testing

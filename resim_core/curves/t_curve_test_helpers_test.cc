@@ -5,7 +5,6 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/two_jet.hh"
 #include "resim_core/curves/two_jet_test_helpers.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 
@@ -17,8 +16,6 @@ constexpr unsigned int SEED = 103;
 
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
-using FSE3 = transforms::FSE3;
-using FSO3 = transforms::FSO3;
 }  // namespace
 
 template <transforms::LieGroupType Group>
@@ -30,7 +27,7 @@ class TCurveHelperTests : public ::testing::Test {
   inline static const std::vector<double> THREE_TIMES{0.0, 0.11, 0.67};
 };
 
-using LieGroupTypes = ::testing::Types<SO3, SE3, FSO3, FSE3>;
+using LieGroupTypes = ::testing::Types<SO3, SE3>;
 
 TYPED_TEST_SUITE(TCurveHelperTests, LieGroupTypes);
 
@@ -61,7 +58,7 @@ TYPED_TEST(TCurveHelperTests, ControlPointsTest) {
 template <typename Group>
 class FramedTCurveHelperTests : public TCurveHelperTests<Group> {};
 
-using FramedTypes = ::testing::Types<transforms::FSE3, transforms::FSO3>;
+using FramedTypes = ::testing::Types<transforms::SE3, transforms::SO3>;
 
 TYPED_TEST_SUITE(FramedTCurveHelperTests, FramedTypes);
 

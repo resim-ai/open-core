@@ -59,6 +59,8 @@ class TCurve {
   const std::vector<Control> &control_pts() const;
   // Access a reference to the segments.
   const std::vector<Segment> &segments() const;
+  // Test if this curve is built from framed liegroups
+  bool is_framed() const;
   // Retrieve the reference frame of the curve's control points.
   // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;
