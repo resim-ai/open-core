@@ -6,7 +6,6 @@
 #include <Eigen/Dense>
 
 #include "resim_core/assert/assert.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 
@@ -17,7 +16,7 @@ using transforms::LieGroupType;
 template <LieGroupType T>
 class OrientedBoxTest : public ::testing::Test {};
 
-using GroupTypes = ::testing::Types<transforms::SE3, transforms::FSE3>;
+using GroupTypes = ::testing::Types<transforms::SE3>;
 
 TYPED_TEST_SUITE(OrientedBoxTest, GroupTypes);
 

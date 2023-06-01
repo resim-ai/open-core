@@ -17,11 +17,14 @@ class Frame {
  public:
   // The dimensionality of the frames space e.g. 2,3.
   static constexpr unsigned int DIMS = dims;
+
   Frame() = default;
   // Initialize a frame with an existing UUID.
   explicit Frame(UUID id) : id_(id) {}
   // Generate a new frame with a new UUID.
   static Frame<DIMS> new_frame() { return Frame(UUID::new_uuid()); }
+  static Frame<DIMS> null_frame() { return Frame(UUID()); }
+
   // Is this frame the same as another?
   bool operator==(const Frame<DIMS> &other) const { return id_ == other.id_; }
   bool operator!=(const Frame<DIMS> &other) const { return id_ != other.id_; }

@@ -5,8 +5,6 @@
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/geometry/gjk_algorithm.hh"
-#include "resim_core/transforms/framed_group.hh"
-#include "resim_core/transforms/framed_group_concept.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::geometry {
@@ -66,11 +64,9 @@ bool boxes_collide(
     const OrientedBox<Group> &box_1,
     const OrientedBox<Group> &box_2,
     const double collision_tolerance) {
-  if constexpr (transforms::FramedGroupType<Group>) {
-    const bool frames_match =
-        box_1.reference_from_box().into() == box_2.reference_from_box().into();
-    REASSERT(frames_match, "Box frames don't match!");
-  }
+  const bool frames_match =
+      box_1.reference_from_box().into() == box_2.reference_from_box().into();
+  REASSERT(frames_match, "Box frames don't match!");
 
   if (not bounding_spheres_collide(box_1, box_2, collision_tolerance)) {
     return false;
@@ -94,11 +90,6 @@ bool boxes_collide(
 template bool boxes_collide(
     const OrientedBox<transforms::SE3> &box_1,
     const OrientedBox<transforms::SE3> &box_2,
-    double collision_tolerance);
-
-template bool boxes_collide(
-    const OrientedBox<transforms::FSE3> &box_1,
-    const OrientedBox<transforms::FSE3> &box_2,
     double collision_tolerance);
 
 }  // namespace resim::geometry

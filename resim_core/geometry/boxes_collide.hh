@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resim_core/geometry/oriented_box.hh"
+#include "resim_core/transforms/liegroup_concepts.hh"
 
 namespace resim::geometry {
 

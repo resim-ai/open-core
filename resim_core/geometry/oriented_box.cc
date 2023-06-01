@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "resim_core/assert/assert.hh"
-#include "resim_core/transforms/framed_group.hh"
+#include "resim_core/transforms/liegroup_concepts.hh"
 #include "resim_core/transforms/se3.hh"
 
 namespace resim::geometry {
@@ -39,6 +39,5 @@ void OrientedBox<Group>::set_extents(ExtentsType extents) {
 }
 
 template class OrientedBox<transforms::SE3>;
-template class OrientedBox<transforms::FSE3>;
 
 }  // namespace resim::geometry
