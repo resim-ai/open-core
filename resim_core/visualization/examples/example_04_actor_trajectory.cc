@@ -9,19 +9,17 @@
 #include "resim_core/actor/state/trajectory.hh"
 #include "resim_core/time/timestamp.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/uuid.hh"
 #include "resim_core/visualization/view.hh"
 
 namespace {
-using resim::transforms::FSE3;
 using resim::transforms::SE3;
 using resim::transforms::SO3;
-using Frame = resim::transforms::Frame<FSE3::DIMS>;
+using Frame = resim::transforms::Frame<SE3::DIMS>;
 using resim::actor::state::Trajectory;
-using RigidBodyState = resim::actor::state::RigidBodyState<FSE3>;
+using RigidBodyState = resim::actor::state::RigidBodyState<SE3>;
 using Eigen::Vector3d;
 
 // Define some useful constants for use in example
@@ -54,15 +52,15 @@ constexpr std::array<resim::time::Timestamp, NUM_CTRL> timestamps() {
 
 Trajectory out_and_back_banked() {
   // Point 0.
-  FSE3 ref_from_0(SE3(SO3::identity(), WAYPOINTS.at(0)), REF_FRAME, BOD_FRAME);
+  SE3 ref_from_0(SO3::identity(), WAYPOINTS.at(0), REF_FRAME, BOD_FRAME);
   RigidBodyState state_0(ref_from_0);
   constexpr double FWD_V_MPS = 5.;
   state_0.set_body_linear_velocity_mps({FWD_V_MPS, 0., 0.});
   // Point 1.
-  FSE3 ref_from_1(
-      SE3((SO3::exp(M_PI_2 * Vector3d::UnitZ()) *
-           SO3::exp(-M_PI_2 * Vector3d::UnitX())),
-          WAYPOINTS.at(1)),
+  SE3 ref_from_1(
+      (SO3::exp(M_PI_2 * Vector3d::UnitZ()) *
+       SO3::exp(-M_PI_2 * Vector3d::UnitX())),
+      WAYPOINTS.at(1),
       REF_FRAME,
       BOD_FRAME);
   RigidBodyState state_1(ref_from_1);
@@ -72,8 +70,9 @@ Trajectory out_and_back_banked() {
   state_1.set_body_linear_velocity_mps({TURN_FWD_V_MPS, 0., 0.});
   state_1.set_body_angular_velocity_radps({0., -turn_ang_v_radps, 0.});
   // Point 2.
-  FSE3 ref_from_2(
-      SE3(SO3::exp(M_PI * Vector3d::UnitZ()), WAYPOINTS.at(2)),
+  SE3 ref_from_2(
+      SO3::exp(M_PI * Vector3d::UnitZ()),
+      WAYPOINTS.at(2),
       REF_FRAME,
       BOD_FRAME);
   RigidBodyState state_2(ref_from_2);
@@ -98,7 +97,7 @@ int main(int argc, char* argv[]) {
   // Now, digging into the code that generates this trajectory,
   // we can also view some of the underlying components: the first control
   // point:
-  FSE3 ref_from_0(SE3(SO3::identity(), WAYPOINTS.at(0)), REF_FRAME, BOD_FRAME);
+  SE3 ref_from_0(SO3::identity(), WAYPOINTS.at(0), REF_FRAME, BOD_FRAME);
   VIEW(ref_from_0) << "ref_from_0_control";
 
   return EXIT_SUCCESS;

@@ -5,7 +5,6 @@
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/transforms/frame.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -39,20 +38,11 @@ void pack_metadata(
       [out](const transforms::SO3 &so3) {
         out->set_type(proto::ReSimType::TYPE_SO3);
       },
-      [out](const transforms::FSE3 &fse3) {
-        out->set_type(proto::ReSimType::TYPE_FSE3);
-      },
-      [out](const transforms::FSO3 &fso3) {
-        out->set_type(proto::ReSimType::TYPE_FSO3);
-      },
       [out](const curves::DCurve<transforms::SE3> &d_curve_se3) {
         out->set_type(proto::ReSimType::TYPE_DCURVE_SE3);
       },
-      [out](const curves::DCurve<transforms::FSE3> &d_curve_fse3) {
-        out->set_type(proto::ReSimType::TYPE_DCURVE_FSE3);
-      },
-      [out](const curves::TCurve<transforms::FSE3> &t_curve) {
-        out->set_type(proto::ReSimType::TYPE_TCURVE_FSE3);
+      [out](const curves::TCurve<transforms::SE3> &t_curve) {
+        out->set_type(proto::ReSimType::TYPE_TCURVE_SE3);
       },
       [out](const actor::state::Trajectory &trajectory) {
         out->set_type(proto::ReSimType::TYPE_TRAJECTORY);

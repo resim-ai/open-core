@@ -6,26 +6,24 @@
 #include "resim_core/assert/assert.hh"
 #include "resim_core/curves/d_curve.hh"
 #include "resim_core/testing/random_matrix.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/utils/uuid.hh"
 #include "resim_core/visualization/view.hh"
 
-using resim::transforms::FSE3;  // ReSim's framed 6 d.o.f. rigid xform.
-using resim::transforms::SE3;   // ReSim's 6 d.o.f. rigid xform.
+using resim::transforms::SE3;  // ReSim's 6 d.o.f. rigid xform.
 using resim::transforms::SO3;
-using TangentVector = FSE3::TangentVector;
-using TCurve = resim::curves::TCurve<FSE3>;  // ReSim's time parameterised curve
-using Frame = resim::transforms::Frame<FSE3::DIMS>;
+using TangentVector = SE3::TangentVector;
+using TCurve = resim::curves::TCurve<SE3>;  // ReSim's time parameterised curve
+using Frame = resim::transforms::Frame<SE3::DIMS>;
 using Vec3 = Eigen::Vector3d;
-using TwoJetL = resim::curves::TwoJetL<FSE3>;
+using TwoJetL = resim::curves::TwoJetL<SE3>;
 
 TCurve make_circle_curve(const Frame& into, const Frame& from) {
   constexpr double VELOCITY = 1.0;
   constexpr double ANGULAR_VELOCITY = 1.0;
 
-  const TangentVector velocity{FSE3::tangent_vector_from_parts(
+  const TangentVector velocity{SE3::tangent_vector_from_parts(
       -ANGULAR_VELOCITY * Vec3::UnitZ(),
       -VELOCITY * Vec3::UnitX())};
 
@@ -35,9 +33,8 @@ TCurve make_circle_curve(const Frame& into, const Frame& from) {
         .time = time,
         .point =
             TwoJetL{
-                FSE3{
-                    SE3{SO3::exp(-(M_PI_2 + time) * Vec3::UnitZ()),
-                        Vec3::UnitY()},
+                SE3{SO3::exp(-(M_PI_2 + time) * Vec3::UnitZ()),
+                    Vec3::UnitY(),
                     into,
                     from},
                 velocity,
@@ -50,11 +47,11 @@ TCurve make_circle_curve(const Frame& into, const Frame& from) {
 
 TCurve translate_t_curve(
     const TCurve& curve_from_world,
-    const FSE3& sensor_from_curve) {
+    const SE3& sensor_from_curve) {
   std::vector<TCurve::Control> control_points;
   for (const TCurve::Control& control : curve_from_world.control_pts()) {
-    FSE3 curve_from_world = control.point.frame_from_ref();
-    FSE3 sensor_from_world = sensor_from_curve * curve_from_world;
+    SE3 curve_from_world = control.point.frame_from_ref();
+    SE3 sensor_from_world = sensor_from_curve * curve_from_world;
     resim::view << curve_from_world;
     resim::view << sensor_from_world;
     TCurve::Control new_control{
@@ -96,8 +93,8 @@ int main(int argc, char* argv[]) {
   const double SENSOR_Y = 0.;
   const double SENSOR_Z = -1.0;
 
-  const FSE3 sensor_from_curve_transform(
-      SE3({SENSOR_X, SENSOR_Y, SENSOR_Z}),
+  const SE3 sensor_from_curve_transform(
+      {SENSOR_X, SENSOR_Y, SENSOR_Z},
       sensor,
       curve);
 

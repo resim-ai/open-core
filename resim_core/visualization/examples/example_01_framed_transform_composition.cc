@@ -1,10 +1,10 @@
 
 #include <cstdlib>
 
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
 #include "resim_core/visualization/view.hh"
+
 int main(int argc, char *argv[]) {
   // Now let's try composing some transforms. Suppose we have a robot with a
   // sensor on it. And we want to know where they are in the world. We can make
@@ -23,11 +23,10 @@ int main(int argc, char *argv[]) {
   VIEW(robot) << "robot";
   VIEW(sensor) << "sensor";
 
-  //  ReSim has special versions of its SE3 and SO3 transforms that are
-  //  explicitly framed:
-  using resim::transforms::FSE3;  // ReSim's framed 6 d.o.f. rigid xform.
-  using resim::transforms::SE3;   // ReSim's 6 d.o.f. rigid xform..
-  using resim::transforms::SO3;   // ReSim's 3 d.o.f. rotation.
+  //  ReSim's SE3 and SO3 transforms can be explicitly framed if they are
+  //  constructed with into and from frames.
+  using resim::transforms::SE3;  // ReSim's 6 d.o.f. rigid xform..
+  using resim::transforms::SO3;  // ReSim's 3 d.o.f. rotation.
 
   // Framed transforms have two big advantages as we will see in the example
   // below.....
@@ -41,12 +40,13 @@ int main(int argc, char *argv[]) {
   const SO3 world_from_robot_rot(ANGLE_RAD, {AXIS_X, AXIS_Y, AXIS_Z});
 
   // Combine the rotation with a simple translation {x, y, z} to construct an
-  // SE3 and also specify the frames to build a framed SE3 (FSE3).
+  // SE3 and also specify the frames to build a framed SE3:
   const double TRANSLATION_X = 1.0;
   const double TRANSLATION_Y = 0.0;
   const double TRANSLATION_Z = 1.0;
-  const FSE3 world_from_robot(
-      SE3(world_from_robot_rot, {TRANSLATION_X, TRANSLATION_Y, TRANSLATION_Z}),
+  const SE3 world_from_robot(
+      world_from_robot_rot,
+      {TRANSLATION_X, TRANSLATION_Y, TRANSLATION_Z},
       world,
       robot);
 
@@ -60,10 +60,7 @@ int main(int argc, char *argv[]) {
   const double SENSOR_X = 0.1;
   const double SENSOR_Y = 0.0;
   const double SENSOR_Z = 0.1;
-  const FSE3 robot_from_sensor(
-      SE3({SENSOR_X, SENSOR_Y, SENSOR_Z}),
-      robot,
-      sensor);
+  const SE3 robot_from_sensor({SENSOR_X, SENSOR_Y, SENSOR_Z}, robot, sensor);
 
   // Note that there is no rotation between the robot and the sensor so we
   // simply omit it from the constructor.
@@ -76,7 +73,7 @@ int main(int argc, char *argv[]) {
   // the frame specification allows ReSim to build a scene graph on-the-fly.
 
   // Now let's try a composition operation
-  FSE3 world_from_sensor = world_from_robot * robot_from_sensor;
+  SE3 world_from_sensor = world_from_robot * robot_from_sensor;
 
   // Visualize this to sanity check that the composed transform matches the
   // other two....
@@ -90,9 +87,9 @@ int main(int argc, char *argv[]) {
 
   /*
   // Danger! The code below contains a deliberate bug.
-  const FSE3 sensor_from_robot = robot_from_sensor.inverse();
+  const SE3 sensor_from_robot = robot_from_sensor.inverse();
   // !!Invalid composition!!
-  const FSE3 bad_world_from_sensor =
+  const SE3 bad_world_from_sensor =
       world_from_robot * sensor_from_robot;
   */
   return EXIT_SUCCESS;

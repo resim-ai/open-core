@@ -20,7 +20,6 @@
 #include "resim_core/curves/t_curve.hh"
 #include "resim_core/curves/test_helpers.hh"
 #include "resim_core/testing/test_directory.hh"
-#include "resim_core/transforms/framed_group.hh"
 #include "resim_core/transforms/framed_vector.hh"
 #include "resim_core/transforms/se3.hh"
 #include "resim_core/transforms/so3.hh"
@@ -38,8 +37,6 @@ using ::resim::visualization::client::proto::ViewSessionUpdateResponse;
 namespace resim::visualization {
 namespace {
 
-using transforms::FSE3;
-using transforms::FSO3;
 using transforms::SE3;
 using transforms::SO3;
 using Frame = transforms::Frame<3>;
@@ -118,20 +115,6 @@ void ViewClientTest<SO3>::check_correctness(
 }
 
 template <>
-void ViewClientTest<FSE3>::check_correctness(
-    const FSE3 &original,
-    const FSE3 &expected) {
-  EXPECT_TRUE(original.is_approx(expected));
-}
-
-template <>
-void ViewClientTest<FSO3>::check_correctness(
-    const FSO3 &original,
-    const FSO3 &expected) {
-  EXPECT_TRUE(original.is_approx(expected));
-}
-
-template <>
 void ViewClientTest<curves::DCurve<SE3>>::check_correctness(
     const curves::DCurve<SE3> &original,
     const curves::DCurve<SE3> &expected) {
@@ -148,25 +131,9 @@ void ViewClientTest<curves::DCurve<SE3>>::check_correctness(
 }
 
 template <>
-void ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
-    const curves::DCurve<FSE3> &original,
-    const curves::DCurve<FSE3> &expected) {
-  const auto &orig_ctrl_pts = original.control_pts();
-  const auto &test_ctrl_pts = expected.control_pts();
-
-  ASSERT_EQ(orig_ctrl_pts.size(), test_ctrl_pts.size());
-
-  for (int i = 0; i < orig_ctrl_pts.size(); i++) {
-    const auto orig_ref_from_ctrl = orig_ctrl_pts.at(i).ref_from_control;
-    const auto test_ref_from_ctrl = test_ctrl_pts.at(i).ref_from_control;
-    EXPECT_TRUE(orig_ref_from_ctrl->is_approx(*test_ref_from_ctrl));
-  }
-}
-
-template <>
-void ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
-    const curves::TCurve<FSE3> &original,
-    const curves::TCurve<FSE3> &expected) {
+void ViewClientTest<curves::TCurve<SE3>>::check_correctness(
+    const curves::TCurve<SE3> &original,
+    const curves::TCurve<SE3> &expected) {
   const auto &orig_ctrl_pts = original.control_pts();
   const auto &test_ctrl_pts = expected.control_pts();
 
@@ -213,11 +180,8 @@ void ViewClientTest<FramedVector>::check_correctness(
 using PayloadTypes = ::testing::Types<
     SE3,
     SO3,
-    FSE3,
-    FSO3,
     curves::DCurve<SE3>,
-    curves::DCurve<FSE3>,
-    curves::TCurve<FSE3>,
+    curves::TCurve<SE3>,
     actor::state::Trajectory,
     Frame,
     FramedVector>;
@@ -364,34 +328,16 @@ TYPED_TEST(ViewClientTest, TestViewClientView) {
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const FSE3 &test_fse3) {
-              ViewClientTest<FSE3>::check_correctness(
-                  test_fse3,
-                  std::get<FSE3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const FSO3 &test_fso3) {
-              ViewClientTest<FSO3>::check_correctness(
-                  test_fso3,
-                  std::get<FSO3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
               ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
-                  test_d_curve_fse3,
-                  std::get<curves::DCurve<FSE3>>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
-                  test_t_curve_fse3,
-                  std::get<curves::TCurve<FSE3>>(
+            [&](const curves::TCurve<SE3> &test_t_curve_se3) {
+              ViewClientTest<curves::TCurve<SE3>>::check_correctness(
+                  test_t_curve_se3,
+                  std::get<curves::TCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
@@ -483,34 +429,16 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomName) {
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const FSE3 &test_fse3) {
-              ViewClientTest<FSE3>::check_correctness(
-                  test_fse3,
-                  std::get<FSE3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const FSO3 &test_fso3) {
-              ViewClientTest<FSO3>::check_correctness(
-                  test_fso3,
-                  std::get<FSO3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
               ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
-                  test_d_curve_fse3,
-                  std::get<curves::DCurve<FSE3>>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
-                  test_t_curve_fse3,
-                  std::get<curves::TCurve<FSE3>>(
+            [&](const curves::TCurve<SE3> &test_t_curve_se3) {
+              ViewClientTest<curves::TCurve<SE3>>::check_correctness(
+                  test_t_curve_se3,
+                  std::get<curves::TCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
@@ -602,34 +530,16 @@ TYPED_TEST(ViewClientTest, TestViewClientViewCustomNameAlt) {
                   std::get<SO3>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const FSE3 &test_fse3) {
-              ViewClientTest<FSE3>::check_correctness(
-                  test_fse3,
-                  std::get<FSE3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const FSO3 &test_fso3) {
-              ViewClientTest<FSO3>::check_correctness(
-                  test_fso3,
-                  std::get<FSO3>(
-                      expected_update.primitives.at(update_id).payload));
-            },
             [&](const curves::DCurve<SE3> &test_d_curve_se3) {
               ViewClientTest<curves::DCurve<SE3>>::check_correctness(
                   test_d_curve_se3,
                   std::get<curves::DCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
-            [&](const curves::DCurve<FSE3> &test_d_curve_fse3) {
-              ViewClientTest<curves::DCurve<FSE3>>::check_correctness(
-                  test_d_curve_fse3,
-                  std::get<curves::DCurve<FSE3>>(
-                      expected_update.primitives.at(update_id).payload));
-            },
-            [&](const curves::TCurve<FSE3> &test_t_curve_fse3) {
-              ViewClientTest<curves::TCurve<FSE3>>::check_correctness(
-                  test_t_curve_fse3,
-                  std::get<curves::TCurve<FSE3>>(
+            [&](const curves::TCurve<SE3> &test_t_curve_se3) {
+              ViewClientTest<curves::TCurve<SE3>>::check_correctness(
+                  test_t_curve_se3,
+                  std::get<curves::TCurve<SE3>>(
                       expected_update.primitives.at(update_id).payload));
             },
             [&](const actor::state::Trajectory &test_trajectory) {
@@ -786,22 +696,6 @@ void ViewTest<SO3>::sort_elements(std::vector<SO3> &result_elements) {
 }
 
 template <>
-void ViewTest<FSE3>::sort_elements(std::vector<FSE3> &result_elements) {
-  std::sort(
-      result_elements.begin(),
-      result_elements.end(),
-      [](const auto &a, const auto &b) { return a.log().x() < b.log().x(); });
-}
-
-template <>
-void ViewTest<FSO3>::sort_elements(std::vector<FSO3> &result_elements) {
-  std::sort(
-      result_elements.begin(),
-      result_elements.end(),
-      [](const auto &a, const auto &b) { return a.log().x() < b.log().x(); });
-}
-
-template <>
 void ViewTest<curves::DCurve<SE3>>::sort_elements(
     std::vector<curves::DCurve<SE3>> &result_elements) {
   std::sort(
@@ -813,19 +707,8 @@ void ViewTest<curves::DCurve<SE3>>::sort_elements(
 }
 
 template <>
-void ViewTest<curves::DCurve<FSE3>>::sort_elements(
-    std::vector<curves::DCurve<FSE3>> &result_elements) {
-  std::sort(
-      result_elements.begin(),
-      result_elements.end(),
-      [](const auto &a, const auto &b) {
-        return a.curve_length() < b.curve_length();
-      });
-}
-
-template <>
-void ViewTest<curves::TCurve<FSE3>>::sort_elements(
-    std::vector<curves::TCurve<FSE3>> &result_elements) {
+void ViewTest<curves::TCurve<SE3>>::sort_elements(
+    std::vector<curves::TCurve<SE3>> &result_elements) {
   std::sort(
       result_elements.begin(),
       result_elements.end(),
