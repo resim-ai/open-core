@@ -74,10 +74,9 @@ class TwoJetL {
   TwoJetL<Group> inverse() const;
 
   // Compose this TwoJetL with another. TwoJetL composition behaves very
-  // similarly to LieGroup composition. It in non-commutative and inner-frames
-  // must match for a valid composition. This is enforced if a FramedGroup is
-  // used. Derivatives are summed in the left tangent space of the left (this)
-  // Group.
+  // similarly to LieGroup composition. It is non-commutative and inner-frames
+  // must match for a valid composition. Derivatives are summed in the left
+  // tangent space of the left (this) Group.
   TwoJetL<Group> operator*(const TwoJetL<Group> &other) const;
 
   // Convert this two jet to a right two jet. This library is opinionated about
@@ -147,10 +146,9 @@ class TwoJetR {
   TwoJetR<Group> inverse() const;
 
   // Compose this TwoJetR with another. TwoJetR composition behaves very
-  // similarly to LieGroup composition. It in non-commutative and inner-frames
-  // must match for a valid composition. This is enforced if a FramedGroup is
-  // used. Derivatives are summed in the right tangent space of the left (this)
-  // Group.
+  // similarly to LieGroup composition. It is non-commutative and inner-frames
+  // must match for a valid composition. Derivatives are summed in the right
+  // tangent space of the left (this) Group.
   TwoJetR<Group> operator*(const TwoJetR<Group> &other) const;
 
   // Convert this two jet to a left two jet. This library is opinionated about

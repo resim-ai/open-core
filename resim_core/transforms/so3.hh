@@ -88,11 +88,12 @@ class SO3 : public LieGroup<3, 3> {
   // [param] fraction - interpolation is over a unit interval, where
   // fraction=0 returns identity and fraction=1 returns this SO3. In between
   // the SO3 returned is a linear interpolation. If fraction is greater than 1
-  // or less than 0, a linear extrapolation will be returned.
+  // or less than 0, a linear extrapolation will be returned. The into() and
+  // from() frames are preserved.
   SO3 interp(double fraction) const;
 
-  // Interpolate the FramedGroup returning a FramedGroup with a user provided
-  // from Frame.
+  // Interpolate the SO3, returning a framed SO3 with a user-provided
+  // from() frame. The into() frame is preserved.
   SO3 interp(double fraction, const Frame<SO3::DIMS> &new_from) const;
 
   // Create an SO3 from an element of the LieGroup algebra.

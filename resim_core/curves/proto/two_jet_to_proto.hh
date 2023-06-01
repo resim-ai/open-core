@@ -4,8 +4,9 @@
 #include "resim_core/utils/inout.hh"
 
 // Pack and Unpack TwoJetL and TwoJetR into their corresponding protobuf
-// messages. For example TwoJetL<SE3> -> proto::TwoJetL_SE3, TwoJetL<FSO3> ->
-// proto::TwoJetL_FSO3.
+// messages. For example:
+// - TwoJetL<SE3> -> proto::TwoJetL_SE3
+// - TwoJetL<SO3> -> proto::TwoJetL_SO3.
 //
 // Note that these templated packing helpers are intended to
 // be used by the explicit pack unpack overloads. As helpers they do not follow

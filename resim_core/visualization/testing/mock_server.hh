@@ -45,7 +45,7 @@ class MockServer {
   std::string host() const;
   int port() const;
 
-  // Returns a valid JWT for authorization.  Note that this is the ONLY
+  // Returns a valid JWT for authorization. Note that this is the ONLY
   // token that the server will accept.
   static std::string valid_token() { return VALID_TOKEN_; }
   // Returns a token that will be rejected as Unauthorized (401).

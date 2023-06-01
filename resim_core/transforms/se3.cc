@@ -59,7 +59,7 @@ SE3 SE3::operator*(const SE3 &other) const {
     // Unless both SE3s are framed make an unframed SE3
     return SE3(std::move(rotation), std::move(translation));
   }
-  // Both SE3s are framed so do strong frame checking.
+  // Both SE3s are framed, so do strong frame checking.
   constexpr auto FRAME_ERR = "Inner frames must match for valid composition";
   REASSERT(from() == other.into(), FRAME_ERR);
   return SE3(std::move(rotation), std::move(translation), into(), other.from());

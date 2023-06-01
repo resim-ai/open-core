@@ -33,19 +33,19 @@ class SE3 : public LieGroup<3, 6> {
   SE3() = default;
 
   // Constructor
-  // Create an SE3 with rotation only from an SO3.
+  // Create an SE3 with rotation only, from an SO3.
   // Please note: if you provide a framed SO3 the frames will be stripped. SE3
   // is the owner of the transform frames and they should be set explicitly.
   explicit SE3(SO3 rotation);
 
   // Constructor
-  // Create a framed  SE3 with rotation only from an SO3.
+  // Create a framed SE3 with rotation only, from an SO3.
   // Please note: if you provide a framed SO3 the frames will be stripped. SE3
   // is the owner of the transform frames and they should be set explicitly.
   SE3(SO3 rotation, Frame<SE3::DIMS> into, Frame<SE3::DIMS> from);
 
   // Constructor
-  // Create an SE3 with translation only from a 3-Vector.
+  // Create an SE3 with translation only, from a 3-Vector.
   template <typename... Args>
   explicit SE3(Eigen::Vector3d translation, Args... args);
 
@@ -77,7 +77,7 @@ class SE3 : public LieGroup<3, 6> {
 
   // Apply the Group rotation to a FramedVector, this will change the frame
   // of the vector accordingly. This method will fail if the source_vector
-  // frame does not match from_;
+  // frame does not match from().
   FramedVector<SE3::DIMS> rotate(
       const FramedVector<SE3::DIMS> &source_vector) const;
 
@@ -92,11 +92,12 @@ class SE3 : public LieGroup<3, 6> {
   // [param] fraction - interpolation is over a unit interval, where
   // fraction=0 returns identity and fraction=1 returns this SE3. In between
   // the SE3 returned is a linear interpolation. If fraction is greater than 1
-  // or less than 0, a linear extrapolation will be returned.
+  // or less than 0, a linear extrapolation will be returned. The into() and
+  // from() frames are preserved.
   SE3 interp(double fraction) const;
 
-  // Interpolate the SE3 returning a framed SE3 with a user provided
-  // from Frame.
+  // Interpolate the SE3, returning a framed SE3 with a user-provided
+  // from() frame. The into() frame is preserved.
   SE3 interp(double fraction, const Frame<SE3::DIMS> &new_from) const;
 
   // Create an SE3 from an element of the LieGroup algebra.

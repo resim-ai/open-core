@@ -4,8 +4,9 @@
 #include "resim_core/utils/inout.hh"
 
 // Pack and Unpack TCurves into their corresponding protobuf messages.
-// For example TCurve<SE3> -> proto::TCurve_SE3, TCurve<FSO3> ->
-// proto::TCurve_FSO3.
+// For example:
+// - TCurve<SE3> -> proto::TCurve_SE3
+// - TCurve<SO3> -> proto::TCurve_SO3.
 //
 // Note that these templated packing helpers are intended to
 // be used by the explicit pack unpack overloads. As helpers they do not follow

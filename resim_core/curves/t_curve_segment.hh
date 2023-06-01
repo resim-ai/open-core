@@ -27,18 +27,17 @@ class TCurveSegment {
   TCurveSegment() = delete;
 
   // Initialize a curve with origin and destination boundary conditions.
-  // If using a FramedGroup, orig and dest must use the same reference frame.
+  // If the group elements are framed, orig and dest must use the same
+  // reference frame, and this is checked.
   TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest);
 
   // Retrieve a point on the curve at normalized time time_nrm.
   TwoJetL<Group> point_at(double time_nrm) const;
-  // Test id this curve segment is build from framed liegroups
+  // Returns whether this curve segment is built from framed group objects.
   bool is_framed() const;
   // Retrieve the reference frame of the curve segment.
-  // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;
   // Retrieve the point frame of the curve segment.
-  // Note, this method is only valid for FramedGroup<T> types
   const Frame &point_frame() const;
 
   const TwoJetL<Group> &orig() const;
@@ -61,15 +60,6 @@ class TCurveSegment {
       const TwoJetPolyCoeffs &coeffs,
       const TangentVector &vec,
       InOut<TwoJetL<Group>> point) const;
-  // A helper specifically for incrementing the Group part of the point TwoJet.
-  // alg - is the algebra representation of the Group being applied in the
-  // increment.
-  // point - is the point to which the increment will be applied. The
-  // composition does not occur here, however we need a reference to the point
-  // for the case when the Group is a FramedGroup and we wish to ensure
-  // consistency in the frames used in the increment.
-  Group increment_group(const TangentVector &alg, const TwoJetL<Group> &point)
-      const;
 
   TwoJetL<Group> orig_;
   TwoJetL<Group> dest_;

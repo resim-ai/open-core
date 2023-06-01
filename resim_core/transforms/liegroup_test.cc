@@ -255,7 +255,7 @@ TYPED_TEST(FramedLieGroupTests, Composition) {
     b_from_c.set_frames(B, C);
     TypeParam unframed_b_from_c = b_from_c;
     unframed_b_from_c.set_unframed();
-    // Multiply raw LieGroups and FramedGroups.
+    // Multiply framed groups, and unframed groups
     const TypeParam a_from_c = a_from_b * b_from_c;
     const TypeParam unframed_a_from_c = unframed_a_from_b * unframed_b_from_c;
     // Verify products are the same.

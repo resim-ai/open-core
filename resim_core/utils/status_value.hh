@@ -141,7 +141,7 @@ constexpr const Status &StatusValue<T>::status() const {
 }
 
 // Return from the enclosing function if the given status result is not
-// ok. Otherwise, assign the value as the value of this expression.  We don't
+// ok. Otherwise, assign the value as the value of this expression. We don't
 // really have a choice but to use the GNU statement expression extension here
 // unless we pass the assignment target in too. We use the lambda because
 // otherwise the statement expression doesn't preserve references.

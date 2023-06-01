@@ -119,20 +119,11 @@ void TCurveSegment<Group>::point_value_accumulator(
     const TangentVector &vec,
     InOut<TwoJetL<Group>> point) const {
   TwoJetL<Group> increment(
-      increment_group(coeffs.a * vec, *point),
+      Group::exp(coeffs.a * vec, point_frame(), point_frame()),
       coeffs.da * vec,
       coeffs.d2a * vec);
 
   *point = increment * *point;
-}
-
-template <transforms::LieGroupType Group>
-Group TCurveSegment<Group>::increment_group(
-    const TangentVector &alg,
-    const TwoJetL<Group> &point) const {
-  Group increment = Group::identity();
-  increment = Group::exp(alg, point_frame(), point_frame());
-  return increment;
 }
 
 template class TCurveSegment<transforms::SO3>;

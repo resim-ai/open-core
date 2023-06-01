@@ -12,7 +12,8 @@ namespace resim::curves {
 // transforms. Segments are geodesic curves with the same number of degrees of
 // freedom as the underlying LieGroup (e.g. six for SE3). By design the curve is
 // C1 smooth. Control points appended to the curve must all use the same
-// reference frame. If the caller uses a FramedGroup, then this will be checked.
+// reference frame. If the group elements are framed, frames are checked for
+// consistency of frames.
 template <typename Group>
 class DCurve {
  public:
@@ -54,13 +55,11 @@ class DCurve {
   const std::vector<Segment> &segments() const;
   // Retrieve the total length of the curve.
   double curve_length() const;
-  // Is this curve built using framed Groups?
+  // Returns whether this curve is built from framed group elements.
   bool is_framed() const;
   // Retrieve the point frame of the curve's control points.
-  // Note, this method is only valid for FramedGroup<T> types
   const transforms::Frame<Group::DIMS> &point_frame() const;
   // Retrieve the reference frame of the curve's control points.
-  // Note, this method is only valid for FramedGroup<T> types
   const transforms::Frame<Group::DIMS> &reference_frame() const;
 
  private:

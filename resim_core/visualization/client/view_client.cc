@@ -46,7 +46,7 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
     }
 
     if (response.status_code != static_cast<int>(HttpResponse::CREATED)) {
-      LOG(ERROR) << "Could not create session.  HTTP Status: "
+      LOG(ERROR) << "Could not create session. HTTP Status: "
                  << response.status_code;
       LOG(ERROR) << response.text;
       return MAKE_STATUS("Could not create session.");
@@ -96,7 +96,7 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
   }
 
   if (response.status_code != static_cast<int>(HttpResponse::CREATED)) {
-    LOG(ERROR) << "Could not send view update.  HTTP Status code: "
+    LOG(ERROR) << "Could not send view update. HTTP Status code: "
                << response.status_code;
     LOG(ERROR) << response.text;
     return MAKE_STATUS("Could not send view update.");

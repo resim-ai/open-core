@@ -37,8 +37,7 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
         extrapolated_two_jet.d2_frame_from_ref(),
         two_jet.d2_frame_from_ref());
 
-    // For framed groups, verify that the frame assignment is done
-    // correctly.
+    // Verify that the frame assignment is done correctly.
     EXPECT_EQ(
         extrapolated_two_jet.frame_from_ref().into(),
         two_jet.frame_from_ref().into());

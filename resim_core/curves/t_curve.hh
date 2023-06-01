@@ -17,7 +17,7 @@ namespace resim::curves {
 //
 // Control points appended to the curve must all use the same reference frame
 // *and* the same point frame (which is required in downstream uses). If the
-// caller uses a FramedGroup, then this will be checked.
+// group elements are framed, frames are checked for consistency of frames.
 //
 // This design decision, requiring the same point frame, can be revisited should
 // a use case for a TCurve with differing point frames emerge.
@@ -59,13 +59,11 @@ class TCurve {
   const std::vector<Control> &control_pts() const;
   // Access a reference to the segments.
   const std::vector<Segment> &segments() const;
-  // Test if this curve is built from framed liegroups
+  // Returns whether this curve is built from liegroup objects with frames.
   bool is_framed() const;
   // Retrieve the reference frame of the curve's control points.
-  // Note, this method is only valid for FramedGroup<T> types
   const Frame &reference_frame() const;
   // Retrieve the point frame of the curve's control points.
-  // Note, this method is only valid for FramedGroup<T> types
   const Frame &point_frame() const;
   // Getters for the start and end time
   double start_time() const;

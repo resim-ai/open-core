@@ -9,8 +9,7 @@ namespace resim::curves {
 namespace {
 
 // General implementation of the extrapolation logic which forwards the given
-// arguments to the exponential in order to initialize the group's frames if
-// it's a framed group.
+// arguments to the exponential in order to initialize the group's frames.
 template <transforms::LieGroupType Group, typename... FrameArgs>
 TwoJetL<Group> extrapolate_two_jet_impl(
     const TwoJetL<Group> &two_jet,
@@ -31,7 +30,7 @@ TwoJetL<Group> extrapolate_two_jet_impl(
 }
 
 // Overload of the implementation which works specifically for framed groups
-// without any arguments. In this case, we can use the extrapolate two jet
+// without any arguments. In this case, we can use the extrapolate_two_jet
 // function and default to the pre-existing into frame.
 template <transforms::LieGroupType Group>
 TwoJetL<Group> extrapolate_two_jet_impl(
