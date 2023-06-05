@@ -39,7 +39,7 @@ void simulate(
 
   std::vector<std::unique_ptr<actor::ActorUnit>> actor_units;
   std::vector<std::unique_ptr<actor::Actor>> actors{
-      actor::factory(experience.dynamic_behavior)};
+      actor::factory(experience.dynamic_behavior, experience.geometries)};
 
   // TODO(tknowles): For now, add an actor metrics unit for the first actor
   if (not actors.empty()) {

@@ -28,7 +28,8 @@ std::unordered_map<ActorId, experiences::MovementModel> make_movement_model_map(
 }  // namespace
 
 std::vector<std::unique_ptr<Actor>> factory(
-    const experiences::DynamicBehavior &dynamic_behavior) {
+    const experiences::DynamicBehavior &dynamic_behavior,
+    const std::unordered_map<UUID, experiences::Geometry> &geometries) {
   const std::unordered_map<ActorId, experiences::MovementModel>
       movement_model_map{make_movement_model_map(dynamic_behavior.storyboard)};
 
@@ -44,9 +45,21 @@ std::vector<std::unique_ptr<Actor>> factory(
     match(
         movement_model_map.at(actor.id).model,
         [&](const state::Trajectory &trajectory) {
+          std::optional<experiences::Geometry> maybe_geometry;
+          REASSERT(
+              actor.geometries.size() <= 1U,
+              "Cannot yet support multiple geometries per actor!");
+
+          for (const auto &geometry_ref : actor.geometries) {
+            REASSERT(
+                geometries.contains(geometry_ref.geometry_id),
+                "Cannot find referenced geometry!");
+            maybe_geometry = geometries.at(geometry_ref.geometry_id);
+          }
           actors.push_back(std::make_unique<resim::actor::TrajectoryActor>(
               actor.id,
-              trajectory));
+              trajectory,
+              maybe_geometry));
         },
         [](const auto &) { REASSERT(false, "Unsupported MovementModel!"); });
   }
