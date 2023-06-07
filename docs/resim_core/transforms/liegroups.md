@@ -23,27 +23,38 @@ coordinates to another. Most commonly, a robot's location and orientation
 relative to the world is represented by the pose (or rigid transformation)
 relating the "world" and "robot" frames.
 
-We already use Lie groups as an abstract concept every time we describe such a
-transformation whether we choose to represent it using Euler angles with
-translation vectors, matrices, dual quaternions, or any other representation. In
-fact, when writing ReSim's Lie groups classes, we could have theoretically
-chosen any of these representations. A more accurate question may therefore be,
-"Why should we use the nomenclature and machinery of Lie groups?"  While the
-theory of Lie groups is very deep, the shallow practial answer is that the
-concept of the **Lie algebra** ends up being useful in many ways, and most
-of the machinery we implement is related to manipulating algebra elements and
-relating them to group elements. Every Lie group has a corresponding Lie algebra
-(a vector space), which can be used to describe its structure locally (i.e. near
-any given element in the group). This means that we can do a lot of things on
-Lie groups that we normally know how to do on vector spaces. For instance, we
-can construct Gaussian distributions on the Lie group of rigid body
-transformations (SE(3)) and sample from them. In the same mold, we can write
-quadratic loss functions on orientations and penalize differences in orientation
-without having to worry about angle wrap-around or singularities
-explicitly. Finally, we can use the local structure represented in the Lie
-algebra to represent the derivatives of trajectories over a Lie group. We've
-glossed over everything exceptionally briefly here, so I would encourage the
-curious reader to peruse the [external links](#external-links) below.
+There are, of course, many ways of representing a robot's pose. Orientation
+alone can be represented by Euler angles, quaternions, rotation matrices, etc.
+Using Lie groups affords us two primary advantages:
+
+ - First, the set of all orientations and the set of all poses
+are both Lie groups. Representing them as such allows us to write generic
+algorithms (like Hermite spline construction or Newtonian dynamics) that
+operate equally well on both since both are equipped with the same basic Lie
+group properties. This would be impossible to do, for example, if we
+represented orientations as quaternions (which otherwise have very nice
+properties) and poses as tuples of (quaternion, translation vector).
+
+ - Second, every Lie group has a corresponding Lie algebra (a vector space), which
+can be used to describe its structure locally (i.e. near any given element in
+the group). This means that we can do a lot of things on Lie groups that we
+normally know how to do on vector spaces. For instance, we can:
+
+     - Construct Gaussian distributions on the Lie group of rigid body
+       transformations (SE(3)) and sample from them. 
+    
+     - Interpolate between recorded actor poses to produce a trajectory without
+       worrying about wrap-around issues that might result if we interpolated
+       poses with Euler angles describing their orientations.
+    
+     - Write loss functions on orientations and use them for optimal control, once
+       again without worrying about wrap-around or singularities.
+    
+     - Take the derivatives of our poses and represent them using elements of the
+       corresponding Lie algebra.
+
+We've glossed over everything exceptionally briefly here, so I would encourage
+the curious reader to peruse the [external links](#external-links) below.
 
 ## LieGroup Interface
 
