@@ -34,14 +34,22 @@ class TCurveSegmentTests : public ::testing::Test {
     return testing::random_vector<typename T::TangentVector>(rng_);
   }
 
-  T test_group() { return T::exp(test_vector(), POINT_FRAME, REF_FRAME); }
+  T test_group(bool framed = true) {
+    if (framed) {
+      return T::exp(test_vector(), POINT_FRAME, REF_FRAME);
+    }
 
-  TwoJetL<T> test_two_jet() {
-    return TwoJetL<T>(test_group(), test_vector(), test_vector());
+    return T::exp(test_vector());
   }
 
-  TCurveSegment<T> test_t_curve_segment() {
-    return TCurveSegment<T>(this->test_two_jet(), this->test_two_jet());
+  TwoJetL<T> test_two_jet(bool framed = true) {
+    return TwoJetL<T>(test_group(framed), test_vector(), test_vector());
+  }
+
+  TCurveSegment<T> test_t_curve_segment(bool framed = true) {
+    return TCurveSegment<T>(
+        this->test_two_jet(framed),
+        this->test_two_jet(framed));
   }
 
  private:
@@ -203,6 +211,16 @@ TYPED_TEST(TCurveSegmentTests, NumericalDerivativesAreConsistent) {
           point.d2_frame_from_ref().isApprox(num_d2_frame_from_ref, EPS));
     }
   }
+}
+
+TYPED_TEST(TCurveSegmentTests, IsFramed) {
+  const TCurveSegment<TypeParam> framed_segment =
+      this->test_t_curve_segment(true);
+  const TCurveSegment<TypeParam> unframed_segment =
+      this->test_t_curve_segment(false);
+
+  EXPECT_TRUE(framed_segment.is_framed());
+  EXPECT_FALSE(unframed_segment.is_framed());
 }
 
 }  // namespace resim::curves

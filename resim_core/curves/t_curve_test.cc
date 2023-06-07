@@ -29,8 +29,8 @@ class TCurveTests : public ::testing::Test {
   void SetUp() override { t_curve_helper_ = TCurveTestHelper<Group>(SEED); }
   TCurveTestHelper<Group> &t_curve_helper() { return t_curve_helper_; }
 
-  TCurve<Group> test_curve_default() {
-    return t_curve_helper().make_t_curve(DEFAULT_TIMES);
+  TCurve<Group> test_curve_default(bool framed = true) {
+    return t_curve_helper().make_t_curve(DEFAULT_TIMES, framed);
   }
 
  private:
@@ -52,6 +52,8 @@ TYPED_TEST(TCurveTests, EmptyCurveConstruction) {
   // Confirm it's empty.
   EXPECT_TRUE(curve_a.control_pts().empty());
   EXPECT_TRUE(curve_a.segments().empty());
+
+  EXPECT_THROW(curve_a.is_framed(), AssertException);
 }
 
 TYPED_TEST(TCurveTests, VectorConstruction) {
@@ -310,6 +312,15 @@ TYPED_TEST(TCurveTests, QueryStartAndEnd) {
   // Check the reference frame of the curve.
   EXPECT_EQ(curve.start_time(), TestFixture::DEFAULT_TIMES.front());
   EXPECT_EQ(curve.end_time(), TestFixture::DEFAULT_TIMES.back());
+}
+
+TYPED_TEST(TCurveTests, IsFramed) {
+  // Create default curve
+  const TCurve framed_curve = this->test_curve_default();
+  const TCurve unframed_curve = this->test_curve_default(false);
+
+  EXPECT_TRUE(framed_curve.is_framed());
+  EXPECT_FALSE(unframed_curve.is_framed());
 }
 
 TYPED_TEST(FramedTCurveTests, RetrievePointWithFrame) {

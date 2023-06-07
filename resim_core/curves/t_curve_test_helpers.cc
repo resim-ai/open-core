@@ -24,12 +24,17 @@ TwoJetTestHelper<TwoJetL<Group>> &TCurveTestHelper<Group>::two_jet_helper() {
 
 template <transforms::LieGroupType Group>
 TCurve<Group> TCurveTestHelper<Group>::make_t_curve(
-    const std::vector<double> &times) {
+    const std::vector<double> &times,
+    bool framed) {
   TCurve<Group> test_curve;
   for (const double &t : times) {
     TwoJetL<Group> test_tj = two_jet_helper_.make_test_two_jet();
     Group group = test_tj.frame_from_ref();
-    group.set_frames(POINT_FRAME, REF_FRAME);
+    if (framed) {
+      group.set_frames(POINT_FRAME, REF_FRAME);
+    } else {
+      group.set_unframed();
+    }
     test_tj.set_frame_from_ref(group);
     test_curve.append({t, test_tj});
   }

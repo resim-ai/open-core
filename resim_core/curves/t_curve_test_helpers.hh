@@ -26,7 +26,9 @@ class TCurveTestHelper {
 
   // Builds and returns a single TCurve with a given set of times and
   // randomly generated points, using POINT_FROM_REF framing.
-  TCurve<Group> make_t_curve(const std::vector<double> &times);
+  TCurve<Group> make_t_curve(
+      const std::vector<double> &times,
+      bool framed = true);
 
  private:
   TwoJetTestHelper<TwoJetL<Group>> two_jet_helper_;
