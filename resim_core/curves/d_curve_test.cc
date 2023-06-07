@@ -11,6 +11,7 @@ namespace resim::curves {
 namespace {
 using SE3 = transforms::SE3;
 using SO3 = transforms::SO3;
+using Vec3 = Eigen::Vector3d;
 }  // namespace
 
 template <typename T>
@@ -169,6 +170,54 @@ TYPED_TEST(DCurveTests, QueryPoints) {
     constexpr double TOL = 10E-14;
     EXPECT_NEAR(angle_exp, angle_deg, TOL);
   }
+}
+
+TEST(DCurveTest, TestZigZag) {
+  // SETUP
+  // Make a curve that zig zags through (0, 0), (1, 1), (2, 2), and (3, 3),
+  // rotating M_PI_2 radians between each point.
+  // NOLINTBEGIN(readability-magic-numbers)
+  DCurve<SE3> curve{{
+      SE3{SO3::identity()},
+      SE3{SO3{M_PI_2, Vec3::UnitZ()}, {1., 1., 0}},
+      SE3{SO3::identity(), {2., 2., 0}},
+      SE3{SO3{M_PI_2, Vec3::UnitZ()}, {3., 3., 0}},
+  }};
+
+  // ACTION / VERIFICATION
+  // Evaluate at the midpoints of each edge, which are at distances given by
+  // (2n + 1) * M_PI_4. All of these should align and have a heading of M_PI_4.
+  // This offset represents the lateral and vertical offset that the midpoint
+  // between each control point will have from the straight line between the
+  // control points. We compute this by noting that the geodesics are circular
+  // arcs with radius one. The pi/2 chord represented by the straight line
+  // between the control points has a total length of sqrt(2). This chord cuts
+  // the line between the circle's center and the midpoint of the geodesic into
+  // one piece of length 1/sqrt(2), and another of length 1 - 1/sqrt(2), the
+  // latter piece being the one of interest. The vertical component of this
+  // piece is simply sin(pi/4) * (1 - 1/sqrt(2)). The horizontal component is
+  // the same. Evaluating this gives offset = (1 - 1/sqrt(2)) / sqrt(2) =
+  // 1/sqrt(2) - 1/2
+  constexpr double OFFSET = M_SQRT1_2 - 0.5;
+  {
+    const SE3 point{curve.point_at(M_PI_4)};
+    EXPECT_TRUE(point.rotation().log().isApprox(M_PI_4 * Vec3::UnitZ()));
+    EXPECT_TRUE(
+        point.translation().isApprox(Vec3{0.5 + OFFSET, 0.5 - OFFSET, 0.}));
+  }
+  {
+    const SE3 point{curve.point_at(3.0 * M_PI_4)};
+    EXPECT_TRUE(point.rotation().log().isApprox(M_PI_4 * Vec3::UnitZ()));
+    EXPECT_TRUE(
+        point.translation().isApprox(Vec3{1.5 - OFFSET, 1.5 + OFFSET, 0.}));
+  }
+  {
+    const SE3 point{curve.point_at(5.0 * M_PI_4)};
+    EXPECT_TRUE(point.rotation().log().isApprox(M_PI_4 * Vec3::UnitZ()));
+    EXPECT_TRUE(
+        point.translation().isApprox(Vec3{2.5 + OFFSET, 2.5 - OFFSET, 0.}));
+  }
+  // NOLINTEND(readability-magic-numbers)
 }
 
 TYPED_TEST(DCurveTests, SinglePointCurveConstruction) {

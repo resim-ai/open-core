@@ -123,9 +123,8 @@ typename DCurve<Group>::PointAtData DCurve<Group>::point_at_impl(
       segments_.begin(),
       segments_.end(),
       [&arc_length](const Segment &segment) {
-        return (arc_length >= segment.orig_arc_length);
+        return (arc_length <= segment.dest_arc_length);
       });
-
   REASSERT(s != segments_.end(), "Did not find valid segment.");
 
   const double fraction = (arc_length - s->orig_arc_length) /
