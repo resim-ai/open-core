@@ -202,5 +202,6 @@ cc_binary(
         "//resim_core/experiences/proto:experience_to_proto",
         "@com_google_protobuf//:protobuf",
         "@cxxopts",
+        "@indicators",
     ],
 )

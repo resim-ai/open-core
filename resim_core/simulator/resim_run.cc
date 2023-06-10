@@ -2,12 +2,16 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_spinner.hpp>
 #include <iostream>
+#include <thread>
 
 #include "resim_core/assert/assert.hh"
 #include "resim_core/experiences/experience.hh"
@@ -36,6 +40,63 @@ experiences::Experience load_experience(const std::filesystem::path &exp_path) {
   }
   return unpack(experience_msg);
 }
+
+// This class encapsulates a simple spinner that starts when it is constructed
+// and stops when it is destructed.
+class SimpleSpinner {
+ public:
+  // Constructor
+  // @param[in] progress_text - The text to display when running.
+  // @param[in] complete_text - The text to display when complete.
+  SimpleSpinner(std::string_view progress_text, std::string_view complete_text);
+
+  SimpleSpinner(const SimpleSpinner &) = delete;
+  SimpleSpinner(SimpleSpinner &&) = delete;
+  SimpleSpinner &operator=(const SimpleSpinner &) = delete;
+  SimpleSpinner &operator=(SimpleSpinner &&) = delete;
+
+  ~SimpleSpinner();
+
+ private:
+  std::vector<std::string> spinner_states_ = {"/", "-", "\\", "|"};
+  indicators::ProgressSpinner spinner_;
+  std::string_view complete_text_;
+  std::thread thread_;
+  bool done_ = false;
+};
+
+SimpleSpinner::SimpleSpinner(
+    std::string_view progress_text,
+    std::string_view complete_text)
+    : spinner_{indicators::option::PostfixText{progress_text.data()}, indicators::option::ForegroundColor{indicators::Color::yellow}, indicators::option::ShowPercentage{false}, indicators::option::ShowElapsedTime{true}, indicators::option::SpinnerStates{spinner_states_}, indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}},
+      complete_text_{complete_text},
+      thread_{[this]() {
+        while (not done_) {
+          if (spinner_.current() == 4) {
+            spinner_.set_progress(0);
+          } else {
+            spinner_.tick();
+          }
+          constexpr int MS_PER_STATE = 40;
+          std::this_thread::sleep_for(std::chrono::milliseconds(MS_PER_STATE));
+        }
+      }} {
+  indicators::show_console_cursor(false);
+}
+
+SimpleSpinner::~SimpleSpinner() {
+  done_ = true;
+  spinner_.set_option(
+      indicators::option::ForegroundColor{indicators::Color::green});
+  spinner_.set_option(indicators::option::PrefixText{"[DONE]"});
+  spinner_.set_option(indicators::option::ShowSpinner{false});
+  spinner_.set_option(indicators::option::ShowPercentage{false});
+  spinner_.set_option(indicators::option::PostfixText{complete_text_.data()});
+  spinner_.mark_as_completed();
+  thread_.join();
+  indicators::show_console_cursor(true);
+}
+
 }  // namespace
 
 void run_sim(int argc, char **argv) {
@@ -60,8 +121,14 @@ void run_sim(int argc, char **argv) {
   const std::filesystem::path experience_path{
       options_result["config"].as<std::string>()};
 
-  const auto experience = load_experience(experience_path);
-  simulate(experience, mcap_path);
+  auto experience = [&]() {
+    SimpleSpinner spinner{"Loading Experience...", "Experience Loaded!"};
+    return load_experience(experience_path);
+  }();
+  {
+    SimpleSpinner spinner{"Running Simulation...", "Simulation Complete!"};
+    simulate(experience, mcap_path);
+  }
 }
 
 }  // namespace resim::simulator
