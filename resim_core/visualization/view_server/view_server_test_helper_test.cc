@@ -99,8 +99,7 @@ void test_framed<curves::DCurve<SE3>>() {
           detail::MIN_TEST_ELEMENTS,
           FRAMED);
   for (const auto &payload : framed_payloads) {
-    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
-    EXPECT_TRUE(payload.control_pts().front().ref_from_control->is_framed());
+    EXPECT_TRUE(payload.is_framed());
   }
 
   std::vector<curves::DCurve<SE3>> unframed_payloads =
@@ -108,8 +107,7 @@ void test_framed<curves::DCurve<SE3>>() {
           detail::MIN_TEST_ELEMENTS,
           UNFRAMED);
   for (const auto &payload : unframed_payloads) {
-    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
-    EXPECT_FALSE(payload.control_pts().front().ref_from_control->is_framed());
+    EXPECT_FALSE(payload.is_framed());
   }
 }
 
@@ -120,9 +118,7 @@ void test_framed<curves::TCurve<SE3>>() {
           detail::MIN_TEST_ELEMENTS,
           FRAMED);
   for (const auto &payload : framed_payloads) {
-    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
-    EXPECT_TRUE(
-        payload.control_pts().front().point.frame_from_ref().is_framed());
+    EXPECT_TRUE(payload.is_framed());
   }
 
   std::vector<curves::TCurve<SE3>> unframed_payloads =
@@ -130,9 +126,7 @@ void test_framed<curves::TCurve<SE3>>() {
           detail::MIN_TEST_ELEMENTS,
           UNFRAMED);
   for (const auto &payload : unframed_payloads) {
-    // TODO(https://app.asana.com/0/0/1204728047835811/f) use a helper for this
-    EXPECT_FALSE(
-        payload.control_pts().front().point.frame_from_ref().is_framed());
+    EXPECT_FALSE(payload.is_framed());
   }
 }
 
