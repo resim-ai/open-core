@@ -20,9 +20,11 @@
 namespace resim::visualization {
 
 ViewClient::ViewClient(std::string base_url) : base_url_{std::move(base_url)} {
+  // TODO(https://app.asana.com/0/1204498029712344/1204809004921025/f) Don't
+  // hard code these.
   auth::DeviceCodeClient::Config auth_client_config = {
-      .server = "https://dev-jbs5inutkvkmnq7c.us.auth0.com",
-      .client_id = "k0ib8T3aTchwCOZvh40xFw0X4aZeduRS",
+      .server = "https://resim.us.auth0.com",
+      .client_id = "RNWJ3idL2UadBBzDqAaq11G9JIgMh7iy",
       .scope = "view:all",
       .audience = "https://api.resim.ai",
       .token_path = determine_token_root(getenv("HOME")),
