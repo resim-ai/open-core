@@ -40,19 +40,15 @@ Wireframe drone_wireframe(const DroneExtents &drone_extents) {
     const double h_l = drone_extents.rotor_lateral_offset_m;
     const double h_v = drone_extents.rotor_vertical_offset_m;
 
-    points.emplace_back(
-        Point{-(r + h_l) * M_SQRT1_2, -(r + h_l) * M_SQRT1_2, h_v});
-    points.emplace_back(Point{-r * M_SQRT1_2, -r * M_SQRT1_2, 0.0});
-    points.emplace_back(Point{r * M_SQRT1_2, r * M_SQRT1_2, 0.0});
-    points.emplace_back(
-        Point{(r + h_l) * M_SQRT1_2, (r + h_l) * M_SQRT1_2, h_v});
+    points.emplace_back(-(r + h_l) * M_SQRT1_2, -(r + h_l) * M_SQRT1_2, h_v);
+    points.emplace_back(-r * M_SQRT1_2, -r * M_SQRT1_2, 0.0);
+    points.emplace_back(r * M_SQRT1_2, r * M_SQRT1_2, 0.0);
+    points.emplace_back((r + h_l) * M_SQRT1_2, (r + h_l) * M_SQRT1_2, h_v);
 
-    points.emplace_back(
-        Point{-(r + h_l) * M_SQRT1_2, (r + h_l) * M_SQRT1_2, h_v});
-    points.emplace_back(Point{-r * M_SQRT1_2, r * M_SQRT1_2, 0.0});
-    points.emplace_back(Point{r * M_SQRT1_2, -r * M_SQRT1_2, 0.0});
-    points.emplace_back(
-        Point{(r + h_l) * M_SQRT1_2, -(r + h_l) * M_SQRT1_2, h_v});
+    points.emplace_back(-(r + h_l) * M_SQRT1_2, (r + h_l) * M_SQRT1_2, h_v);
+    points.emplace_back(-r * M_SQRT1_2, r * M_SQRT1_2, 0.0);
+    points.emplace_back(r * M_SQRT1_2, -r * M_SQRT1_2, 0.0);
+    points.emplace_back((r + h_l) * M_SQRT1_2, -(r + h_l) * M_SQRT1_2, h_v);
 
     // NOLINTBEGIN(readability-magic-numbers)
     // First chassis arm
