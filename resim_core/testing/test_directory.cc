@@ -1,8 +1,6 @@
 
 #include "resim_core/testing/test_directory.hh"
 
-#include <glog/logging.h>
-
 #include "resim_core/assert/assert.hh"
 #include "resim_core/utils/uuid.hh"
 
@@ -16,12 +14,7 @@ TestDirectoryRAII::TestDirectoryRAII()
   REASSERT(cond, "Failed to make directory!");
 }
 
-TestDirectoryRAII::~TestDirectoryRAII() {
-  const bool cond = fs::remove_all(path_) != 0U;
-
-  // We don't use REASSERT because we shouldn't throw in a destructor.
-  CHECK(cond) << "Failed to remove directory!";
-}
+TestDirectoryRAII::~TestDirectoryRAII() { fs::remove_all(path_); }
 
 const fs::path &TestDirectoryRAII::path() const { return path_; }
 
