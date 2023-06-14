@@ -27,6 +27,15 @@ class LieGroupTests : public ::testing::Test {};
 using LieGroupTypes = ::testing::Types<SO3, SE3>;
 TYPED_TEST_SUITE(LieGroupTests, LieGroupTypes);
 
+TYPED_TEST(LieGroupTests, Construction) {
+  for (const TypeParam &a : make_test_group_elements<TypeParam>()) {
+    TypeParam b{a};
+    EXPECT_TRUE(b.is_approx(a));
+    TypeParam c{std::move(b)};
+    EXPECT_TRUE(c.is_approx(a));
+  }
+}
+
 TYPED_TEST(LieGroupTests, InverseNegativeAlgEquivalence) {
   for (const typename TypeParam::TangentVector &alg :
        make_test_algebra_elements<TypeParam>()) {
@@ -472,6 +481,61 @@ TYPED_TEST(FramedLieGroupTests, VerifyFrames) {
   EXPECT_FALSE(a_from_b.verify_frames(A, C));
   EXPECT_FALSE(a_from_b.verify_frames(B, C));
   EXPECT_FALSE(a_from_b.verify_frames(C, C));
+}
+
+// Check that the frames are set correctly in the overloads of exp().
+TYPED_TEST(FramedLieGroupTests, ExpFrames) {
+  // Helpers so we can get rvalues easily
+  const auto A_copy = []() { return A; };
+  const auto B_copy = []() { return B; };
+
+  for (const typename TypeParam::TangentVector &alg :
+       make_test_algebra_elements<TypeParam>()) {
+    const TypeParam no_frames{TypeParam::exp(alg)};
+    EXPECT_FALSE(no_frames.is_framed());
+
+    const TypeParam lval_lval{TypeParam::exp(alg, A, B)};
+    EXPECT_EQ(lval_lval.into(), A);
+    EXPECT_EQ(lval_lval.from(), B);
+
+    const TypeParam rval_lval{TypeParam::exp(alg, A_copy(), B)};
+    EXPECT_EQ(rval_lval.into(), A);
+    EXPECT_EQ(rval_lval.from(), B);
+
+    const TypeParam lval_rval{TypeParam::exp(alg, A, B_copy())};
+    EXPECT_EQ(lval_rval.into(), A);
+    EXPECT_EQ(lval_rval.from(), B);
+
+    const TypeParam rval_rval{TypeParam::exp(alg, A_copy(), B_copy())};
+    EXPECT_EQ(rval_rval.into(), A);
+    EXPECT_EQ(rval_rval.from(), B);
+  }
+}
+
+// Check that the frames are set correctly in the overloads of identity().
+TYPED_TEST(FramedLieGroupTests, IdentityFrames) {
+  // Helpers so we can get rvalues easily
+  const auto A_copy = []() { return A; };
+  const auto B_copy = []() { return B; };
+
+  const TypeParam no_frames{TypeParam::identity()};
+  EXPECT_FALSE(no_frames.is_framed());
+
+  const TypeParam lval_lval{TypeParam::identity(A, B)};
+  EXPECT_EQ(lval_lval.into(), A);
+  EXPECT_EQ(lval_lval.from(), B);
+
+  const TypeParam rval_lval{TypeParam::identity(A_copy(), B)};
+  EXPECT_EQ(rval_lval.into(), A);
+  EXPECT_EQ(rval_lval.from(), B);
+
+  const TypeParam lval_rval{TypeParam::identity(A, B_copy())};
+  EXPECT_EQ(lval_rval.into(), A);
+  EXPECT_EQ(lval_rval.from(), B);
+
+  const TypeParam rval_rval{TypeParam::identity(A_copy(), B_copy())};
+  EXPECT_EQ(rval_rval.into(), A);
+  EXPECT_EQ(rval_rval.from(), B);
 }
 
 }  // namespace resim::transforms
