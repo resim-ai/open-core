@@ -39,13 +39,25 @@ frame expressed in scene coordinates. Since rotation matrices are a
 `SO3` for our robot pose like so:
 
 ```
+#include <cmath>
+
 #include "resim/transforms/so3.hh"
+#include "resim/visualization/view.hh"
 
 using namespace resim::transforms;
+
+// ...
+
+const double psi = M_PI_4;
+const double theta = 0.5;
+const double phi = 0.1;
+
 const SO3 scene_from_robot_rotation = SO3(phi, {1., 0., 0.}) *
                                       SO3(theta, {0., 1., 0.}) *
                                       SO3(psi, {0., 0., 1.});
 
+// Visualize with ReSim View
+VIEW(scene_from_robot_rotation) << "My rotation";
 ```
 
 Here, we're constructing `SO3`s representing the rotations around each
@@ -350,11 +362,67 @@ using these in code is quite simple:
   REASSERT(my_tangent_vector.isApprox(SE3::exp(my_tangent_vector).log()));
 ```
 
-<!---
 ## Frame Checking
 
-So far we've ignored the fact that our SO3 and SE3 classes come equipped with
-frame checking capabilities.
+So far we've ignored the fact that our `SO3` and `SE3` classes come equipped with
+frame checking capabilities (as alluded to in [Lie Groups](./liegroups.md)). In
+brief, each `SO3` and `SE3` object can be assigned two coordinate frames,
+represented by `Frame` objects. This is done by passing the coordinate frames
+into the constructor or into the exponential or identity member functions. When
+assigned, these objects ensure that frame consistency is maintained when
+composing Lie groups. Here's an example:
 
-TODO(michael) Add examples of using them.
--->
+```
+#include "resim/assert/assert.hh"
+#include "resim/transforms/frame.hh"
+#include "resim/transforms/se3.hh"
+#include "resim/transforms/so3.hh"
+#include "resim/visualization/view.hh"
+
+using resim::transforms::SE3;
+using resim::transforms::SO3;
+using Frame = resim::transforms::Frame<SE3::DIMS>; /* SE3::DIMS == 3 */
+
+// ...
+
+const Frame world{Frame::new_frame()};
+const Frame robot{Frame::new_frame()};
+const Frame sensor{Frame::new_frame()};
+
+// The pose of the robot in the world
+const SE3 world_from_robot{SO3::identity(), {5., 5., 0.}, world, robot};
+
+VIEW(world) << "World frame";
+VIEW(robot) << "Robot frame";
+VIEW(world_from_robot) << "World from robot";
+
+// The pose of a sensor mounted on the robot
+const SE3 robot_from_sensor{
+    SO3{M_PI_2, {0., 0., 1.}},
+    {0., 0., 1.},
+    robot,
+    sensor};
+
+// Visualize with ReSim View
+VIEW(sensor) << "Sensor frame";
+VIEW(robot_from_sensor) << "Robot from sensor";
+
+const SE3 world_from_sensor{world_from_robot * robot_from_sensor};
+REASSERT(world_from_sensor.is_framed());
+REASSERT(world_from_sensor.into() == world);
+REASSERT(world_from_sensor.from() == sensor);
+
+// Whoops! This fails at run time because we forgot to invert
+// robot_from_sensor!
+// const SE3 robot_from_world{world_from_sensor * robot_from_sensor};
+
+// We should have done:
+const SE3 robot_from_world{world_from_sensor * robot_from_sensor.inverse()};
+```
+
+Using frame checking is generally good practice as it makes it less likely for
+silly bugs to occur. In the future, we plan on making it possible to deactivate
+frame checking as an optional performance optimization. Note that composition
+with an unframed `SO3` or `SE3` *always* results in an unframed `SO3`/`SE3`.
+Consequently, unframed objects can propogate rapidly if one is not deliberate
+about using framed objects.
