@@ -1,0 +1,10 @@
+
+syntax = "proto3";
+
+package resim.visualization.proto;
+
+import "resim/visualization/proto/view_primitive.proto";
+
+message ViewUpdate {
+    repeated ViewPrimitive primitive = 1;
+}

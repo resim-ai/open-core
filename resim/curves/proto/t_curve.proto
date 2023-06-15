@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "resim/curves/proto/two_jet.proto";
+
+package resim.curves.proto;
+
+message TCurve_SE3 {
+    repeated Control points = 1;
+
+    message Control {
+        double                         time  = 1;
+        resim.curves.proto.TwoJetL_SE3 point = 2;
+    }
+}
+
+message TCurve_SO3 {
+    repeated Control points = 1;
+
+    message Control {
+        double                         time  = 1;
+        resim.curves.proto.TwoJetL_SO3 point = 2;
+    }
+}

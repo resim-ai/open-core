@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package resim.experiences.proto;
+
+import "resim/experiences/proto/completion_criteria.proto";
+import "resim/experiences/proto/actor.proto";
+import "resim/experiences/proto/storyboard.proto";
+
+// The representation of all the dynamic components of an experience. This may
+// be a recorded trajectory for each entity or an e.g. iLQR agent, an autonomy
+// model or a mix of all two?.
+message DynamicBehavior {
+    // The list of all actors (drones, pedestrians, System under Test etc.) that
+    // may appear in the experience.
+    repeated Actor actors = 1;
+    // The storyboard that determines each actor's behaviors
+    Storyboard storyboard = 2;
+    // The completion criteria for an experience
+    CompletionCriteria completion_criteria = 3;
+}

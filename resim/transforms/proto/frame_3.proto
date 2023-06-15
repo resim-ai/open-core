@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "resim/utils/proto/uuid.proto";
+
+package resim.transforms.proto;
+
+message Frame_3 {
+    resim.proto.UUID id = 1;
+}

@@ -1,9 +1,0 @@
-
-syntax = "proto3";
-
-import "resim_core/utils/proto/testing/message_a.proto";
-
-package resim.proto.testing;
-message MessageB {
-    MessageA message_a = 1;
-}

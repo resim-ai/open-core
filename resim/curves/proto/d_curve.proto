@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package resim.curves.proto;
+
+import "resim/transforms/proto/se3.proto";
+
+message DCurve_SE3 {
+    repeated resim.transforms.proto.SE3 ref_from_control = 1;
+}

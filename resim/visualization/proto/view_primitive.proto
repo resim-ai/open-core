@@ -1,0 +1,32 @@
+
+syntax = "proto3";
+
+package resim.visualization.proto;
+
+import "resim/actor/state/proto/trajectory.proto";
+import "resim/curves/proto/d_curve.proto";
+import "resim/curves/proto/t_curve.proto";
+import "resim/transforms/proto/frame_3.proto";
+import "resim/transforms/proto/framed_vector_3.proto";
+import "resim/transforms/proto/se3.proto";
+import "resim/transforms/proto/so3.proto";
+import "resim/utils/proto/uuid.proto";
+
+// Next Field: 15
+message ViewPrimitive {
+    resim.proto.UUID id = 1;
+
+    oneof payload {
+        resim.transforms.proto.SE3            se3           = 2;
+        resim.transforms.proto.SO3            so3           = 3;
+        resim.curves.proto.DCurve_SE3         d_curve_se3   = 4;
+        resim.curves.proto.TCurve_SE3         t_curve_se3   = 5;
+        resim.actor.state.proto.Trajectory    trajectory    = 6;
+        resim.transforms.proto.Frame_3        frame         = 7;
+        resim.transforms.proto.FramedVector_3 framed_vector = 8;
+    }
+
+    string user_defined_name = 11;
+    string file_name         = 12;
+    int32  line_number       = 13;
+}

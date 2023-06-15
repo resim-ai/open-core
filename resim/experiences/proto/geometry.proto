@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "resim/utils/proto/uuid.proto";
+import "resim/geometry/proto/wireframe.proto";
+
+package resim.experiences.proto;
+
+// This message describes the configuration for a single visualizable geometry
+// that may be referenced by other components of the experience (e.g. actors)
+message Geometry {
+    resim.proto.UUID id = 1;
+    oneof            model {
+        resim.geometry.proto.Wireframe wireframe = 2;
+    }
+}

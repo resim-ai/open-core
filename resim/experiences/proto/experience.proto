@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package resim.experiences.proto;
+
+import "resim/experiences/proto/revision.proto";
+import "resim/experiences/proto/dynamic_behavior.proto";
+import "resim/experiences/proto/geometry.proto";
+
+// Describes a robot experience (often called a scenario).
+message Experience {
+    // Metadata for an experience
+    message Header {
+        // Revision for the experience. Mandatory.
+        Revision experience_schema_revision = 1;
+        // Unique name for the experience. Mandatory.
+        string name = 2;
+        // Description of the experience. Optional.
+        string description = 3;
+        // Parent experience name. Optional.
+        string parent_experience_name = 4;
+    }
+    // The header
+    Header header = 1;
+    // The dynamic behavior of the experience
+    DynamicBehavior dynamic_behavior = 2;
+    // The geometries referenced or used in this experience
+    repeated Geometry geometries = 3;
+}

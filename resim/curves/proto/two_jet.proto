@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "resim/transforms/proto/se3.proto";
+import "resim/transforms/proto/so3.proto";
+
+package resim.curves.proto;
+
+message TwoJetL_SE3 {
+    resim.transforms.proto.SE3 frame_from_ref    = 1;
+    repeated double            d_frame_from_ref  = 2;
+    repeated double            d2_frame_from_ref = 3;
+}
+
+message TwoJetL_SO3 {
+    resim.transforms.proto.SO3 frame_from_ref    = 1;
+    repeated double            d_frame_from_ref  = 2;
+    repeated double            d2_frame_from_ref = 3;
+}
+
+message TwoJetR_SE3 {
+    resim.transforms.proto.SE3 ref_from_frame    = 1;
+    repeated double            d_ref_from_frame  = 2;
+    repeated double            d2_ref_from_frame = 3;
+}
+
+message TwoJetR_SO3 {
+    resim.transforms.proto.SO3 ref_from_frame    = 1;
+    repeated double            d_ref_from_frame  = 2;
+    repeated double            d2_ref_from_frame = 3;
+}

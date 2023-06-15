@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "resim/transforms/proto/frame_3.proto";
+
+package resim.transforms.proto;
+
+message SO3 {
+    repeated double algebra = 1;
+    Frame_3         into    = 2;
+    Frame_3         from    = 3;
+}

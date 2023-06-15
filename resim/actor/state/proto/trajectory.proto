@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "resim/curves/proto/t_curve.proto";
+
+package resim.actor.state.proto;
+
+message Trajectory {
+    google.protobuf.Timestamp     start_time = 1;
+    resim.curves.proto.TCurve_SE3 curve      = 2;
+}
