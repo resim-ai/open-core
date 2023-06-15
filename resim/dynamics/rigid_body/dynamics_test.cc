@@ -158,4 +158,40 @@ TEST(RigidBodyDynamicsTest, TestRigidBodyDynamics) {
   }
 }
 
+// Jacobian is not yet supported so we double check this
+TEST(RigidBodyDynamicsTest, TestThrowsOnJacobianRequested) {
+  // SETUP
+  constexpr double MASS = 2.0;
+  const Eigen::Vector3d moments_of_inertia{1.1, 1.2, 1.3};
+  const Inertia inertia{
+      inertia_from_mass_and_moments_of_inertia(MASS, moments_of_inertia)};
+  Dynamics dynamics{inertia};
+  constexpr time::Timestamp START_TIME;
+
+  State state;
+  Dynamics::Diffs diffs;
+
+  // ACTION / VERIFICATION
+  EXPECT_THROW(
+      dynamics(
+          state,
+          TangentVector::Zero(),
+          START_TIME,
+          NullableReference{diffs}),
+      AssertException);
+}
+
+// Test to make sure we cover the instantations of NullableReference for the
+// controller jacobian type.
+TEST(CoverageTest, ControllerReferenceCoverage) {
+  {
+    ConstantController::Jacobian j;
+    EXPECT_EQ(&*NullableReference{j}, &j);
+  }
+  {
+    Integrator<State>::MatXX mat;
+    EXPECT_EQ(&*NullableReference{mat}, &mat);
+  }
+}
+
 }  // namespace resim::dynamics::rigid_body
