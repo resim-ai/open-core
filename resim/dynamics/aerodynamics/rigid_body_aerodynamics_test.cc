@@ -203,6 +203,12 @@ TEST(AerodynamicElementTest, PureRotationTest) {
   // Repeat the same verification
   EXPECT_TRUE(test_element.cop_local_wind(test_state, ref_local_wind)
                   .isApprox(expected_cop_local_wind));
+
+  // This is always true:
+  EXPECT_TRUE(
+      test_element
+          .cop_local_force(test_state, ref_local_wind, EmptyElementState())
+          .isZero());
 }
 
 TEST(AerodynamicElementTest, HelicalMotionTest) {
