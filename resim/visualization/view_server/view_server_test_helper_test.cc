@@ -107,7 +107,7 @@ void test_framed<curves::DCurve<SE3>>() {
           detail::MIN_TEST_ELEMENTS,
           UNFRAMED);
   for (const auto &payload : unframed_payloads) {
-    EXPECT_FALSE(payload.is_framed());
+    EXPECT_FALSE(not payload.control_pts().empty() and payload.is_framed());
   }
 }
 

@@ -108,6 +108,11 @@ std::vector<curves::DCurve<SE3>> generate_payload_type(
       d_curves.push_back(curve);
     }
   }
+
+  if (not framed) {
+    // Add an empty curve at the front
+    d_curves.front() = curves::DCurve<SE3>();
+  }
   return d_curves;
 }
 

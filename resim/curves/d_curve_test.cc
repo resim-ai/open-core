@@ -40,6 +40,9 @@ TYPED_TEST_SUITE(DCurveTests, LieGroupTypes);
 TYPED_TEST(DCurveTests, EmptyCurveConstruction) {
   DCurve<TypeParam> curve_a;
   EXPECT_TRUE(curve_a.control_pts().empty());
+
+  constexpr double EXPECTED_LENGTH_M = 0.;
+  EXPECT_DOUBLE_EQ(curve_a.curve_length(), EXPECTED_LENGTH_M);
 }
 
 TYPED_TEST(DCurveTests, ConstructionFromPoints) {

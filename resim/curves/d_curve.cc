@@ -89,8 +89,7 @@ const std::vector<typename DCurve<Group>::Segment> &DCurve<Group>::segments()
 
 template <typename Group>
 double DCurve<Group>::curve_length() const {
-  REASSERT(!control_pts_.empty(), "Attempt to access length of empty curve.");
-  return control_pts_.back().arc_length;
+  return control_pts_.empty() ? 0.0 : control_pts_.back().arc_length;
 }
 
 template <typename Group>
