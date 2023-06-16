@@ -143,3 +143,8 @@ examples in `resim/visualization/examples/` to explore and play around with the
 full capabilities of the tool. Don't forget to play around with the "play"
 button in Foxglove Studio when working with the time parameterized `TCurve` or
 `Trajectory` objects!
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/view.cc)
+    for the examples above.

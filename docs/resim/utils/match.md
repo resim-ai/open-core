@@ -95,3 +95,8 @@ std::cout
      * It's possible to avoid copying functors passed as lvalues, but we believe
        this would require a much more complex implementation than is warranted for
        this edge case.
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/match.cc)
+    for the example above.

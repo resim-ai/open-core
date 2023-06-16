@@ -157,3 +157,8 @@ const double analytical_result = 2. * (-1. + std::cos(std::sqrt(30.)) +
                                        std::sqrt(30.) * std::sin(std::sqrt(30.)));
 REASSERT(std::fabs(integral - analytical_result) < 1e-4);
 ```
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/time.cc)
+    for the examples above.

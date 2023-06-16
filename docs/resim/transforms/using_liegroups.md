@@ -112,12 +112,12 @@ const SO3 scene_from_a(M_PI - EPSILON, axis);
 const SO3 scene_from_b(-M_PI + EPSILON, axis);
 
 constexpr double FRACTION = 0.5;
-const SO3 scene_from_interped{
+const SO3 scene_from_interped_rotation{
     scene_from_a *
     (scene_from_a.inverse() * scene_from_b).interp(FRACTION)};
 
 const SO3 expected(M_PI, axis);
-REASSERT(scene_from_interped.is_approx(expected));
+REASSERT(scene_from_interped_rotation.is_approx(expected));
 ```
 
 ## Pose / SE3
@@ -392,6 +392,7 @@ const Frame sensor{Frame::new_frame()};
 // The pose of the robot in the world
 const SE3 world_from_robot{SO3::identity(), {5., 5., 0.}, world, robot};
 
+// Visualize with ReSim View
 VIEW(world) << "World frame";
 VIEW(robot) << "Robot frame";
 VIEW(world_from_robot) << "World from robot";
@@ -426,3 +427,8 @@ frame checking as an optional performance optimization. Note that composition
 with an unframed `SO3` or `SE3` *always* results in an unframed `SO3`/`SE3`.
 Consequently, unframed objects can propogate rapidly if one is not deliberate
 about using framed objects.
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/liegroups.cc)
+    for the examples above.

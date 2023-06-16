@@ -139,3 +139,8 @@ VIEW(unit_circle_trajectory) << "My trajectory";
 Running this code shows us our unit circle trajectory which looks like this:
 
 ![Trajectory Example](./trajectory.png)
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/trajectory.cc)
+    for the example above.

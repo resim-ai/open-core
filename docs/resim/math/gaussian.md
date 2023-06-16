@@ -82,3 +82,8 @@ reality we would likely want to use sample means and covariances based on real
 world data rather than making up a qualitatively nice mean and covariance like
 we did for this example, but hopefully this gives a taste of how this library
 can be used in production code.
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/gaussian.cc)
+    for the example above.

@@ -132,3 +132,8 @@ important to have these as separate wrappers because a function can express
 more about how it treats its parameters by its choice of `InOut` (where its
 clear that the function **will** output something there) or `NullableReference`
 (where it's clear the function **won't** if you don't ask it to).
+
+!!! Note
+    Feel free to play around with the [source
+    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/output_parameters.cc)
+    for the examples above.

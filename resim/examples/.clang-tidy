@@ -1,0 +1,6 @@
+# Disable almost all checks in this folder. It is an example folder with plenty of
+# magic numbers, unused variables, etc. for illustrative purposes.
+Checks: >
+  cppcoreguidelines-avoid-goto,
+  -clang-analyzer-deadcode.DeadStores,
+  -clang-diagnostic-unused-variable,
