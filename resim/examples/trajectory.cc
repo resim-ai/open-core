@@ -85,9 +85,9 @@ int main(int argc, char **argv) {
   // Construct the trajectory
   Trajectory unit_circle_trajectory{{
       control_a,
-      // control_b,
+      control_b,
       control_c,
-      // control_d,
+      control_d,
       control_e,
   }};
 
