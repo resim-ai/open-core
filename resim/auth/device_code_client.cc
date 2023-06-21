@@ -89,7 +89,6 @@ void DeviceCodeClient::load_token() {
 void DeviceCodeClient::fetch_token() {
   proto::DeviceCodeRequest device_code_request;
   device_code_request.set_client_id(config_.client_id);
-  device_code_request.set_scope(config_.scope);
   device_code_request.set_audience(config_.audience);
 
   proto::DeviceCodeResponse device_code_response;

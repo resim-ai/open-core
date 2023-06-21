@@ -10,7 +10,6 @@ package resim.auth.proto;
 
 message DeviceCodeRequest {
     optional string client_id = 1;
-    optional string scope     = 2;
     optional string audience  = 3;
 }
 

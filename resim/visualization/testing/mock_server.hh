@@ -52,7 +52,7 @@ class MockServer {
   // An unauthorized token could be expired, malformed, or otherwise invalid.
   static std::string unauthorized_token() { return UNAUTHORIZED_TOKEN_; }
   // Returns a valid token that does not have permission to the endpoint
-  // (for example, insufficient scopes).
+  // (for example, insufficient permissions).
   static std::string forbidden_token() { return FORBIDDEN_TOKEN_; }
 
  private:

@@ -15,7 +15,6 @@ class DeviceCodeClient : public AuthClientInterface {
     // These parameters match the device authorization flow described here:
     // https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-device-authorization-flow
     std::string client_id;
-    std::string scope;
     std::string audience;
 
     // Where to save the token_path

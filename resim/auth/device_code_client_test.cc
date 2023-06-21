@@ -25,7 +25,6 @@ class AuthClientTest : public ::testing::Test {
   AuthClientTest()
       : config_{
             .client_id = "Some Client Id",
-            .scope = "view:all",
             .audience = "https://api.resim.ai",
             .token_path = test_directory_.test_file_path("jwt"),
         } {
@@ -45,7 +44,6 @@ class AuthClientTest : public ::testing::Test {
 
   void handle_device_code_request(const proto::DeviceCodeRequest &request) {
     EXPECT_EQ(request.client_id(), config_.client_id);
-    EXPECT_EQ(request.scope(), config_.scope);
     EXPECT_EQ(request.audience(), config_.audience);
     ++device_code_count_;
   }
