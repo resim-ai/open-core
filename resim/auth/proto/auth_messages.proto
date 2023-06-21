@@ -9,8 +9,8 @@ package resim.auth.proto;
 // them to/from JSON using protobuf's json_utils.h
 
 message DeviceCodeRequest {
-    optional string client_id = 1;
-    optional string audience  = 3;
+    string client_id = 1;
+    string audience  = 2;
 }
 
 message DeviceCodeResponse {
@@ -23,9 +23,9 @@ message DeviceCodeResponse {
 }
 
 message PollingRequest {
-    optional string grant_type  = 1;
-    optional string device_code = 2;
-    optional string client_id   = 3;
+    string grant_type  = 1;
+    string device_code = 2;
+    string client_id   = 3;
 }
 
 message PollingResponse {

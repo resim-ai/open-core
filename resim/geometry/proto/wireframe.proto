@@ -7,8 +7,8 @@ message Wireframe {
         repeated double values = 1;
     }
     message Edge {
-        optional uint32 start = 1;
-        optional uint32 end   = 2;
+        uint32 start = 1;
+        uint32 end   = 2;
     }
 
     repeated Point points = 1;
