@@ -2,9 +2,11 @@
 #pragma once
 
 #include <memory>
+#include <queue>
 
 #include "resim/simulator/executor_builder.hh"
 #include "resim/simulator/simulation_unit.hh"
+#include "resim/simulator/time_lord_update.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/inout.hh"
 #include "resim/utils/mcap_logger.hh"
@@ -21,12 +23,19 @@ class TimeLord final : public SimulationUnit {
       std::shared_ptr<LoggerInterface> logger_interface,
       InOut<ExecutorBuilder> executor_builder);
 
-  // Advance the current time by the given amount.
-  // @param[in] The time to advance. Must be positive.
-  void increment_time(time::Duration dt);
+  void schedule_update(const TimeLordUpdate& update);
+
+  bool ready_to_terminate();
 
  private:
-  time::Timestamp current_time_;
+  std::priority_queue<
+      TimeLordUpdate,
+      std::vector<TimeLordUpdate>,
+      std::greater<>>
+      scheduled_updates_;
+  std::optional<time::Timestamp> current_time_ = std::nullopt;
+  bool terminate_flag_ = false;
+  ;
 };
 
 }  // namespace resim::simulator

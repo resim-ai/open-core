@@ -61,9 +61,21 @@ void simulate(
   // Run the sim
   constexpr time::Duration DT{std::chrono::milliseconds(10)};
 
-  for (time::Timestamp t; t <= time_limit; t += DT) {
+  time::Timestamp t;
+  for (; t < time_limit; t += DT) {
+    time_lord->schedule_update(TimeLordUpdate(
+        t,
+        TimeLordUpdate::FULL_UPDATE,
+        TimeLordUpdate::PRESCHEDULED));
+  }
+
+  time_lord->schedule_update(TimeLordUpdate(
+      time_limit,
+      TimeLordUpdate::FULL_UPDATE_THEN_TERMINATE,
+      TimeLordUpdate::PRESCHEDULED));
+
+  while (not time_lord->ready_to_terminate()) {
     executor->run_step();
-    time_lord->increment_time(DT);
   }
 }
 

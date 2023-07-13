@@ -113,6 +113,24 @@ cc_library(
 )
 
 cc_library(
+    name = "time_lord_update",
+    hdrs = ["time_lord_update.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/time:timestamp",
+    ],
+)
+
+cc_test(
+    name = "time_lord_update_test",
+    srcs = ["time_lord_update_test.cc"],
+    deps = [
+        ":time_lord_update",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "time_lord",
     srcs = ["time_lord.cc"],
     hdrs = ["time_lord.hh"],
@@ -121,6 +139,7 @@ cc_library(
         ":executor_builder",
         ":simulation_unit",
         ":standard_topics",
+        ":time_lord_update",
         "//resim/assert",
         "//resim/time:timestamp",
         "//resim/utils:inout",
