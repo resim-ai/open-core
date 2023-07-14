@@ -47,3 +47,55 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+proto_library(
+    name = "observable_state_proto",
+    srcs = ["observable_state.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/curves/proto:two_jet_proto",
+        "//resim/utils/proto:uuid_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "observable_state_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":observable_state_proto"],
+)
+
+cc_library(
+    name = "observable_state_to_proto",
+    srcs = ["observable_state_to_proto.cc"],
+    hdrs = ["observable_state_to_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":observable_state_proto_cc",
+        "//resim/actor/state:observable_state",
+        "//resim/actor/state:rigid_body_state",
+        "//resim/assert",
+        "//resim/curves/proto:two_jetr_se3_to_proto",
+        "//resim/time:timestamp",
+        "//resim/transforms:se3",
+        "//resim/utils/proto:uuid_to_proto",
+    ],
+)
+
+cc_test(
+    name = "observable_state_to_proto_test",
+    srcs = ["observable_state_to_proto_test.cc"],
+    deps = [
+        ":observable_state_proto_cc",
+        ":observable_state_to_proto",
+        "//resim/actor:actor_id",
+        "//resim/actor/state:observable_state",
+        "//resim/actor/state:rigid_body_state",
+        "//resim/assert",
+        "//resim/curves:two_jet",
+        "//resim/testing:random_matrix",
+        "//resim/time:timestamp",
+        "//resim/transforms:se3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

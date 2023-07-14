@@ -63,6 +63,7 @@ cc_test(
 proto_library(
     name = "two_jet_proto",
     srcs = ["two_jet.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms/proto:se3_proto",
         "//resim/transforms/proto:so3_proto",
@@ -120,6 +121,7 @@ cc_library(
     name = "two_jetr_se3_to_proto",
     srcs = ["two_jetr_se3_to_proto.cc"],
     hdrs = ["two_jetr_se3_to_proto.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":two_jet_proto_cc",
         ":two_jet_to_proto",

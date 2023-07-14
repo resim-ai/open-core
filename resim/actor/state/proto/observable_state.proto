@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "resim/curves/proto/two_jet.proto";
+import "resim/utils/proto/uuid.proto";
+
+package resim.actor.state.proto;
+
+message ObservableState {
+    resim.proto.UUID               id               = 1;
+    bool                           is_spawned       = 2;
+    google.protobuf.Timestamp      time_of_validity = 3;
+    resim.curves.proto.TwoJetR_SE3 state            = 4;
+}
+
+message ObservableStates {
+    repeated ObservableState states = 1;
+}
