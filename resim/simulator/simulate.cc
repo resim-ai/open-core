@@ -8,6 +8,8 @@
 
 #include "resim/actor/actor_unit.hh"
 #include "resim/actor/factory.hh"
+#include "resim/experiences/proto/experience.pb.h"
+#include "resim/experiences/proto/experience_to_proto.hh"
 #include "resim/metrics/actor_metrics_unit.hh"
 #include "resim/simulator/executor_builder.hh"
 #include "resim/simulator/step_executor.hh"
@@ -29,6 +31,14 @@ void simulate(
   // Setup logger
   std::shared_ptr<LoggerInterface> logger{
       std::make_shared<McapLogger>(mcap_path)};
+
+  // Log the experience
+  experiences::proto::Experience experience_msg;
+  pack(experience, &experience_msg);
+  constexpr time::Timestamp ZERO;
+  logger->add_proto_channel<experiences::proto::Experience>("/experience");
+  logger->log_proto("/experience", ZERO, experience_msg);
+
   // Setup units
   ExecutorBuilder executor_builder;
 

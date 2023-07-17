@@ -18,6 +18,8 @@
 #include "resim/experiences/completion_criteria.hh"
 #include "resim/experiences/dynamic_behavior.hh"
 #include "resim/experiences/experience.hh"
+#include "resim/experiences/proto/experience.pb.h"
+#include "resim/experiences/proto/experience_to_proto.hh"
 #include "resim/experiences/storyboard.hh"
 #include "resim/simulator/standard_frames.hh"
 #include "resim/testing/test_directory.hh"
@@ -87,17 +89,31 @@ TEST(SimulateTest, TestRunSim) {
 
   // TODO(tknowles): Currently this includes the single metric_min_distance
   // channel, which will likely change.
-  ASSERT_EQ(channels.size(), 3U);
+  ASSERT_EQ(channels.size(), 4U);
 
   time::Timestamp max_time{time::Duration::min()};
   time::Timestamp min_time{time::Duration::max()};
 
+  constexpr auto EXPERIENCE_TOPIC = "/experience";
   std::unordered_map<std::string, int> message_counts;
   for (const mcap::MessageView &view : reader.readMessages()) {
     const time::Timestamp time{std::chrono::nanoseconds(view.message.logTime)};
     max_time = std::max(max_time, time);
     min_time = std::min(min_time, time);
     ++message_counts[view.channel->topic];
+
+    if (view.channel->topic == EXPERIENCE_TOPIC) {
+      experiences::proto::Experience experience_msg;
+      pack(test_experience, &experience_msg);
+      const std::string expected{experience_msg.SerializeAsString()};
+      ASSERT_EQ(expected.size(), view.message.dataSize);
+      EXPECT_EQ(
+          std::memcmp(
+              expected.data(),
+              view.message.data,
+              view.message.dataSize),
+          0);
+    }
   }
   EXPECT_EQ(min_time, START_TIME);
   EXPECT_EQ(max_time, START_TIME + DURATION);
@@ -115,6 +131,9 @@ TEST(SimulateTest, TestRunSim) {
   constexpr auto GEOMETRIES_TOPIC = "/geometries";
   ASSERT_TRUE(message_counts.contains(GEOMETRIES_TOPIC));
   EXPECT_EQ(message_counts.at(GEOMETRIES_TOPIC), DURATION / DT + 1U);
+
+  ASSERT_TRUE(message_counts.contains(EXPERIENCE_TOPIC));
+  EXPECT_EQ(message_counts.at(EXPERIENCE_TOPIC), 1U);
 }
 
 TEST(SimulateTest, TestRunSimNegativeTimeFails) {
