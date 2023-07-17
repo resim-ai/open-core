@@ -39,6 +39,9 @@
 //   // Create an MyGroup from an element of the LieGroup algebra.
 //   static MyGroup exp(const TangentVector &alg);
 //
+//   // Get the differential of the exponential map at alg.
+//   static TangentMapping exp_diff(const TangentVector &alg);
+//
 //   // Retrieve the element of the LieGroup algebra that represents
 //   // this group element.
 //   TangentVector log() const;
@@ -117,6 +120,12 @@ concept has_exp = requires(const typename T::TangentVector v) {
   { T::exp(v) } -> std::same_as<T>;
 };
 
+// Trait to check whether a type T has an exponential defined for it.
+template <typename T>
+concept has_exp_diff = requires(const typename T::TangentVector v) {
+  { T::exp_diff(v) } -> std::same_as<typename T::TangentMapping>;
+};
+
 // Trait to check whether a type T has a logarithm defined for it.
 template <typename T>
 concept has_log = requires(const T v) {
@@ -163,6 +172,7 @@ concept LieGroupType =
     inherits_liegroup<T>   &&
     has_action<T>          &&
     has_exp<T>             &&
+    has_exp_diff<T>        &&
     has_interp<T>          &&
     has_log<T>             &&
     has_adjoint<T>         &&

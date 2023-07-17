@@ -159,6 +159,7 @@ cc_library(
         ":liegroup_concepts",
         ":liegroup_exp_diff",
         ":so3",
+        "//resim/assert",
         "@libeigen//:eigen",
     ],
 )

@@ -104,6 +104,9 @@ class SE3 : public LieGroup<3, 6> {
   template <typename... Args>
   static SE3 exp(const TangentVector &alg, Args &&...args);
 
+  // Get the differential of the exponential map at alg.
+  static TangentMapping exp_diff(const TangentVector &alg);
+
   // Retrieve the element of the LieGroup algebra that represents
   // this group element.
   TangentVector log() const;

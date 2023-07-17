@@ -82,6 +82,32 @@ TYPED_TEST(LieGroupTests, ExpOfLogNoop) {
   }
 }
 
+TYPED_TEST(LieGroupTests, ExpDiffFiniteDifferences) {
+  using TangentVector = typename TypeParam::TangentVector;
+  using TangentMapping = typename TypeParam::TangentMapping;
+  std::vector<TangentVector> test_elements =
+      make_test_algebra_elements<TypeParam>();
+
+  for (const TangentVector &alg : test_elements) {
+    const TypeParam base{TypeParam::exp(alg)};
+    const TangentMapping diff{TypeParam::exp_diff(alg)};
+    for (int ii = 0; ii < TypeParam::DOF; ++ii) {
+      constexpr double EPSILON = 1e-7;
+      const TangentVector direction{TangentVector::Unit(ii)};
+      const TypeParam perturbed{TypeParam::exp(alg + EPSILON * direction)};
+
+      const TangentVector fd_derivative =
+          (perturbed * base.inverse()).log() / EPSILON;
+      const TangentVector analytical_derivative = diff * direction;
+
+      constexpr double TOLERANCE = 1e-8;
+      EXPECT_LT(
+          (fd_derivative - analytical_derivative).norm(),
+          TOLERANCE * std::max(alg.norm(), 1.));
+    }
+  }
+}
+
 TYPED_TEST(LieGroupTests, SelfAdjointNoop) {
   for (const typename TypeParam::TangentVector &alg :
        make_test_algebra_elements<TypeParam>()) {

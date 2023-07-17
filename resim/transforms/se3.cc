@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "resim/assert/assert.hh"
 #include "resim/transforms/cross_matrix.hh"
 #include "resim/transforms/liegroup_exp_diff.hh"
 
@@ -118,6 +119,32 @@ SE3 SE3::exp(const TangentVector &alg, Args &&...args) {
       coeffs.a * alg_trans + coeffs.b * alg_rot.cross(alg_trans) +
       coeffs.c * alg_rot.dot(alg_trans) * alg_rot;
   return SE3(SO3::exp(alg_rot), translation, std::forward<Args>(args)...);
+}
+
+SE3::TangentMapping SE3::exp_diff(const TangentVector &alg) {
+  const SO3::TangentVector omega = tangent_vector_rotation_part(alg);
+  const Eigen::Vector3d u = tangent_vector_translation_part(alg);
+  const ExpDiffCoeffs coeffs = derivative_of_exp_se3(omega.squaredNorm());
+
+  const SO3::TangentMapping omega_x = cross_matrix(omega);
+  const SO3::TangentMapping u_x = cross_matrix(u);
+
+  const SO3::TangentMapping exp_diff_so3 = SO3::exp_diff(omega);
+
+  REASSERT(coeffs.d.has_value());
+  REASSERT(coeffs.e.has_value());
+  const SO3::TangentMapping cross_term{
+      coeffs.b * u_x +
+      coeffs.c * (omega * u.transpose() + u * omega.transpose()) +
+      (omega.dot(u)) *
+          ((coeffs.c - coeffs.b) * SO3::TangentMapping::Identity() +
+           (*coeffs.d) * omega_x + (*coeffs.e) * omega * omega.transpose())};
+
+  return (SE3::TangentMapping() << exp_diff_so3,
+          SO3::TangentMapping::Zero(),
+          cross_term,
+          exp_diff_so3)
+      .finished();
 }
 
 TangentVector SE3::log() const {
