@@ -13,6 +13,7 @@
 #include "resim/assert/assert.hh"
 #include "resim/testing/test_directory.hh"
 #include "resim/time/timestamp.hh"
+#include "resim/utils/inout.hh"
 #include "resim/utils/proto/testing/message_a.pb.h"
 #include "resim/utils/proto/testing/test.pb.h"
 
@@ -209,4 +210,91 @@ TEST(McapLoggerDeathTest, TestBadLogProto) {
   EXPECT_THROW(logger->log_proto(TOPIC, LOG_TIME, MessageA{}), AssertException);
 }
 
+TEST(McapLoggerTest, TestAddLogContents) {
+  // SETUP
+  // Make a test log
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
+
+  // String stream for testing the streaming constructor
+  std::ostringstream os;
+
+  constexpr auto TOPIC_A = "/topic_a";
+  constexpr auto TOPIC_B = "/topic_b";
+  constexpr auto TOPIC_C = "/topic_c";
+  constexpr time::Timestamp LOG_TIME{3s};
+  constexpr int MESSAGES_PER_CHANNEL = 47;
+
+  {
+    const std::unique_ptr<LoggerInterface> logger{
+        std::make_unique<McapLogger>(test_mcap)};
+    logger->add_proto_channel<TestMsg>(TOPIC_A);
+    logger->add_proto_channel<MessageA>(TOPIC_B);
+    for (int ii = 0; ii < MESSAGES_PER_CHANNEL; ++ii) {
+      logger->log_proto(TOPIC_A, LOG_TIME, TestMsg{});
+      logger->log_proto(TOPIC_B, LOG_TIME, MessageA{});
+    }
+  }
+
+  const std::filesystem::path target_mcap{
+      test_directory.test_file_path("mcap")};
+  mcap::McapReader reader;
+  ASSERT_TRUE(reader.open(test_mcap.string()).ok());
+
+  // ACTION
+  {
+    McapLogger logger{target_mcap};
+    logger.add_log_contents(InOut{reader});
+
+    logger.add_proto_channel<MessageA>(TOPIC_C);
+    for (int ii = 0; ii < MESSAGES_PER_CHANNEL; ++ii) {
+      logger.log_proto(TOPIC_C, LOG_TIME, MessageA{});
+    }
+  }
+
+  // VERIFICATION
+  // Check that we have exactly one message published per topic
+  reader.close();
+  ASSERT_TRUE(reader.open(target_mcap.string()).ok());
+
+  int count = 0;
+  for (const mcap::MessageView &view : reader.readMessages()) {
+    EXPECT_EQ(view.message.logTime, LOG_TIME.time_since_epoch().count());
+    EXPECT_EQ(view.message.publishTime, LOG_TIME.time_since_epoch().count());
+    ++count;
+  }
+  constexpr int NUM_CHANNELS = 3;
+  EXPECT_EQ(count, NUM_CHANNELS * MESSAGES_PER_CHANNEL);
+  EXPECT_EQ(reader.channels().size(), NUM_CHANNELS);
+
+  constexpr int NUM_SCHEMAS = 2;
+  EXPECT_EQ(reader.schemas().size(), NUM_SCHEMAS);
+}
+
+TEST(McapLoggerTest, TestAddLogContentsOverlappingChannel) {
+  // SETUP
+  // Make a test log
+  const testing::TestDirectoryRAII test_directory;
+  const std::filesystem::path test_mcap{test_directory.test_file_path("mcap")};
+
+  // String stream for testing the streaming constructor
+  std::ostringstream os;
+
+  constexpr auto TOPIC_A = "/topic_a";
+  {
+    const std::unique_ptr<LoggerInterface> logger{
+        std::make_unique<McapLogger>(test_mcap)};
+    logger->add_proto_channel<TestMsg>(TOPIC_A);
+  }
+
+  const std::filesystem::path target_mcap{
+      test_directory.test_file_path("mcap")};
+  mcap::McapReader reader;
+  ASSERT_TRUE(reader.open(test_mcap.string()).ok());
+
+  // ACTION / VERIFICATION
+  McapLogger logger{target_mcap};
+  logger.add_proto_channel<TestMsg>(TOPIC_A);
+  EXPECT_THROW(logger.add_log_contents(InOut{reader}), AssertException);
+}
 }  // namespace resim

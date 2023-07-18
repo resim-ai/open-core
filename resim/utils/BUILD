@@ -103,6 +103,7 @@ cc_library(
     hdrs = ["mcap_logger.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":inout",
         "//resim/assert",
         "//resim/third_party/mcap:mcap_impl",
         "//resim/time:timestamp",
@@ -114,6 +115,7 @@ cc_test(
     name = "mcap_logger_test",
     srcs = ["mcap_logger_test.cc"],
     deps = [
+        ":inout",
         ":mcap_logger",
         "//resim/assert",
         "//resim/testing:test_directory",

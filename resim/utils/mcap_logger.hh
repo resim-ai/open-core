@@ -3,6 +3,7 @@
 #include <cstring>
 #include <filesystem>
 #include <map>
+#include <mcap/reader.hpp>
 #include <mcap/writer.hpp>
 #include <ostream>
 #include <string>
@@ -10,6 +11,7 @@
 
 #include "resim/assert/assert.hh"
 #include "resim/time/timestamp.hh"
+#include "resim/utils/inout.hh"
 #include "resim/utils/proto/dependency_file_descriptor_set.hh"
 
 namespace resim {
@@ -69,6 +71,12 @@ class McapLogger final : public LoggerInterface {
   // logger's.
   // @param[in] os - The stream to output the binary log to.
   explicit McapLogger(std::ostream &os);
+
+  // Add the contents of an existing log to this log. Channel collisions are
+  // *not* allowed and will result in an exception.
+  // @param[in] reader - The reader to get messages from.
+  // @throws AssertException in the event of a channel collision
+  void add_log_contents(InOut<mcap::McapReader> reader);
 
   McapLogger(const McapLogger &) = delete;
   McapLogger &operator=(const McapLogger &) = delete;

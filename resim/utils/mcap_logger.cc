@@ -1,6 +1,8 @@
 
 #include "resim/utils/mcap_logger.hh"
 
+#include "resim/assert/assert.hh"
+
 namespace resim {
 
 namespace {
@@ -20,6 +22,43 @@ McapLogger::McapLogger(std::ostream &os) {
 }
 
 McapLogger::~McapLogger() { writer_.close(); }
+
+void McapLogger::add_log_contents(InOut<mcap::McapReader> reader) {
+  REASSERT(
+      reader->readSummary(mcap::ReadSummaryMethod::NoFallbackScan).ok(),
+      "Failed to read input log summary!");
+
+  for (const auto &[id, channel_ptr] : reader->channels()) {
+    REASSERT(
+        not channels_.contains(channel_ptr->topic),
+        "Overlapping channels not allowed!");
+  }
+
+  for (const mcap::MessageView &view : reader->readMessages()) {
+    if (not schemas_.contains(view.schema->name)) {
+      // Add the schema
+      mcap::Schema schema = *view.schema;
+      writer_.addSchema(schema);
+      schemas_.emplace(schema.name, schema.id);
+    }
+    const mcap::SchemaId schema_id = schemas_.at(view.schema->name);
+
+    if (not channels_.contains(view.channel->topic)) {
+      // Add the channel
+      mcap::Channel channel = *view.channel;
+      channel.schemaId = schema_id;
+      writer_.addChannel(channel);
+      channels_.emplace(channel.topic, channel.id);
+      channel_to_schema_map_.emplace(channel.id, schema_id);
+    }
+    const mcap::ChannelId channel_id = channels_.at(view.channel->topic);
+
+    mcap::Message msg = view.message;
+    msg.channelId = channel_id;
+    const auto success = writer_.write(msg);
+    REASSERT(success.ok(), "Failed to write message!");
+  }
+}
 
 void McapLogger::log_proto(
     const std::string &channel_name,
