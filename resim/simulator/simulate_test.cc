@@ -89,7 +89,7 @@ TEST(SimulateTest, TestRunSim) {
 
   // TODO(tknowles): Currently this includes the single metric_min_distance
   // channel, which will likely change.
-  ASSERT_EQ(channels.size(), 4U);
+  ASSERT_EQ(channels.size(), 5U);
 
   time::Timestamp max_time{time::Duration::min()};
   time::Timestamp min_time{time::Duration::max()};
@@ -131,6 +131,10 @@ TEST(SimulateTest, TestRunSim) {
   constexpr auto GEOMETRIES_TOPIC = "/geometries";
   ASSERT_TRUE(message_counts.contains(GEOMETRIES_TOPIC));
   EXPECT_EQ(message_counts.at(GEOMETRIES_TOPIC), DURATION / DT + 1U);
+
+  constexpr auto ACTOR_STATES_TOPIC = "/actor_states";
+  ASSERT_TRUE(message_counts.contains(ACTOR_STATES_TOPIC));
+  EXPECT_EQ(message_counts.at(ACTOR_STATES_TOPIC), DURATION / DT + 1U);
 
   ASSERT_TRUE(message_counts.contains(EXPERIENCE_TOPIC));
   EXPECT_EQ(message_counts.at(EXPERIENCE_TOPIC), 1U);

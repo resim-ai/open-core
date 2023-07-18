@@ -9,6 +9,8 @@
 
 #include "resim/actor/geometry.hh"
 #include "resim/actor/state/observable_state.hh"
+#include "resim/actor/state/proto/observable_state.pb.h"
+#include "resim/actor/state/proto/observable_state_to_proto.hh"
 #include "resim/assert/assert.hh"
 #include "resim/simulator/simulation_unit.hh"
 #include "resim/simulator/standard_frames.hh"
@@ -23,6 +25,7 @@ namespace resim::actor {
 
 namespace {
 const std::string FOXGLOVE_GEOMETRIES_TOPIC{"/geometries"};
+constexpr auto ACTOR_STATES_LOG_TOPIC = "/actor_states";
 
 // Simple helper we use to double check that the actor is outputing sensible
 // values.
@@ -89,6 +92,17 @@ ActorLoggerUnit::ActorLoggerUnit(
 
   logger()->add_proto_channel<foxglove::SceneUpdate>(FOXGLOVE_GEOMETRIES_TOPIC);
 
+  // This is a trick to allow us to guarantee that we have an updated time
+  // before we process actor states. We don't actually write an actor state,
+  // but this must run before things dependent on actor states can read them.
+  // This could be simplified once we support depending on multiple
+  // dependencies simultaneously.
+  executor_builder->add_task<time::Timestamp>(
+      "receive_time",
+      simulator::TIME_TOPIC,
+      simulator::ACTOR_STATES_TOPIC,
+      [this](const time::Timestamp time) { latest_time_ = time; });
+
   executor_builder->add_task<actor::Geometry>(
       "log_actor_geometries",
       simulator::ACTOR_GEOMETRIES_TOPIC,
@@ -108,6 +122,14 @@ ActorLoggerUnit::ActorLoggerUnit(
 
 void ActorLoggerUnit::log_actor_states(
     const std::vector<actor::state::ObservableState> &actor_states) {
+  state::proto::ObservableStates states_msg;
+  pack(actor_states, &states_msg);
+
+  // This is a no-op if already added:
+  logger()->add_proto_channel<state::proto::ObservableStates>(
+      ACTOR_STATES_LOG_TOPIC);
+  logger()->log_proto(ACTOR_STATES_LOG_TOPIC, latest_time_, states_msg);
+
   for (const auto &actor_state : actor_states) {
     if (not actor_state.is_spawned) {
       continue;

@@ -46,6 +46,9 @@ class ActorLoggerUnit : public simulator::SimulationUnit {
   // Helper function to log the given set of actor geometries
   void log_geometries_update(
       const std::vector<actor::Geometry> &actor_geometries) const;
+
+  // The latest time received which the logger unit publishes at
+  time::Timestamp latest_time_;
 };
 
 }  // namespace resim::actor

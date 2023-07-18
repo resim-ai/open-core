@@ -13,6 +13,8 @@
 #include "resim/actor/actor_id.hh"
 #include "resim/actor/geometry.hh"
 #include "resim/actor/state/observable_state.hh"
+#include "resim/actor/state/proto/observable_state.pb.h"
+#include "resim/actor/state/proto/observable_state_to_proto.hh"
 #include "resim/actor/test_actor.hh"
 #include "resim/assert/assert.hh"
 #include "resim/simulator/executor_builder.hh"
@@ -58,6 +60,17 @@ void expect_states_logged(
         std::string(simulator::SCENE_FRAME_NAME));
     EXPECT_EQ(message.message, transform.SerializeAsString());
   }
+  constexpr auto STATES_CHANNEL_NAME = "/actor_states";
+
+  ASSERT_TRUE(channel_to_message_map.contains(STATES_CHANNEL_NAME));
+  ASSERT_EQ(channel_to_message_map.at(STATES_CHANNEL_NAME).size(), 1U);
+  const MockLogger::TimedMessage message{
+      channel_to_message_map.at(STATES_CHANNEL_NAME).front()};
+  EXPECT_EQ(message.time, time);
+
+  state::proto::ObservableStates states_msg;
+  pack(states, &states_msg);
+  EXPECT_EQ(message.message, states_msg.SerializeAsString());
 }
 
 // Helper for comparing a SceneEntityDeletion with a Clear geometry below
@@ -307,11 +320,18 @@ TEST(ActorLoggerUnitTest, TestLogActorStates) {
   std::vector<actor::state::ObservableState> test_states{
       get_test_actor_states(TIME)};
   for (const auto &state : test_states) {
-    executor_builder.add_independent_task<actor::state::ObservableState>(
+    executor_builder.add_task<time::Timestamp, actor::state::ObservableState>(
         "publish_state",
+        simulator::TIME_TOPIC,
         simulator::ACTOR_STATES_TOPIC,
-        [&]() { return state; });
+        [&](time::Timestamp) { return state; });
   }
+
+  // We need this to kick off the step:
+  executor_builder.add_independent_task<time::Timestamp>(
+      "publish_time",
+      simulator::TIME_TOPIC,
+      [&]() { return TIME; });
 
   std::unique_ptr<simulator::StepExecutor> executor{executor_builder.build()};
 
