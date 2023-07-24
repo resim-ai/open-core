@@ -15,11 +15,8 @@
 #include "resim/curves/test_helpers.hh"
 #include "resim/experiences/actor.hh"
 #include "resim/experiences/dynamic_behavior.hh"
-#include "resim/experiences/geometry.hh"
 #include "resim/experiences/ilqr_drone.hh"
 #include "resim/experiences/storyboard.hh"
-#include "resim/geometry/drone_wireframe.hh"
-#include "resim/geometry/wireframe.hh"
 #include "resim/simulator/standard_frames.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/frame.hh"
@@ -28,8 +25,6 @@
 
 namespace resim::actor {
 namespace {
-
-constexpr time::Timestamp ZERO_TIME;
 
 // Simple helper to make a trajectory
 state::Trajectory trajectory_from_curve(
@@ -81,8 +76,7 @@ TEST(FactoryTest, TestMakeTrajectoryActor) {
       });
 
   // ACTION
-  const std::vector<std::unique_ptr<Actor>> actors{
-      factory(dynamic_behavior, {})};
+  const std::vector<std::unique_ptr<Actor>> actors{factory(dynamic_behavior)};
 
   // VERIFICATION
   ASSERT_EQ(actors.size(), 1U);
@@ -106,7 +100,7 @@ TEST(FactoryTest, TestFailsOnBadMovementModel) {
   // Not enough models:
 
   // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior, {}), AssertException);
+  EXPECT_THROW(factory(dynamic_behavior), AssertException);
 
   // SETUP
   // Unsupported model:
@@ -116,7 +110,7 @@ TEST(FactoryTest, TestFailsOnBadMovementModel) {
           .model = experiences::ILQRDrone{},
       });
   // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior, {}), AssertException);
+  EXPECT_THROW(factory(dynamic_behavior), AssertException);
 
   // SETUP
   // Multiple models:
@@ -129,7 +123,7 @@ TEST(FactoryTest, TestFailsOnBadMovementModel) {
         });
   }
   // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior, {}), AssertException);
+  EXPECT_THROW(factory(dynamic_behavior), AssertException);
 }
 
 TEST(FactoryTest, TestFailsOnBadActorType) {
@@ -150,137 +144,7 @@ TEST(FactoryTest, TestFailsOnBadActorType) {
       });
 
   // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior, {}), AssertException);
-}
-
-TEST(FactoryTest, TestForwardsGeometry) {
-  // SETUP
-  experiences::DynamicBehavior dynamic_behavior;
-  const ActorId id{ActorId::new_uuid()};
-  const UUID geometry_id{UUID::new_uuid()};
-  const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::SE3> t_curve{
-      curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
-  dynamic_behavior.actors.push_back(experiences::Actor{
-      .id = id,
-      .actor_type = experiences::ActorType::SIMULATION_ACTOR,
-      .geometries = {{
-          .geometry_id = geometry_id,
-      }},
-  });
-  dynamic_behavior.storyboard.movement_models.push_back(
-      experiences::MovementModel{
-          .actor_reference = id,
-          .model = trajectory_from_curve(t_curve),
-      });
-
-  constexpr double CHASSIS_RADIUS_M = 1.;
-  constexpr double ROTOR_LATERAL_OFFSET_M = 0.3;
-  constexpr double ROTOR_VERTICAL_OFFSET_M = 0.3;
-  constexpr double ROTOR_RADIUS_M = 0.5;
-  constexpr std::size_t SAMPLES_PER_ROTOR = 2;
-
-  const geometry::DroneExtents extents{
-      .chassis_radius_m = CHASSIS_RADIUS_M,
-      .rotor_lateral_offset_m = ROTOR_LATERAL_OFFSET_M,
-      .rotor_vertical_offset_m = ROTOR_VERTICAL_OFFSET_M,
-      .rotor_radius_m = ROTOR_RADIUS_M,
-      .samples_per_rotor = SAMPLES_PER_ROTOR,
-  };
-  const geometry::Wireframe wireframe{geometry::drone_wireframe(extents)};
-
-  const std::unordered_map<UUID, experiences::Geometry> geometries{
-      {geometry_id,
-       {
-           .id = geometry_id,
-           .model = wireframe,
-       }},
-  };
-
-  // ACTION
-  const std::vector<std::unique_ptr<Actor>> actors{
-      factory(dynamic_behavior, geometries)};
-
-  ASSERT_EQ(actors.size(), 1U);
-  const auto &actor = actors.front();
-  actor->simulate_forward(ZERO_TIME);
-
-  // VERIFICATION
-  const Geometry &geometry = actor->geometry();
-  ASSERT_TRUE(
-      std::holds_alternative<geometry::Wireframe>(geometry.visible_geometry));
-  EXPECT_EQ(
-      std::get<geometry::Wireframe>(geometry.visible_geometry),
-      wireframe);
-}
-
-TEST(FactoryTest, TestBadGeometry) {
-  // SETUP
-  experiences::DynamicBehavior dynamic_behavior;
-  const ActorId id{ActorId::new_uuid()};
-  const UUID geometry_id{UUID::new_uuid()};
-  const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::SE3> t_curve{
-      curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
-  dynamic_behavior.actors.push_back(experiences::Actor{
-      .id = id,
-      .actor_type = experiences::ActorType::SIMULATION_ACTOR,
-      .geometries = {{
-          .geometry_id = geometry_id,
-      }},
-  });
-  dynamic_behavior.storyboard.movement_models.push_back(
-      experiences::MovementModel{
-          .actor_reference = id,
-          .model = trajectory_from_curve(t_curve),
-      });
-  std::unordered_map<UUID, experiences::Geometry> geometries{};
-
-  // ACTION / VERIFICATION
-  // Should be unable to find the needed geometry
-  EXPECT_THROW(factory(dynamic_behavior, geometries), AssertException);
-}
-
-TEST(FactoryTest, TestMultipleGeometries) {
-  // SETUP
-  experiences::DynamicBehavior dynamic_behavior;
-  const ActorId id{ActorId::new_uuid()};
-  const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
-  const curves::TCurve<transforms::SE3> t_curve{
-      curves::testing::make_circle_curve(frame, simulator::SCENE_FRAME)};
-
-  const UUID geometry_id{UUID::new_uuid()};
-  const UUID other_geometry_id{UUID::new_uuid()};
-  // Add multiple geometries for a single actor which isn't yet supported
-  dynamic_behavior.actors.push_back(experiences::Actor{
-      .id = id,
-      .actor_type = experiences::ActorType::SIMULATION_ACTOR,
-      .geometries =
-          {
-              {
-                  .geometry_id = geometry_id,
-              },
-              {
-                  .geometry_id = other_geometry_id,
-              },
-          },
-  });
-  std::unordered_map<UUID, experiences::Geometry> geometries{};
-  geometries.emplace(
-      geometry_id,
-      experiences::Geometry{
-          .id = geometry_id,
-          .model = geometry::Wireframe(),
-      });
-  geometries.emplace(
-      other_geometry_id,
-      experiences::Geometry{
-          .id = other_geometry_id,
-          .model = geometry::Wireframe(),
-      });
-
-  // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior, geometries), AssertException);
+  EXPECT_THROW(factory(dynamic_behavior), AssertException);
 }
 
 }  // namespace resim::actor

@@ -2,7 +2,6 @@
 #include "resim/actor/actor_unit.hh"
 
 #include <fmt/core.h>
-#include <foxglove/FrameTransform.pb.h>
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -11,7 +10,6 @@
 
 #include "resim/actor/actor.hh"
 #include "resim/actor/actor_id.hh"
-#include "resim/actor/geometry.hh"
 #include "resim/actor/state/observable_state.hh"
 #include "resim/actor/state/proto/observable_state.pb.h"
 #include "resim/actor/state/proto/observable_state_to_proto.hh"
@@ -25,8 +23,6 @@
 #include "resim/transforms/se3.hh"
 #include "resim/utils/inout.hh"
 #include "resim/utils/testing/mock_logger.hh"
-#include "resim/visualization/foxglove/actor_geometry_to_foxglove.hh"
-#include "resim/visualization/foxglove/frame_transform_to_foxglove.hh"
 
 namespace resim::actor {
 
@@ -56,15 +52,13 @@ void expect_states_logged(
 // GTEST macros end up causing clang-tidy to overestimate the complexity
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 void test_actor_unit_end_to_end(
-    std::vector<std::pair<state::ObservableState, Geometry>>
-        &states_and_geometries,
+    std::vector<state::ObservableState> &states,
     const time::Timestamp &start_time) {
   MockLogger::ChannelToMessageMap channel_to_message_map;
   std::shared_ptr<MockLogger> logger =
       std::make_shared<MockLogger>(channel_to_message_map);
 
   std::vector<state::ObservableState> expected_states{};
-  std::vector<Geometry> expected_geometries{};
 
   std::size_t simulated_forward = 0;
   constexpr time::Duration DELTA_TIME{std::chrono::nanoseconds(1)};
@@ -79,17 +73,14 @@ void test_actor_unit_end_to_end(
       std::make_unique<ActorLoggerUnit>(logger, InOut{executor_builder});
 
   std::vector<std::unique_ptr<ActorUnit>> units{};
-  for (auto &[state, geometry] : states_and_geometries) {
+  for (auto &state : states) {
     std::unique_ptr<TestActor> actor = std::make_unique<TestActor>(state.id);
     // actor->set_simulate_forward([
     actor->set_simulate_forward([actor = actor.get(),
                                  &state = state,
-                                 &geometry = geometry,
                                  &simulated_forward](const time::Timestamp t) {
       state.time_of_validity = t;
-      geometry.time_of_validity = t;
       actor->set_state(state);
-      actor->set_geometry(geometry);
       ++simulated_forward;
     });
 
@@ -134,7 +125,7 @@ void test_actor_unit_end_to_end(
 
   EXPECT_TRUE(states_checked);
   EXPECT_EQ(simulated_forward, units.size());
-  EXPECT_EQ(units.size(), states_and_geometries.size());
+  EXPECT_EQ(units.size(), states.size());
   expect_states_logged(
       expected_states,
       channel_to_message_map,
@@ -148,8 +139,8 @@ TEST(ActorUnitTest, TestActorUnitsEndToEnd) {
   constexpr int NUM_TESTS = 100;
   constexpr time::Timestamp TIME{time::Timestamp{} + std::chrono::seconds(1)};
   for (int i = 0; i < NUM_TESTS; ++i) {
-    auto states_and_geometries = get_test_actor_components(TIME);
-    test_actor_unit_end_to_end(states_and_geometries, TIME);
+    auto states = get_test_actor_states(TIME);
+    test_actor_unit_end_to_end(states, TIME);
   }
 }
 

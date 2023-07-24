@@ -15,7 +15,6 @@ cc_library(
     hdrs = ["actor.hh"],
     deps = [
         ":actor_id",
-        ":geometry",
         "//resim/actor/state:observable_state",
         "//resim/time:timestamp",
     ],
@@ -41,7 +40,6 @@ cc_library(
     deps = [
         ":actor",
         ":actor_id",
-        ":geometry",
         "//resim/actor/state:observable_state",
         "//resim/assert",
         "//resim/simulator:standard_frames",
@@ -58,7 +56,6 @@ cc_library(
     visibility = ["//resim:__subpackages__"],
     deps = [
         ":actor",
-        ":geometry",
         "//resim/actor/state:observable_state",
         "//resim/actor/state/proto:observable_state_proto_cc",
         "//resim/actor/state/proto:observable_state_to_proto",
@@ -70,10 +67,7 @@ cc_library(
         "//resim/time:timestamp",
         "//resim/transforms:se3",
         "//resim/utils:inout",
-        "//resim/visualization/foxglove:actor_geometry_to_foxglove",
-        "//resim/visualization/foxglove:frame_transform_to_foxglove",
         "@fmt",
-        "@foxglove_schemas",
     ],
 )
 
@@ -94,22 +88,8 @@ cc_test(
         "//resim/transforms:se3",
         "//resim/utils:inout",
         "//resim/utils/testing:mock_logger",
-        "//resim/visualization/foxglove:actor_geometry_to_foxglove",
-        "//resim/visualization/foxglove:frame_transform_to_foxglove",
         "@com_google_googletest//:gtest_main",
         "@fmt",
-        "@foxglove_schemas",
-    ],
-)
-
-cc_library(
-    name = "geometry",
-    hdrs = ["geometry.hh"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//resim/geometry:wireframe",
-        "//resim/time:timestamp",
-        "//resim/transforms:frame",
     ],
 )
 
@@ -120,10 +100,8 @@ cc_library(
     deps = [
         ":actor",
         ":actor_id",
-        ":geometry",
         "//resim/actor/state:observable_state",
         "//resim/actor/state:trajectory",
-        "//resim/experiences:geometry",
         "//resim/time:timestamp",
         "//resim/transforms:se3",
         "//resim/utils:match",
@@ -138,9 +116,6 @@ cc_test(
         ":trajectory_actor",
         "//resim/actor/state:trajectory",
         "//resim/curves:test_helpers",
-        "//resim/experiences:geometry",
-        "//resim/geometry:drone_wireframe",
-        "//resim/geometry:wireframe",
         "//resim/simulator:standard_frames",
         "//resim/time:timestamp",
         "//resim/transforms:frame",
@@ -161,7 +136,6 @@ cc_library(
         "//resim/actor/state:trajectory",
         "//resim/assert",
         "//resim/experiences:dynamic_behavior",
-        "//resim/experiences:geometry",
         "//resim/experiences:storyboard",
         "//resim/utils:match",
         "//resim/utils:uuid",
@@ -182,8 +156,6 @@ cc_test(
         "//resim/experiences:actor",
         "//resim/experiences:dynamic_behavior",
         "//resim/experiences:storyboard",
-        "//resim/geometry:drone_wireframe",
-        "//resim/geometry:wireframe",
         "//resim/simulator:standard_frames",
         "//resim/time:timestamp",
         "//resim/transforms:frame",

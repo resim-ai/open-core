@@ -6,7 +6,6 @@
 
 #include "resim/actor/actor.hh"
 #include "resim/experiences/dynamic_behavior.hh"
-#include "resim/experiences/geometry.hh"
 #include "resim/utils/uuid.hh"
 
 namespace resim::actor {
@@ -16,7 +15,6 @@ namespace resim::actor {
 // @param[in] dynamic_behavior - The dynamic behavior config containing the
 //                               actors.
 std::vector<std::unique_ptr<Actor>> factory(
-    const experiences::DynamicBehavior &dynamic_behavior,
-    const std::unordered_map<UUID, experiences::Geometry> &geometries);
+    const experiences::DynamicBehavior &dynamic_behavior);
 
 }  // namespace resim::actor

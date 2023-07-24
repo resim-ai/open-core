@@ -11,7 +11,6 @@
 namespace resim::actor {
 
 const std::string LOG_ACTOR_STATES_TOPIC{"log_actor_states"};
-const std::string LOG_ACTOR_GEOMETRIES_TOPIC{"log_actor_geometries"};
 
 // This class provides a simulation unit wrapping an abstract actor. It
 // coordinates the receipt of simulation timestamps by the actor and the
@@ -27,11 +26,11 @@ class ActorUnit : public simulator::SimulationUnit {
   std::unique_ptr<Actor> actor_;
 
   // A private dependency string used to enforce that simulate forward always
-  // runs before actor state and geometry publication.
+  // runs before actor state publication.
   const std::string simulate_forward_dependency_;
 };
 
-// This unit logs the output states and geometries published by all actor units
+// This unit logs the output states published by all actor units
 class ActorLoggerUnit : public simulator::SimulationUnit {
  public:
   explicit ActorLoggerUnit(
@@ -42,10 +41,6 @@ class ActorLoggerUnit : public simulator::SimulationUnit {
   // Helper function to log the given set of actor states
   void log_actor_states(
       const std::vector<actor::state::ObservableState> &actor_states);
-
-  // Helper function to log the given set of actor geometries
-  void log_geometries_update(
-      const std::vector<actor::Geometry> &actor_geometries) const;
 
   // The latest time received which the logger unit publishes at
   time::Timestamp latest_time_;

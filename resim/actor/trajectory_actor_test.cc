@@ -6,14 +6,10 @@
 #include <variant>
 
 #include "resim/actor/actor_id.hh"
-#include "resim/actor/geometry.hh"
 #include "resim/actor/state/observable_state.hh"
 #include "resim/actor/state/trajectory.hh"
 #include "resim/curves/t_curve.hh"
 #include "resim/curves/test_helpers.hh"
-#include "resim/experiences/geometry.hh"
-#include "resim/geometry/drone_wireframe.hh"
-#include "resim/geometry/wireframe.hh"
 #include "resim/simulator/standard_frames.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/frame.hh"
@@ -24,19 +20,6 @@ namespace resim::actor {
 namespace {
 
 using Frame = transforms::Frame<transforms::SE3::DIMS>;
-constexpr double CHASSIS_RADIUS_M = 1.;
-constexpr double ROTOR_LATERAL_OFFSET_M = 0.3;
-constexpr double ROTOR_VERTICAL_OFFSET_M = 0.3;
-constexpr double ROTOR_RADIUS_M = 0.5;
-constexpr std::size_t SAMPLES_PER_ROTOR = 2;
-
-const geometry::DroneExtents extents{
-    .chassis_radius_m = CHASSIS_RADIUS_M,
-    .rotor_lateral_offset_m = ROTOR_LATERAL_OFFSET_M,
-    .rotor_vertical_offset_m = ROTOR_VERTICAL_OFFSET_M,
-    .rotor_radius_m = ROTOR_RADIUS_M,
-    .samples_per_rotor = SAMPLES_PER_ROTOR,
-};
 
 }  // namespace
 
@@ -133,94 +116,6 @@ TEST(TrajectoryActorTest, TestSimulateForwardAfterDespawn) {
   EXPECT_EQ(state.time_of_validity, after_despawn);
   EXPECT_EQ(state.id, actor.id());
   EXPECT_EQ(actor.current_time(), after_despawn);
-}
-
-TEST(TrajectoryActorTest, TestGeometry) {
-  // SETUP
-  const Frame actor_frame{Frame::new_frame()};
-  curves::TCurve<transforms::SE3> curve{
-      curves::testing::make_circle_curve(simulator::SCENE_FRAME, actor_frame)};
-
-  constexpr time::Timestamp START_TIME{std::chrono::seconds(3)};
-
-  const state::Trajectory trajectory{curve, START_TIME};
-  const ActorId id{ActorId::new_uuid()};
-
-  const time::Timestamp end_time = trajectory.end_time();
-
-  const geometry::Wireframe wireframe{geometry::drone_wireframe(extents)};
-  const experiences::Geometry geometry{
-      .id = UUID::new_uuid(),
-      .model = wireframe};
-
-  TrajectoryActor actor{id, trajectory, geometry};
-
-  constexpr auto EPSILON_TIME = std::chrono::nanoseconds(1);
-  {
-    // Before start of the trajectory (when actor spawns),
-    // no geometry should be published.
-    // ACTION
-    actor.simulate_forward(START_TIME - EPSILON_TIME);
-    const Geometry geometry = actor.geometry();
-
-    // VERIFICATION
-    EXPECT_TRUE(
-        std::holds_alternative<Geometry::NoUpdate>(geometry.visible_geometry));
-    EXPECT_EQ(geometry.frame, trajectory.body_frame());
-    EXPECT_EQ(geometry.time_of_validity, START_TIME - EPSILON_TIME);
-  }
-  {
-    // After spawning the actor, geometry should be published once.
-    // ACTION
-    actor.simulate_forward(START_TIME);
-    const Geometry geometry = actor.geometry();
-
-    // VERIFICATION
-    EXPECT_TRUE(
-        std::holds_alternative<geometry::Wireframe>(geometry.visible_geometry));
-    const geometry::Wireframe &result_wireframe{
-        std::get<geometry::Wireframe>(geometry.visible_geometry)};
-    EXPECT_EQ(result_wireframe.points(), wireframe.points());
-    EXPECT_EQ(result_wireframe.edges(), wireframe.edges());
-    EXPECT_EQ(geometry.frame, trajectory.body_frame());
-    EXPECT_EQ(geometry.time_of_validity, START_TIME);
-  }
-  {
-    // At end (and intermediate times), no update should be published).
-    // ACTION
-    actor.simulate_forward(end_time);
-    const Geometry geometry = actor.geometry();
-
-    // VERIFICATION
-    EXPECT_TRUE(
-        std::holds_alternative<Geometry::NoUpdate>(geometry.visible_geometry));
-    EXPECT_EQ(geometry.frame, trajectory.body_frame());
-    EXPECT_EQ(geometry.time_of_validity, end_time);
-  }
-  {
-    // After the end, geometry should be cleared
-    // ACTION
-    actor.simulate_forward(end_time + EPSILON_TIME);
-    const Geometry geometry = actor.geometry();
-
-    // VERIFICATION
-    EXPECT_TRUE(
-        std::holds_alternative<Geometry::Clear>(geometry.visible_geometry));
-    EXPECT_EQ(geometry.frame, trajectory.body_frame());
-    EXPECT_EQ(geometry.time_of_validity, end_time + EPSILON_TIME);
-  }
-  {
-    // After the final clear, geometry should not update.
-    // ACTION
-    actor.simulate_forward(end_time + 2 * EPSILON_TIME);
-    const Geometry geometry = actor.geometry();
-
-    // VERIFICATION
-    EXPECT_TRUE(
-        std::holds_alternative<Geometry::NoUpdate>(geometry.visible_geometry));
-    EXPECT_EQ(geometry.frame, trajectory.body_frame());
-    EXPECT_EQ(geometry.time_of_validity, end_time + 2 * EPSILON_TIME);
-  }
 }
 
 }  // namespace resim::actor

@@ -2,12 +2,10 @@
 #include "resim/actor/actor_unit.hh"
 
 #include <fmt/core.h>
-#include <foxglove/FrameTransform.pb.h>
 
 #include <memory>
 #include <string_view>
 
-#include "resim/actor/geometry.hh"
 #include "resim/actor/state/observable_state.hh"
 #include "resim/actor/state/proto/observable_state.pb.h"
 #include "resim/actor/state/proto/observable_state_to_proto.hh"
@@ -18,8 +16,6 @@
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/utils/mcap_logger.hh"
-#include "resim/visualization/foxglove/actor_geometry_to_foxglove.hh"
-#include "resim/visualization/foxglove/frame_transform_to_foxglove.hh"
 
 namespace resim::actor {
 
@@ -67,11 +63,6 @@ ActorUnit::ActorUnit(
         validate_observable_state(*actor_, state, actor_->current_time());
         return state;
       });
-  executor_builder->add_task<actor::Geometry>(
-      "publish_actor_geometries",
-      simulate_forward_dependency_,
-      simulator::ACTOR_GEOMETRIES_TOPIC,
-      [this]() { return actor_->geometry(); });
 };
 
 ActorLoggerUnit::ActorLoggerUnit(
@@ -91,14 +82,6 @@ ActorLoggerUnit::ActorLoggerUnit(
       simulator::ACTOR_STATES_TOPIC,
       [this](const time::Timestamp time) { latest_time_ = time; });
 
-  executor_builder->add_task<actor::Geometry>(
-      "log_actor_geometries",
-      simulator::ACTOR_GEOMETRIES_TOPIC,
-      LOG_ACTOR_GEOMETRIES_TOPIC,
-      [&](const std::vector<actor::Geometry> &actor_geometries) {
-        log_geometries_update(actor_geometries);
-      });
-
   executor_builder->add_task<actor::state::ObservableState>(
       "log_actor_states",
       simulator::ACTOR_STATES_TOPIC,
@@ -117,11 +100,6 @@ void ActorLoggerUnit::log_actor_states(
   logger()->add_proto_channel<state::proto::ObservableStates>(
       ACTOR_STATES_LOG_TOPIC);
   logger()->log_proto(ACTOR_STATES_LOG_TOPIC, latest_time_, states_msg);
-}
-
-void ActorLoggerUnit::log_geometries_update(
-    const std::vector<actor::Geometry> &actor_geometries) const {
-  // NO OP
 }
 
 }  // namespace resim::actor
