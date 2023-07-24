@@ -3,7 +3,7 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 cc_library(
     name = "step_executor",
     hdrs = ["step_executor.hh"],
-    visibility = ["//resim/simulator:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
@@ -134,7 +134,7 @@ cc_library(
     name = "time_lord",
     srcs = ["time_lord.cc"],
     hdrs = ["time_lord.hh"],
-    visibility = ["//resim/simulator:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":executor_builder",
         ":simulation_unit",
@@ -178,6 +178,7 @@ cc_library(
         ":step_executor",
         "//resim/actor:actor_unit",
         "//resim/actor:factory",
+        "//resim/actor:location_condition_unit",
         "//resim/experiences:experience",
         "//resim/experiences/proto:experience_proto_cc",
         "//resim/experiences/proto:experience_to_proto",

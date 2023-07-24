@@ -8,6 +8,7 @@
 
 #include "resim/actor/actor_unit.hh"
 #include "resim/actor/factory.hh"
+#include "resim/actor/location_condition_unit.hh"
 #include "resim/experiences/proto/experience.pb.h"
 #include "resim/experiences/proto/experience_to_proto.hh"
 #include "resim/metrics/actor_metrics_unit.hh"
@@ -46,6 +47,11 @@ void simulate(
 
   auto actor_logger_unit =
       std::make_unique<actor::ActorLoggerUnit>(logger, InOut{executor_builder});
+
+  auto location_condition_unit = std::make_unique<actor::LocationConditionUnit>(
+      logger,
+      experience.dynamic_behavior.completion_criteria,
+      InOut{executor_builder});
 
   std::vector<std::unique_ptr<actor::ActorUnit>> actor_units;
   std::vector<std::unique_ptr<actor::Actor>> actors{

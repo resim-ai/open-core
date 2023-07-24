@@ -164,3 +164,37 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "location_condition_unit",
+    srcs = ["location_condition_unit.cc"],
+    hdrs = ["location_condition_unit.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/actor/state:observable_state",
+        "//resim/experiences:completion_criteria",
+        "//resim/simulator:executor_builder",
+        "//resim/simulator:simulation_unit",
+        "//resim/simulator:standard_topics",
+        "//resim/simulator:time_lord_update",
+        "//resim/transforms:se3",
+        "//resim/utils:inout",
+        "//resim/utils:uuid",
+    ],
+)
+
+cc_test(
+    name = "location_condition_unit_test",
+    srcs = ["location_condition_unit_test.cc"],
+    deps = [
+        "//resim/actor:location_condition_unit",
+        "//resim/actor/state:observable_state",
+        "//resim/assert",
+        "//resim/simulator:standard_topics",
+        "//resim/simulator:step_executor",
+        "//resim/simulator:time_lord",
+        "//resim/testing:random_matrix",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
