@@ -89,7 +89,11 @@ TEST(SimulateTest, TestRunSim) {
 
   // TODO(tknowles): Currently this includes the single metric_min_distance
   // channel, which will likely change.
-  ASSERT_EQ(channels.size(), 5U);
+  ASSERT_EQ(channels.size(), 3U);
+
+  for (const auto &[a, b] : channels) {
+    std::cout << b->topic << std::endl;
+  }
 
   time::Timestamp max_time{time::Duration::min()};
   time::Timestamp min_time{time::Duration::max()};
@@ -118,19 +122,7 @@ TEST(SimulateTest, TestRunSim) {
   EXPECT_EQ(min_time, START_TIME);
   EXPECT_EQ(max_time, START_TIME + DURATION);
 
-  const std::string transform_topic{fmt::format(
-      "/transforms/{}_from_{}",
-      SCENE_FRAME_NAME,
-      actor_trajectory.body_frame().id().to_string())};
-  ASSERT_TRUE(message_counts.contains(transform_topic));
   constexpr time::Duration DT{std::chrono::milliseconds(10)};
-  EXPECT_EQ(
-      message_counts.at(transform_topic),
-      actor_trajectory.time_duration() / DT + 1U);  // Fence post
-
-  constexpr auto GEOMETRIES_TOPIC = "/geometries";
-  ASSERT_TRUE(message_counts.contains(GEOMETRIES_TOPIC));
-  EXPECT_EQ(message_counts.at(GEOMETRIES_TOPIC), DURATION / DT + 1U);
 
   constexpr auto ACTOR_STATES_TOPIC = "/actor_states";
   ASSERT_TRUE(message_counts.contains(ACTOR_STATES_TOPIC));

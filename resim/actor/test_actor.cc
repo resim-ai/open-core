@@ -90,21 +90,4 @@ std::vector<state::ObservableState> get_test_actor_states(
   return test_states;
 }
 
-std::vector<Geometry> get_test_actor_geometries(
-    const time::Timestamp time,
-    bool inconsistent_times) {
-  std::vector<Geometry> geometries;
-  constexpr int NUM_GEOMETRIES = 5;
-  geometries.reserve(NUM_GEOMETRIES);
-  for (int ii = 0; ii < NUM_GEOMETRIES; ++ii) {
-    geometries.push_back(Geometry{
-        .frame = Frame::new_frame(),
-        .time_of_validity =
-            inconsistent_times ? (time + std::chrono::nanoseconds(ii)) : time,
-        .visible_geometry = Geometry::Clear{},
-    });
-  }
-  return geometries;
-}
-
 }  // namespace resim::actor

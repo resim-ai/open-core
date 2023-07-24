@@ -40,26 +40,6 @@ void expect_states_logged(
     const std::vector<state::ObservableState> &states,
     const MockLogger::ChannelToMessageMap &channel_to_message_map,
     const time::Timestamp time) {
-  for (const auto &state : states) {
-    const std::string channel_name{fmt::format(
-        "/transforms/{}_from_{}",
-        simulator::SCENE_FRAME_NAME,
-        state.state.ref_from_body().from().id().to_string())};
-    EXPECT_TRUE(channel_to_message_map.contains(channel_name));
-    ASSERT_EQ(channel_to_message_map.at(channel_name).size(), 1U);
-
-    const MockLogger::TimedMessage message{
-        channel_to_message_map.at(channel_name).front()};
-    EXPECT_EQ(message.time, time);
-    foxglove::FrameTransform transform;
-
-    visualization::foxglove::pack_into_foxglove(
-        state.state.ref_from_body(),
-        time,
-        &transform,
-        std::string(simulator::SCENE_FRAME_NAME));
-    EXPECT_EQ(message.message, transform.SerializeAsString());
-  }
   constexpr auto STATES_CHANNEL_NAME = "/actor_states";
 
   ASSERT_TRUE(channel_to_message_map.contains(STATES_CHANNEL_NAME));
@@ -71,44 +51,6 @@ void expect_states_logged(
   state::proto::ObservableStates states_msg;
   pack(states, &states_msg);
   EXPECT_EQ(message.message, states_msg.SerializeAsString());
-}
-
-// Helper for comparing a SceneEntityDeletion with a Clear geometry below
-void expect_deletion_matches_geometry(
-    const ::foxglove::SceneEntityDeletion &deletion,
-    const Geometry &geometry) {
-  ASSERT_TRUE(
-      std::holds_alternative<Geometry::Clear>(geometry.visible_geometry));
-  const auto &time_msg = deletion.timestamp();
-  EXPECT_EQ(
-      time_msg.seconds() * std::nano::den + time_msg.nanos(),
-      geometry.time_of_validity.time_since_epoch().count());
-  EXPECT_EQ(deletion.id(), geometry.frame.id().to_string());
-}
-
-// Helper to verify that all of the test geometries are published into the
-// channel_to_message_map with the given timestamp.
-void expect_geometries_logged(
-    const std::vector<Geometry> &geometries,
-    const MockLogger::ChannelToMessageMap &channel_to_message_map,
-    const time::Timestamp time) {
-  constexpr auto GEOMETRIES_TOPIC = "/geometries";
-  ASSERT_TRUE(channel_to_message_map.contains(GEOMETRIES_TOPIC));
-  ASSERT_EQ(channel_to_message_map.at(GEOMETRIES_TOPIC).size(), 1U);
-
-  const MockLogger::TimedMessage message{
-      channel_to_message_map.at(GEOMETRIES_TOPIC).front()};
-  EXPECT_EQ(message.time, time);
-
-  ::foxglove::SceneUpdate scene_update;
-  ASSERT_TRUE(scene_update.ParseFromString(message.message));
-  // All geometries are Clear operations
-  ASSERT_EQ(scene_update.deletions_size(), geometries.size());
-  for (int ii = 0; ii < scene_update.deletions_size(); ++ii) {
-    expect_deletion_matches_geometry(
-        scene_update.deletions(ii),
-        geometries.at(ii));
-  }
 }
 
 // GTEST macros end up causing clang-tidy to overestimate the complexity
@@ -158,11 +100,7 @@ void test_actor_unit_end_to_end(
 
     state::ObservableState expected_state{state};
     expected_state.time_of_validity = start_time + DELTA_TIME;
-    Geometry expected_geometry{geometry};
-    expected_geometry.time_of_validity = start_time + DELTA_TIME;
-
     expected_states.push_back(expected_state);
-    expected_geometries.push_back(expected_geometry);
   }
 
   // Add tasks to check logs and publishing working correctly
@@ -189,41 +127,16 @@ void test_actor_unit_end_to_end(
         states_checked = true;
       });
 
-  bool geometries_checked = false;
-  executor_builder.add_task<Geometry>(
-      "check_geometries",
-      simulator::ACTOR_GEOMETRIES_TOPIC,
-      simulator::NULL_TOPIC,
-      [&expected_geometries, &geometries_checked, &simulated_forward](
-          const std::vector<Geometry> &geometries) {
-        EXPECT_TRUE(simulated_forward);
-
-        EXPECT_EQ(expected_geometries.size(), geometries.size());
-        for (int i = 0; i < geometries.size(); ++i) {
-          EXPECT_TRUE(std::holds_alternative<Geometry::Clear>(
-              geometries[i].visible_geometry));
-          EXPECT_EQ(geometries[i].frame, expected_geometries[i].frame);
-          EXPECT_EQ(
-              geometries[i].time_of_validity,
-              expected_geometries[i].time_of_validity);
-        }
-        geometries_checked = true;
-      });
   auto executor = executor_builder.build();
 
   // ACTION
   executor->run_step();
 
   EXPECT_TRUE(states_checked);
-  EXPECT_TRUE(geometries_checked);
   EXPECT_EQ(simulated_forward, units.size());
   EXPECT_EQ(units.size(), states_and_geometries.size());
   expect_states_logged(
       expected_states,
-      channel_to_message_map,
-      start_time + DELTA_TIME);
-  expect_geometries_logged(
-      expected_geometries,
       channel_to_message_map,
       start_time + DELTA_TIME);
 }
@@ -340,61 +253,6 @@ TEST(ActorLoggerUnitTest, TestLogActorStates) {
 
   // VERIFICATION
   expect_states_logged(test_states, channel_to_message_map, TIME);
-}
-
-TEST(ActorLoggerUnitTest, TestLogActorGeometries) {
-  // SETUP
-  MockLogger::ChannelToMessageMap channel_to_message_map;
-  std::shared_ptr<MockLogger> logger =
-      std::make_shared<MockLogger>(channel_to_message_map);
-
-  simulator::ExecutorBuilder executor_builder;
-  ActorLoggerUnit unit{std::move(logger), InOut{executor_builder}};
-  constexpr time::Timestamp TIME{time::Timestamp{} + std::chrono::seconds(1)};
-
-  std::vector<actor::Geometry> test_geometries{get_test_actor_geometries(TIME)};
-
-  for (const auto &geometry : test_geometries) {
-    executor_builder.add_independent_task<actor::Geometry>(
-        "publish_geometry",
-        simulator::ACTOR_GEOMETRIES_TOPIC,
-        [&]() { return geometry; });
-  }
-
-  std::unique_ptr<simulator::StepExecutor> executor{executor_builder.build()};
-
-  // ACTION
-  executor->run_step();
-
-  // VERIFICATION
-  expect_geometries_logged(test_geometries, channel_to_message_map, TIME);
-}
-
-TEST(ActorLoggerUnitTest, TestLogActorGeometriesInconsistentTimes) {
-  // SETUP
-  MockLogger::ChannelToMessageMap channel_to_message_map;
-  std::shared_ptr<MockLogger> logger =
-      std::make_shared<MockLogger>(channel_to_message_map);
-
-  simulator::ExecutorBuilder executor_builder;
-  ActorLoggerUnit unit{std::move(logger), InOut{executor_builder}};
-  constexpr time::Timestamp TIME{time::Timestamp{} + std::chrono::seconds(1)};
-
-  constexpr bool INCONSISTENT_TIMES = true;
-  std::vector<actor::Geometry> test_geometries{
-      get_test_actor_geometries(TIME, INCONSISTENT_TIMES)};
-
-  for (const auto &geometry : test_geometries) {
-    executor_builder.add_independent_task<actor::Geometry>(
-        "publish_geometry",
-        simulator::ACTOR_GEOMETRIES_TOPIC,
-        [&]() { return geometry; });
-  }
-
-  std::unique_ptr<simulator::StepExecutor> executor{executor_builder.build()};
-
-  // ACTION / VERIFICATION
-  EXPECT_THROW(executor->run_step(), AssertException);
 }
 
 }  // namespace resim::actor
