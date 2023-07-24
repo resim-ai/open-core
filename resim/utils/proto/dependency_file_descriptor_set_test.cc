@@ -1,11 +1,13 @@
 
 #include "resim/utils/proto/dependency_file_descriptor_set.hh"
 
+#include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <gtest/gtest.h>
 
 #include <unordered_set>
 
+#include "resim/metrics/proto/simple_metric.pb.h"
 #include "resim/utils/proto/testing/message_a.pb.h"
 #include "resim/utils/proto/testing/message_b.pb.h"
 #include "resim/utils/proto/testing/message_c.pb.h"
@@ -50,5 +52,18 @@ TEST(DependencyFileDescriptorFileSetTest, TestMakeDependencySet) {
   EXPECT_TRUE(observed.contains("resim/utils/proto/testing/message_d.proto"));
 }
 // NOLINTEND(readability-function-cognitive-complexity)
+
+// TODO(mikebauer): This currently fails valgrind, which we can circumvent by
+// using ShutdownProtobufLibrary(). We are choosing to ignore this for now.
+
+TEST(DependencyFileDescriptorFileSetTest, TestMoreComplexDependency) {
+  const std::string result = dependency_file_descriptor_set(
+      *metrics::proto::SimpleMetric::GetDescriptor());
+
+  // VERIFICATION
+  google::protobuf::FileDescriptorSet descriptor_set;
+  // Verify parse-ability
+  ASSERT_TRUE(descriptor_set.ParseFromString(result));
+}
 
 }  // namespace resim

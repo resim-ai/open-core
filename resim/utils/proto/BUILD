@@ -17,6 +17,7 @@ cc_test(
     srcs = ["dependency_file_descriptor_set_test.cc"],
     deps = [
         ":dependency_file_descriptor_set",
+        "//resim/metrics/proto:simple_metric_proto_cc",
         "//resim/utils/proto/testing:message_a_proto_cc",
         "//resim/utils/proto/testing:message_b_proto_cc",
         "//resim/utils/proto/testing:message_c_proto_cc",
