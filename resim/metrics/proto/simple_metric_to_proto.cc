@@ -7,9 +7,9 @@
 #include "resim/assert/assert.hh"
 #include "resim/metrics/proto/simple_metric.pb.h"
 #include "resim/metrics/simple_metric.hh"
+#include "resim/time/proto/time_to_proto.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/proto/uuid_to_proto.hh"
-
 namespace resim::metrics::proto {
 
 void pack(
@@ -17,11 +17,7 @@ void pack(
     metrics::proto::SimpleMetric *const out) {
   REASSERT(out != nullptr, "Can't pack into invalid proto!");
   out->Clear();
-  google::protobuf::Timestamp timestamp;
-  time::SecsAndNanos time =
-      time::to_seconds_and_nanos(in.time.time_since_epoch());
-  out->mutable_time()->set_nanos(time.nanos);
-  out->mutable_time()->set_seconds(time.secs);
+  time::proto::pack(in.time, out->mutable_time());
   out->set_name(in.name);
 
   if (in.actor_id.has_value()) {
@@ -34,12 +30,9 @@ void pack(
 }
 
 metrics::SimpleMetric unpack(const metrics::proto::SimpleMetric &in) {
-  time::Timestamp time{
-      time::from_seconds_and_nanos({in.time().seconds(), in.time().nanos()})};
-
   return metrics::SimpleMetric(
       in.name(),
-      time,
+      time::proto::unpack(in.time()),
       in.has_actor_id() ? std::make_optional(unpack(in.actor_id()))
                         : std::nullopt,
       in.has_metric_value() ? std::make_optional<double>(in.metric_value())

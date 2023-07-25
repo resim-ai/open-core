@@ -5,6 +5,7 @@
 #include "resim/actor/state/rigid_body_state.hh"
 #include "resim/assert/assert.hh"
 #include "resim/curves/proto/two_jetr_se3_to_proto.hh"
+#include "resim/time/proto/time_to_proto.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/utils/proto/uuid_to_proto.hh"
@@ -17,21 +18,16 @@ void pack(const actor::state::ObservableState &in, ObservableState *const out) {
   pack(in.id, out->mutable_id());
   out->set_is_spawned(in.is_spawned);
 
-  const time::SecsAndNanos time_of_validity =
-      time::to_seconds_and_nanos(in.time_of_validity.time_since_epoch());
-  out->mutable_time_of_validity()->set_nanos(time_of_validity.nanos);
-  out->mutable_time_of_validity()->set_seconds(time_of_validity.secs);
+  time::proto::pack(in.time_of_validity, out->mutable_time_of_validity());
 
   pack(in.state.ref_from_body_two_jet(), out->mutable_state());
 }
 
 actor::state::ObservableState unpack(const ObservableState &in) {
-  const time::Timestamp time_of_validity{time::from_seconds_and_nanos(
-      {in.time_of_validity().seconds(), in.time_of_validity().nanos()})};
   return actor::state::ObservableState{
       .id = unpack(in.id()),
       .is_spawned = in.is_spawned(),
-      .time_of_validity = time_of_validity,
+      .time_of_validity = time::proto::unpack(in.time_of_validity()),
       .state = RigidBodyState<transforms::SE3>{unpack(in.state())},
   };
 }

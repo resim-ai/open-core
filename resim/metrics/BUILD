@@ -67,6 +67,7 @@ cc_test(
         "//resim/simulator:executor_builder",
         "//resim/simulator:standard_topics",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/transforms:frame",
         "//resim/transforms:se3",
         "//resim/utils:inout",

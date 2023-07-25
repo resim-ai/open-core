@@ -17,6 +17,7 @@
 #include "resim/simulator/executor_builder.hh"
 #include "resim/simulator/standard_topics.hh"
 #include "resim/simulator/step_executor.hh"
+#include "resim/time/proto/time_to_proto.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/se3.hh"
@@ -83,10 +84,7 @@ TEST(ActorMetricsUnitTest, TestLogMinDistanceMetric) {
   EXPECT_EQ(metric_msg.name(), MIN_DISTANCE_TOPIC_NAME);
   EXPECT_TRUE(metric_msg.has_metric_value());
   EXPECT_GT(metric_msg.metric_value(), 0.0);
-  EXPECT_EQ(
-      time::Timestamp(time::from_seconds_and_nanos(
-          {metric_msg.time().seconds(), metric_msg.time().nanos()})),
-      TIME);
+  EXPECT_EQ(time::proto::unpack(metric_msg.time()), TIME);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
@@ -139,10 +137,7 @@ TEST(ActorMetricsUnitTest, TestLogMinDistanceMetricEmpty) {
 
   EXPECT_EQ(metric_msg.name(), MIN_DISTANCE_TOPIC_NAME);
   EXPECT_FALSE(metric_msg.has_metric_value());
-  EXPECT_EQ(
-      time::Timestamp(time::from_seconds_and_nanos(
-          {metric_msg.time().seconds(), metric_msg.time().nanos()})),
-      TIME);
+  EXPECT_EQ(time::proto::unpack(metric_msg.time()), TIME);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 

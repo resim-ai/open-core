@@ -27,6 +27,7 @@ cc_library(
         "//resim/actor:actor_id",
         "//resim/assert",
         "//resim/metrics:simple_metric",
+        "//resim/time/proto:time_to_proto",
         "//resim/utils/proto:uuid_to_proto",
     ],
 )
@@ -39,6 +40,7 @@ cc_test(
         "//resim/metrics:simple_metric",
         "//resim/metrics/proto:simple_metric_to_proto",
         "//resim/time:random_duration",
+        "//resim/time/proto:time_to_proto",
         "//resim/utils:uuid",
         "@com_google_googletest//:gtest_main",
     ],

@@ -49,8 +49,20 @@ It's common in time serialization formats (e.g.
 [google::protobuf::Timestamp](https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto)
 and ROS2's
 [builtin_interfaces/msg/Time.msg](https://github.com/ros2/rcl_interfaces/blob/master/builtin_interfaces/msg/Time.msg))
-for the seconds and nanoseconds to be stored as separate integer counts. To
-facilitate conversion to and from such serialization types, we have a time
+for the seconds and nanoseconds to be stored as separate integer counts. 
+For `google::protobuf::Timestamp`, we provide standard packers and 
+unpackers:
+
+```
+const time::Timestamp time{};
+google::protobuf::Timestamp time_msg{};
+
+pack(time, &time_msg);
+
+const time::Timestamp unpacked_time = unpack(time_msg);
+```
+
+To facilitate other conversions to and from such serialization types, we have a time
 representation called `SecsAndNanos`:
 
 ```
@@ -66,6 +78,7 @@ And converters to and from it:
 const SecsAndNanos my_secs_and_nanos = to_seconds_and_nanos(my_duration);
 REASSERT(from_seconds_and_nanos(my_secs_and_nanos) == my_duration);
 ```
+
 
 ## Event Scheduling
 

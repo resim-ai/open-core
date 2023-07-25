@@ -200,6 +200,7 @@ cc_library(
         "//resim/assert",
         "//resim/experiences:completion_criteria",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
     ],
 )
 

@@ -28,6 +28,7 @@ cc_library(
         "//resim/assert",
         "//resim/curves/proto:t_curve_se3_to_proto",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/utils:inout",
     ],
 )
@@ -77,6 +78,7 @@ cc_library(
         "//resim/assert",
         "//resim/curves/proto:two_jetr_se3_to_proto",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/transforms:se3",
         "//resim/utils/proto:uuid_to_proto",
     ],

@@ -9,6 +9,7 @@
 #include "resim/actor/actor_id.hh"
 #include "resim/metrics/proto/simple_metric.pb.h"
 #include "resim/metrics/simple_metric.hh"
+#include "resim/time/proto/time_to_proto.hh"
 #include "resim/time/random_duration.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/uuid.hh"
@@ -73,9 +74,7 @@ TEST(SimpleMetricToProtoTests, DoublePack) {
   EXPECT_EQ(simple_metric_proto.name(), simple_metric.name);
   EXPECT_EQ(
       simple_metric.time,
-      time::Timestamp(time::from_seconds_and_nanos(
-          {simple_metric_proto.time().seconds(),
-           simple_metric_proto.time().nanos()})));
+      time::proto::unpack(simple_metric_proto.time()));
 
   EXPECT_TRUE(simple_metric_proto.has_metric_value());
   EXPECT_EQ(simple_metric_proto.metric_value(), DOUBLE_VALUE);
@@ -96,9 +95,7 @@ TEST(SimpleMetricToProtoTests, EmptyPack) {
   EXPECT_EQ(simple_metric_proto.name(), simple_metric.name);
   EXPECT_EQ(
       simple_metric.time,
-      time::Timestamp(time::from_seconds_and_nanos(
-          {simple_metric_proto.time().seconds(),
-           simple_metric_proto.time().nanos()})));
+      time::proto::unpack(simple_metric_proto.time()));
 
   EXPECT_FALSE(simple_metric_proto.has_metric_value());
 }
