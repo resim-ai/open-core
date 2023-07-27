@@ -26,3 +26,38 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "t_curve_differential",
+    srcs = ["t_curve_differential.cc"],
+    hdrs = ["t_curve_differential.hh"],
+    deps = [
+        ":two_jet_tangent_space",
+        "//resim/assert",
+        "//resim/curves:quintic_poly_coeffs",
+        "//resim/curves:t_curve",
+        "//resim/curves:two_jet",
+        "//resim/math:vector_partition",
+        "//resim/transforms:frame",
+        "//resim/transforms:liegroup_concepts",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+    ],
+)
+
+cc_test(
+    name = "t_curve_differential_test",
+    srcs = ["t_curve_differential_test.cc"],
+    deps = [
+        ":t_curve_differential",
+        ":two_jet_tangent_space",
+        "//resim/assert",
+        "//resim/curves:t_curve",
+        "//resim/curves:two_jet",
+        "//resim/curves:two_jet_test_helpers",
+        "//resim/transforms:frame",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

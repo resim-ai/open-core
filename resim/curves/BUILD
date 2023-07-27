@@ -59,6 +59,7 @@ cc_library(
     name = "quintic_poly_coeffs",
     srcs = ["quintic_poly_coeffs.cc"],
     hdrs = ["quintic_poly_coeffs.hh"],
+    visibility = ["//resim/curves:__subpackages__"],
 )
 
 cc_test(
