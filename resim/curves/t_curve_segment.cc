@@ -33,13 +33,11 @@ TCurveSegment<Group>::TCurveSegment(TwoJetL<Group> orig, TwoJetL<Group> dest)
 
 template <transforms::LieGroupType Group>
 TwoJetL<Group> TCurveSegment<Group>::point_at(const double time_nrm) const {
-  TwoJetL<Group> point = TwoJetL<Group>::identity();
   // Note that we accumlate the point transform relative to the origin point
   // before composing this with the origin point at the end of this function
   // to get point_from_ref. Therefore, the point starts out as
   // point_from_point.
-  // TODO(https://app.asana.com/0/0/1202833644049385/f)
-  point.set_frame_from_ref(Group::identity(point_frame(), point_frame()));
+  TwoJetL<Group> point = TwoJetL<Group>::identity(point_frame(), point_frame());
 
   // dest_from_orig
   const Group dest_from_orig =
