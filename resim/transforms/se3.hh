@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 
+#include "resim/math/is_approx.hh"
 #include "resim/transforms/liegroup.hh"
 #include "resim/transforms/liegroup_concepts.hh"
 #include "resim/transforms/so3.hh"
@@ -126,10 +127,13 @@ class SE3 : public LieGroup<3, 6> {
       const TangentVector &alg_1);
 
   // Test for floating-point equality with another SE3.
-  bool is_approx(const SE3 &other) const;
+  bool is_approx(const SE3 &other, double precision = math::DEFAULT_PRECISION)
+      const;
 
   // Test for floating-point equality with another SE3, ignoring frames.
-  bool is_approx_transform(const SE3 &other) const;
+  bool is_approx_transform(
+      const SE3 &other,
+      double precision = math::DEFAULT_PRECISION) const;
 
   // Getter
   // Return the rotational part of the transform.

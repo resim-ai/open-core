@@ -96,3 +96,23 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "is_approx",
+    hdrs = ["is_approx.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "is_approx_test",
+    srcs = ["is_approx_test.cc"],
+    deps = [
+        ":is_approx",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)

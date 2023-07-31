@@ -140,6 +140,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":two_jet_concepts",
+        "//resim/math:is_approx",
         "//resim/transforms:liegroup_concepts",
         "//resim/transforms:se3",
     ],

@@ -90,11 +90,13 @@ const typename Group::TangentVector &TwoJetL<Group>::d2_frame_from_ref() const {
 }
 
 template <transforms::LieGroupType Group>
-bool TwoJetL<Group>::is_approx(const TwoJetL<Group> &other) const {
+bool TwoJetL<Group>::is_approx(
+    const TwoJetL<Group> &other,
+    const double precision) const {
   return (
-      frame_from_ref_.is_approx(other.frame_from_ref_) &&
-      d_frame_from_ref_.isApprox(other.d_frame_from_ref_) &&
-      d2_frame_from_ref_.isApprox(other.d2_frame_from_ref_));
+      frame_from_ref_.is_approx(other.frame_from_ref_, precision) &&
+      math::is_approx(d_frame_from_ref_, other.d_frame_from_ref_, precision) &&
+      math::is_approx(d2_frame_from_ref_, other.d2_frame_from_ref_, precision));
 }
 
 template class TwoJetL<transforms::SE3>;
@@ -187,11 +189,13 @@ const typename Group::TangentVector &TwoJetR<Group>::d2_ref_from_frame() const {
 }
 
 template <transforms::LieGroupType Group>
-bool TwoJetR<Group>::is_approx(const TwoJetR<Group> &other) const {
+bool TwoJetR<Group>::is_approx(
+    const TwoJetR<Group> &other,
+    const double precision) const {
   return (
-      ref_from_frame_.is_approx(other.ref_from_frame_) &&
-      d_ref_from_frame_.isApprox(other.d_ref_from_frame_) &&
-      d2_ref_from_frame_.isApprox(other.d2_ref_from_frame_));
+      ref_from_frame_.is_approx(other.ref_from_frame_, precision) &&
+      math::is_approx(d_ref_from_frame_, other.d_ref_from_frame_, precision) &&
+      math::is_approx(d2_ref_from_frame_, other.d2_ref_from_frame_, precision));
 }
 
 template class TwoJetR<transforms::SE3>;

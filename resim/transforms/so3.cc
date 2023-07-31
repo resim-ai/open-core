@@ -122,13 +122,13 @@ TangentVector SO3::adjoint_times(
   return alg_0.cross(alg_1);
 }
 
-bool SO3::is_approx(const SO3 &other) const {
-  return this->is_approx_transform(other) &&
+bool SO3::is_approx(const SO3 &other, const double precision) const {
+  return this->is_approx_transform(other, precision) &&
          this->verify_frames(other.into(), other.from());
 }
 
-bool SO3::is_approx_transform(const SO3 &other) const {
-  return rotation_matrix_.isApprox(other.rotation_matrix_);
+bool SO3::is_approx_transform(const SO3 &other, const double precision) const {
+  return math::is_approx(rotation_matrix_, other.rotation_matrix_, precision);
 }
 
 const Eigen::Matrix3d &SO3::rotation_matrix() const { return rotation_matrix_; }

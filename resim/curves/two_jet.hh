@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resim/curves/two_jet_concepts.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/transforms/liegroup_concepts.hh"
 #include "resim/transforms/se3.hh"
 
@@ -91,7 +92,9 @@ class TwoJetL {
   const TangentVector &d_frame_from_ref() const;
   const TangentVector &d2_frame_from_ref() const;
 
-  bool is_approx(const TwoJetL<Group> &other) const;
+  bool is_approx(
+      const TwoJetL<Group> &other,
+      double precision = math::DEFAULT_PRECISION) const;
 
  private:
   // A rigid transformation describing the position and pose of a frame
@@ -163,7 +166,9 @@ class TwoJetR {
   const TangentVector &d_ref_from_frame() const;
   const TangentVector &d2_ref_from_frame() const;
 
-  bool is_approx(const TwoJetR<Group> &other) const;
+  bool is_approx(
+      const TwoJetR<Group> &other,
+      double precision = math::DEFAULT_PRECISION) const;
 
  private:
   // A rigid transformation describing the position and pose of a frame

@@ -248,13 +248,9 @@ TYPED_TEST(UnframedTwoJetRTests, CompositionByInverseIsIdentityAndZeros) {
     id_ref_from_frame.set_unframed();
     expected_id_tj.set_ref_from_frame(id_ref_from_frame);
 
-    EXPECT_TRUE(
-        expected_id_tj.ref_from_frame().is_approx(id_tj.ref_from_frame()));
     // TwoJetR results in inexact inversions, unlike TwoJetL
-    // TODO(https://app.asana.com/0/1202178773526279/1203942988562265/f)
     constexpr double TOLERANCE = 1e-8;
-    EXPECT_TRUE(expected_id_tj.d_ref_from_frame().isZero(TOLERANCE));
-    EXPECT_TRUE(expected_id_tj.d2_ref_from_frame().isZero(TOLERANCE));
+    EXPECT_TRUE(expected_id_tj.is_approx(id_tj, TOLERANCE));
   }
 }
 

@@ -160,6 +160,7 @@ cc_library(
         ":liegroup_exp_diff",
         ":so3",
         "//resim/assert",
+        "//resim/math:is_approx",
         "@libeigen//:eigen",
     ],
 )
@@ -188,6 +189,7 @@ cc_library(
         ":liegroup_concepts",
         ":liegroup_exp_diff",
         "//resim/assert",
+        "//resim/math:is_approx",
         "@libeigen//:eigen",
     ],
 )

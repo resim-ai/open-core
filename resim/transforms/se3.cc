@@ -224,14 +224,14 @@ TangentVector SE3::adjoint_times(
       alg_0_trans.cross(alg_1_rot) + alg_0_rot.cross(alg_1_trans));
 }
 
-bool SE3::is_approx(const SE3 &other) const {
-  return this->is_approx_transform(other) &&
+bool SE3::is_approx(const SE3 &other, const double precision) const {
+  return this->is_approx_transform(other, precision) &&
          this->verify_frames(other.into(), other.from());
 }
 
-bool SE3::is_approx_transform(const SE3 &other) const {
-  return rotation_.is_approx(other.rotation_) &&
-         translation_.isApprox(other.translation_);
+bool SE3::is_approx_transform(const SE3 &other, const double precision) const {
+  return rotation_.is_approx(other.rotation_, precision) &&
+         math::is_approx(translation_, other.translation_, precision);
 }
 
 const SO3 &SE3::rotation() const { return rotation_; }
