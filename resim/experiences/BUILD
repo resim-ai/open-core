@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "actor",
@@ -6,6 +6,16 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/utils:uuid",
+    ],
+)
+
+cc_test(
+    name = "actor_test",
+    srcs = ["actor_test.cc"],
+    deps = [
+        ":actor",
+        "//resim/utils:uuid",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
