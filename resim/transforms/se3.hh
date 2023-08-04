@@ -61,10 +61,9 @@ class SE3 : public LieGroup<3, 6> {
   template <typename... Args>
   static SE3 identity(Args &&...args);
 
-  // TODO(https://app.asana.com/0/1203294986954613/1204516240910819/f)
   // Operator*
   // Compose this SE3 with another (multiplication)
-  virtual SE3 operator*(const SE3 &other) const;
+  SE3 operator*(const SE3 &other) const;
 
   // Operator*
   // Apply the SE3 action to a vector in 3-Dimensional space

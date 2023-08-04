@@ -61,10 +61,9 @@ class SO3 : public LieGroup<3, 3> {
   template <typename... Args>
   static SO3 identity(Args &&...args);
 
-  // TODO(https://app.asana.com/0/1203294986954613/1204516240910819/f)
   // Operator*
   // Compose this SO3 with another (multiplication)
-  virtual SO3 operator*(const SO3 &other) const;
+  SO3 operator*(const SO3 &other) const;
 
   // Operator*
   // Apply the action SO3 rotation to a vector in 3-Dimensional space
