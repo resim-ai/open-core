@@ -1,5 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
+exports_files(
+    ["assert.hh"],
+)
+
 cc_library(
     name = "assert",
     srcs = ["assert.cc"],
