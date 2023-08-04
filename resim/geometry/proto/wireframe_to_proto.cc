@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/geometry/proto/wireframe_to_proto.hh"
 
 #include <Eigen/Dense>

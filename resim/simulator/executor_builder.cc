@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/simulator/executor_builder.hh"
 
 #include "resim/simulator/simple_step_executor.hh"

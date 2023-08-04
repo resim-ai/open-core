@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/actor/state/proto/observable_state_to_proto.hh"
 
 #include "resim/actor/state/observable_state.hh"

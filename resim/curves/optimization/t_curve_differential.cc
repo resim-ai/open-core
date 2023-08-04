@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/curves/optimization/t_curve_differential.hh"
 
 #include "resim/assert/assert.hh"

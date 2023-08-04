@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/utils/proto/dependency_file_descriptor_set.hh"
 
 #include <google/protobuf/descriptor.h>

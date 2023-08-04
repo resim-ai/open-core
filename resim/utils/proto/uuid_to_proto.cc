@@ -4,8 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
-
 #include "resim/utils/proto/uuid_to_proto.hh"
 
 #include "resim/assert/assert.hh"

@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/visualization/proto/view_primitive_to_proto.hh"
 
 #include "resim/actor/state/proto/trajectory_to_proto.hh"

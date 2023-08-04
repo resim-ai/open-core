@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 #include "resim/visualization/testing/test_helpers.hh"
 
 #include "resim/transforms/se3.hh"
