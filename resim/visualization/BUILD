@@ -1,11 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-exports_files([
-    "view.hh",
-    "view_primitive.hh",
-    "view.cc",
-])
-
 cc_library(
     name = "color",
     hdrs = ["color.hh"],
@@ -67,20 +61,6 @@ cc_library(
         "//resim/utils:uuid",
         "//resim/visualization/client:view_client",
         "@com_google_googletest//:gtest_prod",
-    ],
-)
-
-cc_test(
-    name = "view_integration_test",
-    srcs = ["view_integration_test.cc"],
-    tags = ["integration"],
-    deps = [
-        ":view",
-        "//resim/auth:client_credentials_client",
-        "//resim/testing:test_directory",
-        "//resim/transforms:se3",
-        "@com_github_google_glog//:glog",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
