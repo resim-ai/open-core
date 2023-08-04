@@ -31,7 +31,7 @@ jobs:
         # Trunk makes use of git and we will get permissions issues (i.e.
         # detected dubious ownership) if we don't make the repo a safe
         # directory.
-        run: git config --global --add safe.directory /__w/re-core/re-core
+        run: git config --global --add safe.directory /__w/open-core/open-core
 
       - name: Generate Coverage Report
         run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
