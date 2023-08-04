@@ -1,0 +1,34 @@
+{
+    // Basic editor setup
+    "editor.formatOnSave": true,
+    "files.autoSave": "afterDelay",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    // YAML style
+    "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "none"
+    },
+    // Make GitLens less noisy
+    "gitlens.currentLine.enabled": false,
+    "gitlens.hovers.currentLine.over": "line",
+    "gitlens.hovers.enabled": false,
+    "gitlens.codeLens.enabled": false,
+    "gitlens.heatmap.toggleMode": "window",
+    // Clang/C++ Setup
+    "clangd.onConfigChanged": "restart",
+    "clangd.arguments": [
+        "--header-insertion=iwyu", // automatically insert the right header when you type a symbol
+        "--clang-tidy", // show more warnings and errors
+        // "--log=verbose", // if you are trying to debug a clangd problem
+        // "-j=1" // if you are trying to debug a clangd problem (multiple threads make log files confusing)
+    ],
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.intelliSenseEngine": "Disabled",
+    // Bazel Buildifier
+    "bazel.buildifierFixOnFormat": true,
+}

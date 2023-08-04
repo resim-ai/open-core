@@ -1,0 +1,9 @@
+build --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build --crosstool_top=//resim/toolchain:clang_suite
+build --cpu=k8
+build:debug -c dbg
+build:debug --copt="-g"
+build:debug --strip="never"
+
+coverage --java_runtime_version=remotejdk_11 --nocache_test_results
+coverage --combined_report=lcov --experimental_generate_llvm_lcov --experimental_use_llvm_covmap

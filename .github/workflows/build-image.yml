@@ -1,0 +1,51 @@
+name: Build & Push Core Image
+on:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  IMAGE_NAME: core
+  DOCKERFILE_PATH: .devcontainer/Dockerfile
+  ECR_REPOSITORY: public.ecr.aws/resim/core
+  HUB_REPOSITORY: resimai/core
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ECR_RW_ROLE }}
+          aws-region: us-east-1
+        
+      - name: Log in to ECR Public
+        uses: docker/login-action@v2
+        with:
+          registry: public.ecr.aws
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          context: .devcontainer
+          push: true
+          tags: |
+            ${{ env.ECR_REPOSITORY }}:latest
+            ${{ env.HUB_REPOSITORY }}:latest
