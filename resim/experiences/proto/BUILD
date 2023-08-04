@@ -177,7 +177,6 @@ cc_library(
 cc_test(
     name = "actor_to_proto_test",
     srcs = ["actor_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":actor_proto_cc",
         ":actor_to_proto",
@@ -207,7 +206,6 @@ cc_library(
 cc_test(
     name = "completion_criteria_to_proto_test",
     srcs = ["completion_criteria_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":completion_criteria_proto_cc",
         ":completion_criteria_to_proto",
@@ -233,7 +231,6 @@ cc_library(
 cc_test(
     name = "ilqr_drone_to_proto_test",
     srcs = ["ilqr_drone_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":experiences_test_helpers",
         ":ilqr_drone_proto_cc",
@@ -262,7 +259,6 @@ cc_library(
 cc_test(
     name = "location_condition_to_proto_test",
     srcs = ["location_condition_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":experiences_test_helpers",
         ":location_condition_proto_cc",
@@ -296,7 +292,6 @@ cc_library(
 cc_test(
     name = "storyboard_to_proto_test",
     srcs = ["storyboard_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":experiences_test_helpers",
         ":ilqr_drone_to_proto",
@@ -331,7 +326,6 @@ cc_library(
 cc_test(
     name = "dynamic_behavior_to_proto_test",
     srcs = ["dynamic_behavior_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":actor_proto_cc",
         ":actor_to_proto",
@@ -364,7 +358,6 @@ cc_library(
 cc_test(
     name = "experience_to_proto_test",
     srcs = ["experience_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":dynamic_behavior_to_proto",
         ":experience_proto_cc",

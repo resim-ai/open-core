@@ -1,12 +1,11 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
-
 cc_library(
     name = "mock_logger",
     testonly = True,
     srcs = ["mock_logger.cc"],
     hdrs = ["mock_logger.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
         "//resim/time:timestamp",

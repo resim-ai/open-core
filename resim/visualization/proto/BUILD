@@ -56,7 +56,6 @@ cc_library(
 cc_test(
     name = "view_primitive_to_proto_test",
     srcs = ["view_primitive_to_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":view_primitive_test_helper",
         "//resim/actor/state:trajectory",
@@ -168,7 +167,6 @@ cc_library(
 cc_test(
     name = "view_primitive_to_metadata_proto_test",
     srcs = ["view_primitive_to_metadata_proto_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":view_primitive_test_helper",
         "//resim/actor/state:trajectory",
@@ -210,7 +208,6 @@ cc_library(
 cc_test(
     name = "view_primitive_test_helper_test",
     srcs = ["view_primitive_test_helper_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":view_primitive_test_helper",
         "//resim/actor/state:trajectory",

@@ -126,7 +126,6 @@ cc_test(
     name = "view_server_test_helper_test",
     testonly = 1,
     srcs = ["view_server_test_helper_test.cc"],
-    visibility = ["//visibility:public"],
     deps = [
         ":view_server_test_helper",
         "//resim/actor/state:trajectory",
