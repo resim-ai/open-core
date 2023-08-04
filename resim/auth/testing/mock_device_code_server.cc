@@ -1,3 +1,9 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
 #include "resim/auth/testing/mock_device_code_server.hh"
 
 #include <google/protobuf/util/json_util.h>

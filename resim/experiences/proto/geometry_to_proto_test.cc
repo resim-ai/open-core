@@ -1,3 +1,9 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
 #include "resim/experiences/proto/geometry_to_proto.hh"
 
 #include <google/protobuf/util/message_differencer.h>

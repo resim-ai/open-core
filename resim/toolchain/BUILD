@@ -1,3 +1,9 @@
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 # Copied from https://bazel.build/tutorials/cc-toolchain-config
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test", "cc_toolchain", "cc_toolchain_suite")
