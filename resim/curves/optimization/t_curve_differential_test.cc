@@ -11,6 +11,7 @@
 #include "resim/curves/t_curve.hh"
 #include "resim/curves/two_jet.hh"
 #include "resim/curves/two_jet_test_helpers.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"
@@ -128,9 +129,10 @@ TYPED_TEST(TCurveDifferentialTest, TestFiniteDifferences) {
       Vec expected_differential_column{
           difference(prev_perturbed_point, point_and_diffs.point) / EPSILON};
 
-      EXPECT_TRUE(
-          (expected_differential_column - point_and_diffs.d_prev.col(ii))
-              .isZero(TOLERANCE));
+      EXPECT_TRUE(math::is_approx(
+          expected_differential_column,
+          point_and_diffs.d_prev.col(ii),
+          TOLERANCE));
 
       // Next pertubation
       const Control next_perturbed{
@@ -143,9 +145,10 @@ TYPED_TEST(TCurveDifferentialTest, TestFiniteDifferences) {
       expected_differential_column =
           difference(next_perturbed_point, point_and_diffs.point) / EPSILON;
 
-      EXPECT_TRUE(
-          (expected_differential_column - point_and_diffs.d_next.col(ii))
-              .isZero(TOLERANCE));
+      EXPECT_TRUE(math::is_approx(
+          expected_differential_column,
+          point_and_diffs.d_next.col(ii),
+          TOLERANCE));
     }
   }
 }

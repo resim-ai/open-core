@@ -15,6 +15,7 @@ cc_test(
     srcs = ["state_test.cc"],
     deps = [
         ":state",
+        "//resim/math:is_approx",
         "//resim/testing:random_matrix",
         "//resim/transforms:se3",
         "@com_google_googletest//:gtest_main",

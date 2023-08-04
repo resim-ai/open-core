@@ -55,6 +55,7 @@ cc_test(
         "//resim/curves:t_curve",
         "//resim/curves:two_jet",
         "//resim/curves:two_jet_test_helpers",
+        "//resim/math:is_approx",
         "//resim/transforms:frame",
         "//resim/transforms:se3",
         "//resim/transforms:so3",

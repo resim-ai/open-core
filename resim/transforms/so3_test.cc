@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 
+#include "resim/math/is_approx.hh"
 #include "resim/testing/random_matrix.hh"
 #include "resim/transforms/liegroup_test_helpers.hh"
 
@@ -28,8 +29,9 @@ TEST(SO3ConstructorTest, AngleAxisZero) {
   const SO3 no_rotation(
       Eigen::AngleAxisd(ZERO_ANGLE, Eigen::Vector3d::UnitX()));
   // Verify that the rotation matrix is identity.
-  EXPECT_TRUE(
-      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      no_rotation.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
 }
 
 TEST(SO3FramedConstructorTest, AngleAxisZero) {
@@ -40,8 +42,9 @@ TEST(SO3FramedConstructorTest, AngleAxisZero) {
       A,
       B);
   // Verify that the rotation matrix is identity.
-  EXPECT_TRUE(
-      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      no_rotation.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
   EXPECT_TRUE(no_rotation.verify_frames(A, B));
 }
 
@@ -51,8 +54,9 @@ TEST(SO3ConstructorTest, AngleAxisArbitrary) {
   const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
   const SO3 rotation_so3(rotation_aa);
   // Verify that rotation matrices of axis angle and so3 agree.
-  EXPECT_TRUE(
-      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
+  EXPECT_TRUE(math::is_approx(
+      rotation_so3.rotation_matrix(),
+      rotation_aa.toRotationMatrix()));
 }
 
 TEST(SO3FramedConstructorTest, AngleAxisArbitrary) {
@@ -61,8 +65,9 @@ TEST(SO3FramedConstructorTest, AngleAxisArbitrary) {
   const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
   const SO3 rotation_so3(rotation_aa, A, B);
   // Verify that rotation matrices of axis angle and so3 agree.
-  EXPECT_TRUE(
-      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
+  EXPECT_TRUE(math::is_approx(
+      rotation_so3.rotation_matrix(),
+      rotation_aa.toRotationMatrix()));
   EXPECT_TRUE(rotation_so3.verify_frames(A, B));
 }
 
@@ -71,8 +76,9 @@ TEST(SO3ConstructorTest, AngleWithAxisZero) {
   constexpr double ZERO_ANGLE = 0.;
   const SO3 no_rotation(ZERO_ANGLE, {1., 0., 0.});
   // Verify that the rotation matrix is identity.
-  EXPECT_TRUE(
-      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      no_rotation.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
 }
 
 TEST(SO3FramedConstructorTest, AngleWithAxisZero) {
@@ -80,8 +86,9 @@ TEST(SO3FramedConstructorTest, AngleWithAxisZero) {
   constexpr double ZERO_ANGLE = 0.;
   const SO3 no_rotation(ZERO_ANGLE, {1., 0., 0.}, A, B);
   // Verify that the rotation matrix is identity.
-  EXPECT_TRUE(
-      no_rotation.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      no_rotation.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
   EXPECT_TRUE(no_rotation.verify_frames(A, B));
 }
 
@@ -91,16 +98,18 @@ TEST(SO3ConstructorTest, AngleWithAxisArbitrary) {
   const SO3 rotation_so3(ANGLE, {0., 1., 0.});
   const Eigen::AngleAxisd rotation_aa(ANGLE, Eigen::Vector3d::UnitY());
   // Verify that rotation matrices of axis angle and so3 agree.
-  EXPECT_TRUE(
-      rotation_so3.rotation_matrix().isApprox(rotation_aa.toRotationMatrix()));
+  EXPECT_TRUE(math::is_approx(
+      rotation_so3.rotation_matrix(),
+      rotation_aa.toRotationMatrix()));
 }
 
 TEST(SO3ConstructorTest, MatrixIdentity) {
   // Initialize SO3 with an identity matrix.
   const SO3 from_id_mat(Eigen::Matrix3d::Identity());
   // Initializes to identity
-  EXPECT_TRUE(
-      from_id_mat.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      from_id_mat.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
   // Compare to identity SO3
   const SO3 identity = SO3::identity();
   EXPECT_TRUE(identity.is_approx(from_id_mat));
@@ -110,8 +119,9 @@ TEST(SO3FramedConstructorTest, MatrixIdentity) {
   // Initialize SO3 with an identity matrix.
   const SO3 from_id_mat(Eigen::Matrix3d::Identity(), A, B);
   // Initializes to identity
-  EXPECT_TRUE(
-      from_id_mat.rotation_matrix().isApprox(Eigen::Matrix3d::Identity()));
+  EXPECT_TRUE(math::is_approx(
+      from_id_mat.rotation_matrix(),
+      Eigen::Matrix3d::Identity()));
   // Compare to identity SO3
   const SO3 identity = SO3::identity(A, B);
   EXPECT_TRUE(identity.is_approx(from_id_mat));
@@ -139,7 +149,7 @@ TEST(SO3ConstructorTest, FromQuaternion) {
     // Apply the action of the SO3 to the test vector.
     const Eigen::Vector3d vec_so3 = a_from_b_so3 * three_vec;
     // Action should be identical
-    EXPECT_TRUE(vec_quat.isApprox(vec_so3));
+    EXPECT_TRUE(math::is_approx(vec_quat, vec_so3));
   }
 }
 
@@ -164,7 +174,7 @@ TEST(SO3FramedConstructorTest, quaternion) {
     // Apply the action of the SO3 to the test vector.
     const Eigen::Vector3d vec_so3 = a_from_b_so3 * three_vec;
     // Action should be identical
-    EXPECT_TRUE(vec_quat.isApprox(vec_so3));
+    EXPECT_TRUE(math::is_approx(vec_quat, vec_so3));
     EXPECT_TRUE(a_from_b_so3.verify_frames(A, B));
   }
 }
@@ -176,23 +186,29 @@ TEST(SO3OperatorTest, ActionOnVector) {
   const Eigen::Vector3d zero_one_x{0., 1., 0.};
   const Eigen::Vector3d zero_one_y{-1., 0., 0.};
   const Eigen::Vector3d zero_one_z{0., 0., 1.};
-  EXPECT_TRUE(
-      zero_one_x.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitX()));
-  EXPECT_TRUE(
-      zero_one_y.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitY()));
-  EXPECT_TRUE(
-      zero_one_z.isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
+  EXPECT_TRUE(math::is_approx(
+      zero_one_x,
+      orig_from_half_pi * Eigen::Vector3d::UnitX()));
+  EXPECT_TRUE(math::is_approx(
+      zero_one_y,
+      orig_from_half_pi * Eigen::Vector3d::UnitY()));
+  EXPECT_TRUE(math::is_approx(
+      zero_one_z,
+      orig_from_half_pi * Eigen::Vector3d::UnitZ()));
 }
 
 TEST(SO3OperatorTest, RotateVector) {
   const SO3 orig_from_half_pi =
       SO3(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()));
-  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitX())
-                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitX()));
-  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitY())
-                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitY()));
-  EXPECT_TRUE(orig_from_half_pi.rotate(Eigen::Vector3d::UnitZ())
-                  .isApprox(orig_from_half_pi * Eigen::Vector3d::UnitZ()));
+  EXPECT_TRUE(math::is_approx(
+      orig_from_half_pi.rotate(Eigen::Vector3d::UnitX()),
+      orig_from_half_pi * Eigen::Vector3d::UnitX()));
+  EXPECT_TRUE(math::is_approx(
+      orig_from_half_pi.rotate(Eigen::Vector3d::UnitY()),
+      orig_from_half_pi * Eigen::Vector3d::UnitY()));
+  EXPECT_TRUE(math::is_approx(
+      orig_from_half_pi.rotate(Eigen::Vector3d::UnitZ()),
+      orig_from_half_pi * Eigen::Vector3d::UnitZ()));
 }
 
 TEST(SO3Inverse, CompareToMatrixInverse) {
@@ -247,8 +263,10 @@ TEST(SO3Quaterniond, TestGetQuaternion) {
     // Both +q and -q represent the same orientation for any quaternion q:
     const Eigen::Quaterniond minus_one{-1., 0., 0., 0.};
     EXPECT_TRUE(
-        result_quaternion.isApprox(test_quaternion) or
-        result_quaternion.isApprox(minus_one * test_quaternion));
+        math::is_approx(result_quaternion.vec(), test_quaternion.vec()) or
+        math::is_approx(
+            result_quaternion.vec(),
+            (minus_one * test_quaternion).vec()));
   }
 }
 
@@ -267,8 +285,10 @@ TEST(SO3Test, TestExpDiff) {
           (perturbed * unperturbed.inverse()).log() / EPS};
 
       constexpr double TOLERANCE = 1e-6;
-      EXPECT_TRUE((expected_derivative - d_exp * SO3::TangentVector::Unit(ii))
-                      .isZero(TOLERANCE));
+      EXPECT_TRUE(math::is_approx(
+          expected_derivative,
+          d_exp * SO3::TangentVector::Unit(ii),
+          TOLERANCE));
     }
   }
 }

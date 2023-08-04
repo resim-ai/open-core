@@ -13,10 +13,10 @@ constexpr double DEFAULT_PRECISION = 1e-12;
 // @param[in] a - The first matrix/vector to compare.
 // @param[in] b - The second matrix/vector to compare.
 // @param[in] precision - The precision to use in the fuzzy comparison.
-template <typename Derived>
+template <typename DerivedA, typename DerivedB>
 bool is_approx(
-    const Eigen::MatrixBase<Derived> &a,
-    const Eigen::MatrixBase<Derived> &b,
+    const Eigen::MatrixBase<DerivedA> &a,
+    const Eigen::MatrixBase<DerivedB> &b,
     const double precision = DEFAULT_PRECISION) {
   return (a - b).norm() <=
          precision * std::max(1.0, std::min(a.norm(), b.norm()));

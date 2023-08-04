@@ -31,6 +31,7 @@ cc_test(
     deps = [
         ":cross_matrix",
         ":liegroup_test_helpers",
+        "//resim/math:is_approx",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -142,6 +143,7 @@ cc_test(
         ":liegroup_test_helpers",
         ":se3",
         ":so3",
+        "//resim/math:is_approx",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
@@ -200,6 +202,7 @@ cc_test(
     deps = [
         ":liegroup_test_helpers",
         ":so3",
+        "//resim/math:is_approx",
         "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",

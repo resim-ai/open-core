@@ -33,6 +33,7 @@ cc_test(
     srcs = ["cost_building_blocks_test.cc"],
     deps = [
         ":cost_building_blocks",
+        "//resim/math:is_approx",
         "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",

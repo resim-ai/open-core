@@ -200,6 +200,7 @@ cc_test(
         ":extrapolate_two_jet",
         ":two_jet",
         ":two_jet_test_helpers",
+        "//resim/math:is_approx",
         "//resim/testing:random_matrix",
         "//resim/transforms:liegroup_concepts",
         "//resim/transforms:se3",

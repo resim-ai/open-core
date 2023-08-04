@@ -6,6 +6,7 @@
 #include <random>
 
 #include "resim/assert/assert.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/testing/random_matrix.hh"
 
 namespace resim::planning {
@@ -68,9 +69,12 @@ void expect_finite_differences_match(
 
   // I check this above with ASSERT
   // NOLINTBEGIN(bugprone-unchecked-optional-access)
-  EXPECT_TRUE((*result.dcost_dx - dcost_dx_fd).isZero(derivative_tolerance));
   EXPECT_TRUE(
-      (*result.d2cost_dx2 - d2cost_dx2_fd).isZero(second_derivative_tolerance));
+      math::is_approx(*result.dcost_dx, dcost_dx_fd, derivative_tolerance));
+  EXPECT_TRUE(math::is_approx(
+      *result.d2cost_dx2,
+      d2cost_dx2_fd,
+      second_derivative_tolerance));
   // NOLINTEND(bugprone-unchecked-optional-access)
 }
 

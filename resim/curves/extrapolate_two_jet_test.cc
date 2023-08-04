@@ -6,6 +6,7 @@
 
 #include "resim/curves/two_jet.hh"
 #include "resim/curves/two_jet_test_helpers.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/testing/random_matrix.hh"
 #include "resim/transforms/liegroup_concepts.hh"
 #include "resim/transforms/se3.hh"
@@ -18,18 +19,23 @@ class ExtrapolateTwoJetTests : public ::testing::Test {
  protected:
   void test_extrapolation(const double dt) {
     // SETUP
+    using Tangent = typename Group::TangentVector;
+
     TwoJetL<Group> two_jet = tj_helper.make_test_two_jet();
 
     // ACTION
     TwoJetL<Group> extrapolated_two_jet{extrapolate_two_jet(two_jet, dt)};
 
     // VERIFICATION
-    EXPECT_TRUE(((extrapolated_two_jet.frame_from_ref() *
-                  two_jet.frame_from_ref().inverse())
-                     .log() -
-                 dt * (two_jet.d_frame_from_ref() +
-                       0.5 * dt * two_jet.d2_frame_from_ref()))
-                    .isZero());  // isApprox() has trouble near zero
+    const Tangent actual{(extrapolated_two_jet.frame_from_ref() *
+                          two_jet.frame_from_ref().inverse())
+                             .log()};
+    const Tangent expected{
+        dt *
+        (two_jet.d_frame_from_ref() + 0.5 * dt * two_jet.d2_frame_from_ref())};
+
+    EXPECT_TRUE(math::is_approx(actual, expected));
+
     EXPECT_TRUE(
         (extrapolated_two_jet.d_frame_from_ref() - two_jet.d_frame_from_ref())
             .isApprox(dt * two_jet.d2_frame_from_ref()));

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "liegroup_concepts.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/transforms/liegroup_test_helpers.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"
@@ -70,7 +71,8 @@ TYPED_TEST(LieGroupTests, ExpOfZero) {
 TYPED_TEST(LieGroupTests, LogOfIdentity) {
   const TypeParam a_from_a = TypeParam::identity();
   // Test log of identity TypeParam is zero.
-  EXPECT_TRUE(a_from_a.log().isApprox(TypeParam::TangentVector::Zero()));
+  EXPECT_TRUE(
+      math::is_approx(a_from_a.log(), TypeParam::TangentVector::Zero()));
 }
 
 TYPED_TEST(LieGroupTests, ExpOfLogNoop) {
@@ -114,7 +116,7 @@ TYPED_TEST(LieGroupTests, SelfAdjointNoop) {
     const TypeParam a_from_b = TypeParam::exp(alg);
     const typename TypeParam::TangentVector alg_noop =
         a_from_b.adjoint_times(a_from_b.log());
-    EXPECT_TRUE(alg.isApprox(alg_noop));
+    EXPECT_TRUE(math::is_approx(alg, alg_noop));
   }
 }
 
@@ -136,7 +138,7 @@ TYPED_TEST(LieGroupTests, AdjointAndTimesGroup) {
   for (const TypeParam &grp : test_elements) {
     const TangentVector adj_times = grp.adjoint_times(alg);
     const TangentVector adj_times_alt = grp.adjoint() * alg;
-    EXPECT_TRUE(adj_times.isApprox(adj_times_alt));
+    EXPECT_TRUE(math::is_approx(adj_times, adj_times_alt));
   }
 }
 
@@ -147,9 +149,8 @@ TYPED_TEST(LieGroupTests, AdjointAndTimesAlgebra) {
   for (const TangentVector &a : test_alg_elements) {
     const TangentVector adj_times = TypeParam::adjoint_times(a, b);
     const TangentVector adj_times_alt = TypeParam::adjoint(a) * b;
-    // isApprox struggles when vectors are close to zero.
     constexpr double TOLERANCE = 1e-9;
-    EXPECT_TRUE((adj_times - adj_times_alt).isZero(TOLERANCE));
+    EXPECT_TRUE(math::is_approx(adj_times, adj_times_alt, TOLERANCE));
   }
 }
 
@@ -160,10 +161,8 @@ TYPED_TEST(LieGroupTests, AlgebraAdjointAntiCommutative) {
   for (const TangentVector &a : test_alg_elements) {
     const TangentVector x = TypeParam::adjoint_times(a, b);
     const TangentVector y = TypeParam::adjoint_times(b, a);
-    // One of our test vectors is close to zero and isApprox struggles close to
-    // zero.
     constexpr double TOLERANCE = 1e-9;
-    EXPECT_TRUE((x + y).isZero(TOLERANCE));
+    EXPECT_TRUE(math::is_approx(x, -y, TOLERANCE));
   }
 }
 
@@ -373,7 +372,7 @@ TYPED_TEST(FramedLieGroupTests, RotateFramedVectorTest) {
       a_from_b.rotate(test_vector);
 
   // Verify identity action is a noop.
-  EXPECT_TRUE(rotated_vector.vector().isApprox(test_vector));
+  EXPECT_TRUE(math::is_approx(rotated_vector.vector(), test_vector));
   // Verify the return vector frame is correct
   EXPECT_EQ(A, rotated_vector.frame());
 }
@@ -394,12 +393,12 @@ TYPED_TEST(FramedLieGroupTests, RotateFramedVectorRoundTrip) {
     // Verify the transformed vector frame is correct.
     EXPECT_EQ(A, rotated_vector.frame());
     // Verify the transformed vector is correct.
-    EXPECT_TRUE(rotated_vector.isApprox(a_from_b.rotate(test_vector)));
+    EXPECT_TRUE(math::is_approx(rotated_vector, a_from_b.rotate(test_vector)));
     // Verify the recovered vector frame is correct
     EXPECT_EQ(B, recovered_vector.frame());
     // Verify vector is recovered.
     constexpr double TOL = 10E-10;
-    EXPECT_TRUE(recovered_vector.isApprox(test_vector, TOL));
+    EXPECT_TRUE(math::is_approx(recovered_vector, test_vector, TOL));
   }
 }
 
@@ -419,7 +418,7 @@ TYPED_TEST(FramedLieGroupTests, ActionOnVectorTest) {
   const Eigen::Vector3d transformed_vector = a_from_b * test_vector;
 
   // Verify identity action is a noop.
-  EXPECT_TRUE(transformed_vector.isApprox(test_vector));
+  EXPECT_TRUE(math::is_approx(transformed_vector, test_vector));
 }
 
 TYPED_TEST(FramedLieGroupTests, InverseTest) {
