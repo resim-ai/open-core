@@ -273,7 +273,7 @@ cc_library(
     testonly = True,
     srcs = ["test_helpers.cc"],
     hdrs = ["test_helpers.hh"],
-    visibility = ["//resim:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":t_curve",
         "//resim/transforms:frame",

@@ -162,7 +162,7 @@ cc_test(
 cc_library(
     name = "standard_frames",
     hdrs = ["standard_frames.hh"],
-    visibility = ["//resim:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms:frame",
         "//resim/utils:uuid",

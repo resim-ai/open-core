@@ -5,7 +5,7 @@ cc_library(
     testonly = True,
     srcs = ["test_helpers.cc"],
     hdrs = ["test_helpers.hh"],
-    visibility = ["//resim/visualization:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms:se3",
         "//resim/utils:match",
