@@ -8,7 +8,7 @@ docker run -it \
        --platform linux/amd64 \
        -p 8080:8080 \
        -p 443:443 \
-       --volume $(pwd):/workspaces/re-core \
+       --volume $(pwd):/workspaces/open-core \
        --volume root-home:/root \
        --volume /var/run/docker.sock:/var/run/docker.sock \
-       public.ecr.aws/resim/core:latest /bin/bash -c "cd /workspaces/re-core; $SHELL"
+       public.ecr.aws/resim/core:latest /bin/bash -c "cd /workspaces/open-core; $SHELL"
