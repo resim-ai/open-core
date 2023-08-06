@@ -1,6 +1,6 @@
 # ReSim's Open Libraries
 
-[![codecov](https://codecov.io/gh/resim-ai/re-core/branch/main/graph/badge.svg?token=JAGVIGHQ86)](https://codecov.io/gh/resim-ai/re-core)
+[![codecov](https://codecov.io/gh/resim-ai/open-core/branch/main/graph/badge.svg?token=URJ09ULAH4)](https://codecov.io/gh/resim-ai/open-core)
 
 This repository contains the open source subset of ReSim's C++ code intended to
 accelerate robotics development. For detailed documentation, please visit
