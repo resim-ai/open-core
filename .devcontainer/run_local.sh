@@ -4,11 +4,13 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+DIRPATH="/workspaces/${PWD##*/}"
+
 docker run -it \
        --platform linux/amd64 \
        -p 8080:8080 \
        -p 443:443 \
-       --volume $(pwd):/workspaces/open-core \
+       --volume $(pwd):$DIRPATH \
        --volume root-home:/root \
        --volume /var/run/docker.sock:/var/run/docker.sock \
-       core-local:latest /bin/bash -c "cd /workspaces/open-core; $SHELL"
+       core-local:latest /bin/bash -c "cd $DIRPATH; $SHELL"
