@@ -15,6 +15,14 @@ def resim_core_dependencies():
     """
     maybe(
         http_archive,
+        name = "rules_cc",
+        urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.8/rules_cc-0.0.8.tar.gz"],
+        sha256 = "ae46b722a8b8e9b62170f83bfb040cbf12adb732144e689985a66b26410a7d6f",
+        strip_prefix = "rules_cc-0.0.8",
+    )
+
+    maybe(
+        http_archive,
         name = "bazel_skylib",
         sha256 = "66ffd9315665bfaafc96b52278f57c7e2dd09f5ede279ea6d39b2be471e7e3aa",
         urls = [
@@ -265,4 +273,14 @@ def resim_core_dependencies():
         url = "https://github.com/nelhage/rules_boost/archive/96e9b631f104b43a53c21c87b01ac538ad6f3b48.tar.gz",
         sha256 = "5ea00abc70cdf396a23fb53201db19ebce2837d28887a08544429d27783309ed",
         strip_prefix = "rules_boost-96e9b631f104b43a53c21c87b01ac538ad6f3b48",
+    )
+
+    maybe(
+        http_archive,
+        name = "com_github_mvukov_rules_ros2",
+        patch_args = ["-p1"],
+        patches = ["//resim/third_party/ros2:flto.patch"],
+        sha256 = "16b01677e2b2df0505504fd104ed082cc3caa9d720d994e369c46f43d94b91f5",
+        strip_prefix = "rules_ros2-9b3030feb0538c5491d3f5d8d3d0d483c63938f1",
+        url = "https://github.com/mvukov/rules_ros2/archive/9b3030feb0538c5491d3f5d8d3d0d483c63938f1.tar.gz",
     )
