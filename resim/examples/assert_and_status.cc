@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
     REASSERT(good_status.what() == "OKAY");
 
     Status bad_status = my_outer_wrapper(Arg::BAD_ARGUMENT);
+    (void)bad_status;
     // CHECK_STATUS_OK(bad_status);
   }
 
