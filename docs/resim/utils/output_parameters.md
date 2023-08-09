@@ -135,5 +135,5 @@ clear that the function **will** output something there) or `NullableReference`
 
 !!! Note
     Feel free to play around with the [source
-    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/output_parameters.cc)
+    code](https://github.com/resim-ai/open-core/blob/main/resim/examples/output_parameters.cc)
     for the examples above.

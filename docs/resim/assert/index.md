@@ -237,5 +237,5 @@ which terminates the program.
 
 !!! Note
     Feel free to play around with the [source
-    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/assert_and_status.cc)
+    code](https://github.com/resim-ai/open-core/blob/main/resim/examples/assert_and_status.cc)
     for the examples above.

@@ -85,5 +85,5 @@ can be used in production code.
 
 !!! Note
     Feel free to play around with the [source
-    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/gaussian.cc)
+    code](https://github.com/resim-ai/open-core/blob/main/resim/examples/gaussian.cc)
     for the example above.
