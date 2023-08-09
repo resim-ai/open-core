@@ -1,6 +1,6 @@
 # ReSim Open Libraries
 
-ReSim's `re-core` repository contains the open source subset of ReSim's C++
+ReSim's `open-core` repository contains the open source subset of ReSim's C++
 code intended to accelerate robotics development.
 
 ## Getting Started
@@ -17,7 +17,7 @@ These instructions vary by host platform:
 ### Get the Code
 
 ```
-git clone git@github.com:resim-ai/re-core.git
+git clone git@github.com:resim-ai/open-core.git
 ```
 
 ### Setting up the Environment
@@ -27,7 +27,7 @@ development docker image. To fetch this image, navigate to the open source repo
 and call the following script.
 
 ```bash
-cd re-core
+cd open-core
 ./.devcontainer/pull.sh
 ```
 

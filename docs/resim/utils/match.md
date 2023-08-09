@@ -98,5 +98,5 @@ std::cout
 
 !!! Note
     Feel free to play around with the [source
-    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/match.cc)
+    code](https://github.com/resim-ai/open-core/blob/main/resim/examples/match.cc)
     for the example above.

@@ -142,5 +142,5 @@ Running this code shows us our unit circle trajectory which looks like this:
 
 !!! Note
     Feel free to play around with the [source
-    code](https://github.com/resim-ai/re-core/blob/main/resim/examples/trajectory.cc)
+    code](https://github.com/resim-ai/open-core/blob/main/resim/examples/trajectory.cc)
     for the example above.
