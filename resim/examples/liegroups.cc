@@ -120,9 +120,11 @@ int main(int argc, char **argv) {
   const Vec3 robot_angular_velocity_in_scene_coordinates{
       scene_from_robot.rotation() *
       robot_angular_velocity_in_robot_coordinates};
+  (void)robot_angular_velocity_in_scene_coordinates;
 
   const Vec3 robot_velocity_in_scene_coordinates{
       scene_from_robot.rotation() * robot_velocity_in_robot_coordinates};
+  (void)robot_velocity_in_scene_coordinates;
 
   REASSERT(
       d_scene_from_robot == SE3::tangent_vector_from_parts(
