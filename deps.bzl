@@ -279,7 +279,7 @@ def resim_core_dependencies():
         http_archive,
         name = "com_github_mvukov_rules_ros2",
         patch_args = ["-p1"],
-        patches = ["//resim/third_party/ros2:flto.patch"],
+        patches = ["@resim_open_core//resim/third_party/ros2:flto.patch"],
         sha256 = "16b01677e2b2df0505504fd104ed082cc3caa9d720d994e369c46f43d94b91f5",
         strip_prefix = "rules_ros2-9b3030feb0538c5491d3f5d8d3d0d483c63938f1",
         url = "https://github.com/mvukov/rules_ros2/archive/9b3030feb0538c5491d3f5d8d3d0d483c63938f1.tar.gz",
