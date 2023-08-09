@@ -8,6 +8,14 @@
 """
 
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+load(
+    "@com_github_mvukov_rules_ros2//repositories:deps.bzl",
+    "ros2_deps",
+)
+load(
+    "@com_github_mvukov_rules_ros2//repositories:repositories.bzl",
+    "ros2_repositories",
+)
 load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
 load("@hedron_make_cc_https_easy//:transitive_workspace_setup.bzl", "hedron_keep_cc_https_easy")
 load("@hedron_make_cc_https_easy//:workspace_setup.bzl", "hedron_make_cc_https_easy")
@@ -44,3 +52,12 @@ def resim_core_transitive_dependencies():
 
     # Requires the com_github_nelhage_rules_boost dep
     hedron_keep_cc_https_easy()
+
+    ros2_repositories()
+
+    ros2_deps()
+
+    python_register_toolchains(
+        name = "rules_ros2_python",
+        python_version = "3.10",
+    )

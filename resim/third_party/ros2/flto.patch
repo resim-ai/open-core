@@ -1,0 +1,15 @@
+t a/repositories/cyclonedds.BUILD.bazel b/repositories/cyclonedds.BUILD.bazel
+index ebad2de..6b82bfa 100644
+--- a/repositories/cyclonedds.BUILD.bazel
++++ b/repositories/cyclonedds.BUILD.bazel
+@@ -146,8 +146,8 @@ cmake(
+     lib_source = ":all_srcs",
+     linkopts = select(
+         {
+-            "@platforms//os:linux": ["-lpthread"],
+-            "@platforms//os:macos": ["-lpthread"],
++            "@platforms//os:linux": ["-lpthread", "-flto=thin"],
++            "@platforms//os:macos": ["-lpthread", "-flto=thin"],
+             "@platforms//os:qnx": [],
+         },
+         no_match_error = "Only Linux, macOS and QNX are supported!",
