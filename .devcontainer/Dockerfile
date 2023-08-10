@@ -75,8 +75,18 @@ RUN pip install pymdown-extensions
 # Install Valgrind
 RUN apt -y install valgrind
 
+# Install AWS
+RUN wget -O awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+RUN unzip awscliv2.zip && aws/install && rm -rf aws awscliv2.zip
+
+# Install Amazon ECR Credential Helper
+RUN apt install -y amazon-ecr-credential-helper
+
 # Unminimize to get docs
 RUN yes | unminimize
+
+# Clean apt cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # expose port 22 
 EXPOSE 22
