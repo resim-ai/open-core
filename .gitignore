@@ -41,6 +41,10 @@ terraform.tfstate*
 # Emacs backup files
 *~
 
+# Vim temporary files 
+*.swp
+*.swo
+
 # Mkdocs build output
 /site/
 
