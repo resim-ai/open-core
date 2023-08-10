@@ -76,7 +76,7 @@ RUN pip install pymdown-extensions
 RUN apt -y install valgrind
 
 # Install the ReSim CLI
-RUN go install github.com/resim-ai/api-client/cmd/resim@latest
+RUN go install -v github.com/resim-ai/api-client/cmd/resim@latest
 
 # Install AWS
 RUN wget -O awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
