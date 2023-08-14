@@ -2,8 +2,9 @@
 
 [![codecov](https://codecov.io/gh/resim-ai/open-core/branch/main/graph/badge.svg?token=URJ09ULAH4)](https://codecov.io/gh/resim-ai/open-core)
 
-This repository contains the open source subset of ReSim's C++ code intended to
-accelerate robotics development. For detailed documentation, please visit
+This repository contains the open source subset of
+[ReSim](https://www.resim.ai/)'s C++ code intended to accelerate robotics
+development. For detailed documentation, please visit
 [docs.resim.ai](https://docs.resim.ai).
 
 # Getting Started 
@@ -26,3 +27,13 @@ Currently, the libraries are divided up into:
    with [ReSim View](https://docs.resim.ai/visualization/).
  - [Testing](resim/testing): Common libraries for testing.
  - [Auth](resim/auth): Device code client for use with oauth.
+ - [Dynamics](resim/dynamics): Libraries for defining and integrating dynamics.
+ - [Experiences](resim/experiences): The definition of our experience
+   description format.
+ - [Geometry](resim/geometry): Libraries for geometric primitives and
+   algorithms.
+ - [Metrics](resim/metrics): Tools for computing metrics during and after
+   simulations.
+ - [Planning](resim/planning): Tools for high-level planning and optimal
+   control.
+ - [Simulator](resim/simulator): Our core simulator libraries.
