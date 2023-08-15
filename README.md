@@ -36,4 +36,25 @@ Currently, the libraries are divided up into:
    simulations.
  - [Planning](resim/planning): Tools for high-level planning and optimal
    control.
- - [Simulator](resim/simulator): Our core simulator libraries.
+ - [Simulator](resim/simulator): Our core simulator libraries. 
+
+
+# Building
+
+We use [Bazel](https://bazel.build/) as our build and test tool. As an example
+for those who might be less familiar with bazel, one can build our simulator
+using the command:
+
+```
+bazel build //resim/simulator:resim_run
+```
+
+This will result in the binary for the simulator being placed at
+`open-core/bazel-bin/resim/simulator/resim_run`. The binary can either be run
+directly or run using `bazel run` instead of `bazel build` above.
+
+Our build is *mostly* hermetic, and consequently most of our dependencies are
+tracked through bazel and will be automatically downloaded and built when needed
+for the target being built. However, we do depend on the UUID library from
+[util-linux/util-linux](https://github.com/util-linux/util-linux), which is
+included in our development docker container.
