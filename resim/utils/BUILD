@@ -220,3 +220,20 @@ cc_library(
     deps = [
     ],
 )
+
+cc_library(
+    name = "tuple_utils",
+    hdrs = ["tuple_utils.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_test(
+    name = "tuple_utils_test",
+    srcs = ["tuple_utils_test.cc"],
+    deps = [
+        ":tuple_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
