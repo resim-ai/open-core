@@ -25,6 +25,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/g
 RUN apt-get update
 RUN apt-get install -y gh
 
+# Install trunk
+RUN curl https://get.trunk.io -fsSL | bash -s -- -y
+
 # configure SSH for communication with Visual Studio 
 RUN mkdir -p /var/run/sshd
 RUN echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \ 
