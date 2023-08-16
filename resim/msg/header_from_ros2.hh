@@ -12,7 +12,8 @@
 
 namespace resim::msg {
 
-// Convert a ROS2 timestamp into a resim::msg::proto::Header
+// ROS2 converters for message headers
+
 Header convert_from_ros2(const std_msgs::msg::Header &ros2_msg);
 
 std_msgs::msg::Header convert_to_ros2(const Header &header);

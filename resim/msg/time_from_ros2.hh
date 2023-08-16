@@ -12,7 +12,8 @@
 
 namespace resim::msg {
 
-// Convert a ROS2 timestamp into a google::protobuf::Timestamp
+// ROS2 converters for timestamps
+
 google::protobuf::Timestamp convert_from_ros2(
     const builtin_interfaces::msg::Time &ros2_msg);
 
