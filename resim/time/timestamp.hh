@@ -27,9 +27,9 @@ constexpr double as_seconds(const Duration duration) {
 }
 
 // Create a duration from seconds as a double
-constexpr Duration as_duration(const double t_s) {
+constexpr Duration as_duration(const long double t_s) {
   return std::chrono::duration_cast<Duration>(
-      std::chrono::duration<double>(t_s));
+      std::chrono::duration<long double>(t_s));
 }
 
 // A timestamp represented as integer seconds and nanoseconds. This
