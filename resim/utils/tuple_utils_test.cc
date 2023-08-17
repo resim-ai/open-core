@@ -1,3 +1,8 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/utils/tuple_utils.hh"
 
@@ -41,8 +46,8 @@ TEST(TupleUtilsTest, TestForEachInTupleReferences) {
   const TestTupleType test_tuple_const{a, b, c, 4, 5};
   const TestTupleType test_tuple_const_to_move{a, b, c, 4, 5};
   // NOLINTEND(readability-magic-numbers)
-  //
-  const auto identity = [](auto &&x) -> decltype(x) {
+
+  const auto identity = [](auto &&x) -> decltype(auto) {
     return std::forward<decltype(x)>(x);
   };
 
@@ -62,13 +67,13 @@ TEST(TupleUtilsTest, TestForEachInTupleReferences) {
 
   // Testing reference collapsing rules. The references from the input tuple are
   // added to the references of the entry. Since result was made from an lvalue
-  // bound by lvalue reference, all rvalues become lvalues.
+  // bound by lvalue reference, all rvalue refs become lvalue refs.
   static_assert(std::is_same_v<
                 decltype(result),
                 std::tuple<int &, int &, const int &, int &, const int &>>);
 
   // Since result was made from an rvalue bound by rvalue refernece, all lvalues
-  // stay lvalues and all rvalues stay rvalues.
+  // stay lvalues and all rvalue refs stay rvalue refs.
   static_assert(std::is_same_v<
                 decltype(result_moved),
                 std::tuple<int &&, int &, const int &, int &&, const int &&>>);
