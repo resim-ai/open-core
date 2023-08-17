@@ -1,3 +1,8 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include <fmt/core.h>
 
@@ -18,7 +23,7 @@ int trim_mcap(int argc, char **argv) {
       "trim_mcap",
       "A simple program for trimming mcap logs.\n\nSaves a log to <output> "
       "containing all messages from <input> (along with channels and schemas) "
-      "which fall within the interval [start_time, end_time]. Does not yet "
+      "which fall within the interval [start_time, end_time). Does not yet "
       "support copying over attachments."};
 
   const auto default_start = std::to_string(0.0);
@@ -37,9 +42,8 @@ int trim_mcap(int argc, char **argv) {
       cxxopts::value<std::string>()->default_value(default_end))
     ("h,help", "Print usage")
   ;
-
-options.positional_help("<input> <output>").show_positional_help();
   // clang-format on
+  options.positional_help("<input> <output>").show_positional_help();
   options.parse_positional({"input", "output"});
   auto options_result = options.parse(argc, argv);
 
@@ -65,9 +69,11 @@ options.positional_help("<input> <output>").show_positional_help();
   const mcap::McapWriterOptions writer_options{
       input_mcap.header().has_value() ? input_mcap.header()->profile
                                       : "resim_mcap"};
-  REASSERT(output_mcap
-               .open(options_result["output"].as<std::string>(), writer_options)
-               .ok());
+  REASSERT(
+      output_mcap
+          .open(options_result["output"].as<std::string>(), writer_options)
+          .ok(),
+      "Failed to open output log!");
 
   snippet_mcap(start_time, end_time, InOut{input_mcap}, InOut{output_mcap});
 

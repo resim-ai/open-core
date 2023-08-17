@@ -1,3 +1,8 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/utils/snippet_mcap.hh"
 
@@ -14,6 +19,8 @@ void snippet_mcap(
     time::Timestamp end_time,
     InOut<mcap::McapReader> input_mcap,
     InOut<mcap::McapWriter> output_mcap) {
+  // Keep mappings from the old schema ids to new ones so we can adjust them
+  // appropriately
   std::unordered_map<mcap::SchemaId, mcap::SchemaId> old_to_new_schema_map_;
   std::unordered_map<mcap::ChannelId, mcap::ChannelId> old_to_new_channel_map_;
 
@@ -24,6 +31,7 @@ void snippet_mcap(
       "End time must be later than start time!");
   REASSERT(start_time_count >= 0, "Start time must be after epoch!");
 
+  // Read the messages in the interval and write them to the output log.
   for (const auto &view : input_mcap->readMessages(
            static_cast<mcap::Timestamp>(start_time_count),
            static_cast<mcap::Timestamp>(end_time_count))) {
