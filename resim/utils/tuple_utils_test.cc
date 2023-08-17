@@ -62,7 +62,7 @@ TEST(TupleUtilsTest, TestForEachInTupleReferences) {
 
   // Testing reference collapsing rules. The references from the input tuple are
   // added to the references of the entry. Since result was made from an lvalue
-  // bound by lvalue refernece, all rvalues become rvalues.
+  // bound by lvalue reference, all rvalues become lvalues.
   static_assert(std::is_same_v<
                 decltype(result),
                 std::tuple<int &, int &, const int &, int &, const int &>>);

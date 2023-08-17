@@ -28,7 +28,7 @@ namespace resim {
 // f(const T &),
 //
 // Note that the const from the tuple has no effect on references while it does
-// propgate to values. Further note the & & -> & and & && -> & collapsing rules
+// propagate to values. Further note the & & -> & and & && -> & collapsing rules
 // at play. For other examples, refer to tuple_utils_test.cc. This shouldn't
 // typically be a concern as tuples containing references are not incredibly
 // common.
@@ -36,9 +36,18 @@ template <typename Callable, typename Tuple>
 auto for_each_in_tuple(const Callable &f, Tuple &&t) {
   return std::apply(
       [&f](auto &&...elements) {
-        using ResultType = std::tuple<decltype(f(
-            std::forward<decltype(elements)>(elements)))...>;
-        return ResultType(f(std::forward<decltype(elements)>(elements))...);
+        // clang-format off
+        using ResultType = 
+            std::tuple<
+              decltype(f(
+                std::forward<decltype(elements)>(elements)
+              ))...>;
+
+        return ResultType(
+            f(
+              std::forward<decltype(elements)>(elements)
+            )...);
+        // clang-format on
       },
       std::forward<Tuple>(t));
 }
