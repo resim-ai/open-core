@@ -78,13 +78,19 @@ constexpr auto index_sequence_cat(
 // These are collected in an index sequence which is used with get_tuple() at
 // runtime in operator() to extract out the elements from the tuple with those
 // indices.
-template <template <typename> typename FilterTrait>
+//
+// This class uses a template template (not a typo) parameter of boolean type
+// trait we'd like to use for filtering. It determines for a given type
+// T whether that type satisfies a given constraint.
+template <template <typename T> typename FilterTrait>
 struct FilterTupleImpl {
+  // Base case
   template <std::size_t IDX>
   static constexpr auto get_indices() {
     return std::index_sequence<>();
   }
 
+  // Positive (should include) case.
   template <
       std::size_t IDX,
       typename Head,
@@ -93,11 +99,13 @@ struct FilterTupleImpl {
   static constexpr auto get_indices(
       BasicType<Head> /*unused*/,
       BasicType<Tail>... /*unused*/) {
+    // Make sure we include the current index.
     return index_sequence_cat(
         std::index_sequence<IDX>(),
         get_indices<IDX + 1U>(TypeC<Tail>...));
   }
 
+  // Negative (should discard) case.
   template <
       std::size_t IDX,
       typename Head,
@@ -106,6 +114,7 @@ struct FilterTupleImpl {
   static constexpr auto get_indices(
       BasicType<Head> /*unused*/,
       BasicType<Tail>... /*unused*/) {
+    // Make sure we don't include the current index.
     return get_indices<IDX + 1U>(TypeC<Tail>...);
   }
 
@@ -139,7 +148,7 @@ struct FilterTupleImpl {
 // tuple if it is an lvalue, and moves the elements if it is an rvalue. It must
 // therefore have copyable elements if it is an lvalue. For instance,
 // a std::tuple<int &&> lvalue cannot be filtered.
-template <template <typename> typename FilterTrait, typename Tuple>
+template <template <typename T> typename FilterTrait, typename Tuple>
 constexpr auto filter_tuple(Tuple &&tuple) {
   return FilterTupleImpl<FilterTrait>::filter(std::forward<Tuple>(tuple));
 }
