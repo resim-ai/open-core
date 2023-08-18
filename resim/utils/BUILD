@@ -226,6 +226,7 @@ cc_library(
     hdrs = ["tuple_utils.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":type",
     ],
 )
 

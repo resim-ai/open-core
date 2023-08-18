@@ -128,4 +128,63 @@ TEST(TupleUtilsTest, TestForEachInTupleReferences) {
       &std::get<4>(result_moved_from_const));
 }
 
+TEST(TupleUtilsTest, TestFilterTuple) {
+  // SETUP
+  const auto test_tuple = std::make_tuple(3, nullptr, 'a', "my_string");
+
+  // ACTION
+  const auto filtered_tuple = filter_tuple<std::is_integral>(test_tuple);
+
+  // VERIFICATION
+  static_assert(
+      std::is_same_v<decltype(filtered_tuple), const std::tuple<int, char>>);
+
+  EXPECT_EQ(std::get<0>(filtered_tuple), std::get<0>(test_tuple));
+  EXPECT_EQ(std::get<1>(filtered_tuple), std::get<2>(test_tuple));
+}
+
+TEST(TupleUtilsTest, TestFilterTupleReferences) {
+  // SETUP
+  int a = 1;
+  int b = 2;
+  int c = 3;
+
+  using TestTupleType = std::tuple<int, int &, const int &>;
+  TestTupleType test_tuple{a, b, c};
+  const TestTupleType test_tuple_const{test_tuple};
+
+  using TestTupleMovable =
+      std::tuple<int, int &, const int &, int &&, const int &&>;
+  // NOLINTBEGIN(readability-magic-numbers)
+  TestTupleMovable test_tuple_movable{a, b, c, 4, 5};
+  // NOLINTEND(readability-magic-numbers)
+
+  // ACTION
+  auto filtered_tuple = filter_tuple<std::is_reference>(test_tuple);
+  auto filtered_tuple_const = filter_tuple<std::is_reference>(test_tuple_const);
+  auto filtered_tuple_moved =
+      filter_tuple<std::is_reference>(std::move(test_tuple_movable));
+
+  // VERIFICATION
+  static_assert(
+      std::is_same_v<decltype(filtered_tuple), std::tuple<int &, const int &>>);
+  static_assert(std::is_same_v<
+                decltype(filtered_tuple_const),
+                std::tuple<int &, const int &>>);
+  static_assert(std::is_same_v<
+                decltype(filtered_tuple_moved),
+                std::tuple<int &, const int &, int &&, const int &&>>);
+
+  EXPECT_EQ(&std::get<1>(test_tuple), &std::get<0>(filtered_tuple));
+  EXPECT_EQ(&std::get<2>(test_tuple), &std::get<1>(filtered_tuple));
+
+  EXPECT_EQ(&std::get<1>(test_tuple_const), &std::get<0>(filtered_tuple_const));
+  EXPECT_EQ(&std::get<2>(test_tuple_const), &std::get<1>(filtered_tuple_const));
+
+  EXPECT_EQ(&std::get<0>(filtered_tuple_moved), &b);
+  EXPECT_EQ(&std::get<1>(filtered_tuple_moved), &c);
+  EXPECT_EQ(std::get<2>(filtered_tuple_moved), 4);
+  EXPECT_EQ(std::get<3>(filtered_tuple_moved), 5);
+}
+
 };  // namespace resim
