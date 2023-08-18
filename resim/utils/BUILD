@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 exports_files(
     [
@@ -218,5 +218,65 @@ cc_library(
     hdrs = ["http_response.hh"],
     visibility = ["//visibility:public"],
     deps = [
+    ],
+)
+
+cc_library(
+    name = "mcap_test_helpers",
+    testonly = 1,
+    srcs = ["mcap_test_helpers.cc"],
+    hdrs = ["mcap_test_helpers.hh"],
+    deps = [
+        "//resim/third_party/mcap:mcap_impl",
+    ],
+)
+
+cc_test(
+    name = "mcap_test_helpers_test",
+    srcs = ["mcap_test_helpers_test.cc"],
+    deps = [
+        ":mcap_logger",
+        ":mcap_test_helpers",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils/proto/testing:message_a_proto_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "snippet_mcap",
+    srcs = ["snippet_mcap.cc"],
+    hdrs = ["snippet_mcap.hh"],
+    deps = [
+        "//resim/assert",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/time:timestamp",
+        "//resim/utils:inout",
+    ],
+)
+
+cc_test(
+    name = "snippet_mcap_test",
+    srcs = ["snippet_mcap_test.cc"],
+    deps = [
+        ":inout",
+        ":mcap_logger",
+        ":mcap_test_helpers",
+        ":snippet_mcap",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils/proto/testing:message_a_proto_cc",
+        "//resim/utils/proto/testing:message_b_proto_cc",
+        "//resim/utils/proto/testing:message_c_proto_cc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "trim_mcap",
+    srcs = ["trim_mcap.cc"],
+    deps = [
+        ":snippet_mcap",
+        "@cxxopts",
+        "@fmt",
     ],
 )
