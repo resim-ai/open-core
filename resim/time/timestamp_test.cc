@@ -97,9 +97,11 @@ TEST(TimestampTest, TestAsDuration) {
 
     // We can use this since it's tested above:
     const double result_s = as_seconds(test_duration);
+    const long double result_s_ld = as_seconds_ld(test_duration);
 
     // ACTION
     const Duration result = as_duration(result_s);
+    const Duration result_ld = as_duration(result_s_ld);
 
     // VERIFICATION
     // We need a tolerance here because the conversion to and from
@@ -111,6 +113,11 @@ TEST(TimestampTest, TestAsDuration) {
 
     EXPECT_LE(result, test_duration + tolerance);
     EXPECT_GE(result, test_duration - tolerance);
+
+    // These would always match exactly if we didn't divide and multiply by 1e9
+    // in the round trip to convert from seconds to nanos.
+    EXPECT_LE(result_ld.count(), test_duration.count() + 1);
+    EXPECT_GE(result_ld.count(), test_duration.count() - 1);
   }
 }
 
