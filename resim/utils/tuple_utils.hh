@@ -33,7 +33,7 @@ namespace resim {
 // typically be a concern as tuples containing references are not incredibly
 // common.
 template <typename Callable, typename Tuple>
-auto for_each_in_tuple(const Callable &f, Tuple &&t) {
+constexpr auto for_each_in_tuple(const Callable &f, Tuple &&t) {
   return std::apply(
       [&f](auto &&...elements) {
         // clang-format off
