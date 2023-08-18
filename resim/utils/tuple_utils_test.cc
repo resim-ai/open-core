@@ -204,4 +204,4 @@ TEST(TupleUtilsTest, TestFilterTupleReferences) {
   }
 }
 
-};  // namespace resim
+}  // namespace resim
