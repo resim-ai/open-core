@@ -280,7 +280,16 @@ def resim_core_dependencies():
         name = "com_github_mvukov_rules_ros2",
         patch_args = ["-p1"],
         patches = ["@resim_open_core//resim/third_party/ros2:flto.patch"],
-        sha256 = "16b01677e2b2df0505504fd104ed082cc3caa9d720d994e369c46f43d94b91f5",
-        strip_prefix = "rules_ros2-9b3030feb0538c5491d3f5d8d3d0d483c63938f1",
-        url = "https://github.com/mvukov/rules_ros2/archive/9b3030feb0538c5491d3f5d8d3d0d483c63938f1.tar.gz",
+        sha256 = "56e78c7910c6684a051c0754cc58739484800b11a64e542194a25c34dc8bc488",
+        strip_prefix = "rules_ros2-e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81",
+        url = "https://github.com/mvukov/rules_ros2/archive/e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81.tar.gz",
+    )
+
+    maybe(
+        http_archive,
+        name = "vision_msgs",
+        sha256 = "7b9f94e65e5228d138fc097856bd3fa9c1e731d0cb1a373f5e47e94addd136b0",
+        build_file = "@resim_open_core//resim/third_party/vision_msgs:vision_msgs.BUILD",
+        strip_prefix = "vision_msgs-4.1.0/vision_msgs/msg",
+        url = "https://github.com/ros-perception/vision_msgs/archive/refs/tags/4.1.0.zip",
     )
