@@ -21,7 +21,8 @@ namespace resim {
 // @param[in] start_time - The start of the interval. This end is inclusive.
 // @param[in] end_time - The end of the interval. This end is exclusive.
 // @param[in] input_mcap - The input mcap to read from.
-// @param[in] output_mcap - The output mcap to write to. This should be empty to
+// @param[out] output_mcap - The output mcap to write to. This should be empty
+// to
 //                          avoid channel + schema collisions.
 void snippet_mcap(
     time::Timestamp start_time,

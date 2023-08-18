@@ -10,8 +10,7 @@ cc_library(
     name = "timestamp",
     hdrs = ["timestamp.hh"],
     visibility = ["//visibility:public"],
-    deps = [
-    ],
+    deps = [],
 )
 
 cc_test(
