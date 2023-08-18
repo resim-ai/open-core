@@ -25,6 +25,9 @@ TEST(TupleUtilsTest, TestForEachInTuple) {
       std::tuple_size_v<decltype(simple_tuple)> ==
       std::tuple_size_v<decltype(result)>);
 
+  static_assert(
+      std::is_same_v<decltype(result), std::tuple<int, double, unsigned>>);
+
   EXPECT_EQ(std::get<0>(simple_tuple) + 1, std::get<0>(result));
   EXPECT_EQ(std::get<1>(simple_tuple) + 1, std::get<1>(result));
   EXPECT_EQ(std::get<2>(simple_tuple) + 1, std::get<2>(result));
@@ -72,7 +75,7 @@ TEST(TupleUtilsTest, TestForEachInTupleReferences) {
                 decltype(result),
                 std::tuple<int &, int &, const int &, int &, const int &>>);
 
-  // Since result was made from an rvalue bound by rvalue refernece, all lvalues
+  // Since result was made from an rvalue bound by rvalue reference, all lvalues
   // stay lvalues and all rvalue refs stay rvalue refs.
   static_assert(std::is_same_v<
                 decltype(result_moved),
