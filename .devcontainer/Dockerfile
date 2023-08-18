@@ -25,6 +25,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/g
 RUN apt-get update
 RUN apt-get install -y gh
 
+# Install trunk
+RUN curl https://get.trunk.io -fsSL | bash -s -- -y
+
 # configure SSH for communication with Visual Studio 
 RUN mkdir -p /var/run/sshd
 RUN echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \ 
@@ -74,6 +77,9 @@ RUN pip install pymdown-extensions
 
 # Install Valgrind
 RUN apt -y install valgrind
+
+# Install the ReSim CLI
+RUN go install -v github.com/resim-ai/api-client/cmd/resim@latest
 
 # Install AWS
 RUN wget -O awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
