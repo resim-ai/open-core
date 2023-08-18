@@ -141,6 +141,10 @@ TEST(TupleUtilsTest, TestFilterTuple) {
 
   EXPECT_EQ(std::get<0>(filtered_tuple), std::get<0>(test_tuple));
   EXPECT_EQ(std::get<1>(filtered_tuple), std::get<2>(test_tuple));
+
+  // Coverage. This gets called at compile time, but we need to run it at
+  // runtime to satisfy gcov
+  FilterTupleImpl<std::is_integral>::get_indices<0>(test_tuple);
 }
 
 TEST(TupleUtilsTest, TestFilterTupleReferences) {
@@ -185,6 +189,16 @@ TEST(TupleUtilsTest, TestFilterTupleReferences) {
   EXPECT_EQ(&std::get<1>(filtered_tuple_moved), &c);
   EXPECT_EQ(std::get<2>(filtered_tuple_moved), 4);
   EXPECT_EQ(std::get<3>(filtered_tuple_moved), 5);
+
+  // Coverage. This gets called at compile time, but we need to run it at
+  // runtime to satisfy gcov
+  {
+    FilterTupleImpl<std::is_reference>::get_indices<0>(test_tuple);
+    // NOLINTBEGIN(readability-magic-numbers)
+    TestTupleMovable test_tuple_movable{a, b, c, 4, 5};
+    // NOLINTEND(readability-magic-numbers)
+    FilterTupleImpl<std::is_reference>::get_indices<0>(test_tuple_movable);
+  }
 }
 
 };  // namespace resim

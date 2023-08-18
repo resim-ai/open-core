@@ -36,7 +36,7 @@ namespace resim {
 // typically be a concern as tuples containing references are not incredibly
 // common.
 template <typename Callable, typename Tuple>
-auto for_each_in_tuple(const Callable &f, Tuple &&t) {
+constexpr auto for_each_in_tuple(const Callable &f, Tuple &&t) {
   return std::apply(
       [&f](auto &&...elements) {
         // clang-format off
@@ -81,7 +81,7 @@ constexpr auto index_sequence_cat(
 template <template <typename> typename FilterTrait>
 struct FilterTupleImpl {
   template <std::size_t IDX>
-  auto get_indices() {
+  static constexpr auto get_indices() {
     return std::index_sequence<>();
   }
 
@@ -90,7 +90,9 @@ struct FilterTupleImpl {
       typename Head,
       typename... Tail,
       std::enable_if_t<FilterTrait<Head>::value, bool> = true>
-  auto get_indices(BasicType<Head> /*unused*/, BasicType<Tail>... /*unused*/) {
+  static constexpr auto get_indices(
+      BasicType<Head> /*unused*/,
+      BasicType<Tail>... /*unused*/) {
     return index_sequence_cat(
         std::index_sequence<IDX>(),
         get_indices<IDX + 1U>(TypeC<Tail>...));
@@ -101,19 +103,23 @@ struct FilterTupleImpl {
       typename Head,
       typename... Tail,
       std::enable_if_t<not FilterTrait<Head>::value, bool> = true>
-  auto get_indices(BasicType<Head> /*unused*/, BasicType<Tail>... /*unused*/) {
+  static constexpr auto get_indices(
+      BasicType<Head> /*unused*/,
+      BasicType<Tail>... /*unused*/) {
     return get_indices<IDX + 1U>(TypeC<Tail>...);
   }
 
   // Convenient entrypoint for this function which immediately jumps into the
   // recursion.
   template <std::size_t IDX, typename... Ts>
-  auto get_indices(const std::tuple<Ts...> & /*unused*/) {
+  static constexpr auto get_indices(const std::tuple<Ts...> & /*unused*/) {
     return get_indices<IDX>(TypeC<Ts>...);
   }
 
   template <typename Tuple, std::size_t... Idxs>
-  auto get_tuple(Tuple &&t, std::index_sequence<Idxs...> /*unused*/) {
+  static constexpr auto get_tuple(
+      Tuple &&t,
+      std::index_sequence<Idxs...> /*unused*/) {
     return std::tuple<std::tuple_element_t<
         Idxs,
         std::remove_cv_t<std::remove_reference_t<Tuple>>>...>(
@@ -121,7 +127,7 @@ struct FilterTupleImpl {
   }
 
   template <typename Tuple>
-  auto operator()(Tuple &&t) {
+  static constexpr auto filter(Tuple &&t) {
     constexpr auto INDICES = decltype(get_indices<0U>(t))();
     return get_tuple(std::forward<Tuple>(t), INDICES);
   }
@@ -134,8 +140,8 @@ struct FilterTupleImpl {
 // therefore have copyable elements if it is an lvalue. For instance,
 // a std::tuple<int &&> lvalue cannot be filtered.
 template <template <typename> typename FilterTrait, typename Tuple>
-auto filter_tuple(Tuple &&tuple) {
-  return FilterTupleImpl<FilterTrait>()(std::forward<Tuple>(tuple));
+constexpr auto filter_tuple(Tuple &&tuple) {
+  return FilterTupleImpl<FilterTrait>::filter(std::forward<Tuple>(tuple));
 }
 
 }  // namespace resim
