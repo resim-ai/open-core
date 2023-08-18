@@ -1,0 +1,18 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package resim.msg;
+
+// A header for a communicated message applying a timestamp and a coordinate
+// frame id to the message.
+message Header {
+    google.protobuf.Timestamp stamp    = 1;
+    string                    frame_id = 2;
+}
