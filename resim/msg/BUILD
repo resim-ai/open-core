@@ -7,6 +7,10 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
+################################################################################
+# Protos
+################################################################################
+
 proto_library(
     name = "header_proto",
     srcs = ["header.proto"],
@@ -21,6 +25,26 @@ cc_proto_library(
         ":header_proto",
     ],
 )
+
+proto_library(
+    name = "transform_proto",
+    srcs = ["transform.proto"],
+    deps = [
+        ":header_proto",
+        "//resim/transforms/proto:se3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "transform_proto_cc",
+    deps = [
+        ":transform_proto",
+    ],
+)
+
+################################################################################
+# Converters
+################################################################################
 
 cc_library(
     name = "header_from_ros2",
@@ -62,5 +86,17 @@ cc_test(
         ":time_from_ros2",
         "@com_google_googletest//:gtest_main",
         "@ros2_rcl_interfaces//:cpp_builtin_interfaces",
+    ],
+)
+
+cc_library(
+    name = "transform_from_ros2",
+    srcs = ["transform_from_ros2.cc"],
+    hdrs = ["transform_from_ros2.hh"],
+    deps = [
+        ":transform_proto_cc",
+        "//resim/transforms/proto:se3_to_proto",
+        "@ros2_common_interfaces//:cpp_geometry_msgs",
+        "@ros2_geometry2//:cpp_tf2_msgs",
     ],
 )
