@@ -10,6 +10,7 @@
 #include <tf2_msgs/msg/tf_message.hpp>
 
 #include "resim/msg/transform.pb.h"
+#include "resim/transforms/proto/se3.pb.h"
 
 namespace resim::msg {
 

@@ -94,8 +94,13 @@ cc_library(
     srcs = ["transform_from_ros2.cc"],
     hdrs = ["transform_from_ros2.hh"],
     deps = [
+        ":header_from_ros2",
         ":transform_proto_cc",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "//resim/transforms/proto:se3_proto_cc",
         "//resim/transforms/proto:se3_to_proto",
+        "@libeigen//:eigen",
         "@ros2_common_interfaces//:cpp_geometry_msgs",
         "@ros2_geometry2//:cpp_tf2_msgs",
     ],
