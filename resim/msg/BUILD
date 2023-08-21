@@ -3,7 +3,6 @@
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
@@ -103,5 +102,42 @@ cc_library(
         "@libeigen//:eigen",
         "@ros2_common_interfaces//:cpp_geometry_msgs",
         "@ros2_geometry2//:cpp_tf2_msgs",
+    ],
+)
+
+cc_test(
+    name = "transform_from_ros2_test",
+    srcs = ["transform_from_ros2_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":transform_from_ros2",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    srcs = ["fuzz_helpers.cc"],
+    hdrs = ["fuzz_helpers.hh"],
+    deps = [
+        ":header_proto_cc",
+        ":transform_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/testing:random_matrix",
+        "//resim/transforms/proto:se3_to_proto",
+        "//resim/utils:uuid",
+    ],
+)
+
+cc_test(
+    name = "fuzz_helpers_test",
+    testonly = True,
+    srcs = ["fuzz_helpers_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":header_proto_cc",
+        ":transform_proto_cc",
+        "@com_google_googletest//:gtest_main",
     ],
 )

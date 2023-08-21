@@ -79,3 +79,13 @@ cc_library(
         "@httplib",
     ],
 )
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    hdrs = ["fuzz_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/utils:inout",
+    ],
+)
