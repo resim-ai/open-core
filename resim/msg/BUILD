@@ -64,3 +64,37 @@ cc_test(
         "@ros2_rcl_interfaces//:cpp_builtin_interfaces",
     ],
 )
+
+cc_library(
+    name = "converter_plugin_status",
+    hdrs = ["converter_plugin_status.h"],
+    visibility = ["//resim/msg:__subpackages__"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "converter_plugin",
+    srcs = ["converter_plugin.cc"],
+    hdrs = ["converter_plugin.hh"],
+    visibility = ["//resim/msg:__subpackages__"],
+    deps = [
+        ":converter_plugin_status",
+        "//resim/assert",
+        "@ros2_rclcpp//:rclcpp",
+    ],
+)
+
+cc_test(
+    name = "converter_plugin_test",
+    srcs = ["converter_plugin_test.cc"],
+    data = [
+        "//resim/msg/testing:bad_test_converter_plugin.so",
+        "//resim/msg/testing:good_test_converter_plugin.so",
+    ],
+    deps = [
+        ":converter_plugin",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
