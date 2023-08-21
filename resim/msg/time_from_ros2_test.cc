@@ -16,6 +16,7 @@ namespace resim::msg {
 using Ros2Time = builtin_interfaces::msg::Time;
 
 TEST(TimeFromRos2Test, TestRoundTrip) {
+  // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
   constexpr std::size_t UB = 1000U;
@@ -27,8 +28,10 @@ TEST(TimeFromRos2Test, TestRoundTrip) {
     time.sec = static_cast<int>(dist(rng));
     time.nanosec = dist(rng);
 
+    // ACTION
     const Ros2Time round_trip_time = convert_to_ros2(convert_from_ros2(time));
 
+    // VERIFICATION
     EXPECT_EQ(time.sec, round_trip_time.sec);
     EXPECT_EQ(time.nanosec, round_trip_time.nanosec);
   }

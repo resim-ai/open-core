@@ -111,9 +111,16 @@ cc_test(
     deps = [
         ":fuzz_helpers",
         ":transform_from_ros2",
+        ":transform_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+################################################################################
+# Helpers
+################################################################################
 
 cc_library(
     name = "fuzz_helpers",
