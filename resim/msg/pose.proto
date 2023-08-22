@@ -1,0 +1,25 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "resim/transforms/proto/se3.proto";
+
+package resim.msg;
+
+message PoseWithCovariance {
+    resim.transforms.proto.SE3 pose       = 1;
+    repeated double            covariance = 2;
+}
+
+message Twist {
+    repeated double algebra = 1;
+}
+
+message TwistWithCovariance {
+    Twist           twist      = 1;
+    repeated double covariance = 2;
+}

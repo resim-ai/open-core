@@ -41,6 +41,21 @@ cc_proto_library(
     ],
 )
 
+proto_library(
+    name = "pose_proto",
+    srcs = ["pose.proto"],
+    deps = [
+        "//resim/transforms/proto:se3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "pose_proto_cc",
+    deps = [
+        ":pose_proto",
+    ],
+)
+
 ################################################################################
 # Converters
 ################################################################################
@@ -114,6 +129,31 @@ cc_test(
         ":transform_proto_cc",
         "//resim/testing:fuzz_helpers",
         "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "pose_from_ros2",
+    srcs = ["pose_from_ros2.cc"],
+    hdrs = ["pose_from_ros2.hh"],
+    deps = [
+        ":pose_proto_cc",
+        "//resim/assert",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "//resim/transforms/proto:se3_proto_cc",
+        "//resim/transforms/proto:se3_to_proto",
+        "@libeigen//:eigen",
+        "@ros2_common_interfaces//:cpp_geometry_msgs",
+    ],
+)
+
+cc_test(
+    name = "pose_from_ros2_test",
+    srcs = ["pose_from_ros2_test.cc"],
+    deps = [
+        ":pose_from_ros2",
         "@com_google_googletest//:gtest_main",
     ],
 )
