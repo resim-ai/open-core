@@ -34,7 +34,6 @@ TEST(ConverterPluginTest, TestConverterPlugin) {
   const auto maybe_not_converted =
       plugin.try_convert("unconvertible_message_type", ros2_message);
 
-  EXPECT_THROW(plugin.try_convert(nullptr, ros2_message), AssertException);
   EXPECT_THROW(
       plugin.try_convert("convertible_message_type", invalid_ros2_message),
       AssertException);
@@ -54,11 +53,11 @@ TEST(ConverterPluginTest, TestConverterPlugin) {
           expected_response.size()));
 }
 
-// TEST(ConverterPluginTest, TestConverterBadPlugin) {
-//   // SETUP
-//   EXPECT_THROW(
-//       ConverterPlugin("resim/msg/testing/bad_test_converter_plugin.so"),
-//       AssertException);
-// }
+TEST(ConverterPluginTest, TestConverterBadPlugin) {
+  // SETUP
+  EXPECT_THROW(
+      ConverterPlugin("resim/msg/testing/bad_test_converter_plugin.so"),
+      AssertException);
+}
 
 }  // namespace resim::msg

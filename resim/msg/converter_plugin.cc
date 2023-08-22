@@ -9,7 +9,7 @@
 
 namespace resim::msg {
 
-ConverterPlugin::ConverterPlugin(const std::string &plugin_path)
+ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
     : handle_(dlopen(plugin_path.c_str(), RTLD_LAZY)) {
   // Clear dlerror()
   dlerror();
@@ -40,11 +40,11 @@ ConverterPlugin::~ConverterPlugin() {
 }
 
 std::optional<rclcpp::SerializedMessage> ConverterPlugin::try_convert(
-    const char *ros2_message_type,
+    const std::string_view ros2_message_type,
     const rclcpp::SerializedMessage &ros2_message) const {
   rcl_serialized_message_t result;
   const auto status = converter_(
-      ros2_message_type,
+      ros2_message_type.data(),
       &ros2_message.get_rcl_serialized_message(),
       &result);
   REASSERT(

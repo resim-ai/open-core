@@ -6,6 +6,8 @@
 #include "resim/assert/assert.hh"
 #include "resim/msg/converter_plugin_status.h"
 
+// This is a well-behaved test plugin for testing the ConverterPlugin class. See
+// ConverterPluginTest for more details.
 extern "C" ReSimConverterPluginStatus resim_convert_ros2_to_resim(
     const char *const ros2_message_type,
     const rcutils_uint8_array_t *const ros2_message,
