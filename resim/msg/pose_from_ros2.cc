@@ -6,6 +6,8 @@
 
 #include "resim/msg/pose_from_ros2.hh"
 
+#include <cstdint>
+
 #include "resim/assert/assert.hh"
 #include "resim/transforms/proto/se3_to_proto.hh"
 #include "resim/transforms/se3.hh"
@@ -60,7 +62,7 @@ PoseWithCovariance convert_from_ros2(
 
   result.mutable_pose()->CopyFrom(convert_from_ros2(ros2_msg.pose));
 
-  constexpr int N = transforms::SE3::DOF;
+  constexpr std::size_t N = transforms::SE3::DOF;
   REASSERT(ros2_msg.covariance.size() == N * N, "Covariance has wrong size!");
   for (int ii = 0; ii < N * N; ++ii) {
     result.add_covariance(ros2_msg.covariance.at(ii));
@@ -73,7 +75,7 @@ geometry_msgs::msg::PoseWithCovariance convert_to_ros2(
   geometry_msgs::msg::PoseWithCovariance result;
   result.pose = convert_to_ros2(resim_msg.pose());
 
-  constexpr int N = transforms::SE3::DOF;
+  constexpr std::size_t N = transforms::SE3::DOF;
   REASSERT(resim_msg.covariance_size() == N * N, "Covariance has wrong size!");
   for (int ii = 0; ii < N * N; ++ii) {
     result.covariance.at(ii) = resim_msg.covariance(ii);
@@ -97,9 +99,10 @@ Twist convert_from_ros2(const geometry_msgs::msg::Twist &ros2_msg) {
 
 geometry_msgs::msg::Twist convert_to_ros2(const Twist &resim_msg) {
   geometry_msgs::msg::Twist result;
-  constexpr int N = transforms::SE3::DOF;
+  constexpr std::size_t N = transforms::SE3::DOF;
   REASSERT(resim_msg.algebra_size() == N, "Algebra has wrong size!");
 
+  // NOLINTBEGIN(readability-magic-numbers)
   result.angular.x = resim_msg.algebra(0);
   result.angular.y = resim_msg.algebra(1);
   result.angular.z = resim_msg.algebra(2);
@@ -107,6 +110,7 @@ geometry_msgs::msg::Twist convert_to_ros2(const Twist &resim_msg) {
   result.linear.x = resim_msg.algebra(3);
   result.linear.y = resim_msg.algebra(4);
   result.linear.z = resim_msg.algebra(5);
+  // NOLINTEND(readability-magic-numbers)
 
   return result;
 }
@@ -117,7 +121,7 @@ TwistWithCovariance convert_from_ros2(
 
   result.mutable_twist()->CopyFrom(convert_from_ros2(ros2_msg.twist));
 
-  constexpr int N = transforms::SE3::DOF;
+  constexpr std::size_t N = transforms::SE3::DOF;
   REASSERT(ros2_msg.covariance.size() == N * N, "Covariance has wrong size!");
   for (int ii = 0; ii < N * N; ++ii) {
     result.add_covariance(ros2_msg.covariance.at(ii));
@@ -130,7 +134,7 @@ geometry_msgs::msg::TwistWithCovariance convert_to_ros2(
   geometry_msgs::msg::TwistWithCovariance result;
   result.twist = convert_to_ros2(resim_msg.twist());
 
-  constexpr int N = transforms::SE3::DOF;
+  constexpr std::size_t N = transforms::SE3::DOF;
   REASSERT(resim_msg.covariance_size() == N * N, "Covariance has wrong size!");
   for (int ii = 0; ii < N * N; ++ii) {
     result.covariance.at(ii) = resim_msg.covariance(ii);

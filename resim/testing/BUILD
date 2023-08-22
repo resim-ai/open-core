@@ -83,6 +83,7 @@ cc_library(
 cc_library(
     name = "fuzz_helpers",
     testonly = True,
+    srcs = ["fuzz_helpers.cc"],
     hdrs = ["fuzz_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [

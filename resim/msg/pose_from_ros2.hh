@@ -16,7 +16,7 @@
 
 namespace resim::msg {
 
-// ROS2 converters for transforms
+// ROS2 converters for poses and twists
 
 transforms::proto::SE3 convert_from_ros2(
     const geometry_msgs::msg::Pose &ros2_msg);
