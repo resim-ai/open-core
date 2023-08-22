@@ -11,33 +11,15 @@ namespace resim::msg {
 
 ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
     : handle_(dlopen(plugin_path.c_str(), RTLD_LAZY)) {
-  // Clear dlerror()
-  dlerror();
+  REASSERT(handle_ != nullptr, "Failed to load plugin!");
 
-  const char *maybe_error = dlerror();
-  const auto maybe_error_string = [&maybe_error]() {
-    return std::string(maybe_error != nullptr ? maybe_error : "");
-  };
-  REASSERT(
-      handle_ != nullptr,
-      "Failed to load plugin: " + maybe_error_string());
-
-  // Clear dlerror()
-  dlerror();
   converter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       reinterpret_cast<const Converter>(dlsym(handle_, CONVERTER_NAME));
-  maybe_error = dlerror();
-  REASSERT(
-      converter_ != nullptr and maybe_error == nullptr,
-      "Failed to load plugin: " + maybe_error_string());
+  REASSERT(converter_ != nullptr, "Failed to load_plugin!");
 }
 
-ConverterPlugin::~ConverterPlugin() {
-  if (handle_ != nullptr) {
-    dlclose(handle_);
-  }
-}
+ConverterPlugin::~ConverterPlugin() { dlclose(handle_); }
 
 std::optional<rclcpp::SerializedMessage> ConverterPlugin::try_convert(
     const std::string_view ros2_message_type,
