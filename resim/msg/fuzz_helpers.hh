@@ -14,6 +14,7 @@
 #include "resim/testing/fuzz_helpers.hh"
 #include "resim/testing/random_matrix.hh"
 #include "resim/transforms/proto/se3_to_proto.hh"
+#include "resim/utils/inout.hh"
 #include "resim/utils/uuid.hh"
 
 namespace resim::msg {

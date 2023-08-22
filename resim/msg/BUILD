@@ -133,6 +133,7 @@ cc_library(
         "//resim/testing:fuzz_helpers",
         "//resim/testing:random_matrix",
         "//resim/transforms/proto:se3_to_proto",
+        "//resim/utils:inout",
         "//resim/utils:uuid",
     ],
 )
