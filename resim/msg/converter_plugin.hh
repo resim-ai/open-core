@@ -1,10 +1,11 @@
 // Copyright 2023 ReSim, Inc.
-//
-// Use of this source code is governed by an MIT-style
+// // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
 #pragma once
+
+#include <gtest/gtest_prod.h>
 
 #include <cstddef>
 #include <filesystem>
@@ -86,22 +87,24 @@ class ConverterPlugin {
   // @param[in] ros2_message_type: The message type of the ros2_message.
   // @param[in] ros2_message: The message to convert.
   // @returns The converted message if successful or nullopt if this
-  // converter
-  //          doesn't know how to handle this type of message.
-  // @throws If the contained converter plugin returns
-  // RESIM_CONVERTER_PLUGIN_STATUS_ERROR
+  // converter doesn't know how to handle this type of message.
+  // @throws AssertException If the contained converter plugin returns
+  //         RESIM_CONVERTER_PLUGIN_STATUS_ERROR
   std::vector<std::byte> convert(
       std::string_view ros2_message_type,
       const rclcpp::SerializedMessage &ros2_message) const;
 
   // Get the schema info for the type we want to convert to.
   // @param[in] ros2_message_type - The type we want to convert.
+  // @throws AssertException If the contained converter plugin returns
+  //         RESIM_CONVERTER_PLUGIN_STATUS_ERROR
   SchemaInfo get_schema(std::string_view ros2_message_type) const;
 
  private:
-  static constexpr auto SUPPORTER_NAME = "resim_convert_supports_ros2_type";
-  static constexpr auto CONVERTER_NAME = "resim_convert_ros2_to_resim";
-  static constexpr auto GET_SCHEMA_NAME = "resim_convert_get_resim_schema";
+  FRIEND_TEST(ConverterPluginTest, TestDestructor);
+  static constexpr auto SUPPORTER_NAME_ = "resim_convert_supports_ros2_type";
+  static constexpr auto CONVERTER_NAME_ = "resim_convert_ros2_to_resim";
+  static constexpr auto GET_SCHEMA_NAME_ = "resim_convert_get_resim_schema";
 
   using SupportsType = bool (*)(const char *);
   using Converter = ReSimConverterPluginStatus (*)(

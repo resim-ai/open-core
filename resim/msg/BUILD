@@ -134,6 +134,7 @@ cc_library(
     deps = [
         ":converter_plugin_types",
         "//resim/assert",
+        "@com_google_googletest//:gtest_prod",
         "@ros2_rclcpp//:rclcpp",
     ],
 )

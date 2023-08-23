@@ -29,32 +29,38 @@ ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
 
   converter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const Converter>(dlsym(handle_, CONVERTER_NAME));
+      reinterpret_cast<const Converter>(dlsym(handle_, CONVERTER_NAME_));
   check_dlerror();
   REASSERT(converter_ != nullptr);
 
   supports_type_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const SupportsType>(dlsym(handle_, SUPPORTER_NAME));
+      reinterpret_cast<const SupportsType>(dlsym(handle_, SUPPORTER_NAME_));
   check_dlerror();
   REASSERT(supports_type_ != nullptr);
 
   schema_getter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const SchemaGetter>(dlsym(handle_, GET_SCHEMA_NAME));
+      reinterpret_cast<const SchemaGetter>(dlsym(handle_, GET_SCHEMA_NAME_));
   check_dlerror();
   REASSERT(schema_getter_ != nullptr);
 }
 
-ConverterPlugin::~ConverterPlugin() { dlclose(handle_); }
+ConverterPlugin::~ConverterPlugin() {
+  if (handle_ != nullptr) {
+    dlclose(handle_);
+  }
+}
 
 bool ConverterPlugin::supports_type(std::string_view ros2_message_type) const {
+  REASSERT(supports_type_ != nullptr);
   return supports_type_(ros2_message_type.data());
 }
 
 std::vector<std::byte> ConverterPlugin::convert(
     const std::string_view ros2_message_type,
     const rclcpp::SerializedMessage &ros2_message) const {
+  REASSERT(converter_ != nullptr);
   REASSERT(
       supports_type(ros2_message_type),
       "Can't convert unsupported message type!");
@@ -82,6 +88,7 @@ std::vector<std::byte> ConverterPlugin::convert(
 
 ConverterPlugin::SchemaInfo ConverterPlugin::get_schema(
     std::string_view ros2_message_type) const {
+  REASSERT(schema_getter_ != nullptr);
   REASSERT(
       supports_type(ros2_message_type),
       "Can't convert unsupported message type!");

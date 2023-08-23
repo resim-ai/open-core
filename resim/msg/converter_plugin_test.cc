@@ -24,6 +24,14 @@ TEST(ConverterPluginTest, TestConstructor) {
   EXPECT_THROW(ConverterPlugin{"no_such_plugin.so"}, AssertException);
 }
 
+TEST(ConverterPluginTest, TestDestructor) {
+  // Make sure we don't free a null handle;
+  ConverterPlugin plugin{"resim/msg/testing/good_test_converter_plugin.so"};
+
+  dlclose(plugin.handle_);
+  plugin.handle_ = nullptr;
+}
+
 TEST(ConverterPluginTest, TestSupportsType) {
   // SETUP
   const ConverterPlugin plugin{
