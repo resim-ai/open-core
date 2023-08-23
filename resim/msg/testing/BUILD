@@ -14,19 +14,7 @@ cc_binary(
     visibility = ["//resim/msg:__subpackages__"],
     deps = [
         "//resim/assert",
-        "//resim/msg:converter_plugin_status",
-        "@ros2_rclcpp//:rclcpp",
-    ],
-)
-
-cc_binary(
-    name = "bad_test_converter_plugin.so",
-    testonly = True,
-    srcs = ["bad_test_converter_plugin.cc"],
-    linkshared = True,
-    visibility = ["//resim/msg:__subpackages__"],
-    deps = [
-        "//resim/msg:converter_plugin_status",
+        "//resim/msg:converter_plugin_types",
         "@ros2_rclcpp//:rclcpp",
     ],
 )

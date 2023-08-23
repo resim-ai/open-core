@@ -8,6 +8,7 @@
 
 #include <dlfcn.h>
 
+#include <span>
 #include <utility>
 
 #include "resim/assert/assert.hh"
@@ -15,37 +16,96 @@
 namespace resim::msg {
 
 ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
-    : handle_(dlopen(plugin_path.c_str(), RTLD_LAZY)) {
-  REASSERT(handle_ != nullptr, "Failed to load plugin!");
+    : handle_{dlopen(plugin_path.c_str(), RTLD_LAZY)} {
+  const auto check_dlerror = []() {
+    const char *maybe_error = dlerror();
+    REASSERT(
+        maybe_error == nullptr,
+        "Failed to load plugin! " +
+            std::string(maybe_error ? maybe_error : ""));
+  };
+  check_dlerror();
+  REASSERT(handle_ != nullptr);
 
   converter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       reinterpret_cast<const Converter>(dlsym(handle_, CONVERTER_NAME));
-  REASSERT(converter_ != nullptr, "Failed to load_plugin!");
+  check_dlerror();
+  REASSERT(converter_ != nullptr);
+
+  supports_type_ =
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const SupportsType>(dlsym(handle_, SUPPORTER_NAME));
+  check_dlerror();
+  REASSERT(supports_type_ != nullptr);
+
+  schema_getter_ =
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const SchemaGetter>(dlsym(handle_, GET_SCHEMA_NAME));
+  check_dlerror();
+  REASSERT(schema_getter_ != nullptr);
 }
 
 ConverterPlugin::~ConverterPlugin() { dlclose(handle_); }
 
-std::optional<rclcpp::SerializedMessage> ConverterPlugin::try_convert(
+bool ConverterPlugin::supports_type(std::string_view ros2_message_type) const {
+  return supports_type_(ros2_message_type.data());
+}
+
+std::vector<std::byte> ConverterPlugin::convert(
     const std::string_view ros2_message_type,
     const rclcpp::SerializedMessage &ros2_message) const {
-  rcl_serialized_message_t result;
+  REASSERT(
+      supports_type(ros2_message_type),
+      "Can't convert unsupported message type!");
+
+  rcl_serialized_message_t resim_message;
   const auto status = converter_(
       ros2_message_type.data(),
       &ros2_message.get_rcl_serialized_message(),
-      &result);
+      &resim_message);
   REASSERT(
       status != RESIM_CONVERTER_PLUGIN_STATUS_ERROR,
       "Error encountered on conversion!");
-  if (status == RESIM_CONVERTER_PLUGIN_STATUS_NO_MATCHING_CONVERTER) {
-    return std::nullopt;
-  }
 
-  // result must be moved since the lvalue constructor of SerializedMessage will
-  // do a deep copy resulting in a memory leak. We want to make sure ownershp is
-  // transferred.
-  // NOLINTNEXTLINE(performance-move-const-arg)
-  return rclcpp::SerializedMessage{std::move(result)};
+  std::vector<std::byte> result;
+  result.reserve(resim_message.buffer_length);
+  const std::span buffer{resim_message.buffer, resim_message.buffer_length};
+  for (const auto s : buffer) {
+    result.push_back(static_cast<std::byte>(s));
+  }
+  resim_message.allocator.deallocate(
+      resim_message.buffer,
+      resim_message.allocator.state);
+  return result;
+}
+
+ConverterPlugin::SchemaInfo ConverterPlugin::get_schema(
+    std::string_view ros2_message_type) const {
+  REASSERT(
+      supports_type(ros2_message_type),
+      "Can't convert unsupported message type!");
+  ReSimConverterSchemaInfo schema_info;
+  const auto status = schema_getter_(ros2_message_type.data(), &schema_info);
+  REASSERT(
+      status != RESIM_CONVERTER_PLUGIN_STATUS_ERROR,
+      "Error encountered on schema get!");
+
+  SchemaInfo result{
+      .name = schema_info.name,
+      .encoding = schema_info.encoding,
+  };
+  const std::span buffer{
+      schema_info.data.buffer,
+      schema_info.data.buffer_length};
+  result.data.reserve(schema_info.data.buffer_length);
+  for (const auto s : buffer) {
+    result.data.push_back(static_cast<std::byte>(s));
+  }
+  schema_info.data.allocator.deallocate(
+      schema_info.data.buffer,
+      schema_info.data.allocator.state);
+  return result;
 }
 
 }  // namespace resim::msg

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <rcutils/types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,9 +16,16 @@ extern "C" {
 // for more details.
 typedef enum {
   RESIM_CONVERTER_PLUGIN_STATUS_OK = 0,
-  RESIM_CONVERTER_PLUGIN_STATUS_NO_MATCHING_CONVERTER,
   RESIM_CONVERTER_PLUGIN_STATUS_ERROR,
 } ReSimConverterPluginStatus;
+
+// Schema info we can use to write the converted messages to MCAP. Should fit
+// one of the profiles here: https://mcap.dev/spec/registry#schema-encodings
+typedef struct {
+  const char *name;
+  const char *encoding;
+  rcutils_uint8_array_t data;
+} ReSimConverterSchemaInfo;
 
 #ifdef __cplusplus
 }  // extern "C"
