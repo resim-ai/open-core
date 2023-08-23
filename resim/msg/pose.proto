@@ -11,15 +11,20 @@ import "resim/transforms/proto/se3.proto";
 package resim.msg;
 
 message PoseWithCovariance {
-    resim.transforms.proto.SE3 pose       = 1;
-    repeated double            covariance = 2;
+    resim.transforms.proto.SE3 pose = 1;
+
+    // This is a 6x6 matrix in row-major order
+    repeated double covariance = 2;
 }
 
 message Twist {
+    // This has six elements with angular components first and linear second.
     repeated double algebra = 1;
 }
 
 message TwistWithCovariance {
-    Twist           twist      = 1;
+    Twist twist = 1;
+
+    // This is a 6x6 matrix in row-major order
     repeated double covariance = 2;
 }
