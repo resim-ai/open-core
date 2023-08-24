@@ -10,6 +10,13 @@ import "resim/transforms/proto/se3.proto";
 
 package resim.msg;
 
+// This message represents an observation-based estimate of
+// a six-degree-of-freedom rigid-body transform (or pose) between two coordinate
+// frames along with the estimate of its covariance based on a statistical model
+// of its evolution over time. One might get these, for instance, out of
+// a Kalman filter. We represent the pose using the protobuf representation of
+// our SE3 type since all 3D rigid body transforms are elements of the Lie Group
+// SE3.
 message PoseWithCovariance {
     resim.transforms.proto.SE3 pose = 1;
 
@@ -17,11 +24,22 @@ message PoseWithCovariance {
     repeated double covariance = 2;
 }
 
+// This message represents the time derivative of a six-degree-of-freedom
+// rigid body transform (or pose) between two coordinate frames.
 message Twist {
     // This has six elements with angular components first and linear second.
+    // These are expressed in the input coordinates of the transform. In other
+    // words, if the transform converts robot coordinates to world coordinates,
+    // then the linear components express the robot's velocity in its own
+    // coordinates.
     repeated double algebra = 1;
 }
 
+// This message represents an observation-based estimate of
+// the time derivative of a six-degree-of-freedom transform (or pose) between
+// two coordinate frames along with the estimate of its covariance based on
+// a statistical model of its evolution over time. One might get these, for
+// instance, out of a Kalman filter.
 message TwistWithCovariance {
     Twist twist = 1;
 

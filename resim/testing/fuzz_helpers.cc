@@ -8,11 +8,10 @@
 
 #include <cmath>
 
+#include "resim/math/is_approx.hh"
+
 namespace resim {
 
-bool verify_equality(double a, double b) {
-  constexpr double TOLERANCE = 1e-12;
-  return std::fabs(b - a) < TOLERANCE;
-}
+bool verify_equality(double a, double b) { return math::is_approx(a, b); }
 
 }  // namespace resim

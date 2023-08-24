@@ -25,16 +25,15 @@ TEST(IsApproxTest, TestIsApproxSmall) {
   constexpr double EPSILON = 1e-12;
 
   const Vec3 a{MAGNITUDE * testing::random_matrix<Vec3>(rng).normalized()};
-  const Vec3 should_match_a{
-      a +
-      (TOLERANCE - EPSILON) * testing::random_matrix<Vec3>(rng).normalized()};
-  const Vec3 shouldnt_match_a{
-      a +
-      (TOLERANCE + EPSILON) * testing::random_matrix<Vec3>(rng).normalized()};
+  const Vec3 should_match_a{a + (TOLERANCE - EPSILON) * a.normalized()};
+  const Vec3 shouldnt_match_a{a + (TOLERANCE + EPSILON) * a.normalized()};
 
   // ACTION / VERIFICATION
   EXPECT_TRUE(is_approx(a, should_match_a, TOLERANCE));
   EXPECT_FALSE(is_approx(a, shouldnt_match_a, TOLERANCE));
+
+  EXPECT_TRUE(is_approx(a.norm(), should_match_a.norm(), TOLERANCE));
+  EXPECT_FALSE(is_approx(a.norm(), shouldnt_match_a.norm(), TOLERANCE));
 }
 
 // Test that is_approx() works relatively rather than absolutely when large.
@@ -54,6 +53,9 @@ TEST(IsApproxTest, TestIsApproxLarge) {
   // ACTION / VERIFICATION
   EXPECT_TRUE(is_approx(a, should_match_a, TOLERANCE));
   EXPECT_FALSE(is_approx(a, shouldnt_match_a, TOLERANCE));
+
+  EXPECT_TRUE(is_approx(a.norm(), should_match_a.norm(), TOLERANCE));
+  EXPECT_FALSE(is_approx(a.norm(), shouldnt_match_a.norm(), TOLERANCE));
 }
 
 }  // namespace resim::math

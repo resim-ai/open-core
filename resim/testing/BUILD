@@ -87,6 +87,7 @@ cc_library(
     hdrs = ["fuzz_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim/math:is_approx",
         "//resim/utils:inout",
     ],
 )
