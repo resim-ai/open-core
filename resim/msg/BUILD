@@ -41,6 +41,37 @@ cc_proto_library(
     ],
 )
 
+proto_library(
+    name = "pose_proto",
+    srcs = ["pose.proto"],
+    deps = [
+        "//resim/transforms/proto:se3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "pose_proto_cc",
+    deps = [
+        ":pose_proto",
+    ],
+)
+
+proto_library(
+    name = "odometry_proto",
+    srcs = ["odometry.proto"],
+    deps = [
+        ":header_proto",
+        ":pose_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "odometry_proto_cc",
+    deps = [
+        ":odometry_proto",
+    ],
+)
+
 ################################################################################
 # Converters
 ################################################################################
@@ -118,6 +149,56 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "pose_from_ros2",
+    srcs = ["pose_from_ros2.cc"],
+    hdrs = ["pose_from_ros2.hh"],
+    deps = [
+        ":pose_proto_cc",
+        "//resim/assert",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "//resim/transforms/proto:se3_proto_cc",
+        "//resim/transforms/proto:se3_to_proto",
+        "@libeigen//:eigen",
+        "@ros2_common_interfaces//:cpp_geometry_msgs",
+    ],
+)
+
+cc_test(
+    name = "pose_from_ros2_test",
+    srcs = ["pose_from_ros2_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":pose_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "odometry_from_ros2",
+    srcs = ["odometry_from_ros2.cc"],
+    hdrs = ["odometry_from_ros2.hh"],
+    deps = [
+        ":header_from_ros2",
+        ":odometry_proto_cc",
+        ":pose_from_ros2",
+        "@ros2_common_interfaces//:cpp_nav_msgs",
+    ],
+)
+
+cc_test(
+    name = "odometry_from_ros2_test",
+    srcs = ["odometry_from_ros2_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":odometry_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Helpers
 ################################################################################
@@ -129,6 +210,8 @@ cc_library(
     hdrs = ["fuzz_helpers.hh"],
     deps = [
         ":header_proto_cc",
+        ":odometry_proto_cc",
+        ":pose_proto_cc",
         ":transform_proto_cc",
         "//resim/testing:fuzz_helpers",
         "//resim/testing:random_matrix",
@@ -145,6 +228,8 @@ cc_test(
     deps = [
         ":fuzz_helpers",
         ":header_proto_cc",
+        ":odometry_proto_cc",
+        ":pose_proto_cc",
         ":transform_proto_cc",
         "@com_google_googletest//:gtest_main",
     ],

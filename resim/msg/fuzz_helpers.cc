@@ -32,4 +32,70 @@ bool verify_equality(const TransformArray &a, const TransformArray &b) {
   return true;
 }
 
+bool verify_equality(const PoseWithCovariance &a, const PoseWithCovariance &b) {
+  const bool poses_equal = unpack(a.pose()).is_approx(unpack(b.pose()));
+  if (not poses_equal) {
+    return false;
+  }
+
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(
+      a.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+  REASSERT(
+      b.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+
+  for (int ii = 0; ii < N * N; ++ii) {
+    if (not resim::verify_equality(a.covariance(ii), b.covariance(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(const Twist &a, const Twist &b) {
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(a.algebra().size() == N, "Incorrect twist size detected!");
+  REASSERT(b.algebra().size() == N, "Incorrect twist size detected!");
+
+  for (int ii = 0; ii < N; ++ii) {
+    if (not resim::verify_equality(a.algebra(ii), b.algebra(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(
+    const TwistWithCovariance &a,
+    const TwistWithCovariance &b) {
+  const bool twists_equal = verify_equality(a.twist(), b.twist());
+  if (not twists_equal) {
+    return false;
+  }
+
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(
+      a.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+  REASSERT(
+      b.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+
+  for (int ii = 0; ii < N * N; ++ii) {
+    if (not resim::verify_equality(a.covariance(ii), b.covariance(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(const Odometry &a, const Odometry &b) {
+  return verify_equality(a.header(), b.header()) and
+         a.child_frame_id() == b.child_frame_id() and
+         verify_equality(a.pose(), b.pose()) and
+         verify_equality(a.twist(), b.twist());
+}
+
 }  // namespace resim::msg
