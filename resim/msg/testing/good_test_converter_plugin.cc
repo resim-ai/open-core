@@ -91,11 +91,7 @@ extern "C" ReSimConverterPluginStatus resim_convert_ros2_to_resim(
 extern "C" ReSimConverterPluginStatus resim_convert_get_resim_schema(
     const char *const ros2_message_type,
     ReSimConverterSchemaInfo *schema_info) {
-  try {
-    converters_map.at(ros2_message_type).schema_getter(schema_info);
-  } catch (...) {
-    return RESIM_CONVERTER_PLUGIN_STATUS_ERROR;
-  }
+  converters_map.at(ros2_message_type).schema_getter(schema_info);
   return RESIM_CONVERTER_PLUGIN_STATUS_OK;
 }
 
