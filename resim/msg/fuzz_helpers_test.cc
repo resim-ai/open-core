@@ -10,6 +10,7 @@
 
 #include <random>
 
+#include "resim/geometry/proto/fuzz_helpers.hh"
 #include "resim/msg/header.pb.h"
 #include "resim/msg/odometry.pb.h"
 #include "resim/msg/pose.pb.h"
@@ -218,6 +219,28 @@ TEST(FuzzHelpersTest, TestOdometryEqual) {
   EXPECT_FALSE(verify_equality(odometry_different_child_frame_id, odometry));
   EXPECT_FALSE(verify_equality(odometry_different_pose, odometry));
   EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
+}
+
+TEST(FuzzHelpersTest, TestDetectionEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Detection3D detection{random_element<Detection3D>(InOut{rng})};
+
+  Detection3D detection_different_header{detection};
+  detection_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  Detection3D detection_different_bbox{detection};
+  detection_different_bbox.mutable_bbox()->CopyFrom(
+      random_element<geometry::proto::OrientedBoxSE3>(InOut{rng}));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(detection, detection));
+  EXPECT_FALSE(verify_equality(detection, detection_different_header));
+  EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
+  EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
 }
 
 }  // namespace resim::msg

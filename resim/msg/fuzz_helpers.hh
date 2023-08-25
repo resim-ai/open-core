@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <random>
 
+#include "resim/geometry/proto/fuzz_helpers.hh"
+#include "resim/msg/detection.pb.h"
 #include "resim/msg/header.pb.h"
 #include "resim/msg/odometry.pb.h"
 #include "resim/msg/pose.pb.h"
@@ -127,6 +129,24 @@ Odometry random_element(TypeTag<Odometry> /*unused*/, InOut<Rng> rng) {
   return result;
 }
 
+template <typename Rng>
+Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
+  Detection3D result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+
+  auto bbox = random_element<geometry::proto::OrientedBoxSE3>(rng);
+
+  // We don't use these when converting to/from ROS2
+  constexpr int DIMS = 3;
+  bbox.mutable_reference_from_box()->mutable_into()->mutable_id()->set_data(
+      transforms::Frame<DIMS>::null_frame().id().to_string());
+  bbox.mutable_reference_from_box()->mutable_from()->mutable_id()->set_data(
+      transforms::Frame<DIMS>::null_frame().id().to_string());
+
+  result.mutable_bbox()->CopyFrom(bbox);
+  return result;
+}
+
 bool verify_equality(const Header &a, const Header &b);
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b);
@@ -142,5 +162,7 @@ bool verify_equality(
     const TwistWithCovariance &b);
 
 bool verify_equality(const Odometry &a, const Odometry &b);
+
+bool verify_equality(const Detection3D &a, const Detection3D &b);
 
 }  // namespace resim::msg
