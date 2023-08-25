@@ -11,8 +11,6 @@
 
 namespace resim::msg {
 
-// ROS2 converters for bounding boxes
-
 Detection3D convert_from_ros2(const vision_msgs::msg::Detection3D &ros2_msg) {
   Detection3D result;
   result.mutable_header()->CopyFrom(convert_from_ros2(ros2_msg.header));
