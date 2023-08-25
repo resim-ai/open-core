@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <random>
 
 #include "resim/geometry/proto/fuzz_helpers.hh"
 #include "resim/msg/detection.pb.h"
 #include "resim/msg/header.pb.h"
+#include "resim/msg/navsat.pb.h"
 #include "resim/msg/odometry.pb.h"
 #include "resim/msg/pose.pb.h"
 #include "resim/msg/transform.pb.h"
@@ -147,6 +149,40 @@ Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
   return result;
 }
 
+template <typename Rng>
+NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
+  constexpr std::array STATUSES = {
+      NavSatFix::STATUS_NO_FIX,
+      NavSatFix::STATUS_FIX,
+      NavSatFix::STATUS_SBAS_FIX,
+      NavSatFix::STATUS_GBAS_FIX,
+  };
+  constexpr std::array COVARIANCES = {
+      NavSatFix::COVARIANCE_TYPE_UNKNOWN,
+      NavSatFix::COVARIANCE_TYPE_APPROXIMATED,
+      NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN,
+      NavSatFix::COVARIANCE_TYPE_KNOWN,
+  };
+
+  NavSatFix result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+  result.set_status(
+      STATUSES.at(random_element<std::size_t>(rng) % STATUSES.size()));
+  result.set_latitude(random_element<double>(rng));
+  result.set_longitude(random_element<double>(rng));
+  result.set_altitude_m(random_element<double>(rng));
+
+  constexpr int COV_DIM = 9;
+  for (int ii = 0; ii < COV_DIM; ++ii) {
+    // Absolutely not a valid covariance, but we only care about data
+    // preservation.
+    result.add_position_covariance_m2(random_element<double>(rng));
+  }
+  result.set_position_covariance_type(
+      COVARIANCES.at(random_element<std::size_t>(rng) % COVARIANCES.size()));
+  return result;
+}
+
 bool verify_equality(const Header &a, const Header &b);
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b);
@@ -164,5 +200,7 @@ bool verify_equality(
 bool verify_equality(const Odometry &a, const Odometry &b);
 
 bool verify_equality(const Detection3D &a, const Detection3D &b);
+
+bool verify_equality(const NavSatFix &a, const NavSatFix &b);
 
 }  // namespace resim::msg

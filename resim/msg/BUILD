@@ -88,6 +88,21 @@ cc_proto_library(
     ],
 )
 
+proto_library(
+    name = "navsat_proto",
+    srcs = ["navsat.proto"],
+    deps = [
+        ":header_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "navsat_proto_cc",
+    deps = [
+        ":navsat_proto",
+    ],
+)
+
 ################################################################################
 # Converters
 ################################################################################
@@ -262,6 +277,29 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "navsat_from_ros2",
+    srcs = ["navsat_from_ros2.cc"],
+    hdrs = ["navsat_from_ros2.hh"],
+    deps = [
+        ":header_from_ros2",
+        ":navsat_proto_cc",
+        "//resim/assert",
+        "@ros2_common_interfaces//:cpp_sensor_msgs",
+    ],
+)
+
+cc_test(
+    name = "navsat_from_ros2_test",
+    srcs = ["navsat_from_ros2_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":navsat_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Helpers
 ################################################################################
@@ -274,6 +312,7 @@ cc_library(
     deps = [
         ":detection_proto_cc",
         ":header_proto_cc",
+        ":navsat_proto_cc",
         ":odometry_proto_cc",
         ":pose_proto_cc",
         ":transform_proto_cc",

@@ -1,0 +1,36 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "resim/msg/header.proto";
+
+package resim.msg;
+
+// These have the same meaining as in
+// https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/NavSatFix.msg
+message NavSatFix {
+    enum Status {
+        STATUS_NO_FIX   = 0;
+        STATUS_FIX      = 1;
+        STATUS_SBAS_FIX = 2;
+        STATUS_GBAS_FIX = 3;
+    }
+    enum CovarianceType {
+        COVARIANCE_TYPE_UNKNOWN        = 0;
+        COVARIANCE_TYPE_APPROXIMATED   = 1;
+        COVARIANCE_TYPE_DIAGONAL_KNOWN = 2;
+        COVARIANCE_TYPE_KNOWN          = 3;
+    }
+
+    Header          header                   = 1;
+    Status          status                   = 2;
+    double          latitude                 = 3;
+    double          longitude                = 4;
+    double          altitude_m               = 5;
+    repeated double position_covariance_m2   = 6;
+    CovarianceType  position_covariance_type = 7;
+}
