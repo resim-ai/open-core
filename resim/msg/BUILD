@@ -199,6 +199,30 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "oriented_box_from_ros2",
+    srcs = ["oriented_box_from_ros2.cc"],
+    hdrs = ["oriented_box_from_ros2.hh"],
+    deps = [
+        ":pose_from_ros2",
+        "//resim/assert",
+        "//resim/geometry/proto:oriented_box_proto_cc",
+        "@vision_msgs//:cpp_vision_msgs",
+    ],
+)
+
+cc_test(
+    name = "oriented_box_from_ros2_test",
+    srcs = ["oriented_box_from_ros2_test.cc"],
+    deps = [
+        ":oriented_box_from_ros2",
+        "//resim/geometry/proto:fuzz_helpers",
+        "//resim/testing:fuzz_helpers",
+        "//resim/transforms:frame",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Helpers
 ################################################################################
@@ -215,7 +239,8 @@ cc_library(
         ":transform_proto_cc",
         "//resim/testing:fuzz_helpers",
         "//resim/testing:random_matrix",
-        "//resim/transforms/proto:se3_to_proto",
+        "//resim/transforms:frame",
+        "//resim/transforms/proto:fuzz_helpers",
         "//resim/utils:inout",
         "//resim/utils:uuid",
     ],

@@ -15,6 +15,8 @@
 #include "resim/msg/transform.pb.h"
 #include "resim/testing/fuzz_helpers.hh"
 #include "resim/testing/random_matrix.hh"
+#include "resim/transforms/frame.hh"
+#include "resim/transforms/proto/fuzz_helpers.hh"
 #include "resim/transforms/proto/se3_to_proto.hh"
 #include "resim/utils/inout.hh"
 #include "resim/utils/uuid.hh"
@@ -43,9 +45,15 @@ TransformStamped random_element(
 
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
   result.set_child_frame_id(UUID::new_uuid().to_string());
-  const transforms::SE3 transform{transforms::SE3::exp(
-      testing::random_vector<transforms::SE3::TangentVector>(*rng))};
-  pack(transform, result.mutable_transform());
+  result.mutable_transform()->CopyFrom(
+      random_element<transforms::proto::SE3>(rng));
+
+  // We don't use these when converting to/from ROS2
+  result.mutable_transform()->mutable_into()->mutable_id()->set_data(
+      transforms::Frame<3>::null_frame().id().to_string());
+  result.mutable_transform()->mutable_from()->mutable_id()->set_data(
+      transforms::Frame<3>::null_frame().id().to_string());
+
   return result;
 }
 
@@ -69,9 +77,13 @@ PoseWithCovariance random_element(
     TypeTag<PoseWithCovariance> /*unused*/,
     InOut<Rng> rng) {
   PoseWithCovariance result;
-  const transforms::SE3 pose{transforms::SE3::exp(
-      testing::random_vector<transforms::SE3::TangentVector>(*rng))};
-  pack(pose, result.mutable_pose());
+  result.mutable_pose()->CopyFrom(random_element<transforms::proto::SE3>(rng));
+
+  // We don't use these when converting to/from ROS2
+  result.mutable_pose()->mutable_into()->mutable_id()->set_data(
+      transforms::Frame<3>::null_frame().id().to_string());
+  result.mutable_pose()->mutable_from()->mutable_id()->set_data(
+      transforms::Frame<3>::null_frame().id().to_string());
 
   constexpr std::size_t N = transforms::SE3::DOF;
   for (int ii = 0; ii < N * N; ++ii) {

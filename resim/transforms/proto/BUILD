@@ -172,3 +172,19 @@ cc_library(
         "//resim/transforms:se3",
     ],
 )
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    srcs = ["fuzz_helpers.cc"],
+    hdrs = ["fuzz_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":se3_proto_cc",
+        ":se3_to_proto",
+        "//resim/testing:fuzz_helpers",
+        "//resim/testing:random_matrix",
+        "//resim/transforms:se3",
+        "//resim/utils:inout",
+    ],
+)

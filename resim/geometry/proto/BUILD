@@ -44,3 +44,33 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+proto_library(
+    name = "oriented_box_proto",
+    srcs = ["oriented_box.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/transforms/proto:se3_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "oriented_box_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":oriented_box_proto"],
+)
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    srcs = ["fuzz_helpers.cc"],
+    hdrs = ["fuzz_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oriented_box_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/transforms:se3",
+        "//resim/transforms/proto:fuzz_helpers",
+        "//resim/utils:inout",
+    ],
+)
