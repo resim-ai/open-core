@@ -188,3 +188,15 @@ cc_library(
         "//resim/utils:inout",
     ],
 )
+
+cc_test(
+    name = "fuzz_helpers_test",
+    srcs = ["fuzz_helpers_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":se3_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
