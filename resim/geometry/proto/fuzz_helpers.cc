@@ -6,8 +6,6 @@
 
 #include "resim/geometry/proto/fuzz_helpers.hh"
 
-#include <iostream>
-
 namespace resim::geometry::proto {
 
 bool verify_equality(const OrientedBoxSE3 &a, const OrientedBoxSE3 &b) {
@@ -16,12 +14,10 @@ bool verify_equality(const OrientedBoxSE3 &a, const OrientedBoxSE3 &b) {
   }
 
   for (int ii = 0; ii < transforms::SE3::DIMS; ++ii) {
-    std::cout << a.extents(ii) << " " << b.extents(ii) << std::endl;
     if (not resim::verify_equality(a.extents(ii), b.extents(ii))) {
       return false;
     }
   }
-
   return true;
 }
 

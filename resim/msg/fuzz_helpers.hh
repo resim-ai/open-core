@@ -49,10 +49,11 @@ TransformStamped random_element(
       random_element<transforms::proto::SE3>(rng));
 
   // We don't use these when converting to/from ROS2
+  constexpr int DIMS = 3;
   result.mutable_transform()->mutable_into()->mutable_id()->set_data(
-      transforms::Frame<3>::null_frame().id().to_string());
+      transforms::Frame<DIMS>::null_frame().id().to_string());
   result.mutable_transform()->mutable_from()->mutable_id()->set_data(
-      transforms::Frame<3>::null_frame().id().to_string());
+      transforms::Frame<DIMS>::null_frame().id().to_string());
 
   return result;
 }
@@ -80,10 +81,11 @@ PoseWithCovariance random_element(
   result.mutable_pose()->CopyFrom(random_element<transforms::proto::SE3>(rng));
 
   // We don't use these when converting to/from ROS2
+  constexpr int DIMS = 3;
   result.mutable_pose()->mutable_into()->mutable_id()->set_data(
-      transforms::Frame<3>::null_frame().id().to_string());
+      transforms::Frame<DIMS>::null_frame().id().to_string());
   result.mutable_pose()->mutable_from()->mutable_id()->set_data(
-      transforms::Frame<3>::null_frame().id().to_string());
+      transforms::Frame<DIMS>::null_frame().id().to_string());
 
   constexpr std::size_t N = transforms::SE3::DOF;
   for (int ii = 0; ii < N * N; ++ii) {

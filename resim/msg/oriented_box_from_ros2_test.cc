@@ -25,14 +25,15 @@ TEST(OrientedBoxSE3FromRos2Test, TestRoundTrip) {
   geometry::proto::OrientedBoxSE3 test_oriented_box{
       random_element<geometry::proto::OrientedBoxSE3>(InOut{rng})};
   // We don't use these when converting to/from ROS2
+  constexpr int DIMS = 3;
   test_oriented_box.mutable_reference_from_box()
       ->mutable_into()
       ->mutable_id()
-      ->set_data(transforms::Frame<3>::null_frame().id().to_string());
+      ->set_data(transforms::Frame<DIMS>::null_frame().id().to_string());
   test_oriented_box.mutable_reference_from_box()
       ->mutable_from()
       ->mutable_id()
-      ->set_data(transforms::Frame<3>::null_frame().id().to_string());
+      ->set_data(transforms::Frame<DIMS>::null_frame().id().to_string());
 
   // ACTION
   const geometry::proto::OrientedBoxSE3 round_tripped{

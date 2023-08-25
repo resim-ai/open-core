@@ -12,7 +12,7 @@
 
 namespace resim::msg {
 
-// ROS2 converters for message headers
+// ROS2 converters for bounding boxes
 
 geometry::proto::OrientedBoxSE3 convert_from_ros2(
     const vision_msgs::msg::BoundingBox3D &ros2_msg);
