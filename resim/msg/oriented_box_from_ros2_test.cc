@@ -24,7 +24,7 @@ TEST(OrientedBoxSE3FromRos2Test, TestRoundTrip) {
   std::mt19937 rng{SEED};
   geometry::proto::OrientedBoxSE3 test_oriented_box{
       random_element<geometry::proto::OrientedBoxSE3>(InOut{rng})};
-  // We don't use these when converting to/from ROS2
+  // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   test_oriented_box.mutable_reference_from_box()
       ->mutable_into()
