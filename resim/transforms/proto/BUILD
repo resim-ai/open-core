@@ -172,3 +172,31 @@ cc_library(
         "//resim/transforms:se3",
     ],
 )
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    srcs = ["fuzz_helpers.cc"],
+    hdrs = ["fuzz_helpers.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":se3_proto_cc",
+        ":se3_to_proto",
+        "//resim/testing:fuzz_helpers",
+        "//resim/testing:random_matrix",
+        "//resim/transforms:se3",
+        "//resim/utils:inout",
+    ],
+)
+
+cc_test(
+    name = "fuzz_helpers_test",
+    srcs = ["fuzz_helpers_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":se3_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

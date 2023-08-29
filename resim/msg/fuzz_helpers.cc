@@ -9,15 +9,15 @@
 namespace resim::msg {
 
 bool verify_equality(const Header &a, const Header &b) {
-  return a.stamp().seconds() == b.stamp().seconds() &&
-         a.stamp().nanos() == b.stamp().nanos() && a.frame_id() == b.frame_id();
+  return a.stamp().seconds() == b.stamp().seconds() and
+         a.stamp().nanos() == b.stamp().nanos() and
+         a.frame_id() == b.frame_id();
 }
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b) {
-  const bool transforms_equal =
-      unpack(a.transform()).is_approx(unpack(b.transform()));
-  return transforms_equal && verify_equality(a.header(), b.header()) &&
-         a.child_frame_id() == b.child_frame_id();
+  return verify_equality(a.header(), b.header()) and
+         a.child_frame_id() == b.child_frame_id() and
+         verify_equality(a.transform(), b.transform());
 }
 
 bool verify_equality(const TransformArray &a, const TransformArray &b) {
@@ -33,8 +33,7 @@ bool verify_equality(const TransformArray &a, const TransformArray &b) {
 }
 
 bool verify_equality(const PoseWithCovariance &a, const PoseWithCovariance &b) {
-  const bool poses_equal = unpack(a.pose()).is_approx(unpack(b.pose()));
-  if (not poses_equal) {
+  if (not verify_equality(a.pose(), b.pose())) {
     return false;
   }
 
