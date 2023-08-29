@@ -35,8 +35,8 @@ NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg) {
       REASSERT(false, "Unrecognized status!");
   }
 
-  result.set_latitude(ros2_msg.latitude);
-  result.set_longitude(ros2_msg.longitude);
+  result.set_latitude_deg(ros2_msg.latitude);
+  result.set_longitude_deg(ros2_msg.longitude);
   result.set_altitude_m(ros2_msg.altitude);
 
   constexpr int COV_DIM = 9;
@@ -89,8 +89,8 @@ sensor_msgs::msg::NavSatFix convert_to_ros2(const NavSatFix &resim_msg) {
       REASSERT(false, "Unrecognized covariance type!");
   }
 
-  result.latitude = resim_msg.latitude();
-  result.longitude = resim_msg.longitude();
+  result.latitude = resim_msg.latitude_deg();
+  result.longitude = resim_msg.longitude_deg();
   result.altitude = resim_msg.altitude_m();
 
   constexpr int COV_DIM = 9;

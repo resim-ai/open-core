@@ -113,8 +113,8 @@ bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
   }
   return verify_equality(a.header(), b.header()) and
          a.status() == b.status() and
-         resim::verify_equality(a.latitude(), b.latitude()) and
-         resim::verify_equality(a.longitude(), b.longitude()) and
+         resim::verify_equality(a.latitude_deg(), b.latitude_deg()) and
+         resim::verify_equality(a.longitude_deg(), b.longitude_deg()) and
          resim::verify_equality(a.altitude_m(), b.altitude_m()) and
          a.position_covariance_type() == b.position_covariance_type();
 }

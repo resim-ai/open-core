@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Eigen/Dense>
 #include <array>
 #include <cstdint>
 #include <random>
@@ -168,15 +169,18 @@ NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
   result.set_status(
       STATUSES.at(random_element<std::size_t>(rng) % STATUSES.size()));
-  result.set_latitude(random_element<double>(rng));
-  result.set_longitude(random_element<double>(rng));
+  result.set_latitude_deg(random_element<double>(rng));
+  result.set_longitude_deg(random_element<double>(rng));
   result.set_altitude_m(random_element<double>(rng));
 
-  constexpr int COV_DIM = 9;
-  for (int ii = 0; ii < COV_DIM; ++ii) {
-    // Absolutely not a valid covariance, but we only care about data
-    // preservation.
-    result.add_position_covariance_m2(random_element<double>(rng));
+  // Make a valid covariance:
+  Eigen::Matrix3d covariance{testing::random_matrix<Eigen::Matrix3d>(*rng)};
+  covariance = covariance.transpose() * covariance;
+
+  for (int ii = 0; ii < covariance.rows(); ++ii) {
+    for (int jj = 0; jj < covariance.cols(); ++jj) {
+      result.add_position_covariance_m2(covariance(ii, jj));
+    }
   }
   result.set_position_covariance_type(
       COVARIANCES.at(random_element<std::size_t>(rng) % COVARIANCES.size()));

@@ -260,10 +260,11 @@ TEST(FuzzHelpersTest, TestNavSatFixEqual) {
       (static_cast<int>(nav_sat_fix.status() + 1) % NUM_STATUSES)));
 
   NavSatFix nav_sat_fix_different_latitude{nav_sat_fix};
-  nav_sat_fix_different_latitude.set_latitude(-nav_sat_fix.latitude());
+  nav_sat_fix_different_latitude.set_latitude_deg(-nav_sat_fix.latitude_deg());
 
   NavSatFix nav_sat_fix_different_longitude{nav_sat_fix};
-  nav_sat_fix_different_longitude.set_longitude(-nav_sat_fix.longitude());
+  nav_sat_fix_different_longitude.set_longitude_deg(
+      -nav_sat_fix.longitude_deg());
 
   NavSatFix nav_sat_fix_different_altitude_m{nav_sat_fix};
   nav_sat_fix_different_altitude_m.set_altitude_m(-nav_sat_fix.altitude_m());

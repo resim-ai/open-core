@@ -10,7 +10,7 @@ import "resim/msg/header.proto";
 
 package resim.msg;
 
-// These have the same meaining as in
+// These have the same meaning as in
 // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/NavSatFix.msg
 message NavSatFix {
     enum Status {
@@ -28,8 +28,8 @@ message NavSatFix {
 
     Header          header                   = 1;
     Status          status                   = 2;
-    double          latitude                 = 3;
-    double          longitude                = 4;
+    double          latitude_deg             = 3;
+    double          longitude_deg            = 4;
     double          altitude_m               = 5;
     repeated double position_covariance_m2   = 6;
     CovarianceType  position_covariance_type = 7;
