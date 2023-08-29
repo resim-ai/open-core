@@ -97,4 +97,9 @@ bool verify_equality(const Odometry &a, const Odometry &b) {
          verify_equality(a.twist(), b.twist());
 }
 
+bool verify_equality(const Detection3D &a, const Detection3D &b) {
+  return verify_equality(a.header(), b.header()) and
+         verify_equality(a.bbox(), b.bbox());
+}
+
 }  // namespace resim::msg
