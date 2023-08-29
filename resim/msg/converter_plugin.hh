@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <rclcpp/serialized_message.hpp>
 #include <string_view>
 #include <vector>
@@ -35,7 +36,7 @@ namespace resim::msg {
 // // @param[in] ros2_message_type - The message type we want to try to convert
 // // @param[in] ros2_message - A pointer to a ROS-style byte array containing
 // //                           a serialized ros2 message to convert.
-// // @param[out] resim_message - A pointer to a ROS-stype byte array to put our
+// // @param[out] resim_message - A pointer to a ROS-style byte array to put our
 // //                             converted serialized ReSim type into. Note
 // //                             that this is really just a byte array. We
 // //                             simply use the ROS type for the sake of
@@ -106,13 +107,22 @@ class ConverterPlugin {
   static constexpr auto CONVERTER_NAME_ = "resim_convert_ros2_to_resim";
   static constexpr auto GET_SCHEMA_NAME_ = "resim_convert_get_resim_schema";
 
-  using SupportsType = bool (*)(const char *);
-  using Converter = ReSimConverterPluginStatus (*)(
+  using SupportsTypePtr = bool (*)(const char *);
+  using SupportsType = std::function<bool(const char *)>;
+
+  using ConverterPtr = ReSimConverterPluginStatus (*)(
       const char *,
       const rcutils_uint8_array_t *,
       rcutils_uint8_array_t *);
-  using SchemaGetter =
+  using Converter = std::function<ReSimConverterPluginStatus(
+      const char *,
+      const rcutils_uint8_array_t *,
+      rcutils_uint8_array_t *)>;
+
+  using SchemaGetterPtr =
       ReSimConverterPluginStatus (*)(const char *, ReSimConverterSchemaInfo *);
+  using SchemaGetter = std::function<
+      ReSimConverterPluginStatus(const char *, ReSimConverterSchemaInfo *)>;
 
   SupportsType supports_type_;
   Converter converter_;

@@ -15,8 +15,9 @@
 
 namespace resim::msg {
 
-ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
-    : handle_{dlopen(plugin_path.c_str(), RTLD_LAZY)} {
+ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path) {
+  // Clear dlerror()
+  dlerror();
   const auto check_dlerror = []() {
     const char *maybe_error = dlerror();
     REASSERT(
@@ -24,24 +25,26 @@ ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path)
         "Failed to load plugin! " +
             std::string(maybe_error ? maybe_error : ""));
   };
+
+  handle_ = dlopen(plugin_path.c_str(), RTLD_LAZY);
   check_dlerror();
   REASSERT(handle_ != nullptr);
 
   converter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const Converter>(dlsym(handle_, CONVERTER_NAME_));
+      reinterpret_cast<const ConverterPtr>(dlsym(handle_, CONVERTER_NAME_));
   check_dlerror();
   REASSERT(converter_ != nullptr);
 
   supports_type_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const SupportsType>(dlsym(handle_, SUPPORTER_NAME_));
+      reinterpret_cast<const SupportsTypePtr>(dlsym(handle_, SUPPORTER_NAME_));
   check_dlerror();
   REASSERT(supports_type_ != nullptr);
 
   schema_getter_ =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const SchemaGetter>(dlsym(handle_, GET_SCHEMA_NAME_));
+      reinterpret_cast<const SchemaGetterPtr>(dlsym(handle_, GET_SCHEMA_NAME_));
   check_dlerror();
   REASSERT(schema_getter_ != nullptr);
 }
