@@ -10,6 +10,8 @@
 #include <random>
 
 #include "resim/msg/header.pb.h"
+#include "resim/msg/odometry.pb.h"
+#include "resim/msg/pose.pb.h"
 #include "resim/msg/transform.pb.h"
 #include "resim/testing/fuzz_helpers.hh"
 #include "resim/testing/random_matrix.hh"
@@ -62,10 +64,69 @@ TransformArray random_element(
   return result;
 }
 
+template <typename Rng>
+PoseWithCovariance random_element(
+    TypeTag<PoseWithCovariance> /*unused*/,
+    InOut<Rng> rng) {
+  PoseWithCovariance result;
+  const transforms::SE3 pose{transforms::SE3::exp(
+      testing::random_vector<transforms::SE3::TangentVector>(*rng))};
+  pack(pose, result.mutable_pose());
+
+  constexpr std::size_t N = transforms::SE3::DOF;
+  for (int ii = 0; ii < N * N; ++ii) {
+    result.add_covariance(random_element<double>(rng));
+  }
+  return result;
+}
+
+template <typename Rng>
+Twist random_element(TypeTag<Twist> /*unused*/, InOut<Rng> rng) {
+  Twist result;
+  constexpr std::size_t N = transforms::SE3::DOF;
+  for (int ii = 0; ii < N; ++ii) {
+    result.add_algebra(random_element<double>(rng));
+  }
+  return result;
+}
+
+template <typename Rng>
+TwistWithCovariance random_element(
+    TypeTag<TwistWithCovariance> /*unused*/,
+    InOut<Rng> rng) {
+  TwistWithCovariance result;
+  result.mutable_twist()->CopyFrom(random_element<Twist>(rng));
+  constexpr std::size_t N = transforms::SE3::DOF;
+  for (int ii = 0; ii < N * N; ++ii) {
+    result.add_covariance(random_element<double>(rng));
+  }
+  return result;
+}
+
+template <typename Rng>
+Odometry random_element(TypeTag<Odometry> /*unused*/, InOut<Rng> rng) {
+  Odometry result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+  result.set_child_frame_id(UUID::new_uuid().to_string());
+  result.mutable_pose()->CopyFrom(random_element<PoseWithCovariance>(rng));
+  result.mutable_twist()->CopyFrom(random_element<TwistWithCovariance>(rng));
+  return result;
+}
+
 bool verify_equality(const Header &a, const Header &b);
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b);
 
 bool verify_equality(const TransformArray &a, const TransformArray &b);
+
+bool verify_equality(const PoseWithCovariance &a, const PoseWithCovariance &b);
+
+bool verify_equality(const Twist &a, const Twist &b);
+
+bool verify_equality(
+    const TwistWithCovariance &a,
+    const TwistWithCovariance &b);
+
+bool verify_equality(const Odometry &a, const Odometry &b);
 
 }  // namespace resim::msg

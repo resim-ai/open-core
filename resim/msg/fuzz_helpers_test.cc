@@ -11,6 +11,8 @@
 #include <random>
 
 #include "resim/msg/header.pb.h"
+#include "resim/msg/odometry.pb.h"
+#include "resim/msg/pose.pb.h"
 #include "resim/msg/transform.pb.h"
 
 namespace resim::msg {
@@ -97,6 +99,125 @@ TEST(FuzzHelpersTest, TestTransformArrayEqual) {
       verify_equality(transform_array_different_size, transform_array));
   EXPECT_FALSE(
       verify_equality(transform_array_different_element, transform_array));
+}
+
+TEST(FuzzHelpersTest, TestPoseWithCovarianceEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const PoseWithCovariance pose_with_covariance{
+      random_element<PoseWithCovariance>(InOut{rng})};
+
+  PoseWithCovariance pose_with_covariance_different_pose{pose_with_covariance};
+  pose_with_covariance_different_pose.mutable_pose()->CopyFrom(
+      random_element<PoseWithCovariance>(InOut{rng}).pose());
+
+  PoseWithCovariance pose_with_covariance_different_covariance{
+      pose_with_covariance};
+  pose_with_covariance_different_covariance.mutable_covariance()->Set(
+      0,
+      -pose_with_covariance.covariance(0));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(pose_with_covariance, pose_with_covariance));
+  EXPECT_FALSE(verify_equality(
+      pose_with_covariance,
+      pose_with_covariance_different_pose));
+  EXPECT_FALSE(verify_equality(
+      pose_with_covariance,
+      pose_with_covariance_different_covariance));
+  EXPECT_FALSE(verify_equality(
+      pose_with_covariance_different_pose,
+      pose_with_covariance));
+  EXPECT_FALSE(verify_equality(
+      pose_with_covariance_different_covariance,
+      pose_with_covariance));
+}
+
+TEST(FuzzHelpersTest, TestTwistEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Twist twist{random_element<Twist>(InOut{rng})};
+
+  Twist twist_different_algebra{twist};
+  twist_different_algebra.mutable_algebra()->Set(0, -twist.algebra(0));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(twist, twist));
+  EXPECT_FALSE(verify_equality(twist, twist_different_algebra));
+  EXPECT_FALSE(verify_equality(twist_different_algebra, twist));
+}
+
+TEST(FuzzHelpersTest, TestTwistWithCovarianceEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const TwistWithCovariance twist_with_covariance{
+      random_element<TwistWithCovariance>(InOut{rng})};
+
+  TwistWithCovariance twist_with_covariance_different_twist{
+      twist_with_covariance};
+  twist_with_covariance_different_twist.mutable_twist()->CopyFrom(
+      random_element<Twist>(InOut{rng}));
+
+  TwistWithCovariance twist_with_covariance_different_covariance{
+      twist_with_covariance};
+  twist_with_covariance_different_covariance.mutable_covariance()->Set(
+      0,
+      -twist_with_covariance.covariance(0));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(twist_with_covariance, twist_with_covariance));
+  EXPECT_FALSE(verify_equality(
+      twist_with_covariance,
+      twist_with_covariance_different_twist));
+  EXPECT_FALSE(verify_equality(
+      twist_with_covariance,
+      twist_with_covariance_different_covariance));
+  EXPECT_FALSE(verify_equality(
+      twist_with_covariance_different_twist,
+      twist_with_covariance));
+  EXPECT_FALSE(verify_equality(
+      twist_with_covariance_different_covariance,
+      twist_with_covariance));
+}
+
+TEST(FuzzHelpersTest, TestOdometryEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Odometry odometry{random_element<Odometry>(InOut{rng})};
+
+  Odometry odometry_different_header{odometry};
+  odometry_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  Odometry odometry_different_child_frame_id{odometry};
+  odometry_different_child_frame_id.set_child_frame_id(
+      odometry.child_frame_id() + "_different");
+
+  Odometry odometry_different_pose{odometry};
+  odometry_different_pose.mutable_pose()->CopyFrom(
+      random_element<PoseWithCovariance>(InOut{rng}));
+
+  Odometry odometry_different_twist{odometry};
+  odometry_different_twist.mutable_twist()->CopyFrom(
+      random_element<TwistWithCovariance>(InOut{rng}));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(odometry, odometry));
+  EXPECT_FALSE(verify_equality(odometry, odometry_different_header));
+  EXPECT_FALSE(verify_equality(odometry, odometry_different_child_frame_id));
+  EXPECT_FALSE(verify_equality(odometry, odometry_different_pose));
+  EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
+  EXPECT_FALSE(verify_equality(odometry_different_child_frame_id, odometry));
+  EXPECT_FALSE(verify_equality(odometry_different_pose, odometry));
+  EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
 }
 
 }  // namespace resim::msg

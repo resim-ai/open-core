@@ -27,4 +27,16 @@ bool is_approx(
          precision * std::max(1.0, std::min(a.norm(), b.norm()));
 }
 
+// Overload for the above for scalars rather than matrices or vectors.
+// @param[in] a - The first scalar to compare.
+// @param[in] b - The second scalar to compare.
+// @param[in] precision - The precision to use in the fuzzy comparison.
+inline bool is_approx(
+    const double a,
+    const double b,
+    const double precision = DEFAULT_PRECISION) {
+  return std::fabs(a - b) <=
+         precision * std::max(1.0, std::min(std::fabs(a), std::fabs(b)));
+}
+
 }  // namespace resim::math

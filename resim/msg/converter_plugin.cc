@@ -26,6 +26,8 @@ ConverterPlugin::ConverterPlugin(const std::filesystem::path &plugin_path) {
             std::string(maybe_error ? maybe_error : ""));
   };
 
+  // We need to clear dlerror() first.
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   handle_ = dlopen(plugin_path.c_str(), RTLD_LAZY);
   check_dlerror();
   REASSERT(handle_ != nullptr);

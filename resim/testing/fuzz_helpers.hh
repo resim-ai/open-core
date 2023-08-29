@@ -7,6 +7,7 @@
 #pragma once
 
 #include <concepts>
+#include <iostream>
 #include <random>
 
 #include "resim/utils/inout.hh"
@@ -85,5 +86,20 @@ Int random_element(TypeTag<Int> /*unused*/, InOut<Rng> rng) {
       std::numeric_limits<Int>::max()};
   return dist(*rng);
 }
+
+// random_element overload with an implementation for floating point types. This
+// is done here so it is in the same namespace as TypeTag and can be found by
+// ADL when called in generic code.
+template <std::floating_point Float, typename Rng>
+Float random_element(TypeTag<Float> /*unused*/, InOut<Rng> rng) {
+  constexpr double TWO = 2.;
+  std::uniform_real_distribution<Float> dist{
+      -std::numeric_limits<Float>::max() / TWO,
+      std::numeric_limits<Float>::max() / TWO};
+  return dist(*rng);
+}
+
+// verify_equality overload with an implementation for doubles.
+bool verify_equality(double a, double b);
 
 }  // namespace resim
