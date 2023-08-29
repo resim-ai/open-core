@@ -58,3 +58,7 @@ tracked through bazel and will be automatically downloaded and built when needed
 for the target being built. However, we do depend on the UUID library from
 [util-linux/util-linux](https://github.com/util-linux/util-linux), which is
 included in our development docker container.
+
+# Documentation
+
+If you add a new file to `docs/`, it needs to be added to the `nav:` section in the `mkdocs.yml` of our internal docs repo before it will be easy to find on docs.resim.ai

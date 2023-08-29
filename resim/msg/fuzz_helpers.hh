@@ -53,7 +53,7 @@ TransformStamped random_element(
   result.mutable_transform()->CopyFrom(
       random_element<transforms::proto::SE3>(rng));
 
-  // We don't use these when converting to/from ROS2
+  // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   result.mutable_transform()->mutable_into()->mutable_id()->set_data(
       transforms::Frame<DIMS>::null_frame().id().to_string());
@@ -85,7 +85,7 @@ PoseWithCovariance random_element(
   PoseWithCovariance result;
   result.mutable_pose()->CopyFrom(random_element<transforms::proto::SE3>(rng));
 
-  // We don't use these when converting to/from ROS2
+  // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   result.mutable_pose()->mutable_into()->mutable_id()->set_data(
       transforms::Frame<DIMS>::null_frame().id().to_string());
