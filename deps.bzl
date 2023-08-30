@@ -85,11 +85,10 @@ def resim_core_dependencies():
         http_archive,
         name = "mcap",
         build_file = "@resim_open_core//resim/third_party/mcap:mcap.BUILD",
-        sha256 =
-            "2833f72344308ea58639f3b363a0cf17669580ae7ab435f43f3b104cff6ef548",
-        strip_prefix = "mcap-releases-cpp-v0.8.0/cpp/mcap",
+        sha256 = "11a6badecac2b10e9687e912648a6e9679ef8731e4ab9570346ae9845ae64a65",
+        strip_prefix = "mcap-releases-cpp-v1.2.0/cpp/mcap",
         urls =
-            ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v0.8.0.tar.gz"],
+            ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v1.2.0.tar.gz"],
     )
 
     maybe(
@@ -281,10 +280,7 @@ def resim_core_dependencies():
         http_archive,
         name = "com_github_mvukov_rules_ros2",
         patch_args = ["-p1"],
-        patches = [
-            "@resim_open_core//resim/third_party/ros2:flto.patch",
-            "@resim_open_core//resim/third_party/ros2:copts.patch",
-        ],
+        patches = ["@resim_open_core//resim/third_party/ros2:flto.patch"],
         sha256 = "56e78c7910c6684a051c0754cc58739484800b11a64e542194a25c34dc8bc488",
         strip_prefix = "rules_ros2-e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81",
         url = "https://github.com/mvukov/rules_ros2/archive/e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81.tar.gz",
