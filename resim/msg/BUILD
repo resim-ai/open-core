@@ -300,6 +300,40 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "converter_plugin_types",
+    hdrs = ["converter_plugin_types.h"],
+    visibility = ["//resim/msg:__subpackages__"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "converter_plugin",
+    srcs = ["converter_plugin.cc"],
+    hdrs = ["converter_plugin.hh"],
+    visibility = ["//resim/msg:__subpackages__"],
+    deps = [
+        ":converter_plugin_types",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_prod",
+        "@ros2_rclcpp//:rclcpp",
+    ],
+)
+
+cc_test(
+    name = "converter_plugin_test",
+    srcs = ["converter_plugin_test.cc"],
+    data = [
+        "//resim/msg/testing:good_test_converter_plugin.so",
+    ],
+    deps = [
+        ":converter_plugin",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Helpers
 ################################################################################
