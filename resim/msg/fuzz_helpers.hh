@@ -6,10 +6,15 @@
 
 #pragma once
 
+#include <Eigen/Dense>
+#include <array>
 #include <cstdint>
 #include <random>
 
+#include "resim/geometry/proto/fuzz_helpers.hh"
+#include "resim/msg/detection.pb.h"
 #include "resim/msg/header.pb.h"
+#include "resim/msg/navsat.pb.h"
 #include "resim/msg/odometry.pb.h"
 #include "resim/msg/pose.pb.h"
 #include "resim/msg/transform.pb.h"
@@ -127,6 +132,61 @@ Odometry random_element(TypeTag<Odometry> /*unused*/, InOut<Rng> rng) {
   return result;
 }
 
+template <typename Rng>
+Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
+  Detection3D result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+
+  auto bbox = random_element<geometry::proto::OrientedBoxSE3>(rng);
+
+  // We don't use these when converting to/from ROS2
+  constexpr int DIMS = 3;
+  bbox.mutable_reference_from_box()->mutable_into()->mutable_id()->set_data(
+      transforms::Frame<DIMS>::null_frame().id().to_string());
+  bbox.mutable_reference_from_box()->mutable_from()->mutable_id()->set_data(
+      transforms::Frame<DIMS>::null_frame().id().to_string());
+
+  result.mutable_bbox()->CopyFrom(bbox);
+  return result;
+}
+
+template <typename Rng>
+NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
+  constexpr std::array STATUSES = {
+      NavSatFix::STATUS_NO_FIX,
+      NavSatFix::STATUS_FIX,
+      NavSatFix::STATUS_SBAS_FIX,
+      NavSatFix::STATUS_GBAS_FIX,
+  };
+  constexpr std::array COVARIANCES = {
+      NavSatFix::COVARIANCE_TYPE_UNKNOWN,
+      NavSatFix::COVARIANCE_TYPE_APPROXIMATED,
+      NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN,
+      NavSatFix::COVARIANCE_TYPE_KNOWN,
+  };
+
+  NavSatFix result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+  result.set_status(
+      STATUSES.at(random_element<std::size_t>(rng) % STATUSES.size()));
+  result.set_latitude_deg(random_element<double>(rng));
+  result.set_longitude_deg(random_element<double>(rng));
+  result.set_altitude_m(random_element<double>(rng));
+
+  // Make a valid covariance:
+  Eigen::Matrix3d covariance{testing::random_matrix<Eigen::Matrix3d>(*rng)};
+  covariance = covariance.transpose() * covariance;
+
+  for (int ii = 0; ii < covariance.rows(); ++ii) {
+    for (int jj = 0; jj < covariance.cols(); ++jj) {
+      result.add_position_covariance_m2(covariance(ii, jj));
+    }
+  }
+  result.set_position_covariance_type(
+      COVARIANCES.at(random_element<std::size_t>(rng) % COVARIANCES.size()));
+  return result;
+}
+
 bool verify_equality(const Header &a, const Header &b);
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b);
@@ -142,5 +202,9 @@ bool verify_equality(
     const TwistWithCovariance &b);
 
 bool verify_equality(const Odometry &a, const Odometry &b);
+
+bool verify_equality(const Detection3D &a, const Detection3D &b);
+
+bool verify_equality(const NavSatFix &a, const NavSatFix &b);
 
 }  // namespace resim::msg

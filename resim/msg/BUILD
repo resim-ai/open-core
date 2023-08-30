@@ -72,6 +72,37 @@ cc_proto_library(
     ],
 )
 
+proto_library(
+    name = "detection_proto",
+    srcs = ["detection.proto"],
+    deps = [
+        ":header_proto",
+        "//resim/geometry/proto:oriented_box_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "detection_proto_cc",
+    deps = [
+        ":detection_proto",
+    ],
+)
+
+proto_library(
+    name = "navsat_proto",
+    srcs = ["navsat.proto"],
+    deps = [
+        ":header_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "navsat_proto_cc",
+    deps = [
+        ":navsat_proto",
+    ],
+)
+
 ################################################################################
 # Converters
 ################################################################################
@@ -224,6 +255,52 @@ cc_test(
 )
 
 cc_library(
+    name = "detection_from_ros2",
+    srcs = ["detection_from_ros2.cc"],
+    hdrs = ["detection_from_ros2.hh"],
+    deps = [
+        ":detection_proto_cc",
+        ":header_from_ros2",
+        ":oriented_box_from_ros2",
+        "@vision_msgs//:cpp_vision_msgs",
+    ],
+)
+
+cc_test(
+    name = "detection_from_ros2_test",
+    srcs = ["detection_from_ros2_test.cc"],
+    deps = [
+        ":detection_from_ros2",
+        ":fuzz_helpers",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "navsat_from_ros2",
+    srcs = ["navsat_from_ros2.cc"],
+    hdrs = ["navsat_from_ros2.hh"],
+    deps = [
+        ":header_from_ros2",
+        ":navsat_proto_cc",
+        "//resim/assert",
+        "@ros2_common_interfaces//:cpp_sensor_msgs",
+    ],
+)
+
+cc_test(
+    name = "navsat_from_ros2_test",
+    srcs = ["navsat_from_ros2_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":navsat_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "converter_plugin_types",
     hdrs = ["converter_plugin_types.h"],
     visibility = ["//resim/msg:__subpackages__"],
@@ -267,10 +344,13 @@ cc_library(
     srcs = ["fuzz_helpers.cc"],
     hdrs = ["fuzz_helpers.hh"],
     deps = [
+        ":detection_proto_cc",
         ":header_proto_cc",
+        ":navsat_proto_cc",
         ":odometry_proto_cc",
         ":pose_proto_cc",
         ":transform_proto_cc",
+        "//resim/geometry/proto:fuzz_helpers",
         "//resim/testing:fuzz_helpers",
         "//resim/testing:random_matrix",
         "//resim/transforms:frame",
@@ -290,6 +370,7 @@ cc_test(
         ":odometry_proto_cc",
         ":pose_proto_cc",
         ":transform_proto_cc",
+        "//resim/geometry/proto:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )
