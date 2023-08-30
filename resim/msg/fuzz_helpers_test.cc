@@ -243,4 +243,62 @@ TEST(FuzzHelpersTest, TestDetectionEqual) {
   EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
 }
 
+TEST(FuzzHelpersTest, TestNavSatFixEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const NavSatFix nav_sat_fix{random_element<NavSatFix>(InOut{rng})};
+
+  NavSatFix nav_sat_fix_different_header{nav_sat_fix};
+  nav_sat_fix_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  constexpr int NUM_STATUSES = 4;
+  NavSatFix nav_sat_fix_different_status{nav_sat_fix};
+  nav_sat_fix_different_status.set_status(static_cast<NavSatFix::Status>(
+      (static_cast<int>(nav_sat_fix.status() + 1) % NUM_STATUSES)));
+
+  NavSatFix nav_sat_fix_different_latitude{nav_sat_fix};
+  nav_sat_fix_different_latitude.set_latitude_deg(-nav_sat_fix.latitude_deg());
+
+  NavSatFix nav_sat_fix_different_longitude{nav_sat_fix};
+  nav_sat_fix_different_longitude.set_longitude_deg(
+      -nav_sat_fix.longitude_deg());
+
+  NavSatFix nav_sat_fix_different_altitude_m{nav_sat_fix};
+  nav_sat_fix_different_altitude_m.set_altitude_m(-nav_sat_fix.altitude_m());
+
+  NavSatFix nav_sat_fix_different_covariance{nav_sat_fix};
+  nav_sat_fix_different_covariance.mutable_position_covariance_m2()->Set(
+      0,
+      -nav_sat_fix.position_covariance_m2(0));
+
+  constexpr int NUM_COV_TYPES = 4;
+  NavSatFix nav_sat_fix_different_covariance_type{nav_sat_fix};
+  nav_sat_fix_different_covariance_type.set_position_covariance_type(
+      static_cast<NavSatFix::CovarianceType>(
+          (static_cast<int>(nav_sat_fix.position_covariance_type() + 1) %
+           NUM_COV_TYPES)));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(nav_sat_fix, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_header));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_status));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_latitude));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_longitude));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_altitude_m));
+  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_covariance));
+  EXPECT_FALSE(
+      verify_equality(nav_sat_fix, nav_sat_fix_different_covariance_type));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_header, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_status, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_latitude, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_longitude, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_altitude_m, nav_sat_fix));
+  EXPECT_FALSE(verify_equality(nav_sat_fix_different_covariance, nav_sat_fix));
+  EXPECT_FALSE(
+      verify_equality(nav_sat_fix_different_covariance_type, nav_sat_fix));
+}
+
 }  // namespace resim::msg

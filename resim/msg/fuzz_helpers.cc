@@ -102,4 +102,21 @@ bool verify_equality(const Detection3D &a, const Detection3D &b) {
          verify_equality(a.bbox(), b.bbox());
 }
 
+bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
+  constexpr int COV_DIM = 9;
+  for (int ii = 0; ii < COV_DIM; ++ii) {
+    if (not resim::verify_equality(
+            a.position_covariance_m2(ii),
+            b.position_covariance_m2(ii))) {
+      return false;
+    }
+  }
+  return verify_equality(a.header(), b.header()) and
+         a.status() == b.status() and
+         resim::verify_equality(a.latitude_deg(), b.latitude_deg()) and
+         resim::verify_equality(a.longitude_deg(), b.longitude_deg()) and
+         resim::verify_equality(a.altitude_m(), b.altitude_m()) and
+         a.position_covariance_type() == b.position_covariance_type();
+}
+
 }  // namespace resim::msg
