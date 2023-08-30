@@ -104,7 +104,10 @@ ConverterPlugin::SchemaInfo ConverterPlugin::get_schema(
       "Error encountered on schema get!");
 
   SchemaInfo result{
-      .name = schema_info.name,
+      .name = std::string(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const char *>(schema_info.name.buffer),
+          schema_info.name.buffer_length),
       .encoding = schema_info.encoding,
   };
   const std::span buffer{
@@ -114,6 +117,9 @@ ConverterPlugin::SchemaInfo ConverterPlugin::get_schema(
   for (const auto s : buffer) {
     result.data.push_back(static_cast<std::byte>(s));
   }
+  schema_info.data.allocator.deallocate(
+      schema_info.name.buffer,
+      schema_info.name.allocator.state);
   schema_info.data.allocator.deallocate(
       schema_info.data.buffer,
       schema_info.data.allocator.state);

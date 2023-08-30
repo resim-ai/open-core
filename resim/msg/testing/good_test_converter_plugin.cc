@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <rclcpp/serialized_message.hpp>
 #include <string>
 #include <string_view>
@@ -17,9 +18,9 @@
 namespace resim {
 
 struct ConverterFunctions {
-  using Converter =
-      void (*)(const rcutils_uint8_array_t *, rcutils_uint8_array_t *);
-  using SchemaGetter = void (*)(ReSimConverterSchemaInfo *);
+  using Converter = std::function<
+      void(const rcutils_uint8_array_t *, rcutils_uint8_array_t *)>;
+  using SchemaGetter = std::function<void(ReSimConverterSchemaInfo *)>;
 
   Converter converter;
   SchemaGetter schema_getter;
@@ -53,16 +54,24 @@ void convertible_message_type_schema(ReSimConverterSchemaInfo *schema_info) {
   REASSERT(schema_info != nullptr);
   constexpr std::string_view SCHEMA = "The schema for converted_message_type";
 
-  schema_info->name = "converted_message_type";
+  const auto allocator = rcl_get_default_allocator();
+
+  const auto copy_string_to_uint8_array = [&allocator](
+                                              const std::string_view string,
+                                              rcutils_uint8_array_t &array) {
+    array.allocator = allocator;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    array.buffer = reinterpret_cast<uint8_t *>(
+        allocator.allocate(string.size(), allocator.state));
+    REASSERT(array.buffer != nullptr);
+    array.buffer_length = string.size();
+    array.buffer_capacity = string.size();
+    std::memcpy(array.buffer, string.data(), string.size());
+  };
+
+  copy_string_to_uint8_array("converted_message_type", schema_info->name);
   schema_info->encoding = "protobuf";
-  auto &data = schema_info->data;
-  data.allocator = rcl_get_default_allocator();
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  data.buffer = reinterpret_cast<uint8_t *>(
-      data.allocator.allocate(SCHEMA.size(), data.allocator.state));
-  data.buffer_length = SCHEMA.size();
-  data.buffer_capacity = SCHEMA.size();
-  std::memcpy(data.buffer, SCHEMA.data(), SCHEMA.size());
+  copy_string_to_uint8_array(SCHEMA, schema_info->data);
 }
 
 static const std::unordered_map<std::string, ConverterFunctions>

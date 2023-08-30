@@ -22,7 +22,7 @@ typedef enum {
 // Schema info we can use to write the converted messages to MCAP. Should fit
 // one of the profiles here: https://mcap.dev/spec/registry#schema-encodings
 typedef struct {
-  const char *name;
+  rcutils_uint8_array_t name;
   const char *encoding;
   rcutils_uint8_array_t data;
 } ReSimConverterSchemaInfo;
