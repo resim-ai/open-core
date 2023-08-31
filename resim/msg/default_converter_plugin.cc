@@ -9,15 +9,17 @@
 #include <functional>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
-#include <std_msgs/msg/header.hpp>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 
 #include "resim/assert/assert.hh"
 #include "resim/msg/converter_plugin_types.h"
+#include "resim/msg/detection_from_ros2.hh"
 #include "resim/msg/header_from_ros2.hh"
+#include "resim/msg/navsat_from_ros2.hh"
 #include "resim/msg/odometry_from_ros2.hh"
+#include "resim/msg/oriented_box_from_ros2.hh"
 #include "resim/msg/pose_from_ros2.hh"
 #include "resim/msg/time_from_ros2.hh"
 #include "resim/msg/transform_from_ros2.hh"
@@ -90,12 +92,46 @@ void generate_type_schema(ReSimConverterSchemaInfo *schema_info) {
 
 static const std::unordered_map<std::string, ConverterFunctions>
     converters_map = {
-        {"tf2_msgs/msg/TFMessage",
-         {convert_message<tf2_msgs::msg::TFMessage>,
-          generate_type_schema<tf2_msgs::msg::TFMessage>}},
+        {"builtin_interfaces/msg/Time",
+         {convert_message<builtin_interfaces::msg::Time>,
+          generate_type_schema<builtin_interfaces::msg::Time>}},
+        {"geometry_msgs/msg/Pose",
+         {convert_message<geometry_msgs::msg::Pose>,
+          generate_type_schema<geometry_msgs::msg::Pose>}},
+        {"geometry_msgs/msg/PoseWithCovariance",
+         {convert_message<geometry_msgs::msg::PoseWithCovariance>,
+          generate_type_schema<geometry_msgs::msg::PoseWithCovariance>}},
+        {"geometry_msgs/msg/Transform",
+         {convert_message<geometry_msgs::msg::Transform>,
+          generate_type_schema<geometry_msgs::msg::Transform>}},
+        {"geometry_msgs/msg/TransformStamped",
+         {convert_message<geometry_msgs::msg::TransformStamped>,
+          generate_type_schema<geometry_msgs::msg::TransformStamped>}},
+        {"geometry_msgs/msg/Twist",
+         {convert_message<geometry_msgs::msg::Twist>,
+          generate_type_schema<geometry_msgs::msg::Twist>}},
+        {"geometry_msgs/msg/TwistWithCovariance",
+         {convert_message<geometry_msgs::msg::TwistWithCovariance>,
+          generate_type_schema<geometry_msgs::msg::TwistWithCovariance>}},
         {"nav_msgs/msg/Odometry",
          {convert_message<nav_msgs::msg::Odometry>,
           generate_type_schema<nav_msgs::msg::Odometry>}},
+        {"sensor_msgs/msg/NavSatFix",
+         {convert_message<sensor_msgs::msg::NavSatFix>,
+          generate_type_schema<sensor_msgs::msg::NavSatFix>}},
+        {"std_msgs/msg/Header",
+         {convert_message<std_msgs::msg::Header>,
+          generate_type_schema<std_msgs::msg::Header>}},
+        {"tf2_msgs/msg/TFMessage",
+         {convert_message<tf2_msgs::msg::TFMessage>,
+          generate_type_schema<tf2_msgs::msg::TFMessage>}},
+        {"vision_msgs/msg/BoundingBox3D",
+         {convert_message<vision_msgs::msg::BoundingBox3D>,
+          generate_type_schema<vision_msgs::msg::BoundingBox3D>}},
+        {"vision_msgs/msg/Detection3D",
+         {convert_message<vision_msgs::msg::Detection3D>,
+          generate_type_schema<vision_msgs::msg::Detection3D>}},
+
 };
 
 extern "C" bool resim_convert_supports_ros2_type(
