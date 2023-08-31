@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <cxxopts.hpp>
+#include <filesystem>
 #include <iostream>
 
 #include "resim/msg/resim_log_from_ros2.hh"
