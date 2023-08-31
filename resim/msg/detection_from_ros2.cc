@@ -25,4 +25,25 @@ vision_msgs::msg::Detection3D convert_to_ros2(const Detection3D &resim_msg) {
   return result;
 }
 
+Detection3DArray convert_from_ros2(
+    const vision_msgs::msg::Detection3DArray &ros2_msg) {
+  Detection3DArray result;
+  result.mutable_header()->CopyFrom(convert_from_ros2(ros2_msg.header));
+  for (const auto &detection : ros2_msg.detections) {
+    result.add_detections()->CopyFrom(convert_from_ros2(detection));
+  }
+  return result;
+}
+
+vision_msgs::msg::Detection3DArray convert_to_ros2(
+    const Detection3DArray &resim_msg) {
+  vision_msgs::msg::Detection3DArray result;
+  result.header = convert_to_ros2(resim_msg.header());
+  result.detections.reserve(resim_msg.detections_size());
+  for (const auto &detection : resim_msg.detections()) {
+    result.detections.push_back(convert_to_ros2(detection));
+  }
+  return result;
+}
+
 }  // namespace resim::msg

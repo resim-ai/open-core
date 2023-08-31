@@ -140,7 +140,9 @@ const std::unordered_map<std::string, ConverterFunctions> converters_map = {
     {"vision_msgs/msg/Detection3D",
      {convert_message<vision_msgs::msg::Detection3D>,
       generate_type_schema<vision_msgs::msg::Detection3D>}},
-
+    {"vision_msgs/msg/Detection3DArray",
+     {convert_message<vision_msgs::msg::Detection3DArray>,
+      generate_type_schema<vision_msgs::msg::Detection3DArray>}},
 };
 
 }  // namespace
