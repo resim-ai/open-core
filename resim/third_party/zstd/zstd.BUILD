@@ -10,3 +10,10 @@ make(
     lib_source = ":all_srcs",
     visibility = ["//visibility:public"],
 )
+
+# The @ros2_rosbag2 repository requires this target be present in @libzstd
+alias(
+    name = "zstd",
+    actual = ":libzstd",
+    visibility = ["//visibility:public"],
+)
