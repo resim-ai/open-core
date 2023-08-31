@@ -27,6 +27,10 @@
 
 namespace resim::msg {
 
+namespace {
+
+// A helper struct for holding a Converter and SchemaGetter together in our map
+// of ROS2 types to converters (see below)
 struct ConverterFunctions {
   using Converter = std::function<
       void(const rcutils_uint8_array_t *, rcutils_uint8_array_t *)>;
@@ -36,6 +40,8 @@ struct ConverterFunctions {
   SchemaGetter schema_getter;
 };
 
+// This is the primary function used to convert a given serialized Ros2Type to
+// a serialized ReSimType.
 template <typename Ros2Type>
 void convert_message(
     const rcutils_uint8_array_t *const ros2_message,
@@ -63,6 +69,8 @@ void convert_message(
   converted_message.SerializeToArray(result.buffer, converted_size);
 }
 
+// This is the primary function used to get the output schema info for a given
+// Ros2Type.
 template <typename Ros2Type>
 void generate_type_schema(ReSimConverterSchemaInfo *schema_info) {
   using ReSimType = decltype(convert_from_ros2(std::declval<Ros2Type>()));
@@ -90,6 +98,8 @@ void generate_type_schema(ReSimConverterSchemaInfo *schema_info) {
   copy_string_to_uint8_array(data, schema_info->data);
 }
 
+// This map holds onto all of the functions we need to get the schema and
+// convert for each given ROS2 message.
 static const std::unordered_map<std::string, ConverterFunctions>
     converters_map = {
         {"builtin_interfaces/msg/Time",
@@ -133,6 +143,10 @@ static const std::unordered_map<std::string, ConverterFunctions>
           generate_type_schema<vision_msgs::msg::Detection3D>}},
 
 };
+
+}  // namespace
+
+// Implement the actual functions for this plugin:
 
 extern "C" bool resim_convert_supports_ros2_type(
     const char *ros2_message_type) {
