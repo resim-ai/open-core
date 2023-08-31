@@ -9,8 +9,7 @@
 namespace resim::msg {
 
 bool verify_equality(const Header &a, const Header &b) {
-  return a.stamp().seconds() == b.stamp().seconds() and
-         a.stamp().nanos() == b.stamp().nanos() and
+  return resim::verify_equality(a.stamp(), b.stamp()) and
          a.frame_id() == b.frame_id();
 }
 

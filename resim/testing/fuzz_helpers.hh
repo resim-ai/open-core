@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <google/protobuf/timestamp.pb.h>
+
 #include <concepts>
 #include <iostream>
 #include <random>
@@ -101,5 +103,23 @@ Float random_element(TypeTag<Float> /*unused*/, InOut<Rng> rng) {
 
 // verify_equality overload with an implementation for doubles.
 bool verify_equality(double a, double b);
+
+// Random element for protobuf timestamps
+template <typename Rng>
+google::protobuf::Timestamp random_element(
+    TypeTag<google::protobuf::Timestamp> /*unused*/,
+    InOut<Rng> rng) {
+  google::protobuf::Timestamp result;
+  result.set_seconds(random_element(TypeTag<int32_t>(), rng));
+  constexpr int32_t NANOS_LB = 0;
+  constexpr int32_t NANOS_UB = 1000000000;
+  std::uniform_int_distribution<int32_t> dist{NANOS_LB, NANOS_UB};
+  result.set_nanos(dist(*rng));
+  return result;
+}
+
+bool verify_equality(
+    const google::protobuf::Timestamp &a,
+    const google::protobuf::Timestamp &b);
 
 }  // namespace resim
