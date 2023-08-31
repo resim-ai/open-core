@@ -15,6 +15,7 @@
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <std_msgs/msg/byte.hpp>
 #include <string>
 #include <tuple>
 
@@ -43,6 +44,7 @@ struct Channel {
 // The set of channels we would like to test.
 constexpr auto TEST_CHANNELS = std::make_tuple(
     Channel<TransformArray>{"/transforms"},
+    Channel<TransformArray>{"/transforms_also"},
     Channel<Odometry>{"/odom"});
 
 // Nested maps storing Channel -> (Timestamp -> Message)
@@ -110,6 +112,10 @@ void populate_log(const std::filesystem::path &log_path) {
         return true;
       },
       TEST_CHANNELS);
+
+  // Write a message type we don't support converting
+  std_msgs::msg::Byte byte;
+  writer.write(byte, "/should_not_be_converted", rclcpp::Time());
 }
 
 // Helper function to confirm that the ReSim log at the given path contains the
@@ -157,6 +163,7 @@ void verify_log_contents(const std::filesystem::path &log_path) {
           return true;
         },
         TEST_CHANNELS);
+    EXPECT_NE(topic, "/should_not_be_converted");
   }
 }
 
@@ -165,11 +172,7 @@ void verify_log_contents(const std::filesystem::path &log_path) {
 TEST(ResimLogFromRos2Test, TestConversion) {
   // SETUP
   // Make sure we clean up protobuf:
-  static bool registered = false;
-  if (not registered) {
-    std::atexit(google::protobuf::ShutdownProtobufLibrary);
-    registered = true;
-  }
+  std::atexit(google::protobuf::ShutdownProtobufLibrary);
 
   const testing::TestDirectoryRAII test_directory;
   const std::filesystem::path input_path{test_directory.test_file_path()};
