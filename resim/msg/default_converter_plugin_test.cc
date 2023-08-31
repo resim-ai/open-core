@@ -31,7 +31,7 @@
 namespace resim::msg {
 
 namespace {
-ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
+const ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
 }
 
 using Ros2Types = ::testing::Types<
