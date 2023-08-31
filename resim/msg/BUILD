@@ -14,6 +14,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
     name = "header_proto",
     srcs = ["header.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_protobuf//:timestamp_proto",
     ],
@@ -21,6 +22,7 @@ proto_library(
 
 cc_proto_library(
     name = "header_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":header_proto",
     ],
@@ -29,6 +31,7 @@ cc_proto_library(
 proto_library(
     name = "transform_proto",
     srcs = ["transform.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_proto",
         "//resim/transforms/proto:se3_proto",
@@ -37,6 +40,7 @@ proto_library(
 
 cc_proto_library(
     name = "transform_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":transform_proto",
     ],
@@ -45,6 +49,7 @@ cc_proto_library(
 proto_library(
     name = "pose_proto",
     srcs = ["pose.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms/proto:se3_proto",
     ],
@@ -52,6 +57,7 @@ proto_library(
 
 cc_proto_library(
     name = "pose_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":pose_proto",
     ],
@@ -60,6 +66,7 @@ cc_proto_library(
 proto_library(
     name = "odometry_proto",
     srcs = ["odometry.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_proto",
         ":pose_proto",
@@ -68,6 +75,7 @@ proto_library(
 
 cc_proto_library(
     name = "odometry_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":odometry_proto",
     ],
@@ -76,6 +84,7 @@ cc_proto_library(
 proto_library(
     name = "detection_proto",
     srcs = ["detection.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_proto",
         "//resim/geometry/proto:oriented_box_proto",
@@ -84,6 +93,7 @@ proto_library(
 
 cc_proto_library(
     name = "detection_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":detection_proto",
     ],
@@ -92,6 +102,7 @@ cc_proto_library(
 proto_library(
     name = "navsat_proto",
     srcs = ["navsat.proto"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_proto",
     ],
@@ -99,6 +110,7 @@ proto_library(
 
 cc_proto_library(
     name = "navsat_proto_cc",
+    visibility = ["//visibility:public"],
     deps = [
         ":navsat_proto",
     ],
@@ -446,6 +458,7 @@ cc_library(
     testonly = True,
     srcs = ["fuzz_helpers.cc"],
     hdrs = ["fuzz_helpers.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":detection_proto_cc",
         ":header_proto_cc",
