@@ -30,6 +30,10 @@
 
 namespace resim::msg {
 
+namespace {
+ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
+}
+
 using Ros2Types = ::testing::Types<
     builtin_interfaces::msg::Time,
     geometry_msgs::msg::Pose,
@@ -66,7 +70,6 @@ std::string resim_type_name() {
 
 TYPED_TEST(DefaultConverterPluginTest, TestSupports) {
   // SETUP
-  ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
 
   const char *ros2_type_name = rosidl_generator_traits::name<TypeParam>();
 
@@ -76,8 +79,6 @@ TYPED_TEST(DefaultConverterPluginTest, TestSupports) {
 
 TYPED_TEST(DefaultConverterPluginTest, TestSchemas) {
   // SETUP
-  ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
-
   using Ros2Type = TypeParam;
   using ReSimType = decltype(convert_from_ros2(std::declval<Ros2Type>()));
   const char *ros2_type_name = rosidl_generator_traits::name<Ros2Type>();
@@ -171,8 +172,6 @@ bool verify_equality(
 
 TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
   // SETUP
-  ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
-
   using Ros2Type = TypeParam;
   using ReSimType = decltype(convert_from_ros2(std::declval<Ros2Type>()));
   const char *ros2_type_name = rosidl_generator_traits::name<Ros2Type>();
@@ -197,8 +196,6 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
 
 TYPED_TEST(DefaultConverterPluginTest, TestConvertBadMessage) {
   // SETUP
-  ConverterPlugin plugin{"resim/msg/default_converter_plugin.so"};
-
   using Ros2Type = TypeParam;
   const char *ros2_type_name = rosidl_generator_traits::name<Ros2Type>();
 
