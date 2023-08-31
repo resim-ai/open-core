@@ -3,7 +3,7 @@
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_test")
+load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
@@ -417,6 +417,23 @@ ros2_cpp_test(
         "@ros2_rclcpp//:rclcpp",
         "@ros2_rosbag2//:rosbag2_cpp",
         "@ros2_rosbag2//:rosbag2_storage",
+    ],
+)
+
+ros2_cpp_binary(
+    name = "convert_log",
+    srcs = ["convert_log.cc"],
+    data = [":default_converter_plugin.so"],
+    set_up_ament = True,
+    deps = [
+        ":converter_plugin",
+        ":resim_log_from_ros2",
+        "//resim/assert",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils:inout",
+        "@cxxopts",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
     ],
 )
 
