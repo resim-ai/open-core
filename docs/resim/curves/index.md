@@ -89,8 +89,8 @@ first and second derivatives. There are two varieties of `TwoJet`, namely
 `TwoJetR` and `TwoJetL`. The distinction between them is that `TwoJetR`
 represents its first and second derivatives as *right tangent vectors*
 (described fully in [Using SO(3) and
-SE(3)](/resim/transforms/using_liegroups) and [Lie Group
-Derivatives](/resim/transforms/liegroup_derivatives)), whereas `TwoJetL`
+SE(3)](../transforms/using_liegroups.md) and [Lie Group
+Derivatives](../transforms/liegroup_derivatives.md)), whereas `TwoJetL`
 uses *left tangent vectors*. For simplicity, we'll use the
 `actor::state::RigidBodyState` abstraction in our example to make defining
 these easy. That way, we can write clearer code that doesn't require us reason
