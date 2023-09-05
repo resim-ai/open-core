@@ -3,6 +3,7 @@
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
+load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
@@ -376,6 +377,46 @@ cc_test(
         "//resim/utils:inout",
         "//resim/utils/proto:dependency_file_descriptor_set",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "resim_log_from_ros2",
+    srcs = ["resim_log_from_ros2.cc"],
+    hdrs = ["resim_log_from_ros2.hh"],
+    deps = [
+        ":converter_plugin",
+        "//resim/assert",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils:inout",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
+    ],
+)
+
+ros2_cpp_test(
+    name = "resim_log_from_ros2_test",
+    testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
+    srcs = ["resim_log_from_ros2_test.cc"],
+    data = [":default_converter_plugin.so"],
+    set_up_ament = True,
+    deps = [
+        ":converter_plugin",
+        ":resim_log_from_ros2",
+        "//resim/msg:fuzz_helpers",
+        "//resim/msg:odometry_from_ros2",
+        "//resim/msg:transform_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "//resim/testing:test_directory",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/time:timestamp",
+        "//resim/utils:inout",
+        "//resim/utils:tuple_utils",
+        "//resim/utils/proto:dependency_file_descriptor_set",
+        "@com_google_googletest//:gtest_main",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
+        "@ros2_rosbag2//:rosbag2_storage",
     ],
 )
 
