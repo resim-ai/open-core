@@ -85,9 +85,10 @@ def resim_core_dependencies():
         http_archive,
         name = "mcap",
         build_file = "@resim_open_core//resim/third_party/mcap:mcap.BUILD",
-        sha256 = "5d30a67c0c282e478e9342127129c3b4138c1464f42c25ba083415ced0824437",
-        strip_prefix = "mcap-releases-cpp-v0.5.0",
-        urls = ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v0.5.0.zip"],
+        sha256 = "11a6badecac2b10e9687e912648a6e9679ef8731e4ab9570346ae9845ae64a65",
+        strip_prefix = "mcap-releases-cpp-v1.2.0/cpp/mcap",
+        urls =
+            ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v1.2.0.tar.gz"],
     )
 
     maybe(
