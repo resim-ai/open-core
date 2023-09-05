@@ -33,7 +33,9 @@ namespace resim::msg {
 //
 //
 // // This function performs the message conversion and returns an ERROR status
-// // if this plugin doesn't know how to do it.
+// // if this plugin doesn't know how to do it. This function is expected to
+// // assign an allocator to resim_message and use it to alloc the contents
+// // thereof. The ConverterPlugin will dealloc the contents after calling this.
 // // @param[in] ros2_message_type - The message type we want to try to convert
 // // @param[in] ros2_message - A pointer to a ROS-style byte array containing
 // //                           a serialized ros2 message to convert.
@@ -53,7 +55,10 @@ namespace resim::msg {
 // // This function returns the schema info for the type that this plugin
 // // converts ros2_message_type to. This schema info is designed so we can
 // // write the result to an MCAP file and so it should fit one of the profiles
-// // here: https://mcap.dev/spec/registry#schema-encodings
+// // here: https://mcap.dev/spec/registry#schema-encodings. This function is
+// // expected to assign allocators to the schema_info and use them to alloc its
+// // contents. The ConverterPlugin will dealloc the contents of schema_info
+// // after.
 // // @param[in] ros2_message_type - We want the schema info for the type we
 // //                                convert to *from* this type.
 // // @param[out] schema_info - The schema info for the type converted to.

@@ -89,5 +89,6 @@ cc_library(
     deps = [
         "//resim/math:is_approx",
         "//resim/utils:inout",
+        "@com_google_protobuf//:protobuf",
     ],
 )

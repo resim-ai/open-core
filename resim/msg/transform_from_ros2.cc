@@ -37,7 +37,7 @@ transforms::proto::SE3 convert_from_ros2(
   return result;
 }
 
-geometry_msgs::msg::Transform convert_to_ros2(
+geometry_msgs::msg::Transform convert_to_ros2_transform(
     const transforms::proto::SE3 &resim_msg) {
   const transforms::SE3 pose{unpack(resim_msg)};
   geometry_msgs::msg::Transform result;
@@ -70,7 +70,7 @@ geometry_msgs::msg::TransformStamped convert_to_ros2(
   geometry_msgs::msg::TransformStamped result;
   result.header = convert_to_ros2(resim_msg.header());
   result.child_frame_id = resim_msg.child_frame_id();
-  result.transform = convert_to_ros2(resim_msg.transform());
+  result.transform = convert_to_ros2_transform(resim_msg.transform());
   return result;
 }
 

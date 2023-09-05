@@ -3,7 +3,7 @@
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 ################################################################################
@@ -330,6 +330,51 @@ cc_test(
     deps = [
         ":converter_plugin",
         "//resim/assert",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "default_converter_plugin.so",
+    srcs = ["default_converter_plugin.cc"],
+    linkshared = True,
+    visibility = ["//resim/msg:__subpackages__"],
+    deps = [
+        ":detection_from_ros2",
+        ":header_from_ros2",
+        ":navsat_from_ros2",
+        ":odometry_from_ros2",
+        ":oriented_box_from_ros2",
+        ":pose_from_ros2",
+        ":time_from_ros2",
+        ":transform_from_ros2",
+        "//resim/assert",
+        "//resim/msg:converter_plugin_types",
+        "//resim/utils/proto:dependency_file_descriptor_set",
+        "@ros2_rclcpp//:rclcpp",
+    ],
+)
+
+cc_test(
+    name = "default_converter_plugin_test",
+    srcs = ["default_converter_plugin_test.cc"],
+    data = [":default_converter_plugin.so"],
+    deps = [
+        ":converter_plugin",
+        ":detection_from_ros2",
+        ":fuzz_helpers",
+        ":header_from_ros2",
+        ":navsat_from_ros2",
+        ":odometry_from_ros2",
+        ":odometry_proto_cc",
+        ":oriented_box_from_ros2",
+        ":pose_from_ros2",
+        ":time_from_ros2",
+        ":transform_from_ros2",
+        ":transform_proto_cc",
+        "//resim/assert",
+        "//resim/utils:inout",
+        "//resim/utils/proto:dependency_file_descriptor_set",
         "@com_google_googletest//:gtest_main",
     ],
 )

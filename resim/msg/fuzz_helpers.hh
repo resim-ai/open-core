@@ -31,13 +31,8 @@ namespace resim::msg {
 template <typename Rng>
 Header random_element(TypeTag<Header> /*unused*/, InOut<Rng> rng) {
   Header result;
-
-  // Need to use int32 since that's all ROS supports
-  result.mutable_stamp()->set_seconds(random_element(TypeTag<int32_t>(), rng));
-  constexpr int32_t NANOS_LB = 0;
-  constexpr int32_t NANOS_UB = 1000000000;
-  std::uniform_int_distribution<int32_t> dist{NANOS_LB, NANOS_UB};
-  result.mutable_stamp()->set_nanos(dist(*rng));
+  result.mutable_stamp()->CopyFrom(
+      resim::random_element<google::protobuf::Timestamp>(rng));
   result.set_frame_id(UUID::new_uuid().to_string());
   return result;
 }

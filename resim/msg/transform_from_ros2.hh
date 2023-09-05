@@ -19,7 +19,7 @@ namespace resim::msg {
 transforms::proto::SE3 convert_from_ros2(
     const geometry_msgs::msg::Transform &ros2_msg);
 
-geometry_msgs::msg::Transform convert_to_ros2(
+geometry_msgs::msg::Transform convert_to_ros2_transform(
     const transforms::proto::SE3 &resim_msg);
 
 TransformStamped convert_from_ros2(
