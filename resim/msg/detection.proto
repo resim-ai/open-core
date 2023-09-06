@@ -22,3 +22,8 @@ message Detection3D {
     // TODO(mikebauer) Add source_cloud field when we need it to match ROS
     // vision_msgs::msg::Detection3D message.
 }
+
+message Detection3DArray {
+    Header               header     = 1;
+    repeated Detection3D detections = 2;
+}

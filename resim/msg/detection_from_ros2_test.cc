@@ -15,18 +15,25 @@
 
 namespace resim::msg {
 
-TEST(Detection3DFromRos2Test, TestRoundTrip) {
+using Types = ::testing::Types<Detection3D, Detection3DArray>;
+
+template <typename T>
+class Detection3DFromRos2Test : public ::testing::Test {};
+
+TYPED_TEST_SUITE(Detection3DFromRos2Test, Types);
+
+TYPED_TEST(Detection3DFromRos2Test, TestRoundTrip) {
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
-  const Detection3D test_detection{random_element<Detection3D>(InOut{rng})};
+  const TypeParam test_element{random_element<TypeParam>(InOut{rng})};
 
   // ACTION
-  const Detection3D round_tripped{
-      convert_from_ros2(convert_to_ros2(test_detection))};
+  const TypeParam round_tripped{
+      convert_from_ros2(convert_to_ros2(test_element))};
 
   // VERIFICATION
-  EXPECT_TRUE(verify_equality(test_detection, round_tripped));
+  EXPECT_TRUE(verify_equality(test_element, round_tripped));
 }
 
 }  // namespace resim::msg

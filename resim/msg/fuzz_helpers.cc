@@ -101,6 +101,19 @@ bool verify_equality(const Detection3D &a, const Detection3D &b) {
          verify_equality(a.bbox(), b.bbox());
 }
 
+bool verify_equality(const Detection3DArray &a, const Detection3DArray &b) {
+  if (not verify_equality(a.header(), b.header()) or
+      a.detections_size() != b.detections_size()) {
+    return false;
+  }
+  for (int ii = 0; ii < a.detections_size(); ++ii) {
+    if (not verify_equality(a.detections(ii), b.detections(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
   constexpr int COV_DIM = 9;
   for (int ii = 0; ii < COV_DIM; ++ii) {
