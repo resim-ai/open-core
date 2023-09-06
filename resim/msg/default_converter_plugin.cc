@@ -10,7 +10,6 @@
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
 #include "resim/assert/assert.hh"
