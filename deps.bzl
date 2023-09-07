@@ -297,3 +297,12 @@ def resim_core_dependencies():
         strip_prefix = "vision_msgs-4.1.0/vision_msgs/msg",
         url = "https://github.com/ros-perception/vision_msgs/archive/refs/tags/4.1.0.zip",
     )
+
+    maybe(
+        http_archive,
+        name = "pybind",
+        sha256 = "b011a730c8845bfc265f0f81ee4e5e9e1d354df390836d2a25880e123d021f89",
+        build_file = "@resim_open_core//resim/third_party/pybind:pybind.BUILD",
+        strip_prefix = "pybind11-2.11.1/include",
+        url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.zip",
+    )
