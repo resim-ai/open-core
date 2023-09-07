@@ -32,15 +32,6 @@ load("@resim_open_core//:ros2_setup_2.bzl", "ros2_setup_2")
 
 ros2_setup_2()
 
-load("@rules_python//python:pip.bzl", "pip_parse")
-
-# Create a central repo that knows about the dependencies needed from
-# requirements_lock.txt.
-pip_parse(
-    name = "python_deps",
-    requirements_lock = "//:requirements_lock.txt",
-)
-
-load("@python_deps//:requirements.bzl", "install_deps")
+load("@resim_python_deps//:requirements.bzl", "install_deps")
 
 install_deps()

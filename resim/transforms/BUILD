@@ -4,9 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@python_deps//:requirements.bzl", "requirement")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 exports_files(
     [
@@ -172,25 +170,6 @@ cc_library(
         "//resim/assert",
         "//resim/math:is_approx",
         "@libeigen//:eigen",
-    ],
-)
-
-cc_binary(
-    name = "se3_python.so",
-    srcs = ["se3_python.cc"],
-    linkshared = True,
-    deps = [
-        ":se3",
-        "@pybind",
-    ],
-)
-
-py_binary(
-    name = "se3_python_test",
-    srcs = ["se3_python_test.py"],
-    data = [
-        ":se3_python.so",
-        requirement("numpy"),
     ],
 )
 
