@@ -172,3 +172,24 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "polygon",
+    srcs = ["polygon.cc"],
+    hdrs = ["polygon.hh"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "polygon_test",
+    srcs = ["polygon_test.cc"],
+    deps = [
+        ":polygon",
+        "//resim/math:is_approx",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
