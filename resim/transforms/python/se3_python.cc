@@ -14,6 +14,8 @@
 namespace resim::transforms {
 namespace py = pybind11;
 
+// A simple pybinding of SE3
+// TODO(mikebauer) Add frames and other operators
 PYBIND11_MODULE(se3_python, m) {
   py::class_<SE3>(m, "SE3")
       .def_readonly_static("DIMS", &SE3::DIMS)
