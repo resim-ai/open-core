@@ -236,11 +236,16 @@ TEST(FuzzHelpersTest, TestDetectionEqual) {
   detection_different_bbox.mutable_bbox()->CopyFrom(
       random_element<geometry::proto::OrientedBoxSE3>(InOut{rng}));
 
+  Detection3D detection_different_id{detection};
+  detection_different_id.set_id(detection.id() + "_different");
+
   // ACTION / VERIFICATION
   EXPECT_TRUE(verify_equality(detection, detection));
   EXPECT_FALSE(verify_equality(detection, detection_different_header));
   EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
   EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
+  EXPECT_FALSE(verify_equality(detection, detection_different_id));
+  EXPECT_FALSE(verify_equality(detection_different_id, detection));
 }
 
 TEST(FuzzHelpersTest, TestNavSatFixEqual) {
