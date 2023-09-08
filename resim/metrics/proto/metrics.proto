@@ -1,0 +1,299 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "resim/utils/proto/uuid.proto";
+
+package resim.metrics.proto;
+
+// -------------------
+// Data Representation
+// -------------------
+
+enum MetricsDataType {
+    NO_DATA_TYPE = 0;
+
+    DOUBLE_ARRAY_DATA_TYPE        = 1;
+    TIMESTAMP_ARRAY_DATA_TYPE     = 2;
+    ACTOR_ID_ARRAY_DATA_TYPE      = 3;
+    STRING_ARRAY_DATA_TYPE        = 4;
+    METRIC_STATUS_ARRAY_DATA_TYPE = 5;
+
+    INDEXED_DOUBLE_ARRAY_DATA_TYPE        = 6;
+    INDEXED_TIMESTAMP_ARRAY_DATA_TYPE     = 7;
+    INDEXED_ACTOR_ID_ARRAY_DATA_TYPE      = 8;
+    INDEXED_STRING_ARRAY_DATA_TYPE        = 9;
+    INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE = 10;
+}
+
+message ActorId {
+    resim.proto.UUID actor_id = 1;
+}
+
+message DataId {
+    resim.proto.UUID data_id = 1;
+}
+
+message DoubleArray {
+    repeated double doubles = 1;
+}
+
+message TimestampArray {
+    repeated google.protobuf.Timestamp timestamps = 1;
+}
+
+message ActorIdArray {
+    repeated ActorId actor_ids = 1;
+}
+
+message StringArray {
+    repeated string strings = 1;
+}
+
+message MetricStatusArray {
+    repeated MetricStatus statuses = 1;
+}
+
+message IndexedDoubleArray {
+    repeated double doubles = 1;
+
+    DataId          index_id   = 2;
+    MetricsDataType index_type = 3;
+}
+
+message IndexedTimestampArray {
+    repeated google.protobuf.Timestamp timestamps = 1;
+
+    DataId          index_id   = 2;
+    MetricsDataType index_type = 3;
+}
+
+message IndexedActorIdArray {
+    repeated ActorId actor_ids = 1;
+
+    DataId          index_id   = 2;
+    MetricsDataType index_type = 3;
+}
+
+message IndexedStringArray {
+    repeated string strings = 1;
+
+    DataId          index_id   = 2;
+    MetricsDataType index_type = 3;
+}
+
+message IndexedMetricStatusArray {
+    repeated MetricStatus statuses = 1;
+
+    DataId          index_id   = 2;
+    MetricsDataType index_type = 3;
+}
+
+message Array {
+    oneof array {
+        DoubleArray       doubles    = 1;
+        TimestampArray    timestamps = 2;
+        ActorIdArray      actor_ids  = 3;
+        StringArray       strings    = 4;
+        MetricStatusArray statuses   = 5;
+
+        IndexedDoubleArray       indexed_doubles    = 6;
+        IndexedTimestampArray    indexed_timestamps = 7;
+        IndexedActorIdArray      indexed_actor_ids  = 8;
+        IndexedStringArray       indexed_strings    = 9;
+        IndexedMetricStatusArray indexed_statuses   = 10;
+    }
+}
+
+message PerActorData {
+    repeated ActorData actor_data = 1;
+}
+
+message ActorData {
+    ActorId id        = 1;
+    DataId  parent_id = 2;
+    uint32  length    = 3;
+
+    Array array = 4;
+}
+
+message MetricsData {
+    DataId          id           = 1;
+    MetricsDataType data_type    = 2;
+    uint32          length       = 3;  // not sure if needed
+    string          name         = 4;
+    string          unit         = 5;
+    bool            is_per_actor = 6;
+
+    repeated ActorId actors = 7;  // empty if not per-actor
+
+    oneof data {
+        Array        array          = 8;
+        PerActorData per_actor_data = 9;
+    }
+}
+
+// ---------------------
+// Metric representation
+// ---------------------
+
+enum MetricStatus {
+    NO_METRIC_STATUS = 0;
+    PASSED           = 1;
+    FAILED           = 2;
+    NOT_APPLICABLE   = 3;
+}
+
+enum MetricImportance {
+    NO_IMPORTANCE = 0;
+    LOW_IMPORTANCE = 1;
+    MEDIUM_IMPORTANCE = 2;
+    HIGH_IMPORTANCE = 3;
+    CRITICAL_IMPORTANCE = 4;
+}
+
+// The type of a metric
+enum MetricType {
+    NO_METRIC_TYPE       = 0;
+    DOUBLE_SUMMARY       = 1;
+    DOUBLE_OVER_TIME     = 2;
+    LINE_PLOT            = 3;
+    BAR_CHART            = 4;
+    STATES_OVER_TIME     = 5;
+}
+
+message MetricId {
+    resim.proto.UUID metric_id = 1;
+}
+
+message JobId {
+    resim.proto.UUID job_id = 1;
+}
+
+// All metrics associated with a given job - metrics may not necessarily be stored in this object, 
+// but this object can be used to represent a single overall job.
+message JobMetrics {
+    JobId job_id = 1;
+
+    MetricCollection job_metrics = 2;
+
+    MetricStatus metrics_status = 3;
+
+    repeated MetricId metrics_ids = 4;
+
+    repeated MetricId failed_metrics  = 5;
+
+    repeated MetricsData metrics_data = 6;
+}
+
+// Top level generic metric collection
+message MetricCollection {
+    repeated Metric metrics = 1;
+
+    repeated MetricId failed_metrics = 2;
+
+    MetricStatus metrics_status = 3;
+}
+
+message Metric {
+    MetricId id = 1;
+
+    string name = 2;
+
+    MetricType type = 3;
+
+    string description = 4;
+
+    MetricStatus status = 5;
+
+    bool should_display = 6;
+
+    MetricValues metric_values = 7;
+
+    bool blocking = 8;
+
+    MetricImportance importance = 9;
+
+    oneof parent_id {
+        JobId   job_id       = 10;
+    }
+}
+
+message MetricValues {
+    oneof metric_values {
+        DoubleSummaryMetricValues     double_metric_values               = 1;
+        DoubleOverTimeMetricValues    double_over_time_metric_values     = 2;
+        LinePlotMetricValues          line_plot_metric_values            = 3;
+        BarChartMetricValues          bar_chart_metric_values            = 4;
+        StatesOverTimeMetricValues    states_over_time_metric_values     = 5;
+    }
+}
+
+message DoubleFailureDefinition {
+    optional double fails_above = 1;
+    optional double fails_below = 2;
+}
+
+message DoubleSummaryMetricValues {
+    DataId value_data_id  = 1;
+    DataId status_data_id = 2;
+
+    // Optional select index from data
+    optional uint32 index = 3;
+
+    // Optional select timestamp from data
+    optional google.protobuf.Timestamp timestamp = 4;
+
+    // Optional select actor from data
+    optional ActorId actor_id = 5;
+
+    DoubleFailureDefinition failure_definition = 6;
+}
+
+message DoubleOverTimeMetricValues {
+    repeated DataId double_timestamps_data_id =
+        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+    repeated DataId status_timestamps_data_id =
+        2;  // INDEXED_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+
+    repeated DoubleFailureDefinition failure_definition = 3;
+    optional google.protobuf.Timestamp start_time       = 4;
+    optional google.protobuf.Timestamp end_time         = 5;
+    optional string                    y_axis_name      = 6;
+}
+
+message LinePlotMetricValues {
+    repeated DataId x_doubles_data_id = 1;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated DataId y_doubles_data_id = 2;  // DOUBLE_ARRAY_DATA_TYPE
+
+    repeated DataId statuses_data_id = 3;
+
+    optional string x_axis_name = 4;
+    optional string y_axis_name = 5;
+}
+
+message BarChartMetricValues {
+    repeated DataId values_data_id   = 1;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated DataId statuses_data_id = 2;  // METRIC_STATUS_ARRAY_DATA_TYPE
+
+    repeated string axis_labels  = 3;
+    repeated string stack_labels = 4;
+
+    optional string x_axis_name = 5;
+    optional string y_axis_name = 6;
+}
+
+message StatesOverTimeMetricValues {
+    repeated DataId state_timestamps_data_id =
+        1;  // INDEXED_STRING_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+    repeated DataId status_timestamps_data_id = 2;
+
+    repeated string states_set     = 3;
+    repeated string failure_states = 4;
+}

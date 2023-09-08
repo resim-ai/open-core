@@ -1,0 +1,894 @@
+{
+  "job_id": {
+    "job_id": {
+      "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+    }
+  },
+  "job_metrics": {
+    "metrics": [
+      {
+        "id": {
+          "metric_id": {
+            "data": "51c0cd79-eaa3-4a77-82e5-e58b3982c2bf"
+          }
+        },
+        "name": "Maximum speed",
+        "type": "DOUBLE_SUMMARY",
+        "description": "Maximum speed reached by actor",
+        "status": "PASSED",
+        "should_display": true,
+        "metric_values": {
+          "double_metric_values": {
+            "value_data_id": {
+              "data_id": {
+                "data": "97340602-2368-441d-abc7-4e17a0561687"
+              }
+            },
+            "status_data_id": {
+              "data_id": {
+                "data": "efe8549b-f264-4c5e-8955-4bf6848270dd"
+              }
+            },
+            "failure_definition": {
+              "fails_above": 29.0576,
+              "fails_below": 0
+            }
+          }
+        },
+        "blocking": false,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      },
+      {
+        "id": {
+          "metric_id": {
+            "data": "38720e26-b350-43c7-9ab9-6de88815b7e2"
+          }
+        },
+        "name": "Distance prediction accuracy",
+        "type": "LINE_PLOT",
+        "description": "Plot of actual minimum distance of non-ego actors against predicted minimum distance.",
+        "status": "PASSED",
+        "should_display": true,
+        "metric_values": {
+          "line_plot_metric_values": {
+            "x_doubles_data_id": [
+              {
+                "data_id": {
+                  "data": "24b122ac-77a2-48e5-8693-ea997c32ce59"
+                }
+              }
+            ],
+            "y_doubles_data_id": [
+              {
+                "data_id": {
+                  "data": "f9132be4-6530-4bf1-afc3-2e2904c7bb8d"
+                }
+              }
+            ],
+            "statuses_data_id": [
+              {
+                "data_id": {
+                  "data": "b1889335-1e5a-478e-9e37-55ad103cd459"
+                }
+              }
+            ],
+            "x_axis_name": "Actual minimum distance",
+            "y_axis_name": "Predicted minimum distance"
+          }
+        },
+        "blocking": false,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      },
+      {
+        "id": {
+          "metric_id": {
+            "data": "eb2f54fa-9958-43e9-b74f-7a732efd6d8a"
+          }
+        },
+        "name": "Detection latency",
+        "type": "BAR_CHART",
+        "description": "Average latency on computing detections from images",
+        "status": "FAILED",
+        "should_display": true,
+        "metric_values": {
+          "bar_chart_metric_values": {
+            "values_data_id": [
+              {
+                "data_id": {
+                  "data": "f8496309-98a2-4c55-8add-d71c28f64353"
+                }
+              },
+              {
+                "data_id": {
+                  "data": "99c84253-dd7c-43c2-bd9b-7fe8aaf468cb"
+                }
+              }
+            ],
+            "statuses_data_id": [
+              {
+                "data_id": {
+                  "data": "7fbc32d6-a3ab-45f1-82fb-cb0f031977ee"
+                }
+              },
+              {
+                "data_id": {
+                  "data": "92bedf33-134c-4d53-bd23-cf3786774bfa"
+                }
+              }
+            ],
+            "axis_labels": [
+              "camera_0",
+              "camera_1",
+              "camera_2"
+            ],
+            "stack_labels": [
+              "Camera",
+              "PyTorch"
+            ],
+            "x_axis_name": "Component"
+          }
+        },
+        "blocking": false,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      },
+      {
+        "id": {
+          "metric_id": {
+            "data": "5f2d0762-9e3b-4957-aa00-53cc6ff1cdbd"
+          }
+        },
+        "name": "Time to collision",
+        "type": "DOUBLE_OVER_TIME",
+        "description": "Time to collide with leading actor",
+        "status": "FAILED",
+        "should_display": true,
+        "metric_values": {
+          "double_over_time_metric_values": {
+            "double_timestamps_data_id": [
+              {
+                "data_id": {
+                  "data": "69ba7071-5a63-40ae-87a1-21ef0df3e869"
+                }
+              },
+              {
+                "data_id": {
+                  "data": "0a1f8273-42c8-4b66-986e-d043187e7d6a"
+                }
+              }
+            ],
+            "status_timestamps_data_id": [
+              {
+                "data_id": {
+                  "data": "c0e9abf8-b461-45ef-8753-fd47616dae69"
+                }
+              },
+              {
+                "data_id": {
+                  "data": "f8cb394d-aa23-4883-9667-bf4ed636c886"
+                }
+              }
+            ],
+            "failure_definition": [
+              {
+                "fails_below": 1
+              }
+            ],
+            "start_time": "1970-01-01T00:00:00Z",
+            "end_time": "1970-01-01T00:00:10Z",
+            "y_axis_name": "TTC"
+          }
+        },
+        "blocking": true,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      },
+      {
+        "id": {
+          "metric_id": {
+            "data": "4c1eb0d7-4219-43c3-8ca5-7635df09161c"
+          }
+        },
+        "name": "Number of seatbelts in front car",
+        "type": "DOUBLE_SUMMARY",
+        "description": "This metric should index into the values list to get a single double, corresponding to a matching actor id.",
+        "status": "PASSED",
+        "should_display": true,
+        "metric_values": {
+          "double_metric_values": {
+            "value_data_id": {
+              "data_id": {
+                "data": "4b6803f9-e27c-4c5f-89ac-50f7b92061ab"
+              }
+            },
+            "status_data_id": {
+              "data_id": {
+                "data": "44aa987e-5f56-4fb1-b8b6-953735152634"
+              }
+            },
+            "actor_id": {
+              "actor_id": {
+                "data": "b0d5a948-9ebe-47b5-8ba6-d62ca28d20a5"
+              }
+            },
+            "failure_definition": {
+              "fails_above": 2,
+              "fails_below": 2
+            }
+          }
+        },
+        "blocking": true,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      },
+      {
+        "id": {
+          "metric_id": {
+            "data": "54abc37a-ab7a-4a36-a9d8-633d12d2562d"
+          }
+        },
+        "name": "Lane change states metric",
+        "type": "STATES_OVER_TIME",
+        "description": "",
+        "status": "PASSED",
+        "should_display": false,
+        "metric_values": {
+          "states_over_time_metric_values": {
+            "state_timestamps_data_id": [
+              {
+                "data_id": {
+                  "data": "a37e8718-038f-42cc-a85f-9e9d63f73788"
+                }
+              }
+            ],
+            "status_timestamps_data_id": [
+              {
+                "data_id": {
+                  "data": "edf932f2-4a0e-4db1-a80b-ab547a4a9925"
+                }
+              }
+            ],
+            "states_set": [
+              "LANE_CHANGE",
+              "LANE_FOLLOW",
+              "COLLISION",
+              "NO_STATE"
+            ],
+            "failure_states": [
+              "COLLISION"
+            ]
+          }
+        },
+        "blocking": false,
+        "job_id": {
+          "job_id": {
+            "data": "b74c98d1-71c7-43e2-97d1-367ab7d8118d"
+          }
+        }
+      }
+    ],
+    "failed_metrics": [
+      {
+        "metric_id": {
+          "data": "eb2f54fa-9958-43e9-b74f-7a732efd6d8a"
+        }
+      },
+      {
+        "metric_id": {
+          "data": "5f2d0762-9e3b-4957-aa00-53cc6ff1cdbd"
+        }
+      }
+    ],
+    "metrics_status": "FAILED"
+  },
+  "metrics_status": "FAILED",
+  "metrics_ids": [
+    {
+      "metric_id": {
+        "data": "51c0cd79-eaa3-4a77-82e5-e58b3982c2bf"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "38720e26-b350-43c7-9ab9-6de88815b7e2"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "eb2f54fa-9958-43e9-b74f-7a732efd6d8a"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "5f2d0762-9e3b-4957-aa00-53cc6ff1cdbd"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "4c1eb0d7-4219-43c3-8ca5-7635df09161c"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "54abc37a-ab7a-4a36-a9d8-633d12d2562d"
+      }
+    }
+  ],
+  "failed_metrics": [
+    {
+      "metric_id": {
+        "data": "eb2f54fa-9958-43e9-b74f-7a732efd6d8a"
+      }
+    },
+    {
+      "metric_id": {
+        "data": "5f2d0762-9e3b-4957-aa00-53cc6ff1cdbd"
+      }
+    }
+  ],
+  "metrics_data": [
+    {
+      "id": {
+        "data_id": {
+          "data": "97340602-2368-441d-abc7-4e17a0561687"
+        }
+      },
+      "data_type": "DOUBLE_ARRAY_DATA_TYPE",
+      "length": 1,
+      "name": "Ad-hoc speed metric",
+      "unit": "m/s",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "doubles": {
+          "doubles": [
+            27
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "efe8549b-f264-4c5e-8955-4bf6848270dd"
+        }
+      },
+      "data_type": "METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 1,
+      "name": "Speed metric status",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "statuses": {
+          "statuses": [
+            "PASSED"
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "24b122ac-77a2-48e5-8693-ea997c32ce59"
+        }
+      },
+      "data_type": "DOUBLE_ARRAY_DATA_TYPE",
+      "length": 4,
+      "name": "Min d",
+      "unit": "m/s (real)",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "doubles": {
+          "doubles": [
+            21,
+            2,
+            25,
+            15.5
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "f9132be4-6530-4bf1-afc3-2e2904c7bb8d"
+        }
+      },
+      "data_type": "DOUBLE_ARRAY_DATA_TYPE",
+      "length": 4,
+      "name": "Min d pred",
+      "unit": "m/s (pred)",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "doubles": {
+          "doubles": [
+            19.2,
+            1.9,
+            26.7,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "b1889335-1e5a-478e-9e37-55ad103cd459"
+        }
+      },
+      "data_type": "METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 4,
+      "name": "D pred statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED"
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "f8496309-98a2-4c55-8add-d71c28f64353"
+        }
+      },
+      "data_type": "DOUBLE_ARRAY_DATA_TYPE",
+      "length": 3,
+      "name": "Camera timings",
+      "unit": "msec",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "doubles": {
+          "doubles": [
+            1.5,
+            2.6,
+            1.8
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "7fbc32d6-a3ab-45f1-82fb-cb0f031977ee"
+        }
+      },
+      "data_type": "METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 3,
+      "name": "Camera timing statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "PASSED"
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "99c84253-dd7c-43c2-bd9b-7fe8aaf468cb"
+        }
+      },
+      "data_type": "DOUBLE_ARRAY_DATA_TYPE",
+      "length": 3,
+      "name": "PyTorch timings",
+      "unit": "msec",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "doubles": {
+          "doubles": [
+            10.1,
+            9.2,
+            12.3
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "92bedf33-134c-4d53-bd23-cf3786774bfa"
+        }
+      },
+      "data_type": "METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 3,
+      "name": "PyTorch timing statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "FAILED"
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "69ba7071-5a63-40ae-87a1-21ef0df3e869"
+        }
+      },
+      "data_type": "INDEXED_DOUBLE_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor 1 TTC",
+      "unit": "sec",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_doubles": {
+          "doubles": [
+            2.4,
+            2.1,
+            1.9,
+            1.8,
+            1.9,
+            2.3,
+            2.6,
+            3,
+            4.1,
+            7.2
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "c0e9abf8-b461-45ef-8753-fd47616dae69"
+        }
+      },
+      "data_type": "INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor one ttc statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "0a1f8273-42c8-4b66-986e-d043187e7d6a"
+        }
+      },
+      "data_type": "INDEXED_DOUBLE_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor 2 TTC",
+      "unit": "sec",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_doubles": {
+          "doubles": [
+            3,
+            2.9,
+            2.5,
+            2,
+            1.5,
+            1.6,
+            1.2,
+            0.9,
+            0.8,
+            1.1
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "f8cb394d-aa23-4883-9667-bf4ed636c886"
+        }
+      },
+      "data_type": "INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor two ttc statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "FAILED",
+            "FAILED",
+            "PASSED"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+        }
+      },
+      "data_type": "TIMESTAMP_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Timestamps at which TTC are reported",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "timestamps": {
+          "timestamps": [
+            "1970-01-01T00:00:00Z",
+            "1970-01-01T00:00:01Z",
+            "1970-01-01T00:00:02Z",
+            "1970-01-01T00:00:03Z",
+            "1970-01-01T00:00:04Z",
+            "1970-01-01T00:00:05Z",
+            "1970-01-01T00:00:06Z",
+            "1970-01-01T00:00:07Z",
+            "1970-01-01T00:00:08Z",
+            "1970-01-01T00:00:09Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "4b6803f9-e27c-4c5f-89ac-50f7b92061ab"
+        }
+      },
+      "data_type": "INDEXED_DOUBLE_ARRAY_DATA_TYPE",
+      "length": 2,
+      "name": "Seatbelts worn in 5 user car",
+      "unit": "belts",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_doubles": {
+          "doubles": [
+            2,
+            1
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "368bae81-b670-44cc-8fca-306564da2485"
+            }
+          },
+          "index_type": "ACTOR_ID_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "44aa987e-5f56-4fb1-b8b6-953735152634"
+        }
+      },
+      "data_type": "INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 2,
+      "name": "Seatbelt metric status",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "368bae81-b670-44cc-8fca-306564da2485"
+            }
+          },
+          "index_type": "ACTOR_ID_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "368bae81-b670-44cc-8fca-306564da2485"
+        }
+      },
+      "data_type": "ACTOR_ID_ARRAY_DATA_TYPE",
+      "length": 2,
+      "name": "Actor IDs",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "actor_ids": {
+          "actor_ids": [
+            {
+              "actor_id": {
+                "data": "b0d5a948-9ebe-47b5-8ba6-d62ca28d20a5"
+              }
+            },
+            {
+              "actor_id": {
+                "data": "16242ad8-4735-4c66-ba03-8132aafb1247"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "3d424faf-885b-4320-bb8e-fd46d246d15c"
+        }
+      },
+      "data_type": "INDEXED_STRING_ARRAY_DATA_TYPE",
+      "length": 2,
+      "name": "Friendly actor names",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_strings": {
+          "strings": [
+            "Front car",
+            "Rear car"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "368bae81-b670-44cc-8fca-306564da2485"
+            }
+          },
+          "index_type": "ACTOR_ID_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "a37e8718-038f-42cc-a85f-9e9d63f73788"
+        }
+      },
+      "data_type": "INDEXED_STRING_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor 2 state data",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_strings": {
+          "strings": [
+            "LANE_FOLLOW",
+            "LANE_FOLLOW",
+            "LANE_FOLLOW",
+            "LANE_CHANGE",
+            "LANE_CHANGE",
+            "LANE_CHANGE",
+            "LANE_CHANGE",
+            "LANE_FOLLOW",
+            "LANE_FOLLOW",
+            "LANE_FOLLOW"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    },
+    {
+      "id": {
+        "data_id": {
+          "data": "edf932f2-4a0e-4db1-a80b-ab547a4a9925"
+        }
+      },
+      "data_type": "INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE",
+      "length": 10,
+      "name": "Actor 2 state statuses",
+      "unit": "",
+      "is_per_actor": false,
+      "actors": [],
+      "array": {
+        "indexed_statuses": {
+          "statuses": [
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED",
+            "PASSED"
+          ],
+          "index_id": {
+            "data_id": {
+              "data": "9e1ddbca-2581-491d-a1db-581a283e5316"
+            }
+          },
+          "index_type": "TIMESTAMP_ARRAY_DATA_TYPE"
+        }
+      }
+    }
+  ]
+}
