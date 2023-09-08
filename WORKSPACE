@@ -43,8 +43,3 @@ python_configure(
     name = "local_config_python",
     python_interpreter_target = interpreter,
 )
-
-bind(
-    name = "python_headers",
-    actual = "@local_config_python//:python_headers",
-)
