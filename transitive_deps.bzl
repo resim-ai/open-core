@@ -38,6 +38,7 @@ def resim_core_transitive_dependencies():
         # Available versions are listed in @rules_python//python:versions.bzl.
         # We recommend using the same version your team is already standardized on.
         python_version = "3.10",
+        ignore_root_user_error = True,
     )
 
     hedron_compile_commands_setup()
@@ -61,6 +62,7 @@ def resim_core_transitive_dependencies():
     python_register_toolchains(
         name = "rules_ros2_python",
         python_version = "3.10",
+        ignore_root_user_error = True,
     )
 
     # Create a central repo that knows about the dependencies needed from
