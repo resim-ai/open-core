@@ -15,6 +15,7 @@ Detection3D convert_from_ros2(const vision_msgs::msg::Detection3D &ros2_msg) {
   Detection3D result;
   result.mutable_header()->CopyFrom(convert_from_ros2(ros2_msg.header));
   result.mutable_bbox()->CopyFrom(convert_from_ros2(ros2_msg.bbox));
+  result.set_id(ros2_msg.id);
   return result;
 }
 
@@ -22,6 +23,7 @@ vision_msgs::msg::Detection3D convert_to_ros2(const Detection3D &resim_msg) {
   vision_msgs::msg::Detection3D result;
   result.header = convert_to_ros2(resim_msg.header());
   result.bbox = convert_to_ros2(resim_msg.bbox());
+  result.id = resim_msg.id();
   return result;
 }
 

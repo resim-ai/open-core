@@ -142,6 +142,7 @@ Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
       transforms::Frame<DIMS>::null_frame().id().to_string());
 
   result.mutable_bbox()->CopyFrom(bbox);
+  result.set_id(UUID::new_uuid().to_string());
   return result;
 }
 
