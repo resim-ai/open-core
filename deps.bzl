@@ -300,9 +300,17 @@ def resim_core_dependencies():
 
     maybe(
         http_archive,
-        name = "pybind",
+        name = "pybind11_bazel",
+        sha256 = "2c466c9b3cca7852b47e0785003128984fcf0d5d61a1a2e4c5aceefd935ac220",
+        strip_prefix = "pybind11_bazel-2.11.1",
+        url = "https://github.com/pybind/pybind11_bazel/archive/refs/tags/v2.11.1.zip",
+    )
+
+    maybe(
+        http_archive,
+        name = "pybind11",
         sha256 = "b011a730c8845bfc265f0f81ee4e5e9e1d354df390836d2a25880e123d021f89",
-        build_file = "@resim_open_core//resim/third_party/pybind:pybind.BUILD",
-        strip_prefix = "pybind11-2.11.1/include",
+        build_file = "@pybind11_bazel//:pybind11.BUILD",
+        strip_prefix = "pybind11-2.11.1",
         url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.zip",
     )

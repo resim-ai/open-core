@@ -4,17 +4,15 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@resim_python_deps//:requirements.bzl", "requirement")
-load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_python//python:defs.bzl", "py_test")
 
-cc_binary(
-    name = "se3_python.so",
+pybind_extension(
+    name = "se3_python",
     srcs = ["se3_python.cc"],
-    linkshared = True,
     deps = [
         "//resim/transforms:se3",
-        "@pybind",
     ],
 )
 
@@ -23,6 +21,8 @@ py_test(
     srcs = ["se3_python_test.py"],
     data = [
         ":se3_python.so",
+    ],
+    deps = [
         requirement("numpy"),
     ],
 )
