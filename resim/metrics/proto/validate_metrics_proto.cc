@@ -26,7 +26,7 @@ namespace resim::metrics::proto {
 void validate_double_summary_values_proto(
     const DoubleSummaryMetricValues& metric_values,
     const MetricsDataMap& map) {
-  // TODO(tknowles): This validation is incomplete for the full features set of
+  // TODO(tknowles): This validation is incomplete for the full feature set of
   // double summaries
   REASSERT(metric_values.has_value_data_id());
   REASSERT(metric_values.has_status_data_id());
@@ -388,14 +388,33 @@ void validate_job_metrics_proto(
   REASSERT(job_metrics_msg.has_job_id());
   REASSERT(job_metrics_msg.has_job_metrics());
 
+  const MetricCollection& job_metrics_collection =
+      job_metrics_msg.job_metrics();
+
+  // Check for repeat IDs across all IDs
+
+  std::unordered_set<UUID> uuids;
+  for (auto iter = job_metrics_msg.metrics_data().begin();
+       iter < job_metrics_msg.metrics_data().end();
+       ++iter) {
+    UUID id = resim::proto::unpack(iter->id().data_id());
+    REASSERT(!uuids.contains(id), "Repeat data ID");
+    uuids.insert(id);
+  }
+
+  for (auto iter = job_metrics_collection.metrics().begin();
+       iter < job_metrics_collection.metrics().end();
+       ++iter) {
+    UUID id = resim::proto::unpack(iter->id().metric_id());
+    REASSERT(!uuids.contains(id), "Repeat metric ID");
+    uuids.insert(id);
+  }
+
   for (auto iter = job_metrics_msg.metrics_data().begin();
        iter < job_metrics_msg.metrics_data().end();
        ++iter) {
     validate_metrics_data_proto(*iter, map);
   }
-
-  const MetricCollection& job_metrics_collection =
-      job_metrics_msg.job_metrics();
 
   validate_job_metrics_collection_proto(job_metrics_collection, map);
 }
@@ -405,7 +424,9 @@ MetricsDataMap build_metrics_data_map(
   MetricsDataMap map{};
   for (auto iter = metrics_data.begin(); iter < metrics_data.end(); ++iter) {
     REASSERT(iter->has_id());
-    map.insert({resim::proto::unpack(iter->id().data_id()), *iter});
+    UUID id = resim::proto::unpack(iter->id().data_id());
+    REASSERT(!map.contains(id), "Repeat data ID");
+    map.insert({id, *iter});
   }
   return map;
 }

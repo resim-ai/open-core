@@ -101,23 +101,10 @@ cc_test(
         ":metrics_proto_cc",
         ":validate_metrics_proto",
         "//resim/assert",
+        "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protobuf",
-    ],
-)
-
-cc_binary(
-    name = "validate_metrics_proto_binary",
-    srcs = ["validate_metrics_proto_binary.cc"],
-    data = [
-        ":metrics_json",
-    ],
-    deps = [
-        ":metrics_proto_cc",
-        ":validate_metrics_proto",
-        "//resim/assert",
-        "@bazel_tools//tools/cpp/runfiles",
         "@com_google_protobuf//:protobuf",
     ],
 )
