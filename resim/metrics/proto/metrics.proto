@@ -116,7 +116,7 @@ message PerActorData {
 }
 
 message ActorData {
-    ActorId id        = 1;
+    ActorId actor_id        = 1;
     DataId  parent_id = 2;
     uint32  length    = 3;
 
@@ -131,7 +131,7 @@ message MetricsData {
     string          unit         = 5;
     bool            is_per_actor = 6;
 
-    repeated ActorId actors = 7;  // empty if not per-actor
+    repeated ActorId actor_ids = 7;  // empty if not per-actor
 
     oneof data {
         Array        array          = 8;
@@ -244,14 +244,16 @@ message DoubleSummaryMetricValues {
     DataId value_data_id  = 1;
     DataId status_data_id = 2;
 
-    // Optional select index from data
-    optional uint32 index = 3;
+    oneof index {
+        // Optional select index
+        uint32 array_index = 3;
 
-    // Optional select timestamp from data
-    optional google.protobuf.Timestamp timestamp = 4;
+        // Optional select timestamp from data
+        google.protobuf.Timestamp timestamp = 4;
 
-    // Optional select actor from data
-    optional ActorId actor_id = 5;
+        // Optional select actor from data
+        ActorId actor_id = 5;
+    }
 
     DoubleFailureDefinition failure_definition = 6;
 }

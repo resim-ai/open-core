@@ -355,7 +355,7 @@
       "name": "Ad-hoc speed metric",
       "unit": "m/s",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "doubles": {
           "doubles": [
@@ -375,7 +375,7 @@
       "name": "Speed metric status",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "statuses": {
           "statuses": [
@@ -395,7 +395,7 @@
       "name": "Min d",
       "unit": "m/s (real)",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "doubles": {
           "doubles": [
@@ -418,7 +418,7 @@
       "name": "Min d pred",
       "unit": "m/s (pred)",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "doubles": {
           "doubles": [
@@ -441,7 +441,7 @@
       "name": "D pred statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "statuses": {
           "statuses": [
@@ -464,7 +464,7 @@
       "name": "Camera timings",
       "unit": "msec",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "doubles": {
           "doubles": [
@@ -486,7 +486,7 @@
       "name": "Camera timing statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "statuses": {
           "statuses": [
@@ -508,7 +508,7 @@
       "name": "PyTorch timings",
       "unit": "msec",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "doubles": {
           "doubles": [
@@ -530,7 +530,7 @@
       "name": "PyTorch timing statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "statuses": {
           "statuses": [
@@ -552,7 +552,7 @@
       "name": "Actor 1 TTC",
       "unit": "sec",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_doubles": {
           "doubles": [
@@ -587,7 +587,7 @@
       "name": "Actor one ttc statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_statuses": {
           "statuses": [
@@ -622,7 +622,7 @@
       "name": "Actor 2 TTC",
       "unit": "sec",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_doubles": {
           "doubles": [
@@ -657,7 +657,7 @@
       "name": "Actor two ttc statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_statuses": {
           "statuses": [
@@ -692,7 +692,7 @@
       "name": "Timestamps at which TTC are reported",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "timestamps": {
           "timestamps": [
@@ -721,7 +721,7 @@
       "name": "Seatbelts worn in 5 user car",
       "unit": "belts",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_doubles": {
           "doubles": [
@@ -748,7 +748,7 @@
       "name": "Seatbelt metric status",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_statuses": {
           "statuses": [
@@ -775,7 +775,7 @@
       "name": "Actor IDs",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "actor_ids": {
           "actor_ids": [
@@ -804,7 +804,7 @@
       "name": "Friendly actor names",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_strings": {
           "strings": [
@@ -831,7 +831,7 @@
       "name": "Actor 2 state data",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_strings": {
           "strings": [
@@ -866,7 +866,7 @@
       "name": "Actor 2 state statuses",
       "unit": "",
       "is_per_actor": false,
-      "actors": [],
+      "actor_ids": [],
       "array": {
         "indexed_statuses": {
           "statuses": [

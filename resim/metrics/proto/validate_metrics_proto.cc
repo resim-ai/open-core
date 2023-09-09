@@ -23,21 +23,34 @@
 
 namespace resim::metrics::proto {
 
+// TODO(tknowles): This file needs better validation of statuses and lengths of
+// data, within metrics values checks.
+
 void validate_double_summary_values_proto(
     const DoubleSummaryMetricValues& metric_values,
     const MetricsDataMap& map) {
-  // TODO(tknowles): This validation is incomplete for the full feature set of
-  // double summaries
   REASSERT(metric_values.has_value_data_id());
   REASSERT(metric_values.has_status_data_id());
+
+  const std::unordered_set<MetricsDataType> VALID_DOUBLE_TYPES{
+      DOUBLE_ARRAY_DATA_TYPE,
+      INDEXED_DOUBLE_ARRAY_DATA_TYPE};
+
+  const std::unordered_set<MetricsDataType> VALID_STATUS_TYPES{
+      METRIC_STATUS_ARRAY_DATA_TYPE,
+      INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE};
+
   resim::UUID id =
       resim::proto::unpack(metric_values.value_data_id().data_id());
-  REASSERT(
-      map.at(id).data_type() == INDEXED_DOUBLE_ARRAY_DATA_TYPE ||
-      map.at(id).data_type() == DOUBLE_ARRAY_DATA_TYPE);
+  REASSERT(VALID_DOUBLE_TYPES.contains(map.at(id).data_type()));
+
   resim::UUID status_id =
       resim::proto::unpack(metric_values.status_data_id().data_id());
+  REASSERT(VALID_STATUS_TYPES.contains(map.at(status_id).data_type()));
 
+  REASSERT(map.at(id).length() == map.at(status_id).length());
+
+  // Check statuses have same index type as doubles
   if (map.at(id).data_type() == INDEXED_DOUBLE_ARRAY_DATA_TYPE) {
     REASSERT(
         map.at(status_id).data_type() == INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE);
@@ -51,7 +64,24 @@ void validate_double_summary_values_proto(
             map.at(status_id).array().indexed_statuses().index_id().data_id()));
   } else {
     REASSERT(map.at(status_id).data_type() == METRIC_STATUS_ARRAY_DATA_TYPE);
-    REASSERT(map.at(status_id).length() == 1);
+  }
+
+  // Check index types make sense
+  if (metric_values.has_array_index()) {
+    REASSERT(metric_values.array_index() < map.at(id).length());
+    REASSERT(map.at(id).data_type() == DOUBLE_ARRAY_DATA_TYPE);
+  } else if (metric_values.has_timestamp()) {
+    REASSERT(map.at(id).data_type() == INDEXED_DOUBLE_ARRAY_DATA_TYPE);
+    REASSERT(
+        map.at(id).array().indexed_doubles().index_type() ==
+        TIMESTAMP_ARRAY_DATA_TYPE);
+  } else if (metric_values.has_actor_id()) {
+    REASSERT(map.at(id).data_type() == INDEXED_DOUBLE_ARRAY_DATA_TYPE);
+    REASSERT(
+        map.at(id).array().indexed_doubles().index_type() ==
+        ACTOR_ID_ARRAY_DATA_TYPE);
+  } else {
+    REASSERT(map.at(id).data_type() == DOUBLE_ARRAY_DATA_TYPE);
     REASSERT(map.at(id).length() == 1);
   }
 }
@@ -60,6 +90,9 @@ void validate_double_over_time_metric_values_proto(
     const DoubleOverTimeMetricValues& metric_values,
     const MetricsDataMap& map) {
   REASSERT(metric_values.double_timestamps_data_id_size() >= 1);
+  REASSERT(
+      metric_values.status_timestamps_data_id_size() ==
+      metric_values.double_timestamps_data_id_size());
   for (auto iter = metric_values.double_timestamps_data_id().begin();
        iter < metric_values.double_timestamps_data_id().end();
        ++iter) {
@@ -77,6 +110,9 @@ void validate_line_plot_metric_values_proto(
   REASSERT(metric_values.x_doubles_data_id_size() >= 1);
   REASSERT(
       metric_values.y_doubles_data_id_size() ==
+      metric_values.x_doubles_data_id_size());
+  REASSERT(
+      metric_values.statuses_data_id_size() ==
       metric_values.x_doubles_data_id_size());
   for (int i = 0; i < metric_values.x_doubles_data_id_size(); ++i) {
     resim::UUID x_id =
@@ -348,11 +384,24 @@ void validate_metrics_data_proto(
   if (data.is_per_actor()) {
     REASSERT(data.has_per_actor_data());
     REASSERT(not data.has_array());
-    REASSERT(data.actors_size() == data.per_actor_data().actor_data_size());
+    REASSERT(data.actor_ids_size() == data.per_actor_data().actor_data_size());
+    std::unordered_set<UUID> actor_ids;
+    for (auto iter = data.actor_ids().begin(); iter < data.actor_ids().end();
+         ++iter) {
+      UUID actor_id = resim::proto::unpack(iter->actor_id());
+      REASSERT(!actor_ids.contains(actor_id), "Repeat actor ID");
+      actor_ids.insert(actor_id);
+    }
+
     for (auto iter = data.per_actor_data().actor_data().begin();
          iter < data.per_actor_data().actor_data().end();
          ++iter) {
-      REASSERT(iter->has_id());
+      REASSERT(iter->has_actor_id());
+      REASSERT(actor_ids.contains(
+          resim::proto::unpack(iter->actor_id().actor_id())));
+      REASSERT(
+          resim::proto::unpack(iter->parent_id().data_id()) ==
+          resim::proto::unpack(data.id().data_id()));
       validate_array_proto(iter->array(), data.data_type(), data.length(), map);
     }
   } else {

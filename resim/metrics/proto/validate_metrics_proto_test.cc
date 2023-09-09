@@ -411,4 +411,320 @@ TEST_F(MetricsProtoTest, InvalidMetricTypes) {
   EXPECT_THROW(validate_job_metrics_proto(job_metrics), AssertException);
 }
 
+TEST_F(MetricsProtoTest, ValidatePerActorData) {
+  JobMetrics job_metrics;
+  UUID job_id = UUID::new_uuid();
+  job_metrics.set_metrics_status(MetricStatus::PASSED);
+  resim::proto::pack(job_id, job_metrics.mutable_job_id()->mutable_job_id());
+  job_metrics.mutable_job_metrics()->set_metrics_status(MetricStatus::PASSED);
+
+  // Make some double data
+  auto* double_data = job_metrics.add_metrics_data();
+  UUID double_data_id = UUID::new_uuid();
+  resim::proto::pack(
+      double_data_id,
+      double_data->mutable_id()->mutable_data_id());
+  double_data->set_data_type(MetricsDataType::DOUBLE_ARRAY_DATA_TYPE);
+  double_data->set_length(1);
+  double_data->set_name("Doubles per actor");
+  double_data->set_is_per_actor(true);
+  UUID actor_one_id = UUID::new_uuid();
+  UUID actor_two_id = UUID::new_uuid();
+
+  resim::proto::pack(
+      actor_one_id,
+      double_data->add_actor_ids()->mutable_actor_id());
+  resim::proto::pack(
+      actor_two_id,
+      double_data->add_actor_ids()->mutable_actor_id());
+
+  auto* actor_one_data =
+      double_data->mutable_per_actor_data()->add_actor_data();
+  resim::proto::pack(
+      actor_one_id,
+      actor_one_data->mutable_actor_id()->mutable_actor_id());
+  resim::proto::pack(
+      double_data_id,
+      actor_one_data->mutable_parent_id()->mutable_data_id());
+  actor_one_data->set_length(1);
+  actor_one_data->mutable_array()->mutable_doubles()->add_doubles(1.0);
+
+  auto* actor_two_data =
+      double_data->mutable_per_actor_data()->add_actor_data();
+  resim::proto::pack(
+      actor_two_id,
+      actor_two_data->mutable_actor_id()->mutable_actor_id());
+  resim::proto::pack(
+      double_data_id,
+      actor_two_data->mutable_parent_id()->mutable_data_id());
+  actor_two_data->set_length(1);
+  actor_two_data->mutable_array()->mutable_doubles()->add_doubles(2.0);
+
+  // Per actor data should validate
+  resim::metrics::proto::validate_metrics_data_proto(
+      *double_data,
+      resim::metrics::proto::build_metrics_data_map(
+          job_metrics.metrics_data()));
+
+  // Should not validate if an invalid actor ID is added
+  resim::proto::pack(
+      UUID::new_uuid(),
+      actor_one_data->mutable_actor_id()->mutable_actor_id());
+  EXPECT_THROW(
+      resim::metrics::proto::validate_metrics_data_proto(
+          *double_data,
+          resim::metrics::proto::build_metrics_data_map(
+              job_metrics.metrics_data())),
+      AssertException);
+  resim::proto::pack(
+      actor_one_id,
+      actor_one_data->mutable_actor_id()->mutable_actor_id());
+
+  // Should not validate if an invalid length is passed
+  double_data->set_length(2);
+  EXPECT_THROW(
+      resim::metrics::proto::validate_metrics_data_proto(
+          *double_data,
+          resim::metrics::proto::build_metrics_data_map(
+              job_metrics.metrics_data())),
+      AssertException);
+  double_data->set_length(1);
+
+  // Should not validate if an invalid parent ID is passed
+  resim::proto::pack(
+      UUID::new_uuid(),
+      actor_one_data->mutable_parent_id()->mutable_data_id());
+  EXPECT_THROW(
+      resim::metrics::proto::validate_metrics_data_proto(
+          *double_data,
+          resim::metrics::proto::build_metrics_data_map(
+              job_metrics.metrics_data())),
+      AssertException);
+  resim::proto::pack(
+      double_data_id,
+      actor_one_data->mutable_parent_id()->mutable_data_id());
+
+  // Per actor data should validate again after reset
+  resim::metrics::proto::validate_metrics_data_proto(
+      *double_data,
+      resim::metrics::proto::build_metrics_data_map(
+          job_metrics.metrics_data()));
+}
+
+TEST_F(MetricsProtoTest, IndexedDoubleSummaries) {
+  JobMetrics job_metrics;
+  UUID job_id = UUID::new_uuid();
+  job_metrics.set_metrics_status(MetricStatus::FAILED);
+  resim::proto::pack(job_id, job_metrics.mutable_job_id()->mutable_job_id());
+  job_metrics.mutable_job_metrics()->set_metrics_status(MetricStatus::FAILED);
+
+  // Make some timestamp data
+  auto* timestamp_data = job_metrics.add_metrics_data();
+  UUID timestamp_data_id = UUID::new_uuid();
+  resim::proto::pack(
+      timestamp_data_id,
+      timestamp_data->mutable_id()->mutable_data_id());
+  timestamp_data->set_data_type(MetricsDataType::TIMESTAMP_ARRAY_DATA_TYPE);
+  timestamp_data->set_length(2);
+  timestamp_data->set_name("Timestamps");
+  timestamp_data->set_is_per_actor(false);
+  resim::time::proto::pack(
+      time::Timestamp(std::chrono::seconds(0)),
+      timestamp_data->mutable_array()->mutable_timestamps()->add_timestamps());
+  resim::time::proto::pack(
+      time::Timestamp(std::chrono::seconds(1)),
+      timestamp_data->mutable_array()->mutable_timestamps()->add_timestamps());
+  validate_metrics_data_proto(
+      *timestamp_data,
+      build_metrics_data_map(job_metrics.metrics_data()));
+
+  // Make some actor ID data
+  auto* actor_data = job_metrics.add_metrics_data();
+  UUID actor_data_id = UUID::new_uuid();
+  resim::proto::pack(
+      actor_data_id,
+      actor_data->mutable_id()->mutable_data_id());
+  actor_data->set_data_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  actor_data->set_length(2);
+  actor_data->set_name("Actors");
+  actor_data->set_is_per_actor(false);
+  UUID actor_one_id = UUID::new_uuid();
+  UUID actor_two_id = UUID::new_uuid();
+  resim::proto::pack(
+      actor_one_id,
+      actor_data->mutable_array()
+          ->mutable_actor_ids()
+          ->add_actor_ids()
+          ->mutable_actor_id());
+  resim::proto::pack(
+      actor_two_id,
+      actor_data->mutable_array()
+          ->mutable_actor_ids()
+          ->add_actor_ids()
+          ->mutable_actor_id());
+
+  // Make some indexed double data
+  auto* indexed_double_data = job_metrics.add_metrics_data();
+  UUID indexed_double_data_id = UUID::new_uuid();
+  resim::proto::pack(
+      indexed_double_data_id,
+      indexed_double_data->mutable_id()->mutable_data_id());
+  indexed_double_data->set_data_type(
+      MetricsDataType::INDEXED_DOUBLE_ARRAY_DATA_TYPE);
+  indexed_double_data->set_length(2);
+  indexed_double_data->set_name("Doubles");
+  indexed_double_data->set_is_per_actor(false);
+  indexed_double_data->mutable_array()->mutable_indexed_doubles()->add_doubles(
+      1.0);
+  indexed_double_data->mutable_array()->mutable_indexed_doubles()->add_doubles(
+      2.0);
+
+  // Make some indexed status data
+  auto* indexed_status_data = job_metrics.add_metrics_data();
+  UUID indexed_status_data_id = UUID::new_uuid();
+  resim::proto::pack(
+      indexed_status_data_id,
+      indexed_status_data->mutable_id()->mutable_data_id());
+  indexed_status_data->set_data_type(
+      MetricsDataType::INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE);
+  indexed_status_data->set_length(2);
+  indexed_status_data->set_name("Statuses");
+  indexed_status_data->set_is_per_actor(false);
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->add_statuses(MetricStatus::FAILED);
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->add_statuses(MetricStatus::PASSED);
+
+  // Make a double summary metric
+  auto* metric = job_metrics.mutable_job_metrics()->add_metrics();
+  UUID metric_id = UUID::new_uuid();
+
+  resim::proto::pack(metric_id, metric->mutable_id()->mutable_metric_id());
+  metric->set_type(MetricType::DOUBLE_SUMMARY);
+  metric->set_status(MetricStatus::PASSED);
+  resim::proto::pack(job_id, metric->mutable_job_id()->mutable_job_id());
+
+  auto* metric_values =
+      metric->mutable_metric_values()->mutable_double_metric_values();
+
+  resim::proto::pack(
+      indexed_double_data_id,
+      metric_values->mutable_value_data_id()->mutable_data_id());
+  resim::proto::pack(
+      indexed_status_data_id,
+      metric_values->mutable_status_data_id()->mutable_data_id());
+
+  // Index everything by timestamp
+  resim::time::proto::pack(
+      time::Timestamp(std::chrono::seconds(0)),
+      metric_values->mutable_timestamp());
+  indexed_double_data->mutable_array()
+      ->mutable_indexed_doubles()
+      ->set_index_type(MetricsDataType::TIMESTAMP_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      timestamp_data_id,
+      indexed_double_data->mutable_array()
+          ->mutable_indexed_doubles()
+          ->mutable_index_id()
+          ->mutable_data_id());
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->set_index_type(MetricsDataType::TIMESTAMP_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      timestamp_data_id,
+      indexed_status_data->mutable_array()
+          ->mutable_indexed_statuses()
+          ->mutable_index_id()
+          ->mutable_data_id());
+
+  // Check validation passes
+  resim::metrics::proto::validate_job_metrics_proto(job_metrics);
+  metric_values->clear_timestamp();
+
+  // Index both data and statuses by actor ID
+  resim::proto::pack(
+      actor_one_id,
+      metric_values->mutable_actor_id()->mutable_actor_id());
+  indexed_double_data->mutable_array()
+      ->mutable_indexed_doubles()
+      ->set_index_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      actor_data_id,
+      indexed_double_data->mutable_array()
+          ->mutable_indexed_doubles()
+          ->mutable_index_id()
+          ->mutable_data_id());
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->set_index_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      actor_data_id,
+      indexed_status_data->mutable_array()
+          ->mutable_indexed_statuses()
+          ->mutable_index_id()
+          ->mutable_data_id());
+
+  // Check validation passes
+  resim::metrics::proto::validate_job_metrics_proto(job_metrics);
+  metric_values->clear_actor_id();
+
+  // Index doubles by ID and statuses by timestamp
+  resim::time::proto::pack(
+      time::Timestamp(std::chrono::seconds(0)),
+      metric_values->mutable_timestamp());
+  indexed_double_data->mutable_array()
+      ->mutable_indexed_doubles()
+      ->set_index_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      actor_data_id,
+      indexed_double_data->mutable_array()
+          ->mutable_indexed_doubles()
+          ->mutable_index_id()
+          ->mutable_data_id());
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->set_index_type(MetricsDataType::TIMESTAMP_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      timestamp_data_id,
+      indexed_status_data->mutable_array()
+          ->mutable_indexed_statuses()
+          ->mutable_index_id()
+          ->mutable_data_id());
+
+  // Validation should fail, as types don't match
+  EXPECT_THROW(
+      resim::metrics::proto::validate_job_metrics_proto(job_metrics),
+      AssertException);
+  metric_values->clear_timestamp();
+
+  // Index statuses and data by ID, but provide an array index
+  metric_values->set_array_index(1);
+  indexed_double_data->mutable_array()
+      ->mutable_indexed_doubles()
+      ->set_index_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      actor_data_id,
+      indexed_double_data->mutable_array()
+          ->mutable_indexed_doubles()
+          ->mutable_index_id()
+          ->mutable_data_id());
+  indexed_status_data->mutable_array()
+      ->mutable_indexed_statuses()
+      ->set_index_type(MetricsDataType::ACTOR_ID_ARRAY_DATA_TYPE);
+  resim::proto::pack(
+      actor_data_id,
+      indexed_status_data->mutable_array()
+          ->mutable_indexed_statuses()
+          ->mutable_index_id()
+          ->mutable_data_id());
+
+  // Validation should fail, as types don't match
+  EXPECT_THROW(
+      resim::metrics::proto::validate_job_metrics_proto(job_metrics),
+      AssertException);
+  metric_values->clear_timestamp();
+}
+
 }  // namespace resim::metrics::proto
