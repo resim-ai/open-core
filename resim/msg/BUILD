@@ -6,6 +6,7 @@
 load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 ################################################################################
 # Protos
@@ -21,6 +22,13 @@ proto_library(
 
 cc_proto_library(
     name = "header_proto_cc",
+    deps = [
+        ":header_proto",
+    ],
+)
+
+py_proto_library(
+    name = "header_proto_py",
     deps = [
         ":header_proto",
     ],
@@ -42,6 +50,13 @@ cc_proto_library(
     ],
 )
 
+py_proto_library(
+    name = "transform_proto_py",
+    deps = [
+        ":transform_proto",
+    ],
+)
+
 proto_library(
     name = "pose_proto",
     srcs = ["pose.proto"],
@@ -52,6 +67,13 @@ proto_library(
 
 cc_proto_library(
     name = "pose_proto_cc",
+    deps = [
+        ":pose_proto",
+    ],
+)
+
+py_proto_library(
+    name = "pose_proto_py",
     deps = [
         ":pose_proto",
     ],
@@ -73,6 +95,13 @@ cc_proto_library(
     ],
 )
 
+py_proto_library(
+    name = "odometry_proto_py",
+    deps = [
+        ":odometry_proto",
+    ],
+)
+
 proto_library(
     name = "detection_proto",
     srcs = ["detection.proto"],
@@ -89,6 +118,13 @@ cc_proto_library(
     ],
 )
 
+py_proto_library(
+    name = "detection_proto_py",
+    deps = [
+        ":detection_proto",
+    ],
+)
+
 proto_library(
     name = "navsat_proto",
     srcs = ["navsat.proto"],
@@ -99,6 +135,13 @@ proto_library(
 
 cc_proto_library(
     name = "navsat_proto_cc",
+    deps = [
+        ":navsat_proto",
+    ],
+)
+
+py_proto_library(
+    name = "navsat_proto_py",
     deps = [
         ":navsat_proto",
     ],

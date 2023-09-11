@@ -98,7 +98,7 @@ bool verify_equality(const Odometry &a, const Odometry &b) {
 
 bool verify_equality(const Detection3D &a, const Detection3D &b) {
   return verify_equality(a.header(), b.header()) and
-         verify_equality(a.bbox(), b.bbox());
+         verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
 }
 
 bool verify_equality(const Detection3DArray &a, const Detection3DArray &b) {

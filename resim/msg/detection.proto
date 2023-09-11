@@ -19,8 +19,7 @@ message Detection3D {
     //
     resim.geometry.proto.OrientedBoxSE3 bbox = 3;
 
-    // TODO(mikebauer) Add source_cloud field when we need it to match ROS
-    // vision_msgs::msg::Detection3D message.
+    string id = 4;
 }
 
 message Detection3DArray {
