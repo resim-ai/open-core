@@ -147,6 +147,28 @@ Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
 }
 
 template <typename Rng>
+BoundingBox2D random_element(
+    TypeTag<BoundingBox2D> /*unused*/,
+    InOut<Rng> rng) {
+  BoundingBox2D result;
+  result.set_center_x(random_element<double>(rng));
+  result.set_center_y(random_element<double>(rng));
+  result.set_theta_rad(random_element<double>(rng));
+  result.set_size_x(random_element<double>(rng));
+  result.set_size_y(random_element<double>(rng));
+  return result;
+}
+
+template <typename Rng>
+Detection2D random_element(TypeTag<Detection2D> /*unused*/, InOut<Rng> rng) {
+  Detection2D result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+  result.mutable_bbox()->CopyFrom(random_element<BoundingBox2D>(rng));
+  result.set_id(UUID::new_uuid().to_string());
+  return result;
+}
+
+template <typename Rng>
 NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
   constexpr std::array STATUSES = {
       NavSatFix::STATUS_NO_FIX,
@@ -200,6 +222,10 @@ bool verify_equality(
 bool verify_equality(const Odometry &a, const Odometry &b);
 
 bool verify_equality(const Detection3D &a, const Detection3D &b);
+
+bool verify_equality(const BoundingBox2D &a, const BoundingBox2D &b);
+
+bool verify_equality(const Detection2D &a, const Detection2D &b);
 
 bool verify_equality(const NavSatFix &a, const NavSatFix &b);
 

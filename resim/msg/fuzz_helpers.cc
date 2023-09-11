@@ -101,6 +101,19 @@ bool verify_equality(const Detection3D &a, const Detection3D &b) {
          verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
 }
 
+bool verify_equality(const BoundingBox2D &a, const BoundingBox2D &b) {
+  return resim::verify_equality(a.center_x(), b.center_x()) and
+         resim::verify_equality(a.center_y(), b.center_y()) and
+         resim::verify_equality(a.theta_rad(), b.theta_rad()) and
+         resim::verify_equality(a.size_x(), b.size_x()) and
+         resim::verify_equality(a.size_y(), b.size_y());
+}
+
+bool verify_equality(const Detection2D &a, const Detection2D &b) {
+  return verify_equality(a.header(), b.header()) and
+         verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
+}
+
 bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
   constexpr int COV_DIM = 9;
   for (int ii = 0; ii < COV_DIM; ++ii) {
@@ -117,5 +130,4 @@ bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
          resim::verify_equality(a.altitude_m(), b.altitude_m()) and
          a.position_covariance_type() == b.position_covariance_type();
 }
-
 }  // namespace resim::msg

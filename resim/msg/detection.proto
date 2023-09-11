@@ -21,3 +21,22 @@ message Detection3D {
 
     string id = 4;
 }
+
+message BoundingBox2D {
+    double center_x  = 1;
+    double center_y  = 2;
+    double theta_rad = 3;
+    double size_x    = 4;
+    double size_y    = 5;
+}
+
+message Detection2D {
+    Header header = 1;
+
+    // TODO(mikebauer) Add results field when we need it to match ROS
+    // vision_msgs::msg::Detection2D message.
+    //
+    BoundingBox2D bbox = 3;
+
+    string id = 4;
+}
