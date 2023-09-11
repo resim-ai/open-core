@@ -169,6 +169,42 @@ Detection2D random_element(TypeTag<Detection2D> /*unused*/, InOut<Rng> rng) {
 }
 
 template <typename Rng>
+Detection3DArray random_element(
+    TypeTag<Detection3DArray> /*unused*/,
+    InOut<Rng> rng) {
+  Detection3DArray result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+
+  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MAX_ELEMENTS = 10;
+  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
+  const int num_elements = dist(*rng);
+  for (int ii = 0; ii < num_elements; ++ii) {
+    result.add_detections()->CopyFrom(random_element<Detection3D>(rng));
+  }
+
+  return result;
+}
+
+template <typename Rng>
+Detection2DArray random_element(
+    TypeTag<Detection2DArray> /*unused*/,
+    InOut<Rng> rng) {
+  Detection2DArray result;
+  result.mutable_header()->CopyFrom(random_element<Header>(rng));
+
+  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MAX_ELEMENTS = 10;
+  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
+  const int num_elements = dist(*rng);
+  for (int ii = 0; ii < num_elements; ++ii) {
+    result.add_detections()->CopyFrom(random_element<Detection2D>(rng));
+  }
+
+  return result;
+}
+
+template <typename Rng>
 NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
   constexpr std::array STATUSES = {
       NavSatFix::STATUS_NO_FIX,
@@ -226,6 +262,10 @@ bool verify_equality(const Detection3D &a, const Detection3D &b);
 bool verify_equality(const BoundingBox2D &a, const BoundingBox2D &b);
 
 bool verify_equality(const Detection2D &a, const Detection2D &b);
+
+bool verify_equality(const Detection3DArray &a, const Detection3DArray &b);
+
+bool verify_equality(const Detection2DArray &a, const Detection2DArray &b);
 
 bool verify_equality(const NavSatFix &a, const NavSatFix &b);
 

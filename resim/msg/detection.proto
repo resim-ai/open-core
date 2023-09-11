@@ -40,3 +40,13 @@ message Detection2D {
 
     string id = 4;
 }
+
+message Detection3DArray {
+    Header               header     = 1;
+    repeated Detection3D detections = 2;
+}
+
+message Detection2DArray {
+    Header               header     = 1;
+    repeated Detection2D detections = 2;
+}
