@@ -25,9 +25,12 @@
 
 namespace resim::metrics::proto {
 
+namespace {
+
 class MetricsProtoTest : public ::testing::Test {
  public:
-  static std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> runfiles;
+  static std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles>
+      runfiles;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
  protected:
   static void SetUpTestSuite() {
@@ -42,10 +45,15 @@ class MetricsProtoTest : public ::testing::Test {
   }
 };
 
-std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles>
-    MetricsProtoTest::runfiles;
+std::unique_ptr<bazel::tools::cpp::runfiles::Runfiles> MetricsProtoTest::
+    runfiles;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-JobMetrics read_metrics_json(std::string metrics_path) {
+constexpr double ONE = 1.0;
+constexpr double TWO = 2.0;
+constexpr int INVALID_ENUM = 100000;
+}  // namespace
+
+JobMetrics read_metrics_json(const std::string& metrics_path) {
   std::string metrics_file_path =
       MetricsProtoTest::runfiles->Rlocation(metrics_path);
   REASSERT(
@@ -107,8 +115,8 @@ TEST_F(MetricsProtoTest, TestInvalidMetricsDataType) {
   double_data->set_length(2);
   double_data->set_name("Doubles");
   double_data->set_is_per_actor(false);
-  double_data->mutable_array()->mutable_doubles()->add_doubles(1.0);
-  double_data->mutable_array()->mutable_doubles()->add_doubles(2.0);
+  double_data->mutable_array()->mutable_doubles()->add_doubles(ONE);
+  double_data->mutable_array()->mutable_doubles()->add_doubles(TWO);
 
   // Test double data validates when type is correct
   validate_metrics_data_proto(
@@ -336,7 +344,7 @@ TEST_F(MetricsProtoTest, InvalidDataTypes) {
       AssertException);
 
   // Should not validate with invalid type
-  timestamp_data->set_data_type(static_cast<MetricsDataType>(100000));
+  timestamp_data->set_data_type(static_cast<MetricsDataType>(INVALID_ENUM));
   EXPECT_THROW(
       validate_metrics_data_proto(
           *timestamp_data,
@@ -361,7 +369,7 @@ TEST_F(MetricsProtoTest, InvalidMetricTypes) {
   double_data->set_length(1);
   double_data->set_name("Doubles");
   double_data->set_is_per_actor(false);
-  double_data->mutable_array()->mutable_doubles()->add_doubles(1.0);
+  double_data->mutable_array()->mutable_doubles()->add_doubles(ONE);
 
   // Make some status data
   auto* status_data = job_metrics.add_metrics_data();
@@ -407,7 +415,7 @@ TEST_F(MetricsProtoTest, InvalidMetricTypes) {
   EXPECT_THROW(validate_job_metrics_proto(job_metrics), AssertException);
 
   // Should not validate with an invalid type
-  metric->set_type(static_cast<MetricType>(1000000));
+  metric->set_type(static_cast<MetricType>(INVALID_ENUM));
   EXPECT_THROW(validate_job_metrics_proto(job_metrics), AssertException);
 }
 
@@ -447,7 +455,7 @@ TEST_F(MetricsProtoTest, ValidatePerActorData) {
       double_data_id,
       actor_one_data->mutable_parent_id()->mutable_data_id());
   actor_one_data->set_length(1);
-  actor_one_data->mutable_array()->mutable_doubles()->add_doubles(1.0);
+  actor_one_data->mutable_array()->mutable_doubles()->add_doubles(ONE);
 
   auto* actor_two_data =
       double_data->mutable_per_actor_data()->add_actor_data();
@@ -458,7 +466,7 @@ TEST_F(MetricsProtoTest, ValidatePerActorData) {
       double_data_id,
       actor_two_data->mutable_parent_id()->mutable_data_id());
   actor_two_data->set_length(1);
-  actor_two_data->mutable_array()->mutable_doubles()->add_doubles(2.0);
+  actor_two_data->mutable_array()->mutable_doubles()->add_doubles(TWO);
 
   // Per actor data should validate
   resim::metrics::proto::validate_metrics_data_proto(
@@ -575,9 +583,9 @@ TEST_F(MetricsProtoTest, IndexedDoubleSummaries) {
   indexed_double_data->set_name("Doubles");
   indexed_double_data->set_is_per_actor(false);
   indexed_double_data->mutable_array()->mutable_indexed_doubles()->add_doubles(
-      1.0);
+      ONE);
   indexed_double_data->mutable_array()->mutable_indexed_doubles()->add_doubles(
-      2.0);
+      TWO);
 
   // Make some indexed status data
   auto* indexed_status_data = job_metrics.add_metrics_data();

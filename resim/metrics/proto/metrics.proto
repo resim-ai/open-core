@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
@@ -116,7 +115,7 @@ message PerActorData {
 }
 
 message ActorData {
-    ActorId actor_id        = 1;
+    ActorId actor_id  = 1;
     DataId  parent_id = 2;
     uint32  length    = 3;
 
@@ -151,21 +150,21 @@ enum MetricStatus {
 }
 
 enum MetricImportance {
-    NO_IMPORTANCE = 0;
-    LOW_IMPORTANCE = 1;
-    MEDIUM_IMPORTANCE = 2;
-    HIGH_IMPORTANCE = 3;
+    NO_IMPORTANCE       = 0;
+    LOW_IMPORTANCE      = 1;
+    MEDIUM_IMPORTANCE   = 2;
+    HIGH_IMPORTANCE     = 3;
     CRITICAL_IMPORTANCE = 4;
 }
 
 // The type of a metric
 enum MetricType {
-    NO_METRIC_TYPE       = 0;
-    DOUBLE_SUMMARY       = 1;
-    DOUBLE_OVER_TIME     = 2;
-    LINE_PLOT            = 3;
-    BAR_CHART            = 4;
-    STATES_OVER_TIME     = 5;
+    NO_METRIC_TYPE   = 0;
+    DOUBLE_SUMMARY   = 1;
+    DOUBLE_OVER_TIME = 2;
+    LINE_PLOT        = 3;
+    BAR_CHART        = 4;
+    STATES_OVER_TIME = 5;
 }
 
 message MetricId {
@@ -176,8 +175,9 @@ message JobId {
     resim.proto.UUID job_id = 1;
 }
 
-// All metrics associated with a given job - metrics may not necessarily be stored in this object, 
-// but this object can be used to represent a single overall job.
+// All metrics associated with a given job - metrics may not necessarily be
+// stored in this object, but this object can be used to represent a single
+// overall job.
 message JobMetrics {
     JobId job_id = 1;
 
@@ -187,7 +187,7 @@ message JobMetrics {
 
     repeated MetricId metrics_ids = 4;
 
-    repeated MetricId failed_metrics  = 5;
+    repeated MetricId failed_metrics = 5;
 
     repeated MetricsData metrics_data = 6;
 }
@@ -221,17 +221,17 @@ message Metric {
     MetricImportance importance = 9;
 
     oneof parent_id {
-        JobId   job_id       = 10;
+        JobId job_id = 10;
     }
 }
 
 message MetricValues {
     oneof metric_values {
-        DoubleSummaryMetricValues     double_metric_values               = 1;
-        DoubleOverTimeMetricValues    double_over_time_metric_values     = 2;
-        LinePlotMetricValues          line_plot_metric_values            = 3;
-        BarChartMetricValues          bar_chart_metric_values            = 4;
-        StatesOverTimeMetricValues    states_over_time_metric_values     = 5;
+        DoubleSummaryMetricValues  double_metric_values           = 1;
+        DoubleOverTimeMetricValues double_over_time_metric_values = 2;
+        LinePlotMetricValues       line_plot_metric_values        = 3;
+        BarChartMetricValues       bar_chart_metric_values        = 4;
+        StatesOverTimeMetricValues states_over_time_metric_values = 5;
     }
 }
 

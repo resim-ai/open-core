@@ -14,7 +14,7 @@ namespace resim::metrics::proto {
 using MetricsDataMap = std::unordered_map<resim::UUID, MetricsData>;
 
 MetricsDataMap build_metrics_data_map(
-    const google::protobuf::RepeatedPtrField<MetricsData> metrics_data);
+    const google::protobuf::RepeatedPtrField<MetricsData>& metrics_data);
 
 void validate_job_metrics_proto(const JobMetrics& job_metrics_msg);
 
@@ -25,7 +25,7 @@ void validate_job_metrics_proto(
 void validate_metric_proto(const Metric& metric_msg, const MetricsDataMap& map);
 
 void validate_metrics_data_proto(
-    const MetricsData& metric_data_msg,
+    const MetricsData& metrics_data_msg,
     const MetricsDataMap& map);
 
 }  // namespace resim::metrics::proto

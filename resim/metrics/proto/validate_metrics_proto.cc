@@ -378,36 +378,47 @@ void validate_array_proto(
 }
 
 void validate_metrics_data_proto(
-    const MetricsData& data,
+    const MetricsData& metrics_data_msg,
     const MetricsDataMap& map) {
-  REASSERT(data.has_id());
-  if (data.is_per_actor()) {
-    REASSERT(data.has_per_actor_data());
-    REASSERT(not data.has_array());
-    REASSERT(data.actor_ids_size() == data.per_actor_data().actor_data_size());
+  REASSERT(metrics_data_msg.has_id());
+  if (metrics_data_msg.is_per_actor()) {
+    REASSERT(metrics_data_msg.has_per_actor_data());
+    REASSERT(not metrics_data_msg.has_array());
+    REASSERT(
+        metrics_data_msg.actor_ids_size() ==
+        metrics_data_msg.per_actor_data().actor_data_size());
     std::unordered_set<UUID> actor_ids;
-    for (auto iter = data.actor_ids().begin(); iter < data.actor_ids().end();
+    for (auto iter = metrics_data_msg.actor_ids().begin();
+         iter < metrics_data_msg.actor_ids().end();
          ++iter) {
       UUID actor_id = resim::proto::unpack(iter->actor_id());
       REASSERT(!actor_ids.contains(actor_id), "Repeat actor ID");
       actor_ids.insert(actor_id);
     }
 
-    for (auto iter = data.per_actor_data().actor_data().begin();
-         iter < data.per_actor_data().actor_data().end();
+    for (auto iter = metrics_data_msg.per_actor_data().actor_data().begin();
+         iter < metrics_data_msg.per_actor_data().actor_data().end();
          ++iter) {
       REASSERT(iter->has_actor_id());
       REASSERT(actor_ids.contains(
           resim::proto::unpack(iter->actor_id().actor_id())));
       REASSERT(
           resim::proto::unpack(iter->parent_id().data_id()) ==
-          resim::proto::unpack(data.id().data_id()));
-      validate_array_proto(iter->array(), data.data_type(), data.length(), map);
+          resim::proto::unpack(metrics_data_msg.id().data_id()));
+      validate_array_proto(
+          iter->array(),
+          metrics_data_msg.data_type(),
+          metrics_data_msg.length(),
+          map);
     }
   } else {
-    REASSERT(not data.has_per_actor_data());
-    REASSERT(data.has_array());
-    validate_array_proto(data.array(), data.data_type(), data.length(), map);
+    REASSERT(not metrics_data_msg.has_per_actor_data());
+    REASSERT(metrics_data_msg.has_array());
+    validate_array_proto(
+        metrics_data_msg.array(),
+        metrics_data_msg.data_type(),
+        metrics_data_msg.length(),
+        map);
   }
 }
 
@@ -469,7 +480,7 @@ void validate_job_metrics_proto(
 }
 
 MetricsDataMap build_metrics_data_map(
-    const google::protobuf::RepeatedPtrField<MetricsData> metrics_data) {
+    const google::protobuf::RepeatedPtrField<MetricsData>& metrics_data) {
   MetricsDataMap map{};
   for (auto iter = metrics_data.begin(); iter < metrics_data.end(); ++iter) {
     REASSERT(iter->has_id());
