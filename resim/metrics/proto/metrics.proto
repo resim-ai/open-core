@@ -115,10 +115,8 @@ message ArrayPerCategory {
 }
 
 message CategorizedArray {
-    string category_name  = 1;
-    DataId parent_data_id = 2;
-
-    DataId array_id = 3;
+    string category_name = 1;
+    DataId array_id      = 2;
 }
 
 message MetricsData {
@@ -127,12 +125,15 @@ message MetricsData {
     string          name      = 4;
     string          unit      = 5;
 
+    // These fields are not set if not per-category:
     bool            is_per_category = 6;
-    repeated string category_names  = 7;  // empty if not per_category
+    repeated string category_names  = 7;
+    DataId          parent_data_id  = 8;
 
+    // Data fields
     oneof data {
-        Array            array              = 8;
-        ArrayPerCategory array_per_category = 9;
+        Array            array              = 9;
+        ArrayPerCategory array_per_category = 10;
     }
 }
 
