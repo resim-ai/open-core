@@ -253,9 +253,12 @@ message DoubleSummaryMetricValues {
 
         // Optional select actor from data
         ActorId actor_id = 5;
+
+        // Optional select string from data
+        string string_index = 6;
     }
 
-    DoubleFailureDefinition failure_definition = 6;
+    DoubleFailureDefinition failure_definition = 7;
 }
 
 message DoubleOverTimeMetricValues {

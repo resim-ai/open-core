@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 proto_library(
     name = "simple_metric_proto",
@@ -107,4 +108,10 @@ cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_google_protobuf//:protobuf",
     ],
+)
+
+py_proto_library(
+    name = "metrics_proto_py",
+    visibility = ["//visibility:public"],
+    deps = [":metrics_proto"],
 )
