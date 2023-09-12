@@ -110,31 +110,29 @@ message Array {
     }
 }
 
-message PerActorData {
-    repeated ActorData actor_data = 1;
+message ArrayPerCategory {
+    repeated CategorizedArray categorized_arrays = 1;
 }
 
-message ActorData {
-    ActorId actor_id  = 1;
-    DataId  parent_id = 2;
-    uint32  length    = 3;
+message CategorizedArray {
+    string category_name  = 1;
+    DataId parent_data_id = 2;
 
-    Array array = 4;
+    DataId array_id = 3;
 }
 
 message MetricsData {
-    DataId          id           = 1;
-    MetricsDataType data_type    = 2;
-    uint32          length       = 3;  // not sure if needed
-    string          name         = 4;
-    string          unit         = 5;
-    bool            is_per_actor = 6;
+    DataId          id        = 1;
+    MetricsDataType data_type = 2;
+    string          name      = 4;
+    string          unit      = 5;
 
-    repeated ActorId actor_ids = 7;  // empty if not per-actor
+    bool            is_per_category = 6;
+    repeated string category_names  = 7;  // empty if not per_category
 
     oneof data {
-        Array        array          = 8;
-        PerActorData per_actor_data = 9;
+        Array            array              = 8;
+        ArrayPerCategory array_per_category = 9;
     }
 }
 
