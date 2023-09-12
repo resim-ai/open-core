@@ -40,55 +40,55 @@ message DataId {
 }
 
 message DoubleArray {
-    repeated double doubles = 1;
+    repeated double array = 1;
 }
 
 message TimestampArray {
-    repeated google.protobuf.Timestamp timestamps = 1;
+    repeated google.protobuf.Timestamp array = 1;
 }
 
 message ActorIdArray {
-    repeated ActorId actor_ids = 1;
+    repeated ActorId array = 1;
 }
 
 message StringArray {
-    repeated string strings = 1;
+    repeated string array = 1;
 }
 
 message MetricStatusArray {
-    repeated MetricStatus statuses = 1;
+    repeated MetricStatus array = 1;
 }
 
 message IndexedDoubleArray {
-    repeated double doubles = 1;
+    repeated double array = 1;
 
     DataId          index_id   = 2;
     MetricsDataType index_type = 3;
 }
 
 message IndexedTimestampArray {
-    repeated google.protobuf.Timestamp timestamps = 1;
+    repeated google.protobuf.Timestamp array = 1;
 
     DataId          index_id   = 2;
     MetricsDataType index_type = 3;
 }
 
 message IndexedActorIdArray {
-    repeated ActorId actor_ids = 1;
+    repeated ActorId array = 1;
 
     DataId          index_id   = 2;
     MetricsDataType index_type = 3;
 }
 
 message IndexedStringArray {
-    repeated string strings = 1;
+    repeated string array = 1;
 
     DataId          index_id   = 2;
     MetricsDataType index_type = 3;
 }
 
 message IndexedMetricStatusArray {
-    repeated MetricStatus statuses = 1;
+    repeated MetricStatus array = 1;
 
     DataId          index_id   = 2;
     MetricsDataType index_type = 3;
