@@ -284,14 +284,16 @@ message LinePlotMetricValues {
 }
 
 message BarChartMetricValues {
-    repeated DataId values_data_id   = 1;  // DOUBLE_ARRAY_DATA_TYPE
-    repeated DataId statuses_data_id = 2;  // METRIC_STATUS_ARRAY_DATA_TYPE
+    repeated DataId values_data_id =
+        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by STRING
+    repeated DataId statuses_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by STRING
 
-    repeated string axis_labels  = 3;
-    repeated string stack_labels = 4;
+    repeated string legend_series_names =
+        3;  // One name per INDEXED_DOUBLE_ARRAY
 
-    optional string x_axis_name = 5;
-    optional string y_axis_name = 6;
+    optional string x_axis_name = 4;
+    optional string y_axis_name = 5;
 }
 
 message StatesOverTimeMetricValues {
