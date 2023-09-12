@@ -142,28 +142,29 @@ message MetricsData {
 // ---------------------
 
 enum MetricStatus {
-    NO_METRIC_STATUS = 0;
-    PASSED           = 1;
-    FAILED           = 2;
-    NOT_APPLICABLE   = 3;
+    NO_METRIC_STATUS             = 0;
+    PASSED_METRIC_STATUS         = 1;
+    FAILED_METRIC_STATUS         = 2;
+    NOT_APPLICABLE_METRIC_STATUS = 3;
 }
 
 enum MetricImportance {
-    NO_IMPORTANCE       = 0;
-    LOW_IMPORTANCE      = 1;
-    MEDIUM_IMPORTANCE   = 2;
-    HIGH_IMPORTANCE     = 3;
-    CRITICAL_IMPORTANCE = 4;
+    NO_SPECIFIED_IMPORTANCE = 0;
+    ZERO_IMPORTANCE         = 1;
+    LOW_IMPORTANCE          = 2;
+    MEDIUM_IMPORTANCE       = 3;
+    HIGH_IMPORTANCE         = 4;
+    CRITICAL_IMPORTANCE     = 5;
 }
 
 // The type of a metric
 enum MetricType {
-    NO_METRIC_TYPE   = 0;
-    DOUBLE_SUMMARY   = 1;
-    DOUBLE_OVER_TIME = 2;
-    LINE_PLOT        = 3;
-    BAR_CHART        = 4;
-    STATES_OVER_TIME = 5;
+    NO_METRIC_TYPE               = 0;
+    DOUBLE_SUMMARY_METRIC_TYPE   = 1;
+    DOUBLE_OVER_TIME_METRIC_TYPE = 2;
+    LINE_PLOT_METRIC_TYPE        = 3;
+    BAR_CHART_METRIC_TYPE        = 4;
+    STATES_OVER_TIME_METRIC_TYPE = 5;
 }
 
 message MetricId {
