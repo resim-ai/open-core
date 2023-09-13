@@ -20,23 +20,19 @@ enum MetricsDataType {
 
     DOUBLE_ARRAY_DATA_TYPE        = 1;
     TIMESTAMP_ARRAY_DATA_TYPE     = 2;
-    ACTOR_ID_ARRAY_DATA_TYPE      = 3;
+    UUID_ARRAY_DATA_TYPE          = 3;
     STRING_ARRAY_DATA_TYPE        = 4;
     METRIC_STATUS_ARRAY_DATA_TYPE = 5;
 
     INDEXED_DOUBLE_ARRAY_DATA_TYPE        = 6;
     INDEXED_TIMESTAMP_ARRAY_DATA_TYPE     = 7;
-    INDEXED_ACTOR_ID_ARRAY_DATA_TYPE      = 8;
+    INDEXED_UUID_ARRAY_DATA_TYPE          = 8;
     INDEXED_STRING_ARRAY_DATA_TYPE        = 9;
     INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE = 10;
 }
 
-message ActorId {
-    resim.proto.UUID actor_id = 1;
-}
-
-message DataId {
-    resim.proto.UUID data_id = 1;
+message MetricsDataId {
+    resim.proto.UUID id = 1;
 }
 
 message DoubleArray {
@@ -47,8 +43,8 @@ message TimestampArray {
     repeated google.protobuf.Timestamp array = 1;
 }
 
-message ActorIdArray {
-    repeated ActorId array = 1;
+message UUIDArray {
+    repeated resim.proto.UUID array = 1;
 }
 
 message StringArray {
@@ -59,54 +55,13 @@ message MetricStatusArray {
     repeated MetricStatus array = 1;
 }
 
-message IndexedDoubleArray {
-    repeated double array = 1;
-
-    DataId          index_id   = 2;
-    MetricsDataType index_type = 3;
-}
-
-message IndexedTimestampArray {
-    repeated google.protobuf.Timestamp array = 1;
-
-    DataId          index_id   = 2;
-    MetricsDataType index_type = 3;
-}
-
-message IndexedActorIdArray {
-    repeated ActorId array = 1;
-
-    DataId          index_id   = 2;
-    MetricsDataType index_type = 3;
-}
-
-message IndexedStringArray {
-    repeated string array = 1;
-
-    DataId          index_id   = 2;
-    MetricsDataType index_type = 3;
-}
-
-message IndexedMetricStatusArray {
-    repeated MetricStatus array = 1;
-
-    DataId          index_id   = 2;
-    MetricsDataType index_type = 3;
-}
-
 message Array {
     oneof array {
         DoubleArray       doubles    = 1;
         TimestampArray    timestamps = 2;
-        ActorIdArray      actor_ids  = 3;
+        UUIDArray         uuids      = 3;
         StringArray       strings    = 4;
         MetricStatusArray statuses   = 5;
-
-        IndexedDoubleArray       indexed_doubles    = 6;
-        IndexedTimestampArray    indexed_timestamps = 7;
-        IndexedActorIdArray      indexed_actor_ids  = 8;
-        IndexedStringArray       indexed_strings    = 9;
-        IndexedMetricStatusArray indexed_statuses   = 10;
     }
 }
 
@@ -115,25 +70,31 @@ message ArrayPerCategory {
 }
 
 message CategorizedArray {
-    string category_name = 1;
-    DataId array_id      = 2;
+    string        category_name          = 1;
+    Array         array                  = 2;
+    MetricsDataId parent_metrics_data_id = 3;
 }
 
 message MetricsData {
-    DataId          id        = 1;
-    MetricsDataType data_type = 2;
-    string          name      = 4;
-    string          unit      = 5;
+    // Generic metrics data fields
+    MetricsDataId   metrics_data_id = 1;
+    MetricsDataType data_type       = 2;
+    string          name            = 3;
+    string          unit            = 4;
 
-    // These fields are not set if not per-category:
-    bool            is_per_category = 6;
-    repeated string category_names  = 7;
-    DataId          parent_data_id  = 8;
+    // Fields for categorized data only
+    bool            is_per_category = 5;
+    repeated string category_names  = 6;
+
+    // Fields for indexed data only
+    bool            is_indexed      = 7;
+    MetricsDataId   index_data_id   = 8;
+    MetricsDataType index_data_type = 9;
 
     // Data fields
     oneof data {
-        Array            array              = 9;
-        ArrayPerCategory array_per_category = 10;
+        Array            array              = 10;
+        ArrayPerCategory array_per_category = 112;
     }
 }
 
@@ -168,41 +129,42 @@ enum MetricType {
 }
 
 message MetricId {
-    resim.proto.UUID metric_id = 1;
+    resim.proto.UUID id = 1;
 }
 
 message JobId {
-    resim.proto.UUID job_id = 1;
+    resim.proto.UUID id = 1;
 }
 
-// All metrics associated with a given job - metrics may not necessarily be
-// stored in this object, but this object can be used to represent a single
-// overall job.
+// All metrics  associated with a given job.
+// This is the type output by metrics scripts for validation.
 message JobMetrics {
     JobId job_id = 1;
 
-    MetricCollection job_metrics = 2;
+    MetricCollection job_level_metrics = 2;
 
     MetricStatus metrics_status = 3;
 
-    repeated MetricId metrics_ids = 4;
+    repeated MetricsData metrics_data = 4;
 
-    repeated MetricId failed_metrics = 5;
+    repeated MetricId metrics_ids = 5;
 
-    repeated MetricsData metrics_data = 6;
+    repeated MetricsDataId metrics_data_ids = 6;
 }
 
-// Top level generic metric collection
+// Top-level generic metric collection within JobMetrics
+//
+// This is separated out in order to allow metrics that are specifically
+// associated with batches, or lower-level constructs like actors, which may
+// (for example) PASS, even though the job FAILS.
 message MetricCollection {
     repeated Metric metrics = 1;
 
-    repeated MetricId failed_metrics = 2;
-
-    MetricStatus metrics_status = 3;
+    MetricStatus metrics_status = 2;
 }
 
 message Metric {
-    MetricId id = 1;
+    MetricId metric_id = 1;
 
     string name = 2;
 
@@ -241,18 +203,19 @@ message DoubleFailureDefinition {
 }
 
 message DoubleSummaryMetricValues {
-    DataId value_data_id  = 1;
-    DataId status_data_id = 2;
+    MetricsDataId value_data_id = 1;  // DOUBLE array, optionally indexed
+    MetricsDataId status_data_id =
+        2;  // METRIC_STATUS array, optionally indexed
 
     oneof index {
         // Optional select index
         uint32 array_index = 3;
 
         // Optional select timestamp from data
-        google.protobuf.Timestamp timestamp = 4;
+        google.protobuf.Timestamp timestamp_index = 4;
 
         // Optional select actor from data
-        ActorId actor_id = 5;
+        resim.proto.UUID uuid_index = 5;
 
         // Optional select string from data
         string string_index = 6;
@@ -262,10 +225,10 @@ message DoubleSummaryMetricValues {
 }
 
 message DoubleOverTimeMetricValues {
-    repeated DataId double_timestamps_data_id =
+    repeated MetricsDataId doubles_over_time_data_id =
         1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by TIMESTAMP
-    repeated DataId status_timestamps_data_id =
-        2;  // INDEXED_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+    repeated MetricsDataId statuses_over_time_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
 
     repeated DoubleFailureDefinition failure_definition = 3;
     optional google.protobuf.Timestamp start_time       = 4;
@@ -274,19 +237,19 @@ message DoubleOverTimeMetricValues {
 }
 
 message LinePlotMetricValues {
-    repeated DataId x_doubles_data_id = 1;  // DOUBLE_ARRAY_DATA_TYPE
-    repeated DataId y_doubles_data_id = 2;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated MetricsDataId x_doubles_data_id = 1;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated MetricsDataId y_doubles_data_id = 2;  // DOUBLE_ARRAY_DATA_TYPE
 
-    repeated DataId statuses_data_id = 3;
+    repeated MetricsDataId statuses_data_id = 3;
 
     optional string x_axis_name = 4;
     optional string y_axis_name = 5;
 }
 
 message BarChartMetricValues {
-    repeated DataId values_data_id =
+    repeated MetricsDataId values_data_id =
         1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by STRING
-    repeated DataId statuses_data_id =
+    repeated MetricsDataId statuses_data_id =
         2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by STRING
 
     repeated string legend_series_names =
@@ -297,9 +260,10 @@ message BarChartMetricValues {
 }
 
 message StatesOverTimeMetricValues {
-    repeated DataId state_timestamps_data_id =
+    repeated MetricsDataId states_over_time_data_id =
         1;  // INDEXED_STRING_ARRAY_DATA_TYPE, indexed by TIMESTAMP
-    repeated DataId status_timestamps_data_id = 2;
+    repeated MetricsDataId statuses_over_time_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
 
     repeated string states_set     = 3;
     repeated string failure_states = 4;
