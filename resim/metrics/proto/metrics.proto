@@ -70,9 +70,8 @@ message ArrayPerCategory {
 }
 
 message CategorizedArray {
-    string        category_name          = 1;
-    Array         array                  = 2;
-    MetricsDataId parent_metrics_data_id = 3;
+    string category_name = 1;
+    Array  array         = 2;
 }
 
 message MetricsData {
@@ -94,7 +93,7 @@ message MetricsData {
     // Data fields
     oneof data {
         Array            array              = 10;
-        ArrayPerCategory array_per_category = 112;
+        ArrayPerCategory array_per_category = 11;
     }
 }
 
