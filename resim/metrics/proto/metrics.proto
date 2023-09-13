@@ -125,7 +125,7 @@ enum MetricType {
     LINE_PLOT_METRIC_TYPE        = 3;
     BAR_CHART_METRIC_TYPE        = 4;
     STATES_OVER_TIME_METRIC_TYPE = 5;
-    HISTOGRAM_TYPE               = 6;
+    HISTOGRAM_METRIC_TYPE        = 6;
 }
 
 message MetricId {
