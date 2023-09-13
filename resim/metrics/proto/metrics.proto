@@ -125,6 +125,7 @@ enum MetricType {
     LINE_PLOT_METRIC_TYPE        = 3;
     BAR_CHART_METRIC_TYPE        = 4;
     STATES_OVER_TIME_METRIC_TYPE = 5;
+    HISTOGRAM_TYPE               = 6;
 }
 
 message MetricId {
@@ -193,6 +194,7 @@ message MetricValues {
         LinePlotMetricValues       line_plot_metric_values        = 3;
         BarChartMetricValues       bar_chart_metric_values        = 4;
         StatesOverTimeMetricValues states_over_time_metric_values = 5;
+        HistogramMetricValues      histogram_metric_values        = 6;
     }
 }
 
@@ -266,4 +268,23 @@ message StatesOverTimeMetricValues {
 
     repeated string states_set     = 3;
     repeated string failure_states = 4;
+}
+
+message HistogramMetricValues {
+    MetricsDataId values_data_id =
+        1;  // DOUBLE_ARRAY_DATA_TYPE, can be INDEXED but INDEX is ignored.
+    MetricsDataId statuses_data_id = 2;  // METRIC_STATUS_ARRAY_DATA_TYPE, can
+                                         // be INDEXED but INDEX is ignored.
+
+    repeated Bucket buckets = 3;
+
+    double lower_bound = 4;
+    double upper_bound = 5;
+
+    optional string x_axis_name = 6;
+
+    message Bucket {
+        double lower = 1;
+        double upper = 2;
+    }
 }
