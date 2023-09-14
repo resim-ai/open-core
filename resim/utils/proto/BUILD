@@ -48,7 +48,7 @@ cc_proto_library(
 
 go_proto_library(
     name = "uuid_go_proto",
-    importpath = "github.com/resim-ai/protos/uuid_proto",
+    importpath = "github.com/resim-ai/open-core/uuid_proto",
     protos = [":uuid_proto"],
     visibility = ["//visibility:public"],
 )

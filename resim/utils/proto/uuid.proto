@@ -7,7 +7,7 @@
 syntax = "proto3";
 
 package resim.proto;
-option go_package = "github.com/resim-ai/protos/uuid_proto";
+option go_package = "github.com/resim-ai/open-core/uuid_proto";
 
 message UUID {
     string data = 1;

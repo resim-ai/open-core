@@ -72,7 +72,7 @@ cc_proto_library(
 
 go_proto_library(
     name = "metrics_go_proto",
-    importpath = "github.com/resim-ai/protos/metrics_proto",
+    importpath = "github.com/resim-ai/open-core/metrics_proto",
     protos = [":metrics_proto"],
     visibility = ["//visibility:public"],
     deps = [

@@ -17,26 +17,26 @@ jobs:
       uses: bazelbuild/setup-bazelisk@v1
 
     # This assumes you already have rules_go and rules_proto set up
-    - name: Generate Go files from metrics.proto
+    - name: Generate Go files from uuid.proto
       run: bazel build //resim/metrics/proto:metrics_go_proto
       # Replace //path/to:your_proto_go with the actual target in your Bazel BUILD file
 
     - name: Copy generated files to a directory
       run: |
-        mkdir generated_files
-        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/* generated_files/
+        mkdir metrics
+        cp $(bazel info bazel-bin)/resim/utils/proto/uuid_go_proto_/github.com/resim-ai/open_core/* metrics/
+        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/github.com/resim-ai/open-core/* metrics/
 
     - name: Archive generated files
-      run: tar czf metrics-go.tar.gz -C generated_files .
+      run: tar czf metrics-go.tar.gz -C metrics .
 
-    - name: Create Release and Upload Artifact
-      uses: gh-actions/gh-release@master
+    - uses: ncipollo/release-action@v1.12.0
       with:
-        name: Release ${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        draft: false
-        prerelease: false
-        files: |
-          metrics-go.tar.gz
+        tag: ${{ env.GITHUB_REF_NAME }}
+        artifacts: "metrics-go.tar.gz"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Go pkg DB
+      run: curl https://sum.golang.org/lookup/github.com/resim-ai/open-core@$GITHUB_REF_NAME
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}
