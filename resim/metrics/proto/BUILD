@@ -7,6 +7,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_python//python:proto.bzl", "py_proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 proto_library(
     name = "simple_metric_proto",
@@ -67,6 +68,16 @@ cc_proto_library(
     name = "metrics_proto_cc",
     visibility = ["//visibility:public"],
     deps = [":metrics_proto"],
+)
+
+go_proto_library(
+    name = "metrics_go_proto",
+    importpath = "github.com/resim-ai/protos/metrics_proto",
+    protos = [":metrics_proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/utils/proto:uuid_go_proto",
+    ],
 )
 
 cc_library(
