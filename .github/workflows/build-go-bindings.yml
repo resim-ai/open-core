@@ -24,8 +24,8 @@ jobs:
     - name: Copy generated files to a directory
       run: |
         mkdir metrics
-        cp $(bazel info bazel-bin)/resim/utils/proto/uuid_go_proto_/github.com/resim-ai/open-core/* metrics/
-        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/github.com/resim-ai/open-core/* metrics/
+        cp $(bazel info bazel-bin)/resim/utils/proto/uuid_go_proto_/github.com/resim-ai/open-core/uuid_proto/* metrics/
+        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/github.com/resim-ai/open-core/metrics_proto/* metrics/
 
     - name: Archive generated files
       run: tar czf metrics-go.tar.gz -C metrics .
