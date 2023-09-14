@@ -1,39 +1,39 @@
-name: Generate Go from Protobuf and Create Release
+# name: Generate Go from Protobuf and Create Release
 
-on:
-  push:
-    tags:
-      - 'v*'
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 
-jobs:
-  generate-and-release:
-    runs-on: ubuntu-latest
+# jobs:
+#   generate-and-release:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v2
 
-    - name: Setup Bazel
-      uses: bazelbuild/setup-bazelisk@v1
+#     - name: Setup Bazel
+#       uses: bazelbuild/setup-bazelisk@v1
 
-    # This assumes you already have rules_go and rules_proto set up
-    - name: Generate Go files from uuid.proto
-      run: bazel build //resim/metrics/proto:metrics_go_proto
-      # Replace //path/to:your_proto_go with the actual target in your Bazel BUILD file
+#     # This assumes you already have rules_go and rules_proto set up
+#     - name: Generate Go files from uuid.proto
+#       run: bazel build //resim/metrics/proto:metrics_go_proto
+#       # Replace //path/to:your_proto_go with the actual target in your Bazel BUILD file
 
-    - name: Copy generated files to a directory
-      run: |
-        mkdir metrics
-        cp $(bazel info bazel-bin)/resim/utils/proto/uuid_go_proto_/github.com/resim-ai/open-core/uuid_proto/* metrics/
-        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/github.com/resim-ai/open-core/metrics_proto/* metrics/
+#     - name: Copy generated files to a directory
+#       run: |
+#         mkdir metrics
+#         cp $(bazel info bazel-bin)/resim/utils/proto/uuid_go_proto_/github.com/resim-ai/open-core/uuid_proto/* metrics/
+#         cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/github.com/resim-ai/open-core/metrics_proto/* metrics/
 
-    - uses: ncipollo/release-action@v1.12.0
-      with:
-        tag: ${{ env.GITHUB_REF_NAME }}
-        artifacts: "metrics/*"
-        token: ${{ secrets.GITHUB_TOKEN }}
+#     - uses: ncipollo/release-action@v1.12.0
+#       with:
+#         tag: ${{ env.GITHUB_REF_NAME }}
+#         artifacts: "metrics/*"
+#         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Update Go pkg DB
-      run: curl https://sum.golang.org/lookup/github.com/resim-ai/open-core/metrics@$GITHUB_REF_NAME
-      env:
-        GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}
+#     - name: Update Go pkg DB
+#       run: curl https://sum.golang.org/lookup/github.com/resim-ai/open-core/metrics@$GITHUB_REF_NAME
+#       env:
+#         GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}
