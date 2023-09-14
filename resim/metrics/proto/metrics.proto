@@ -126,6 +126,7 @@ enum MetricType {
     BAR_CHART_METRIC_TYPE        = 4;
     STATES_OVER_TIME_METRIC_TYPE = 5;
     HISTOGRAM_METRIC_TYPE        = 6;
+    SCALAR_METRIC_TYPE           = 7;
 }
 
 message MetricId {
@@ -174,11 +175,11 @@ message Metric {
 
     MetricStatus status = 5;
 
-    bool should_display = 6;
+    optional bool should_display = 6;
 
     MetricValues metric_values = 7;
 
-    bool blocking = 8;
+    optional bool blocking = 8;
 
     MetricImportance importance = 9;
 
@@ -195,6 +196,7 @@ message MetricValues {
         BarChartMetricValues       bar_chart_metric_values        = 4;
         StatesOverTimeMetricValues states_over_time_metric_values = 5;
         HistogramMetricValues      histogram_metric_values        = 6;
+        ScalarMetricValues         scalar_metric_values           = 7;
     }
 }
 
@@ -278,13 +280,19 @@ message HistogramMetricValues {
 
     repeated Bucket buckets = 3;
 
-    double lower_bound = 4;
-    double upper_bound = 5;
+    optional double lower_bound = 4;
+    optional double upper_bound = 5;
 
     optional string x_axis_name = 6;
 
     message Bucket {
-        double lower = 1;
-        double upper = 2;
+        optional double lower = 1;
+        optional double upper = 2;
     }
+}
+
+message ScalarMetricValues {
+    optional double value = 1;
+
+    optional DoubleFailureDefinition failure_definition = 2;
 }
