@@ -1,0 +1,42 @@
+name: Generate Go from Protobuf and Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  generate-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Bazel
+      uses: bazelbuild/setup-bazelisk@v1
+
+    # This assumes you already have rules_go and rules_proto set up
+    - name: Generate Go files from metrics.proto
+      run: bazel build //resim/metrics/proto:metrics_go_proto
+      # Replace //path/to:your_proto_go with the actual target in your Bazel BUILD file
+
+    - name: Copy generated files to a directory
+      run: |
+        mkdir generated_files
+        cp $(bazel info bazel-bin)/resim/metrics/proto/metrics_go_proto_/* generated_files/
+
+    - name: Archive generated files
+      run: tar czf metrics-go.tar.gz -C generated_files .
+
+    - name: Create Release and Upload Artifact
+      uses: gh-actions/gh-release@master
+      with:
+        name: Release ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+        files: |
+          metrics-go.tar.gz
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
