@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 cc_library(
     name = "dependency_file_descriptor_set",
@@ -43,6 +44,13 @@ cc_proto_library(
     name = "uuid_proto_cc",
     visibility = ["//visibility:public"],
     deps = [":uuid_proto"],
+)
+
+go_proto_library(
+    name = "uuid_go_proto",
+    importpath = "github.com/resim-ai/protos/uuid_proto",
+    protos = [":uuid_proto"],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

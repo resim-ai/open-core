@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "resim/utils/proto/uuid.proto";
 
 package resim.metrics.proto;
-
+option go_package = "github.com/resim-ai/protos/metrics_proto";
 // -------------------
 // Data Representation
 // -------------------
