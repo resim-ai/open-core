@@ -69,47 +69,6 @@ cc_proto_library(
     deps = [":metrics_proto"],
 )
 
-cc_library(
-    name = "validate_metrics_proto",
-    srcs = ["validate_metrics_proto.cc"],
-    hdrs = ["validate_metrics_proto.hh"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":metrics_proto_cc",
-        "//resim/actor:actor_id",
-        "//resim/assert",
-        "//resim/time:timestamp",
-        "//resim/time/proto:time_to_proto",
-        "//resim/utils:uuid",
-        "//resim/utils/proto:uuid_to_proto",
-        "@com_google_protobuf//:protobuf",
-    ],
-)
-
-filegroup(
-    name = "metrics_json",
-    srcs = ["metrics.json"],
-    visibility = ["//visibility:public"],
-)
-
-cc_test(
-    name = "validate_metrics_proto_test",
-    srcs = ["validate_metrics_proto_test.cc"],
-    data = [
-        ":metrics_json",
-    ],
-    deps = [
-        ":metrics_proto_cc",
-        ":validate_metrics_proto",
-        "//resim/assert",
-        "//resim/time:timestamp",
-        "//resim/time/proto:time_to_proto",
-        "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protobuf",
-    ],
-)
-
 py_proto_library(
     name = "metrics_proto_py",
     visibility = ["//visibility:public"],
