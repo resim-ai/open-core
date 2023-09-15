@@ -23,6 +23,7 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 load("@rules_fuzzing//fuzzing:repositories.bzl", "rules_fuzzing_dependencies")
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+load("@rules_python//python:pip.bzl", "pip_parse")
 load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 
 def resim_core_transitive_dependencies():
@@ -62,4 +63,11 @@ def resim_core_transitive_dependencies():
         name = "rules_ros2_python",
         python_version = "3.10",
         ignore_root_user_error = True,
+    )
+
+    # Create a central repo that knows about the dependencies needed from
+    # requirements_lock.txt.
+    pip_parse(
+        name = "resim_python_deps",
+        requirements_lock = "//:requirements_lock.txt",
     )
