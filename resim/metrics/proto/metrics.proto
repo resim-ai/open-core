@@ -66,31 +66,26 @@ message Array {
 }
 
 message ArrayPerCategory {
-    repeated CategorizedArray categorized_arrays = 1;
-}
-
-message CategorizedArray {
-    string category_name = 1;
-    Array  array         = 2;
+    map<string, Array> category_to_array = 1;
 }
 
 message MetricsData {
-    // Generic metrics data fields
+    // Generic metrics data fields:
     MetricsDataId   metrics_data_id = 1;
     MetricsDataType data_type       = 2;
     string          name            = 3;
     string          unit            = 4;
 
-    // Fields for categorized data only
+    // Fields for categorized data only:
     bool            is_per_category = 5;
     repeated string category_names  = 6;
 
-    // Fields for indexed data only
+    // Fields for indexed data only:
     bool            is_indexed      = 7;
     MetricsDataId   index_data_id   = 8;
     MetricsDataType index_data_type = 9;
 
-    // Data fields
+    // Data fields:
     oneof data {
         Array            array              = 10;
         ArrayPerCategory array_per_category = 11;
@@ -117,7 +112,6 @@ enum MetricImportance {
     CRITICAL_IMPORTANCE     = 5;
 }
 
-// The type of a metric
 enum MetricType {
     NO_METRIC_TYPE               = 0;
     DOUBLE_SUMMARY_METRIC_TYPE   = 1;
@@ -148,22 +142,23 @@ message JobMetrics {
 
     repeated MetricsData metrics_data = 4;
 
-    repeated MetricId metrics_ids = 5;
+    repeated MetricId metric_ids = 5;
 
     repeated MetricsDataId metrics_data_ids = 6;
 }
 
-// Top-level generic metric collection within JobMetrics
-//
-// This is separated out in order to allow metrics that are specifically
-// associated with batches, or lower-level constructs like actors, which may
-// (for example) PASS, even though the job FAILS.
+// Top-level generic metric collection within JobMetrics.
+// NB: This is separated out in order to allow metrics that are specifically
+// associated with higher-level concepts like batches, or lower-level constructs
+// like actors, which may (for example) PASS, even though the job-level metrics
+// FAIL.
 message MetricCollection {
     repeated Metric metrics = 1;
 
     MetricStatus metrics_status = 2;
 }
 
+// A single metric to be shown on a page (such as the job-level insights page).
 message Metric {
     MetricId metric_id = 1;
 
@@ -214,13 +209,13 @@ message DoubleSummaryMetricValues {
         // Optional select index
         uint32 array_index = 3;
 
-        // Optional select timestamp from data
+        // Optional select timestamp from timestamp-indexed data
         google.protobuf.Timestamp timestamp_index = 4;
 
-        // Optional select actor from data
+        // Optional select actor from UUID-indexed data
         resim.proto.UUID uuid_index = 5;
 
-        // Optional select string from data
+        // Optional select string from string-indexed data
         string string_index = 6;
     }
 
@@ -295,4 +290,7 @@ message ScalarMetricValues {
     optional double value = 1;
 
     optional DoubleFailureDefinition failure_definition = 2;
+
+    optional string unit =
+        3;  // Unit is stored in metric here, as no data arrays are used.
 }
