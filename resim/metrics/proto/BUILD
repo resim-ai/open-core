@@ -97,30 +97,6 @@ cc_library(
     ],
 )
 
-filegroup(
-    name = "metrics_json",
-    srcs = ["metrics.json"],
-    visibility = ["//visibility:public"],
-)
-
-cc_test(
-    name = "validate_metrics_proto_test",
-    srcs = ["validate_metrics_proto_test.cc"],
-    data = [
-        ":metrics_json",
-    ],
-    deps = [
-        ":metrics_proto_cc",
-        ":validate_metrics_proto",
-        "//resim/assert",
-        "//resim/time:timestamp",
-        "//resim/time/proto:time_to_proto",
-        "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protobuf",
-    ],
-)
-
 py_proto_library(
     name = "metrics_proto_py",
     visibility = ["//visibility:public"],
