@@ -18,12 +18,14 @@ package resim.metrics.proto;
 enum MetricsDataType {
     NO_DATA_TYPE = 0;
 
+    // Regular arrays:
     DOUBLE_ARRAY_DATA_TYPE        = 1;
     TIMESTAMP_ARRAY_DATA_TYPE     = 2;
     UUID_ARRAY_DATA_TYPE          = 3;
     STRING_ARRAY_DATA_TYPE        = 4;
     METRIC_STATUS_ARRAY_DATA_TYPE = 5;
 
+    // Indexed arrays:
     INDEXED_DOUBLE_ARRAY_DATA_TYPE        = 6;
     INDEXED_TIMESTAMP_ARRAY_DATA_TYPE     = 7;
     INDEXED_UUID_ARRAY_DATA_TYPE          = 8;
@@ -65,27 +67,43 @@ message Array {
     }
 }
 
+// This represents a related list of arrays, each associated with a string. The
+// main purpose of this is to enable one chart per string within a single
+// metric, without making tons of different MetricsData objects. For example,
+// this might be used to generate one StatesPerTime chart per actor, or one
+// LinePlot (such as a precision-recall curve) per perception category.
+//
+// This differs from INDEXED_ arrays in that these are almost always intended to
+// represent the axes of a single chart, when  one array is the "axis" on which
+// to plot another arrray. Note that because of this, per-category MetricsData
+// can be indexed, and should always be indexed by another per-category
+// MetricsData with the same categories.
+//
+// In the future, we expect we may make some of these categorization systems
+// more first-class in our metrics reporting and UI. A good example might be
+// per-actor metrics - but implementing that will rely on a single common
+// representation of actors and actor IDs.
 message ArrayPerCategory {
     map<string, Array> category_to_array = 1;
 }
 
 message MetricsData {
-    // Generic metrics data fields:
+    // Generic metrics data fields
     MetricsDataId   metrics_data_id = 1;
     MetricsDataType data_type       = 2;
     string          name            = 3;
     string          unit            = 4;
 
-    // Fields for categorized data only:
+    // Fields for categorized data only
     bool            is_per_category = 5;
     repeated string category_names  = 6;
 
-    // Fields for indexed data only:
+    // Fields for indexed data only
     bool            is_indexed      = 7;
     MetricsDataId   index_data_id   = 8;
     MetricsDataType index_data_type = 9;
 
-    // Data fields:
+    // Data fields
     oneof data {
         Array            array              = 10;
         ArrayPerCategory array_per_category = 11;
@@ -138,13 +156,9 @@ message JobMetrics {
 
     MetricCollection job_level_metrics = 2;
 
-    MetricStatus metrics_status = 3;
+    repeated MetricsData metrics_data = 3;
 
-    repeated MetricsData metrics_data = 4;
-
-    repeated MetricId metric_ids = 5;
-
-    repeated MetricsDataId metrics_data_ids = 6;
+    MetricStatus metrics_status = 4;
 }
 
 // Top-level generic metric collection within JobMetrics.
@@ -158,7 +172,8 @@ message MetricCollection {
     MetricStatus metrics_status = 2;
 }
 
-// A single metric to be shown on a page (such as the job-level insights page).
+// A single metric to be shown within on a page (such as the job-level insights
+// page)
 message Metric {
     MetricId metric_id = 1;
 
