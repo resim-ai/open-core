@@ -11,7 +11,7 @@ generate_test_metrics.py
 This module creates a valid resim.metrics.proto.JobMetrics message containing
 representative data for each of the metrics types so we can test our validation
 code and other code that needs to operate on such data. It is intended for use
-in tests only, and not in production code itself.
+in tests only, and not in production code.
 """
 
 
