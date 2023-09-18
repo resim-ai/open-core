@@ -7,7 +7,7 @@
 """
 validate_metrics_proto.py
 
-This module defines the public function validate_job_metrics() which is ujsed to
+This module defines the public function validate_job_metrics() which is used to
 validate that a resim.metrics.proto.JobMetrics protobuf message contains valid
 contents that can be posted to the metrics endpoint.
 """
@@ -267,7 +267,7 @@ def _validate_double_over_time_metric_values(
 
 
 def _validate_line_plot_metric_values(
-        line_plot_metric_values: mp.LinePlotMetricValues, 
+        line_plot_metric_values: mp.LinePlotMetricValues,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a LinePlotMetricValues is valid.
@@ -301,7 +301,7 @@ def _validate_line_plot_metric_values(
 
 
 def _validate_bar_chart_metric_values(
-        bar_chart_metric_values: mp.BarChartMetricValues, 
+        bar_chart_metric_values: mp.BarChartMetricValues,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a BarChartMetricValues is valid.
@@ -327,7 +327,7 @@ def _validate_bar_chart_metric_values(
 
 
 def _validate_states_over_time_metric_values(
-        states_over_time_metric_values: mp.StatesOverTimeMetricValues, 
+        states_over_time_metric_values: mp.StatesOverTimeMetricValues,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a StatesOverTimeMetricValues is valid.
@@ -372,7 +372,7 @@ def _validate_states_over_time_metric_values(
 
 
 def _validate_histogram_metric_values(
-        histogram_metric_values: mp.HistogramMetricValues, 
+        histogram_metric_values: mp.HistogramMetricValues,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a HistogramMetricValues is valid.
@@ -413,7 +413,7 @@ def _validate_scalar_metric_values(
 
 
 def _validate_metric_values(
-        metric_values: mp.MetricValues, 
+        metric_values: mp.MetricValues,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a MetricValues is valid.
@@ -490,7 +490,7 @@ def _validate_metric(metric: mp.Metric,
 
 
 def _validate_job_level_metrics(
-        job_level_metrics: mp.MetricCollection, 
+        job_level_metrics: mp.MetricCollection,
         metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that a MetricCollection is valid.
@@ -524,7 +524,9 @@ def _validate_array_matches_type(
         _metrics_assert(array.HasField('uuids'))
     elif data_type in (mp.STRING_ARRAY_DATA_TYPE, mp.INDEXED_STRING_ARRAY_DATA_TYPE):
         _metrics_assert(array.HasField('strings'))
-    else:  # data_type in (mp.METRIC_STATUS_ARRAY_DATA_TYPE, mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE):
+    # data_type in (mp.METRIC_STATUS_ARRAY_DATA_TYPE,
+    # mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE):
+    else:
         _metrics_assert(array.HasField('statuses'))
 
 
@@ -532,7 +534,7 @@ def _validate_metrics_data(
         metrics_data: mp.MetricsData, metrics_data_map: dict[str, mp.MetricsData]):
     """
     Check that the MetricsData is valid.
- 
+
     Args:
         metrics_data: The MetricsData to validate.
         metrics_data_map: A map to find the metrics data in.
@@ -573,8 +575,8 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
 
     This ensures that the status stored in the JobMetrics and the
     MetricCollection match and are PASSED only if none of the blocking metrics
-    FAILED.  
-    
+    FAILED.
+
     Args:
         job_metrics: The job metrics to validate.
         metrics_data_map: A map to find the metrics data in.
@@ -631,14 +633,14 @@ def build_metrics_data_map(
     Build a map of id (as a str) to mp.MetricsData.
 
     We do this so we can quickly look these up while validating.
-    
+
     Args:
         job_metrics: The job metrics to get the data from.
 
     Returns:
         A map of id -> mp.MetricsData from the job_level_metrics.metrics field
-        in the job_metrics.  
-    """ 
+        in the job_metrics.
+    """
     result = {}
     for data in job_metrics.metrics_data:
         _validate_metrics_data_id(data.metrics_data_id)
