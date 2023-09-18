@@ -4,6 +4,15 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+"""
+validate_metrics_proto.py
+
+This module defines the public function validate_job_metrics() which is ujsed to
+validate that a resim.metrics.proto.JobMetrics protobuf message contains valid
+contents that can be posted to the metrics endpoint.
+"""
+
+
 import uuid
 
 import resim.metrics.proto.metrics_pb2 as mp

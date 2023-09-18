@@ -1,3 +1,19 @@
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+
+"""
+generate_test_metrics.py
+
+This module creates a valid resim.metrics.proto.JobMetrics message containing
+representative data for each of the metrics types so we can test our validation
+code and other code that needs to operate on such data. It is intended for use
+in tests only, and not in production code itself.
+"""
+
 
 import uuid
 
@@ -5,6 +21,7 @@ import resim.metrics.proto.metrics_pb2 as mp
 
 
 def _get_uuid_str() -> str:
+    """Helper to get a valid UUID as a hex str"""
     return '{' + str(uuid.uuid4()) + '}'
 
 
@@ -640,6 +657,10 @@ def _populate_metrics_statuses(job_metrics: mp.JobMetrics):
 
 
 def generate_test_metrics() -> mp.JobMetrics:
+    """
+    Generate a set of test metrics containing representative examples for each
+    of our metric types.
+    """
     job_metrics = mp.JobMetrics()
     job_metrics.job_id.id.data = _get_uuid_str()
 

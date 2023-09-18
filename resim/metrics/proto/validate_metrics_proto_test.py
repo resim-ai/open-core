@@ -37,6 +37,7 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         all_blocking = _make_all_blocking(self._valid_metrics)
         vmp.validate_job_metrics(all_blocking)
 
+    def test_invalid_job_metrics(self):
         bad_id = _make_id_bad(self._valid_metrics)
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(bad_id)
