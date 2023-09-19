@@ -20,7 +20,6 @@ import resim.metrics.proto.metrics_pb2 as mp
 
 class InvalidMetricsException(Exception):
     """A simple exception to raise when our metrics are invalid"""
-    pass
 
 
 def _metrics_assert(val: bool, msg: str = ''):
@@ -49,8 +48,8 @@ def _validate_uuid(unique_id):
     """Check that the given UUID proto is a valid UUID"""
     try:
         uuid.UUID(hex=unique_id.data)
-    except ValueError:
-        return InvalidMetricsException()
+    except ValueError as exc:
+        raise InvalidMetricsException() from exc
 
 
 def _validate_metrics_data_id(metrics_data_id: mp.MetricsDataId):
@@ -65,7 +64,7 @@ def _validate_metric_id(metric_id: mp.MetricId):
     _validate_uuid(metric_id.id)
 
 
-_all_array_data_types = {
+_ALL_ARRAY_DATA_TYPES = {
     mp.DOUBLE_ARRAY_DATA_TYPE,
     mp.TIMESTAMP_ARRAY_DATA_TYPE,
     mp.UUID_ARRAY_DATA_TYPE,
@@ -94,15 +93,15 @@ def _array_length(array: mp.Array):
     _metrics_assert(array.WhichOneof("array") is not None)
     if array.HasField("doubles"):
         return len(array.doubles.array)
-    elif array.HasField("timestamps"):
+    if array.HasField("timestamps"):
         return len(array.timestamps.array)
-    elif array.HasField("uuids"):
+    if array.HasField("uuids"):
         return len(array.uuids.array)
-    elif array.HasField("strings"):
+    if array.HasField("strings"):
         return len(array.strings.array)
-    else:  # array.HasField("statuses")
-        # This is an else for code coverage reasons
-        return len(array.statuses.array)
+    # if array.HasField("statuses"):
+    # This is commented out for code coverage reasons
+    return len(array.statuses.array)
 
 
 def _validate_data_arrays_agree(data_a: mp.MetricsData,
@@ -151,8 +150,8 @@ def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
                                   status_data_id: mp.MetricsDataId,
                                   metrics_data_map: dict[str, mp.MetricsData],
                                   *,
-                                  allowed_value_types: set[mp.MetricsDataType] = _all_array_data_types,
-                                  allowed_index_types: set[mp.MetricsDataType] = _all_array_data_types):
+                                  allowed_value_types: set[mp.MetricsDataType],
+                                  allowed_index_types: set[mp.MetricsDataType]):
     """
     Validate that the given value data and status data match.
 
@@ -226,7 +225,7 @@ def _validate_double_metric_values(
         # array_index or no index
         allowed_value_types = {mp.DOUBLE_ARRAY_DATA_TYPE,
                                mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE}
-        allowed_index_types = _all_array_data_types
+        allowed_index_types = _ALL_ARRAY_DATA_TYPES
 
     _validate_values_and_statuses(double_metric_values.value_data_id,
                                   double_metric_values.status_data_id,
@@ -255,10 +254,10 @@ def _validate_double_over_time_metric_values(
         length == len(
             double_over_time_metric_values.failure_definition))
 
-    for ii in range(length):
+    for i in range(length):
         _validate_values_and_statuses(
-            double_over_time_metric_values.doubles_over_time_data_id[ii],
-            double_over_time_metric_values.statuses_over_time_data_id[ii],
+            double_over_time_metric_values.doubles_over_time_data_id[i],
+            double_over_time_metric_values.statuses_over_time_data_id[i],
             metrics_data_map,
             allowed_value_types={mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
             allowed_index_types={
@@ -284,10 +283,10 @@ def _validate_line_plot_metric_values(
         length == len(
             line_plot_metric_values.statuses_data_id))
 
-    for ii in range(length):
-        statuses_data_id = line_plot_metric_values.statuses_data_id[ii]
-        for values_data_id in (line_plot_metric_values.x_doubles_data_id[ii],
-                               line_plot_metric_values.y_doubles_data_id[ii]):
+    for i in range(length):
+        statuses_data_id = line_plot_metric_values.statuses_data_id[i]
+        for values_data_id in (line_plot_metric_values.x_doubles_data_id[i],
+                               line_plot_metric_values.y_doubles_data_id[i]):
             _validate_values_and_statuses(
                 values_data_id,
                 statuses_data_id,
@@ -315,10 +314,10 @@ def _validate_bar_chart_metric_values(
         length == len(
             bar_chart_metric_values.statuses_data_id))
 
-    for ii in range(length):
+    for i in range(length):
         _validate_values_and_statuses(
-            bar_chart_metric_values.values_data_id[ii],
-            bar_chart_metric_values.statuses_data_id[ii],
+            bar_chart_metric_values.values_data_id[i],
+            bar_chart_metric_values.statuses_data_id[i],
             metrics_data_map,
             allowed_value_types={mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
             allowed_index_types={
@@ -341,11 +340,11 @@ def _validate_states_over_time_metric_values(
         length == len(
             states_over_time_metric_values.statuses_over_time_data_id))
 
-    for ii in range(length):
-        value_data_id = states_over_time_metric_values.states_over_time_data_id[ii]
+    for i in range(length):
+        value_data_id = states_over_time_metric_values.states_over_time_data_id[i]
         _validate_values_and_statuses(
             value_data_id,
-            states_over_time_metric_values.statuses_over_time_data_id[ii],
+            states_over_time_metric_values.statuses_over_time_data_id[i],
             metrics_data_map,
             allowed_value_types={mp.INDEXED_STRING_ARRAY_DATA_TYPE},
             allowed_index_types={
@@ -361,7 +360,7 @@ def _validate_states_over_time_metric_values(
                 _metrics_assert(
                     state in states_over_time_metric_values.states_set)
         else:
-            for category, array in value_data.array_per_category.category_to_array.items():
+            for _, array in value_data.array_per_category.category_to_array.items():
                 _metrics_assert(array.HasField('strings'))
                 for state in array.strings.array:
                     _metrics_assert(
@@ -387,7 +386,8 @@ def _validate_histogram_metric_values(
         metrics_data_map,
         allowed_value_types={
             mp.DOUBLE_ARRAY_DATA_TYPE,
-            mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE})
+            mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
+        allowed_index_types=_ALL_ARRAY_DATA_TYPES)
 
     last_ub = None
     for bucket in histogram_metric_values.buckets:
@@ -544,7 +544,7 @@ def _validate_metrics_data(
 
     if metrics_data.is_per_category:
         _metrics_assert(metrics_data.HasField('array_per_category'))
-        for category, array in metrics_data.array_per_category.category_to_array.items():
+        for _, array in metrics_data.array_per_category.category_to_array.items():
             _metrics_assert(_array_length(array) > 0)
             _validate_array_matches_type(array, metrics_data.data_type)
         _metrics_assert(len(metrics_data.category_names) > 0)
@@ -568,6 +568,44 @@ def _validate_metrics_data(
         _metrics_assert(metrics_data.index_data_type == index_data.data_type)
 
 
+def _get_relevant_status_ids(job_metrics: mp.JobMetrics) -> set[str]:
+    """
+    Get the data ids for status metrics data which are blocking.
+
+    Args:
+        job_metrics: The job metrics to validate.
+    """
+    relevant_status_ids = set()
+    for metric in job_metrics.job_level_metrics.metrics:
+        if not metric.blocking:
+            continue
+        metric_values = metric.metric_values
+        _metrics_assert(metric_values.WhichOneof('metric_values') is not None)
+        if metric_values.HasField('double_metric_values'):
+            relevant_status_ids.add(
+                metric_values.double_metric_values.status_data_id.id.data)
+        elif metric_values.HasField('double_over_time_metric_values'):
+            status_ids = metric_values.double_over_time_metric_values.statuses_over_time_data_id
+            relevant_status_ids.update(
+                [data_id.id.data for data_id in status_ids])
+        elif metric_values.HasField('line_plot_metric_values'):
+            status_ids = metric_values.line_plot_metric_values.statuses_data_id
+            relevant_status_ids.update(
+                [data_id.id.data for data_id in status_ids])
+        elif metric_values.HasField('bar_chart_metric_values'):
+            status_ids = metric_values.bar_chart_metric_values.statuses_data_id
+            relevant_status_ids.update(
+                [data_id.id.data for data_id in status_ids])
+        elif metric_values.HasField('states_over_time_metric_values'):
+            status_ids = metric_values.states_over_time_metric_values.statuses_over_time_data_id
+            relevant_status_ids.update(
+                [data_id.id.data for data_id in status_ids])
+        elif metric_values.HasField('histogram_metric_values'):
+            relevant_status_ids.add(
+                metric_values.histogram_metric_values.statuses_data_id.id.data)
+    return relevant_status_ids
+
+
 def _validate_statuses(job_metrics: mp.JobMetrics,
                        metrics_data_map: dict[str, mp.MetricsData]):
     """
@@ -581,43 +619,18 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
         job_metrics: The job metrics to validate.
         metrics_data_map: A map to find the metrics data in.
     """
-
-    relevant_status_ids = set()
-    for metric in job_metrics.job_level_metrics.metrics:
-        if not metric.blocking:
-            continue
-        metric_values = metric.metric_values
-        _metrics_assert(metric_values.WhichOneof('metric_values') is not None)
-        if metric_values.HasField('double_metric_values'):
-            relevant_status_ids.add(
-                metric_values.double_metric_values.status_data_id.id.data)
-        elif metric_values.HasField('double_over_time_metric_values'):
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in metric_values.double_over_time_metric_values.statuses_over_time_data_id])
-        elif metric_values.HasField('line_plot_metric_values'):
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in metric_values.line_plot_metric_values.statuses_data_id])
-        elif metric_values.HasField('bar_chart_metric_values'):
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in metric_values.bar_chart_metric_values.statuses_data_id])
-        elif metric_values.HasField('states_over_time_metric_values'):
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in metric_values.states_over_time_metric_values.statuses_over_time_data_id])
-        elif metric_values.HasField('histogram_metric_values'):
-            relevant_status_ids.add(
-                metric_values.histogram_metric_values.statuses_data_id.id.data)
+    relevant_status_ids = _get_relevant_status_ids(job_metrics)
 
     expected_status = mp.PASSED_METRIC_STATUS
     for status_id in relevant_status_ids:
         status_data = metrics_data_map[status_id]
-
         if status_data.HasField('array'):
             _metrics_assert(status_data.array.HasField('statuses'))
             for status in status_data.array.statuses.array:
                 if status == mp.FAILED_METRIC_STATUS:
                     expected_status = mp.FAILED_METRIC_STATUS
         else:
-            for key, array in status_data.array_per_category.category_to_array.items():
+            for _, array in status_data.array_per_category.category_to_array.items():
                 _metrics_assert(array.HasField('statuses'))
                 for status in array.statuses.array:
                     if status == mp.FAILED_METRIC_STATUS:

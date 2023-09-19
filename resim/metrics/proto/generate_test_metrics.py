@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+# pylint: disable=too-many-statements,too-many-locals
 
 """
 generate_test_metrics.py
@@ -16,6 +17,7 @@ in tests only, and not in production code.
 
 
 import uuid
+from typing import Any
 
 import resim.metrics.proto.metrics_pb2 as mp
 
@@ -119,55 +121,59 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics):
     times.metrics_data_id.id.data = _get_uuid_str()
     times.data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
     times.name = "Subsystem state times"
-    times.unit = ""
     times.is_per_category = True
     times.category_names.extend(["Planner", "Localization"])
     planner_arr = times.array_per_category.category_to_array["Planner"]
     localization_arr = times.array_per_category.category_to_array["Localization"]
-    for i in range(10):
+
+    array_length = 10
+    for i in range(array_length):
         planner_arr.timestamps.array.add().seconds = i
         localization_arr.timestamps.array.add().seconds = i
 
-    states = job_metrics.metrics_data.add()
-    states.metrics_data_id.id.data = _get_uuid_str()
-    states.data_type = mp.INDEXED_STRING_ARRAY_DATA_TYPE
-    states.name = "Subsystem states"
-    states.unit = ""
-    states.is_per_category = True
-    states.category_names.extend(["Planner", "Localization"])
+    def create_data_array(*,
+                          data_type: mp.MetricsDataType,
+                          name: str,
+                          array_getter: str,
+                          planner_data: list[Any],
+                          localization_data: list[Any]) -> mp.MetricsDataId:
+        data = job_metrics.metrics_data.add()
+        data.metrics_data_id.id.data = _get_uuid_str()
+        data.data_type = data_type
+        data.name = name
+        data.is_per_category = True
+        data.category_names.extend(["Planner", "Localization"])
 
-    states.is_indexed = True
-    states.index_data_id.CopyFrom(times.metrics_data_id)
-    states.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+        data.is_indexed = True
+        data.index_data_id.CopyFrom(times.metrics_data_id)
+        data.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
 
-    planner_arr = states.array_per_category.category_to_array["Planner"]
-    planner_arr.strings.array.extend([
-        "ENGAGED" if (i >= 3 and i < 7) else "DISENGAGED" for i in range(10)])
-    localization_arr = states.array_per_category.category_to_array["Localization"]
-    localization_arr.strings.array.extend(10 * ["ENGAGED"])
+        planner_arr = data.array_per_category.category_to_array["Planner"]
+        getattr(planner_arr, array_getter).array.extend(planner_data)
+        localization_arr = data.array_per_category.category_to_array["Localization"]
+        getattr(localization_arr, array_getter).array.extend(localization_data)
+        return data.metrics_data_id
 
-    states_status = job_metrics.metrics_data.add()
-    states_status.metrics_data_id.id.data = _get_uuid_str()
-    states_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
-    states_status.name = "Subsystem states status"
-    states_status.unit = ""
+    value_id = create_data_array(
+        data_type=mp.INDEXED_STRING_ARRAY_DATA_TYPE,
+        name="Subsystem states",
+        array_getter="strings",
+        planner_data=[
+            "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(array_length)],
+        localization_data=array_length *
+        ["ENGAGED"])
 
-    states_status.is_per_category = True
-    states_status.category_names.extend(["Planner", "Localization"])
-
-    states_status.is_indexed = True
-    states_status.index_data_id.CopyFrom(times.metrics_data_id)
-    states_status.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
-    planner_arr = states_status.array_per_category.category_to_array["Planner"]
-    planner_arr.statuses.array.extend(10 * [mp.PASSED_METRIC_STATUS])
-
-    localization_arr = states_status.array_per_category.category_to_array["Localization"]
-    localization_arr.statuses.array.extend(10 * [mp.PASSED_METRIC_STATUS])
+    status_id = create_data_array(
+        data_type=mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE,
+        name="Subsystem states status",
+        array_getter="statuses",
+        planner_data=array_length * [mp.PASSED_METRIC_STATUS],
+        localization_data=array_length * [mp.PASSED_METRIC_STATUS])
 
     states_over_time = metric.metric_values.states_over_time_metric_values
-    states_over_time.states_over_time_data_id.add().CopyFrom(states.metrics_data_id)
+    states_over_time.states_over_time_data_id.add().CopyFrom(value_id)
     states_over_time.statuses_over_time_data_id.add().CopyFrom(
-        states_status.metrics_data_id)
+        status_id)
     states_over_time.states_set.extend(
         ["ENGAGED", "DISENGAGED", "FAULTED"])
     states_over_time.failure_states.extend(["FAULTED"])
@@ -206,11 +212,11 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
         }]
 
     double_over_time_values = metric.metric_values.double_over_time_metric_values
-    FAILS_BELOW = 1.0
+    fails_below = 1.0
 
     # Add a failure definition per actor
-    double_over_time_values.failure_definition.add().fails_below = FAILS_BELOW
-    double_over_time_values.failure_definition.add().fails_below = FAILS_BELOW
+    double_over_time_values.failure_definition.add().fails_below = fails_below
+    double_over_time_values.failure_definition.add().fails_below = fails_below
 
     double_over_time_values.start_time.seconds = 0
     double_over_time_values.end_time.seconds = 10
@@ -223,7 +229,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
         ttc.metrics_data_id.id.data = _get_uuid_str()
         actor_ttc_value_ids.append(ttc.metrics_data_id)
         ttc.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
-        ttc.name = "{} TTC".format(actor["name"])
+        ttc.name = f"{actor['name']} TTC"
         ttc.unit = "sec"
         ttc.is_indexed = True
         ttc.index_data_id.CopyFrom(ttc_index.metrics_data_id)
@@ -236,7 +242,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
         ttc_status.metrics_data_id.id.data = _get_uuid_str()
         actor_ttc_status_ids.append(ttc_status.metrics_data_id)
         ttc_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
-        ttc_status.name = "{} TTC Statuses".format(actor["name"])
+        ttc.name = f"{actor['name']} TTC Statuses"
         ttc_status.unit = ""
         ttc_status.is_indexed = True
         ttc_status.index_data_id.CopyFrom(ttc_index.metrics_data_id)
@@ -244,7 +250,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
 
         ttc_statuses = ttc_status.array.statuses
         for val in ttc_doubles.array:
-            if val < FAILS_BELOW:
+            if val < fails_below:
                 ttc_statuses.array.append(mp.FAILED_METRIC_STATUS)
                 metric.status = mp.FAILED_METRIC_STATUS
             else:
@@ -291,7 +297,8 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics):
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Distance prediction accuracy"
     metric.type = mp.LINE_PLOT_METRIC_TYPE
-    metric.description = "Plot of actual minimum distance of non-ego actors against predicted minimum distance"
+    metric.description = ("Plot of actual minimum distance of non-ego actors"
+        "against predicted minimum distance")
     metric.status = mp.PASSED_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
@@ -353,7 +360,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics):
     labels.data_type = mp.STRING_ARRAY_DATA_TYPE
     labels.is_indexed = False
     labels.array.strings.array.extend(
-        ["camera_{}".format(i) for i in range(3)])
+        [f"camera_{i}" for i in range(3)])
 
     data_series = [{
         "name": "Camera timings",
@@ -562,7 +569,7 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics):
     states.index_data_id.CopyFrom(times.metrics_data_id)
     states.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
     states.array.strings.array.extend([
-        "LANE_CHANGE" if (i >= 3 and i < 7) else "LANE_FOLLOW" for i in range(10)])
+        "LANE_CHANGE" if (3 <= i < 7) else "LANE_FOLLOW" for i in range(10)])
 
     states_status = job_metrics.metrics_data.add()
     states_status.metrics_data_id.id.data = _get_uuid_str()
@@ -616,7 +623,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics):
     index.name = "Image ID"
     index.unit = ""
     index.is_indexed = False
-    for ii in range(len(data_values)):
+    for _ in range(len(data_values)):
         index.array.uuids.array.add().data = _get_uuid_str()
 
     data.index_data_id.CopyFrom(index.metrics_data_id)
