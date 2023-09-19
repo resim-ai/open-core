@@ -29,7 +29,7 @@ def _make_all_blocking(job_metrics: mp.JobMetrics):
 
 def _make_id_bad(job_metrics: mp.JobMetrics):
     """
-    Make the job_metrics invalid by setting it's job_id data to an invalid hex
+    Make the job_metrics invalid by setting its job_id data to an invalid hex
     string for a UUID
     """
     result = copy.deepcopy(job_metrics)
