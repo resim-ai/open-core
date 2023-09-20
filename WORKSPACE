@@ -62,7 +62,9 @@ llvm_toolchain(
     cxx_standard = {"": "c++20"},
     link_libs = {"": ["-luuid"]},
     llvm_version = "14.0.0",
-    stdlib = {"": "stdc++"},
+    # We can't use the built in libcxx that ships with llvm since it compares
+    # typeinfos using pointers, which doesn't work with ROS2.
+    # stdlib = {"": "stdc++"},
 )
 
 load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")

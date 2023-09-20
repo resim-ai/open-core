@@ -1,0 +1,16 @@
+diff --git a/repositories/class_loader.BUILD.bazel b/repositories/class_loader.BUILD.bazel
+index 7410f0b..bb27e0d 100644
+--- a/repositories/class_loader.BUILD.bazel
++++ b/repositories/class_loader.BUILD.bazel
+@@ -23,6 +23,11 @@ cc_library(
+     srcs = ["class_loader.so"],
+     hdrs = glob(["include/class_loader/*.hpp"]),
+     copts = ["-std=c++17"],
++    # Ensure that we export these types from linked executables so that
++    # dynamic_casts work. See https://www.gnu.org/software/gcc/java/faq.html
++    linkopts = [
++       "-Wl,--export-dynamic-symbol=\"_ZTIN12class_loader4impl18AbstractMetaObject*\""
++    ],
+     includes = ["include"],
+     visibility = ["//visibility:public"],
+     deps = [

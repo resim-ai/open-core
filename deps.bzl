@@ -283,6 +283,7 @@ def resim_core_dependencies():
         patches = [
             "@resim_open_core//resim/third_party/ros2:flto.patch",
             "@resim_open_core//resim/third_party/ros2:copts.patch",
+            "@resim_open_core//resim/third_party/ros2:exports.patch",
         ],
         sha256 = "56e78c7910c6684a051c0754cc58739484800b11a64e542194a25c34dc8bc488",
         strip_prefix = "rules_ros2-e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81",
