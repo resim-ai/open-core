@@ -11,6 +11,7 @@ lint:
     - buildifier@6.1.0
     - clang-tidy@15.0.6
     - clang-format@14.0.0
+    - pylint@2.17.5
 runtimes:
 # These runtimes do not influence anything running in our development
 # docker container, or our bazel environment. These runtimes set the 
