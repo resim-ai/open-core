@@ -36,6 +36,15 @@ def _make_id_bad(job_metrics: mp.JobMetrics):
     result.job_id.id.data = "foo"
     return result
 
+def _make_data_empty(job_metrics: mp.JobMetrics):
+    """
+    Make the job_metrics invalid by emptying out the data.
+    """
+    result = copy.deepcopy(job_metrics)
+    del result.metrics_data[:]
+    return result
+
+
 
 class ValidateMetricsProtoTest(unittest.TestCase):
     """
@@ -64,6 +73,10 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         bad_id = _make_id_bad(self._valid_metrics)
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(bad_id)
+
+        data_empty = _make_data_empty(self._valid_metrics)
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(data_empty)
 
 
 if __name__ == '__main__':
