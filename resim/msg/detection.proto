@@ -21,3 +21,8 @@ message Detection3D {
 
     string id = 4;
 }
+
+message Detection3DArray {
+    Header               header     = 1;
+    repeated Detection3D detections = 2;
+}
