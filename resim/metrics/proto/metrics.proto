@@ -247,7 +247,9 @@ message DoubleOverTimeMetricValues {
     repeated DoubleFailureDefinition failure_definition = 3;
     optional google.protobuf.Timestamp start_time       = 4;
     optional google.protobuf.Timestamp end_time         = 5;
-    optional string                    y_axis_name      = 6;
+
+    optional string y_axis_name         = 6;
+    repeated string legend_series_names = 7;
 }
 
 message LinePlotMetricValues {
@@ -256,8 +258,9 @@ message LinePlotMetricValues {
 
     repeated MetricsDataId statuses_data_id = 3;
 
-    optional string x_axis_name = 4;
-    optional string y_axis_name = 5;
+    optional string x_axis_name         = 4;
+    optional string y_axis_name         = 5;
+    repeated string legend_series_names = 6;
 }
 
 message BarChartMetricValues {
