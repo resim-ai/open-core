@@ -248,6 +248,37 @@ TEST(FuzzHelpersTest, TestDetectionEqual) {
   EXPECT_FALSE(verify_equality(detection_different_id, detection));
 }
 
+TEST(FuzzHelpersTest, TestDetectionArrayEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Detection3DArray array{random_element<Detection3DArray>(InOut{rng})};
+
+  Detection3DArray array_different_header{array};
+  array_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  Detection3DArray array_different_size{array};
+  ASSERT_GT(array_different_size.detections_size(), 0U);
+  array_different_size.mutable_detections()->erase(
+      array_different_size.detections().begin());
+
+  Detection3DArray array_different_element{array};
+  ASSERT_GT(array_different_element.detections_size(), 0U);
+  array_different_element.mutable_detections(0)->CopyFrom(
+      random_element<Detection3D>(InOut{rng}));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(array, array));
+  EXPECT_FALSE(verify_equality(array, array_different_header));
+  EXPECT_FALSE(verify_equality(array, array_different_size));
+  EXPECT_FALSE(verify_equality(array, array_different_element));
+  EXPECT_FALSE(verify_equality(array_different_header, array));
+  EXPECT_FALSE(verify_equality(array_different_size, array));
+  EXPECT_FALSE(verify_equality(array_different_element, array));
+}
+
 TEST(FuzzHelpersTest, TestNavSatFixEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
