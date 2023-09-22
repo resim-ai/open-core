@@ -272,8 +272,8 @@ message BarChartMetricValues {
     optional string x_axis_name = 4;
     optional string y_axis_name = 5;
 
-    optional bool stack_series = 6;  // Whether series should be stacked, as
-                                     // opposed to next to each other
+    optional bool stack_bars = 6;  // Whether series should be stacked, as
+                                   // opposed to next to each other
 }
 
 message StatesOverTimeMetricValues {
