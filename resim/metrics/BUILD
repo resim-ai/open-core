@@ -91,4 +91,7 @@ pkg_tar(
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/msg:convert_log",
     ],
+    extension = "tar.gz",
+    include_runfiles = True,
+    strip_prefix = "/",
 )
