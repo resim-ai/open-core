@@ -221,7 +221,7 @@ TEST(FuzzHelpersTest, TestOdometryEqual) {
   EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
 }
 
-TEST(FuzzHelpersTest, TestDetectionEqual) {
+TEST(FuzzHelpersTest, TestDetection3DEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
@@ -248,7 +248,76 @@ TEST(FuzzHelpersTest, TestDetectionEqual) {
   EXPECT_FALSE(verify_equality(detection_different_id, detection));
 }
 
+<<<<<<< HEAD
 TEST(FuzzHelpersTest, TestDetectionArrayEqual) {
+=======
+TEST(FuzzHelpersTest, TestBoundingBox2DEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const BoundingBox2D bbox{random_element<BoundingBox2D>(InOut{rng})};
+
+  BoundingBox2D bbox_different_center_x{bbox};
+  bbox_different_center_x.set_center_x(-bbox.center_x());
+
+  BoundingBox2D bbox_different_center_y{bbox};
+  bbox_different_center_y.set_center_y(-bbox.center_y());
+
+  BoundingBox2D bbox_different_theta_rad{bbox};
+  bbox_different_theta_rad.set_theta_rad(-bbox.theta_rad());
+
+  BoundingBox2D bbox_different_size_x{bbox};
+  bbox_different_size_x.set_size_x(-bbox.size_x());
+
+  BoundingBox2D bbox_different_size_y{bbox};
+  bbox_different_size_y.set_size_y(-bbox.size_y());
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(bbox, bbox));
+
+  EXPECT_FALSE(verify_equality(bbox, bbox_different_center_x));
+  EXPECT_FALSE(verify_equality(bbox, bbox_different_center_y));
+  EXPECT_FALSE(verify_equality(bbox, bbox_different_theta_rad));
+  EXPECT_FALSE(verify_equality(bbox, bbox_different_size_x));
+  EXPECT_FALSE(verify_equality(bbox, bbox_different_size_y));
+
+  EXPECT_FALSE(verify_equality(bbox_different_center_x, bbox));
+  EXPECT_FALSE(verify_equality(bbox_different_center_y, bbox));
+  EXPECT_FALSE(verify_equality(bbox_different_theta_rad, bbox));
+  EXPECT_FALSE(verify_equality(bbox_different_size_x, bbox));
+  EXPECT_FALSE(verify_equality(bbox_different_size_y, bbox));
+}
+
+TEST(FuzzHelpersTest, TestDetection2DEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Detection2D detection{random_element<Detection2D>(InOut{rng})};
+
+  Detection2D detection_different_header{detection};
+  detection_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  Detection2D detection_different_bbox{detection};
+  detection_different_bbox.mutable_bbox()->CopyFrom(
+      random_element<BoundingBox2D>(InOut{rng}));
+
+  Detection2D detection_different_id{detection};
+  detection_different_id.set_id(detection.id() + "_different");
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(detection, detection));
+  EXPECT_FALSE(verify_equality(detection, detection_different_header));
+  EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
+  EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
+  EXPECT_FALSE(verify_equality(detection, detection_different_id));
+  EXPECT_FALSE(verify_equality(detection_different_id, detection));
+}
+
+TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
+>>>>>>> prod/mikebauer/detection2d_converters
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
@@ -279,6 +348,40 @@ TEST(FuzzHelpersTest, TestDetectionArrayEqual) {
   EXPECT_FALSE(verify_equality(array_different_element, array));
 }
 
+<<<<<<< HEAD
+=======
+TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const Detection2DArray array{random_element<Detection2DArray>(InOut{rng})};
+
+  Detection2DArray array_different_header{array};
+  array_different_header.mutable_header()->CopyFrom(
+      random_element<Header>(InOut{rng}));
+
+  Detection2DArray array_different_size{array};
+  ASSERT_GT(array_different_size.detections_size(), 0U);
+  array_different_size.mutable_detections()->erase(
+      array_different_size.detections().begin());
+
+  Detection2DArray array_different_element{array};
+  ASSERT_GT(array_different_element.detections_size(), 0U);
+  array_different_element.mutable_detections(0)->CopyFrom(
+      random_element<Detection2D>(InOut{rng}));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(array, array));
+  EXPECT_FALSE(verify_equality(array, array_different_header));
+  EXPECT_FALSE(verify_equality(array, array_different_size));
+  EXPECT_FALSE(verify_equality(array, array_different_element));
+  EXPECT_FALSE(verify_equality(array_different_header, array));
+  EXPECT_FALSE(verify_equality(array_different_size, array));
+  EXPECT_FALSE(verify_equality(array_different_element, array));
+}
+
+>>>>>>> prod/mikebauer/detection2d_converters
 TEST(FuzzHelpersTest, TestNavSatFixEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;

@@ -142,6 +142,15 @@ const std::unordered_map<std::string, ConverterFunctions> converters_map = {
     {"vision_msgs/msg/Detection3DArray",
      {convert_message<vision_msgs::msg::Detection3DArray>,
       generate_type_schema<vision_msgs::msg::Detection3DArray>}},
+    {"vision_msgs/msg/BoundingBox2D",
+     {convert_message<vision_msgs::msg::BoundingBox2D>,
+      generate_type_schema<vision_msgs::msg::BoundingBox2D>}},
+    {"vision_msgs/msg/Detection2D",
+     {convert_message<vision_msgs::msg::Detection2D>,
+      generate_type_schema<vision_msgs::msg::Detection2D>}},
+    {"vision_msgs/msg/Detection2DArray",
+     {convert_message<vision_msgs::msg::Detection2DArray>,
+      generate_type_schema<vision_msgs::msg::Detection2DArray>}},
 };
 
 }  // namespace
