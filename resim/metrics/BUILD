@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -85,9 +86,26 @@ cc_test(
     ],
 )
 
+py_library(
+    name = "dice_coefficient",
+    srcs = ["dice_coefficient.py"],
+    deps = [
+        "//resim/msg:detection_proto_py",
+    ],
+)
+
+py_test(
+    name = "dice_coefficient_test",
+    srcs = ["dice_coefficient_test.py"],
+    deps = [
+        ":dice_coefficient",
+    ],
+)
+
 pkg_tar(
     name = "resim_metrics_tools",
     srcs = [
+        ":dice_coefficient",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/msg:convert_log",
     ],
