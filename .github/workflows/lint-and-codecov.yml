@@ -31,4 +31,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
-          tag: "testing_${{ env.GITHUB_SHA }}"
+          tag: "testing_${{ github.sha }}"
