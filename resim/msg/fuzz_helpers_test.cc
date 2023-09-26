@@ -248,9 +248,6 @@ TEST(FuzzHelpersTest, TestDetection3DEqual) {
   EXPECT_FALSE(verify_equality(detection_different_id, detection));
 }
 
-<<<<<<< HEAD
-TEST(FuzzHelpersTest, TestDetectionArrayEqual) {
-=======
 TEST(FuzzHelpersTest, TestBoundingBox2DEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
@@ -317,7 +314,6 @@ TEST(FuzzHelpersTest, TestDetection2DEqual) {
 }
 
 TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
->>>>>>> prod/mikebauer/detection2d_converters
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
@@ -348,8 +344,6 @@ TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
   EXPECT_FALSE(verify_equality(array_different_element, array));
 }
 
-<<<<<<< HEAD
-=======
 TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
@@ -381,7 +375,6 @@ TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
   EXPECT_FALSE(verify_equality(array_different_element, array));
 }
 
->>>>>>> prod/mikebauer/detection2d_converters
 TEST(FuzzHelpersTest, TestNavSatFixEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
