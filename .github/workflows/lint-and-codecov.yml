@@ -25,7 +25,7 @@ jobs:
             ${{ runner.os }}-bazel-
 
       - name: Build Metrics Tools
-        run: bazel build //resim/metrics:resim_metris_tools
+        run: bazel build //resim/metrics:resim_metrics_tools
 
       - name: Release Metrics Tools
         uses: ncipollo/release-action@v1
