@@ -468,6 +468,7 @@ ros2_cpp_binary(
     srcs = ["convert_log.cc"],
     data = [":default_converter_plugin.so"],
     set_up_ament = True,
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin",
         ":resim_log_from_ros2",

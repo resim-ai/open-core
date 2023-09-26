@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 cc_library(
     name = "simple_metric",
@@ -81,5 +82,13 @@ cc_test(
         "//resim/utils:uuid",
         "//resim/utils/testing:mock_logger",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+pkg_tar(
+    name = "resim_metrics_tools",
+    srcs = [
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/msg:convert_log",
     ],
 )
