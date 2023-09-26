@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 proto_library(
     name = "simple_metric_proto",
@@ -50,4 +51,26 @@ cc_test(
         "//resim/utils:uuid",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+proto_library(
+    name = "metrics_proto",
+    srcs = ["metrics.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/utils/proto:uuid_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "metrics_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":metrics_proto"],
+)
+
+py_proto_library(
+    name = "metrics_proto_py",
+    visibility = ["//visibility:public"],
+    deps = [":metrics_proto"],
 )
