@@ -107,6 +107,7 @@ pkg_tar(
     srcs = [
         ":dice_coefficient",
         "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
         "//resim/msg:convert_log",
     ],
     extension = "tar.gz",

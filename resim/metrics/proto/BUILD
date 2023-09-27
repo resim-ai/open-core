@@ -88,6 +88,7 @@ py_library(
 py_library(
     name = "validate_metrics_proto",
     srcs = ["validate_metrics_proto.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":metrics_proto_py",
     ],
