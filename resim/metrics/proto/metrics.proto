@@ -1,0 +1,320 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "resim/utils/proto/uuid.proto";
+
+package resim.metrics.proto;
+
+// -------------------
+// Data Representation
+// -------------------
+
+enum MetricsDataType {
+    NO_DATA_TYPE = 0;
+
+    // Regular arrays:
+    DOUBLE_ARRAY_DATA_TYPE        = 1;
+    TIMESTAMP_ARRAY_DATA_TYPE     = 2;
+    UUID_ARRAY_DATA_TYPE          = 3;
+    STRING_ARRAY_DATA_TYPE        = 4;
+    METRIC_STATUS_ARRAY_DATA_TYPE = 5;
+
+    // Indexed arrays:
+    INDEXED_DOUBLE_ARRAY_DATA_TYPE        = 6;
+    INDEXED_TIMESTAMP_ARRAY_DATA_TYPE     = 7;
+    INDEXED_UUID_ARRAY_DATA_TYPE          = 8;
+    INDEXED_STRING_ARRAY_DATA_TYPE        = 9;
+    INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE = 10;
+}
+
+message MetricsDataId {
+    resim.proto.UUID id = 1;
+}
+
+message DoubleArray {
+    repeated double array = 1;
+}
+
+message TimestampArray {
+    repeated google.protobuf.Timestamp array = 1;
+}
+
+message UUIDArray {
+    repeated resim.proto.UUID array = 1;
+}
+
+message StringArray {
+    repeated string array = 1;
+}
+
+message MetricStatusArray {
+    repeated MetricStatus array = 1;
+}
+
+message Array {
+    oneof array {
+        DoubleArray       doubles    = 1;
+        TimestampArray    timestamps = 2;
+        UUIDArray         uuids      = 3;
+        StringArray       strings    = 4;
+        MetricStatusArray statuses   = 5;
+    }
+}
+
+// This represents a related list of arrays, each associated with a string. The
+// main purpose of this is to enable one chart per string within a single
+// metric, without making tons of different MetricsData objects. For example,
+// this might be used to generate one StatesPerTime chart per actor, or one
+// LinePlot (such as a precision-recall curve) per perception category.
+//
+// This differs from INDEXED_ arrays in that these are almost always intended to
+// represent the axes of a single chart, when  one array is the "axis" on which
+// to plot another arrray. Note that because of this, per-category MetricsData
+// can be indexed, and should always be indexed by another per-category
+// MetricsData with the same categories.
+//
+// In the future, we expect we may make some of these categorization systems
+// more first-class in our metrics reporting and UI. A good example might be
+// per-actor metrics - but implementing that will rely on a single common
+// representation of actors and actor IDs.
+message ArrayPerCategory {
+    map<string, Array> category_to_array = 1;
+}
+
+message MetricsData {
+    // Generic metrics data fields
+    MetricsDataId   metrics_data_id = 1;
+    MetricsDataType data_type       = 2;
+    string          name            = 3;
+    string          unit            = 4;
+
+    // Fields for categorized data only
+    bool            is_per_category = 5;
+    repeated string category_names  = 6;
+
+    // Fields for indexed data only
+    bool            is_indexed      = 7;
+    MetricsDataId   index_data_id   = 8;
+    MetricsDataType index_data_type = 9;
+
+    // Data fields
+    oneof data {
+        Array            array              = 10;
+        ArrayPerCategory array_per_category = 11;
+    }
+}
+
+// ---------------------
+// Metric representation
+// ---------------------
+
+enum MetricStatus {
+    NO_METRIC_STATUS             = 0;
+    PASSED_METRIC_STATUS         = 1;
+    FAILED_METRIC_STATUS         = 2;
+    NOT_APPLICABLE_METRIC_STATUS = 3;
+    RAW_METRIC_STATUS            = 4;
+}
+
+enum MetricImportance {
+    NO_SPECIFIED_IMPORTANCE = 0;
+    ZERO_IMPORTANCE         = 1;
+    LOW_IMPORTANCE          = 2;
+    MEDIUM_IMPORTANCE       = 3;
+    HIGH_IMPORTANCE         = 4;
+    CRITICAL_IMPORTANCE     = 5;
+}
+
+enum MetricType {
+    NO_METRIC_TYPE               = 0;
+    DOUBLE_SUMMARY_METRIC_TYPE   = 1;
+    DOUBLE_OVER_TIME_METRIC_TYPE = 2;
+    LINE_PLOT_METRIC_TYPE        = 3;
+    BAR_CHART_METRIC_TYPE        = 4;
+    STATES_OVER_TIME_METRIC_TYPE = 5;
+    HISTOGRAM_METRIC_TYPE        = 6;
+    SCALAR_METRIC_TYPE           = 7;
+}
+
+message MetricId {
+    resim.proto.UUID id = 1;
+}
+
+message JobId {
+    resim.proto.UUID id = 1;
+}
+
+// All metrics  associated with a given job.
+// This is the type output by metrics scripts for validation.
+message JobMetrics {
+    JobId job_id = 1;
+
+    MetricCollection job_level_metrics = 2;
+
+    repeated MetricsData metrics_data = 3;
+
+    MetricStatus metrics_status = 4;
+}
+
+// Top-level generic metric collection within JobMetrics.
+// NB: This is separated out in order to allow metrics that are specifically
+// associated with higher-level concepts like batches, or lower-level constructs
+// like actors, which may (for example) PASS, even though the job-level metrics
+// FAIL.
+message MetricCollection {
+    repeated Metric metrics = 1;
+
+    MetricStatus metrics_status = 2;
+}
+
+// A single metric to be shown within on a page (such as the job-level insights
+// page)
+message Metric {
+    MetricId metric_id = 1;
+
+    string name = 2;
+
+    MetricType type = 3;
+
+    string description = 4;
+
+    MetricStatus status = 5;
+
+    optional bool should_display = 6;
+
+    MetricValues metric_values = 7;
+
+    optional bool blocking = 8;
+
+    MetricImportance importance = 9;
+
+    oneof parent_id {
+        JobId job_id = 10;
+    }
+}
+
+message MetricValues {
+    oneof metric_values {
+        DoubleSummaryMetricValues  double_metric_values           = 1;
+        DoubleOverTimeMetricValues double_over_time_metric_values = 2;
+        LinePlotMetricValues       line_plot_metric_values        = 3;
+        BarChartMetricValues       bar_chart_metric_values        = 4;
+        StatesOverTimeMetricValues states_over_time_metric_values = 5;
+        HistogramMetricValues      histogram_metric_values        = 6;
+        ScalarMetricValues         scalar_metric_values           = 7;
+    }
+}
+
+message DoubleFailureDefinition {
+    optional double fails_above = 1;
+    optional double fails_below = 2;
+}
+
+message DoubleSummaryMetricValues {
+    MetricsDataId value_data_id = 1;  // DOUBLE array, optionally indexed
+    MetricsDataId status_data_id =
+        2;  // METRIC_STATUS array, optionally indexed
+
+    oneof index {
+        // Optional select index
+        uint32 array_index = 3;
+
+        // Optional select timestamp from timestamp-indexed data
+        google.protobuf.Timestamp timestamp_index = 4;
+
+        // Optional select actor from UUID-indexed data
+        resim.proto.UUID uuid_index = 5;
+
+        // Optional select string from string-indexed data
+        string string_index = 6;
+    }
+
+    DoubleFailureDefinition failure_definition = 7;
+}
+
+message DoubleOverTimeMetricValues {
+    repeated MetricsDataId doubles_over_time_data_id =
+        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+    repeated MetricsDataId statuses_over_time_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+
+    repeated DoubleFailureDefinition failure_definition = 3;
+    optional google.protobuf.Timestamp start_time       = 4;
+    optional google.protobuf.Timestamp end_time         = 5;
+
+    optional string y_axis_name         = 6;
+    repeated string legend_series_names = 7;
+}
+
+message LinePlotMetricValues {
+    repeated MetricsDataId x_doubles_data_id = 1;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated MetricsDataId y_doubles_data_id = 2;  // DOUBLE_ARRAY_DATA_TYPE
+
+    repeated MetricsDataId statuses_data_id = 3;
+
+    optional string x_axis_name         = 4;
+    optional string y_axis_name         = 5;
+    repeated string legend_series_names = 6;
+}
+
+message BarChartMetricValues {
+    repeated MetricsDataId values_data_id =
+        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by STRING
+    repeated MetricsDataId statuses_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by STRING
+
+    repeated string legend_series_names =
+        3;  // One name per INDEXED_DOUBLE_ARRAY
+
+    optional string x_axis_name = 4;
+    optional string y_axis_name = 5;
+
+    optional bool stack_bars = 6;  // Whether series should be stacked, as
+                                   // opposed to next to each other
+}
+
+message StatesOverTimeMetricValues {
+    repeated MetricsDataId states_over_time_data_id =
+        1;  // INDEXED_STRING_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+    repeated MetricsDataId statuses_over_time_data_id =
+        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+
+    repeated string states_set     = 3;
+    repeated string failure_states = 4;
+
+    repeated string legend_series_names = 5;
+}
+
+message HistogramMetricValues {
+    MetricsDataId values_data_id =
+        1;  // DOUBLE_ARRAY_DATA_TYPE, can be INDEXED but INDEX is ignored.
+    MetricsDataId statuses_data_id = 2;  // METRIC_STATUS_ARRAY_DATA_TYPE, can
+                                         // be INDEXED but INDEX is ignored.
+
+    repeated Bucket buckets = 3;
+
+    optional double lower_bound = 4;
+    optional double upper_bound = 5;
+
+    optional string x_axis_name = 6;
+
+    message Bucket {
+        optional double lower = 1;
+        optional double upper = 2;
+    }
+}
+
+message ScalarMetricValues {
+    optional double value = 1;
+
+    optional DoubleFailureDefinition failure_definition = 2;
+
+    optional string unit =
+        3;  // Unit is stored in metric here, as no data arrays are used.
+}

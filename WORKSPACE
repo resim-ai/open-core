@@ -32,6 +32,11 @@ load("@resim_open_core//:ros2_setup_2.bzl", "ros2_setup_2")
 
 ros2_setup_2()
 
+bind(
+    name = "python_headers",
+    actual = "@python3_10//:python_headers",
+)
+
 load("@resim_python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
