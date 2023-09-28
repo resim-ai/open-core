@@ -5,8 +5,10 @@
 // https://opensource.org/licenses/MIT.
 
 #include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
+#include <Eigen/Dense>
 #include <utility>
 
 #include "resim/transforms/se3.hh"
@@ -22,7 +24,11 @@ PYBIND11_MODULE(se3_python, m) {
       .def_readonly_static("DOF", &SE3::DOF)
       .def(py::init<>())
       .def("log", &SE3::log)
-      .def("exp", [](const SE3::TangentVector &arg) { return SE3::exp(arg); });
+      .def("translation", &SE3::translation)
+      .def("exp", [](const SE3::TangentVector &arg) { return SE3::exp(arg); })
+      .def("inverse", &SE3::inverse)
+      .def(py::self * py::self)
+      .def(py::self * Eigen::Vector3d());
 }
 
 }  // namespace resim::transforms
