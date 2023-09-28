@@ -97,6 +97,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "odometry_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":odometry_proto",
     ],
