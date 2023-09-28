@@ -9,15 +9,14 @@
 namespace resim::msg {
 
 bool verify_equality(const Header &a, const Header &b) {
-  return a.stamp().seconds() == b.stamp().seconds() &&
-         a.stamp().nanos() == b.stamp().nanos() && a.frame_id() == b.frame_id();
+  return resim::verify_equality(a.stamp(), b.stamp()) and
+         a.frame_id() == b.frame_id();
 }
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b) {
-  const bool transforms_equal =
-      unpack(a.transform()).is_approx(unpack(b.transform()));
-  return transforms_equal && verify_equality(a.header(), b.header()) &&
-         a.child_frame_id() == b.child_frame_id();
+  return verify_equality(a.header(), b.header()) and
+         a.child_frame_id() == b.child_frame_id() and
+         verify_equality(a.transform(), b.transform());
 }
 
 bool verify_equality(const TransformArray &a, const TransformArray &b) {
@@ -30,6 +29,106 @@ bool verify_equality(const TransformArray &a, const TransformArray &b) {
     }
   }
   return true;
+}
+
+bool verify_equality(const PoseWithCovariance &a, const PoseWithCovariance &b) {
+  if (not verify_equality(a.pose(), b.pose())) {
+    return false;
+  }
+
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(
+      a.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+  REASSERT(
+      b.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+
+  for (int ii = 0; ii < N * N; ++ii) {
+    if (not resim::verify_equality(a.covariance(ii), b.covariance(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(const Twist &a, const Twist &b) {
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(a.algebra().size() == N, "Incorrect twist size detected!");
+  REASSERT(b.algebra().size() == N, "Incorrect twist size detected!");
+
+  for (int ii = 0; ii < N; ++ii) {
+    if (not resim::verify_equality(a.algebra(ii), b.algebra(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(
+    const TwistWithCovariance &a,
+    const TwistWithCovariance &b) {
+  const bool twists_equal = verify_equality(a.twist(), b.twist());
+  if (not twists_equal) {
+    return false;
+  }
+
+  constexpr std::size_t N = transforms::SE3::DOF;
+  REASSERT(
+      a.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+  REASSERT(
+      b.covariance().size() == N * N,
+      "Incorrect covariance size detected!");
+
+  for (int ii = 0; ii < N * N; ++ii) {
+    if (not resim::verify_equality(a.covariance(ii), b.covariance(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(const Odometry &a, const Odometry &b) {
+  return verify_equality(a.header(), b.header()) and
+         a.child_frame_id() == b.child_frame_id() and
+         verify_equality(a.pose(), b.pose()) and
+         verify_equality(a.twist(), b.twist());
+}
+
+bool verify_equality(const Detection3D &a, const Detection3D &b) {
+  return verify_equality(a.header(), b.header()) and
+         verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
+}
+
+bool verify_equality(const Detection3DArray &a, const Detection3DArray &b) {
+  if (not verify_equality(a.header(), b.header()) or
+      a.detections_size() != b.detections_size()) {
+    return false;
+  }
+  for (int ii = 0; ii < a.detections_size(); ++ii) {
+    if (not verify_equality(a.detections(ii), b.detections(ii))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
+  constexpr int COV_DIM = 9;
+  for (int ii = 0; ii < COV_DIM; ++ii) {
+    if (not resim::verify_equality(
+            a.position_covariance_m2(ii),
+            b.position_covariance_m2(ii))) {
+      return false;
+    }
+  }
+  return verify_equality(a.header(), b.header()) and
+         a.status() == b.status() and
+         resim::verify_equality(a.latitude_deg(), b.latitude_deg()) and
+         resim::verify_equality(a.longitude_deg(), b.longitude_deg()) and
+         resim::verify_equality(a.altitude_m(), b.altitude_m()) and
+         a.position_covariance_type() == b.position_covariance_type();
 }
 
 }  // namespace resim::msg

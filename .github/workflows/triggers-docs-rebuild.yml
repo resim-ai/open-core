@@ -1,0 +1,17 @@
+name: Trigger rebuild of docs.resim.ai
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'docs/**'
+
+env:
+  WEBHOOK_URL: ${{ secrets.DOCS_SITE_BUILD_WEBHOOK }}
+
+jobs:
+  rebuild-docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: |
+          curl -X POST -d {} "${WEBHOOK_URL}" -H "Content-Type:application/json"

@@ -1,0 +1,28 @@
+// Copyright 2023 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "resim/msg/header.proto";
+import "resim/geometry/proto/oriented_box.proto";
+
+package resim.msg;
+
+message Detection3D {
+    Header header = 1;
+
+    // TODO(mikebauer) Add results field when we need it to match ROS
+    // vision_msgs::msg::Detection3D message.
+    //
+    resim.geometry.proto.OrientedBoxSE3 bbox = 3;
+
+    string id = 4;
+}
+
+message Detection3DArray {
+    Header               header     = 1;
+    repeated Detection3D detections = 2;
+}

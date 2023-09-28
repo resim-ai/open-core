@@ -85,17 +85,18 @@ def resim_core_dependencies():
         http_archive,
         name = "mcap",
         build_file = "@resim_open_core//resim/third_party/mcap:mcap.BUILD",
-        sha256 = "5d30a67c0c282e478e9342127129c3b4138c1464f42c25ba083415ced0824437",
-        strip_prefix = "mcap-releases-cpp-v0.5.0",
-        urls = ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v0.5.0.zip"],
+        sha256 = "11a6badecac2b10e9687e912648a6e9679ef8731e4ab9570346ae9845ae64a65",
+        strip_prefix = "mcap-releases-cpp-v1.2.0/cpp/mcap",
+        urls =
+            ["https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v1.2.0.tar.gz"],
     )
 
     maybe(
         http_archive,
         name = "rules_python",
-        sha256 = "cdf6b84084aad8f10bf20b46b77cb48d83c319ebe6458a18e9d2cebf57807cdd",
-        strip_prefix = "rules_python-0.8.1",
-        url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.8.1.tar.gz",
+        sha256 = "5868e73107a8e85d8f323806e60cad7283f34b32163ea6ff1020cf27abef6036",
+        strip_prefix = "rules_python-0.25.0",
+        url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.25.0.tar.gz",
     )
 
     # Hedron's Compile Commands Extractor for Bazel
@@ -113,10 +114,10 @@ def resim_core_dependencies():
     maybe(
         http_archive,
         name = "rules_proto",
-        sha256 = "e017528fd1c91c5a33f15493e3a398181a9e821a804eb7ff5acdd1d2d6c2b18d",
-        strip_prefix = "rules_proto-4.0.0-3.20.0",
+        sha256 = "dc3fb206a2cb3441b485eb1e423165b231235a1ea9b031b4433cf7bc1fa460dd",
+        strip_prefix = "rules_proto-5.3.0-21.7",
         urls = [
-            "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0-3.20.0.tar.gz",
+            "https://github.com/bazelbuild/rules_proto/archive/refs/tags/5.3.0-21.7.tar.gz",
         ],
     )
 
@@ -279,7 +280,10 @@ def resim_core_dependencies():
         http_archive,
         name = "com_github_mvukov_rules_ros2",
         patch_args = ["-p1"],
-        patches = ["@resim_open_core//resim/third_party/ros2:flto.patch"],
+        patches = [
+            "@resim_open_core//resim/third_party/ros2:flto.patch",
+            "@resim_open_core//resim/third_party/ros2:copts.patch",
+        ],
         sha256 = "56e78c7910c6684a051c0754cc58739484800b11a64e542194a25c34dc8bc488",
         strip_prefix = "rules_ros2-e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81",
         url = "https://github.com/mvukov/rules_ros2/archive/e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81.tar.gz",
