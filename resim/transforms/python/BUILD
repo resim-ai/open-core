@@ -11,6 +11,7 @@ load("@rules_python//python:defs.bzl", "py_test")
 pybind_extension(
     name = "se3_python",
     srcs = ["se3_python.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms:se3",
     ],

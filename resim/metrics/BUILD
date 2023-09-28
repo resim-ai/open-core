@@ -109,6 +109,7 @@ pkg_tar(
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
         "//resim/msg:convert_log",
+        "//resim/transforms/python:se3_python.so",
     ],
     extension = "tar.gz",
     include_runfiles = True,
