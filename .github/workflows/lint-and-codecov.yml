@@ -15,15 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache Bazel
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-
-
       - name: Build `compile_commands.json` database
         run: bazel run @hedron_compile_commands//:refresh_all
 
