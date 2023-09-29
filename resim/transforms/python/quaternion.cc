@@ -16,7 +16,11 @@ PYBIND11_MODULE(quaternion, m) {
           py::arg("w"),
           py::arg("x"),
           py::arg("y"),
-          py::arg("z"));
+          py::arg("z"))
+      .def("w", py::overload_cast<>(&Eigen::Quaterniond::w))
+      .def("x", py::overload_cast<>(&Eigen::Quaterniond::x))
+      .def("y", py::overload_cast<>(&Eigen::Quaterniond::y))
+      .def("z", py::overload_cast<>(&Eigen::Quaterniond::z));
 }
 
 }  // namespace resim::transforms
