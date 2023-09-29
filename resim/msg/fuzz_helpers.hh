@@ -63,7 +63,7 @@ TransformArray random_element(
     TypeTag<TransformArray> /*unused*/,
     InOut<Rng> rng) {
   TransformArray result;
-  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MIN_ELEMENTS = 5;
   constexpr int MAX_ELEMENTS = 10;
   std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
   const int num_elements = dist(*rng);
@@ -175,7 +175,7 @@ Detection3DArray random_element(
   Detection3DArray result;
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
 
-  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MIN_ELEMENTS = 5;
   constexpr int MAX_ELEMENTS = 10;
   std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
   const int num_elements = dist(*rng);
@@ -193,7 +193,7 @@ Detection2DArray random_element(
   Detection2DArray result;
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
 
-  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MIN_ELEMENTS = 5;
   constexpr int MAX_ELEMENTS = 10;
   std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
   const int num_elements = dist(*rng);
