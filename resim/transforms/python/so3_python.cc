@@ -32,24 +32,12 @@ PYBIND11_MODULE(so3_python, m) {
       .def("inverse", &SO3::inverse)
       .def("interp", py::overload_cast<double>(&SO3::interp, py::const_))
       .def("exp", &SO3::exp<>)
-      .def("exp_diff", &SO3::exp_diff)
       .def("log", &SO3::log)
-      .def("adjoint", py::overload_cast<>(&SO3::adjoint, py::const_))
-      .def_static(
-          "algebra_adjoint",
-          py::overload_cast<const SO3::TangentVector &>(&SO3::adjoint))
       .def(
-          "adjoint_times",
-          py::overload_cast<const SO3::TangentVector &>(
-              &SO3::adjoint_times,
-              py::const_))
-      .def_static(
-          "algebra_adjoint_times",
-          py::overload_cast<
-              const SO3::TangentVector &,
-              const SO3::TangentVector &>(&SO3::adjoint_times))
-      .def("is_approx", &SO3::is_approx)
-      .def("is_approx_transform", &SO3::is_approx_transform)
+          "is_approx",
+          &SO3::is_approx,
+          py::arg("other"),
+          py::arg("precision") = math::DEFAULT_PRECISION)
       .def("rotation_matrix", &SO3::rotation_matrix)
       .def("quaternion", &SO3::quaternion);
 }

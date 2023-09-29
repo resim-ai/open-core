@@ -6,18 +6,18 @@
 
 
 """
-Unit tests for SE3 pybinding
+Unit tests for SO3 pybinding
 """
 
 import unittest
 
 import numpy as np
-import resim.transforms.python.se3_python as se3
 import resim.transforms.python.so3_python as so3
+import resim.transforms.python.quaternion as quat
 
 
-class SE3PythonTest(unittest.TestCase):
-    """Unit tests for SE3 pybinding"""
+class SO3PythonTest(unittest.TestCase):
+    """Unit tests for SO3 pybinding"""
 
     def setUp(self):
         """Seed the random number generator"""
@@ -25,39 +25,62 @@ class SE3PythonTest(unittest.TestCase):
 
     def test_dims_dof(self):
         """Test that DIMS and DOF are correct"""
-        self.assertEqual(se3.SE3.DIMS, 3)
-        self.assertEqual(se3.SE3.DOF, 6)
+        self.assertEqual(so3.SO3.DIMS, 3)
+        self.assertEqual(so3.SO3.DOF, 3)
 
     def test_default_constructor(self):
         """Check that the default constructor, is_approx, and identity work"""
-        self.assertTrue(se3.SE3().is_approx(se3.SE3.identity()))
+        self.assertTrue(so3.SO3().is_approx(so3.SO3.identity()))
+
+    def test_quaternion(self):
+        """Check that the quaternion constructor works."""
+        # SETUP
+        vec = np.random.rand(4)
+        vec = vec / np.linalg.norm(vec)
+        quaternion = quat.Quaternion(vec)
+
+        # ACTION
+        rotation = so3.SO3(quaternion)
+
+        # VERIFICATION
+        quaternion_out = rotation.quaternion()
+        self.assertAlmostEqual(quaternion.w(), quaternion_out.w())
+        self.assertAlmostEqual(quaternion.x(), quaternion_out.x())
+        self.assertAlmostEqual(quaternion.y(), quaternion_out.y())
+        self.assertAlmostEqual(quaternion.z(), quaternion_out.z())
+
+        # Confirm that the quaternion matches up with the SO3
+        angle_rad = 2.0 * np.arccos(quaternion.w())
+        axis = np.array([quaternion.x(), quaternion.y(),
+                        quaternion.z()]) / np.sin(0.5 * angle_rad)
+        self.assertTrue(np.allclose(axis * angle_rad, rotation.log()))
 
     def test_inverse(self):
         """Check that inversion works"""
         num_tests = 10
         for _ in range(num_tests):
             # SETUP
-            rotation = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
+            rotation = so3.SO3.exp(np.random.rand(so3.SO3.DOF))
 
             # ACTION / VERIFICATION
             self.assertTrue(
                 (rotation *
                  rotation.inverse()).is_approx(
-                    se3.SE3.identity()))
+                    so3.SO3.identity()))
 
     def test_interp(self):
         """Check that interpolation works"""
         num_tests = 10
         for _ in range(num_tests):
             # SETUP
-            rotation = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
+            rotation = so3.SO3.exp(np.random.rand(so3.SO3.DOF))
 
             # ACTION / VERIFICATION
             scale = np.random.random()
             interped = rotation.interp(scale)
             self.assertTrue(
                 interped.is_approx(
-                    se3.SE3.exp(
+                    so3.SO3.exp(
                         scale *
                         rotation.log())))
 
@@ -66,7 +89,7 @@ class SE3PythonTest(unittest.TestCase):
         num_tests = 10
         for _ in range(num_tests):
             # SETUP
-            arg = np.random.rand(se3.SE3.DOF)
+            arg = np.random.rand(so3.SO3.DOF)
             # Clamp arg to have ||arg|| < PI
             # This is needed because we might otherwise exit the subset of the
             # domain where exp is invertible.
@@ -74,22 +97,8 @@ class SE3PythonTest(unittest.TestCase):
             arg = (1. - epsilon) * arg * (np.pi / max(1., np.linalg.norm(arg)))
 
             # ACTION / VERIFICATION
-            test_se3 = se3.SE3.exp(arg)
-            self.assertTrue(np.allclose(test_se3.log(), arg))
-
-    def test_rotation_and_translation(self):
-        """Test that rotation and translation getters work."""
-        num_tests = 10
-        for _ in range(num_tests):
-            # SETUP
-            rotation = so3.SO3.exp(np.random.rand(so3.SO3.DOF))
-            translation = np.random.rand(se3.SE3.DIMS)
-
-            pose = se3.SE3(rotation, translation)
-
-            # ACTION / VERIFICATION
-            self.assertTrue(rotation.is_approx(pose.rotation()))
-            self.assertTrue(np.allclose(translation, pose.translation()))
+            test_so3 = so3.SO3.exp(arg)
+            self.assertTrue(np.allclose(test_so3.log(), arg))
 
 
 if __name__ == '__main__':

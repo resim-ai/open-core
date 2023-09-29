@@ -16,6 +16,17 @@ pybind_extension(
     ],
 )
 
+py_test(
+    name = "quaternion_test",
+    srcs = ["quaternion_test.py"],
+    data = [
+        ":quaternion.so",
+    ],
+    deps = [
+        requirement("numpy"),
+    ],
+)
+
 pybind_extension(
     name = "se3_python",
     srcs = ["se3_python.cc"],
@@ -42,6 +53,18 @@ py_test(
     srcs = ["se3_python_test.py"],
     data = [
         ":se3_python.so",
+        ":so3_python.so",
+    ],
+    deps = [
+        requirement("numpy"),
+    ],
+)
+
+py_test(
+    name = "so3_python_test",
+    srcs = ["so3_python_test.py"],
+    data = [
+        ":so3_python.so",
     ],
     deps = [
         requirement("numpy"),

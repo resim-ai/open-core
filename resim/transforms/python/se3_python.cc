@@ -25,6 +25,7 @@ PYBIND11_MODULE(se3_python, m) {
       .def(py::init<>())
       .def(py::init<SO3>())
       .def(py::init<Eigen::Vector3d>())
+      .def(py::init<SO3, Eigen::Vector3d>())
       .def("identity", &SE3::identity<>)
       .def(py::self * py::self)
       .def(py::self * Eigen::Vector3d())
@@ -35,24 +36,12 @@ PYBIND11_MODULE(se3_python, m) {
       .def("arc_length", &SE3::arc_length)
       .def("interp", py::overload_cast<double>(&SE3::interp, py::const_))
       .def("exp", &SE3::exp<>)
-      .def("exp_diff", &SE3::exp_diff)
       .def("log", &SE3::log)
-      .def("adjoint", py::overload_cast<>(&SE3::adjoint, py::const_))
-      .def_static(
-          "algebra_adjoint",
-          py::overload_cast<const SE3::TangentVector &>(&SE3::adjoint))
       .def(
-          "adjoint_times",
-          py::overload_cast<const SE3::TangentVector &>(
-              &SE3::adjoint_times,
-              py::const_))
-      .def_static(
-          "algebra_adjoint_times",
-          py::overload_cast<
-              const SE3::TangentVector &,
-              const SE3::TangentVector &>(&SE3::adjoint_times))
-      .def("is_approx", &SE3::is_approx)
-      .def("is_approx_transform", &SE3::is_approx_transform)
+          "is_approx",
+          &SE3::is_approx,
+          py::arg("other"),
+          py::arg("precision") = math::DEFAULT_PRECISION)
       .def("rotation", &SE3::rotation)
       .def("translation", &SE3::translation);
 }
