@@ -48,7 +48,10 @@ using Ros2Types = ::testing::Types<
     tf2_msgs::msg::TFMessage,
     vision_msgs::msg::BoundingBox3D,
     vision_msgs::msg::Detection3D,
-    vision_msgs::msg::Detection3DArray>;
+    vision_msgs::msg::Detection3DArray,
+    vision_msgs::msg::BoundingBox2D,
+    vision_msgs::msg::Detection2D,
+    vision_msgs::msg::Detection2DArray>;
 
 template <typename T>
 struct DefaultConverterPluginTest : public ::testing::Test {
