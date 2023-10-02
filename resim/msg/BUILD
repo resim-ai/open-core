@@ -29,6 +29,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "header_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":header_proto",
     ],
@@ -52,6 +53,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "transform_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":transform_proto",
     ],
@@ -74,6 +76,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "pose_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":pose_proto",
     ],
@@ -145,6 +148,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "navsat_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":navsat_proto",
     ],
