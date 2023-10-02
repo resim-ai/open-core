@@ -15,7 +15,12 @@
 
 namespace resim::msg {
 
-using Types = ::testing::Types<Detection3D, Detection3DArray>;
+using Types = ::testing::Types<
+    Detection3D,
+    Detection3DArray,
+    BoundingBox2D,
+    Detection2D,
+    Detection2DArray>;
 
 template <typename T>
 class Detection3DFromRos2Test : public ::testing::Test {};
