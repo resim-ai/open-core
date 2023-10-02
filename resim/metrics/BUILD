@@ -116,6 +116,7 @@ pkg_tar(
         "//resim/msg:pose_proto_py",
         "//resim/msg:transform_proto_py",
         "//resim/transforms/python:se3_python.so",
+        "//resim/transforms/python:so3_python.so",
     ],
     extension = "tar.gz",
     include_runfiles = True,

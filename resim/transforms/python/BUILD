@@ -42,6 +42,7 @@ pybind_extension(
 pybind_extension(
     name = "so3_python",
     srcs = ["so3_python.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":quaternion.so",
         "//resim/transforms:so3",
