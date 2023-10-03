@@ -41,6 +41,14 @@ load("@resim_python_deps//:requirements.bzl", "install_deps")
 
 install_deps()
 
+load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+load("@python3_10//:defs.bzl", "interpreter")
+
+python_configure(
+    name = "local_config_python",
+    python_interpreter_target = interpreter,
+)
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
