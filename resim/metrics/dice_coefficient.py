@@ -6,7 +6,7 @@
 
 
 """
-A module for computing Sørense-Dice coefficient.
+A module for computing Sorensen-Dice coefficient.
 """
 
 import resim.msg.detection_pb2 as Detection
