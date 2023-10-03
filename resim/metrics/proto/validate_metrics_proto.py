@@ -667,7 +667,7 @@ def build_metrics_data_map(
 def validate_job_metrics(job_metrics: mp.JobMetrics):
     """
     Validate that the given JobMetrics is valid and can be posted to the
-endpoint.
+    endpoint.
     """
     metrics_data_map = build_metrics_data_map(job_metrics)
 
@@ -677,10 +677,18 @@ endpoint.
         metrics_data_map)
     _validate_metric_status(job_metrics.metrics_status)
 
+    # Use a set to check for duplicated names
+    metric_names = set()
     for metric in job_metrics.job_level_metrics.metrics:
+        _metrics_assert(metric.name not in metric_names)
+        metric_names.add(metric.name)
         _metrics_assert(metric.job_id == job_metrics.job_id)
 
+    # Use a set to check for duplicated names
+    metric_data_names = set()
     for metric_data in job_metrics.metrics_data:
+        _metrics_assert(metric_data.name not in metric_data_names)
+        metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
     _validate_statuses(job_metrics, metrics_data_map)
