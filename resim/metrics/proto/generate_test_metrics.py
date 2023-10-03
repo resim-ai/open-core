@@ -242,7 +242,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
         ttc_status.metrics_data_id.id.data = _get_uuid_str()
         actor_ttc_status_ids.append(ttc_status.metrics_data_id)
         ttc_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
-        ttc.name = f"{actor['name']} TTC Statuses"
+        ttc_status.name = f"{actor['name']} TTC Statuses"
         ttc_status.unit = ""
         ttc_status.is_indexed = True
         ttc_status.index_data_id.CopyFrom(ttc_index.metrics_data_id)
@@ -356,6 +356,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics):
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     labels = job_metrics.metrics_data.add()
+    labels.name = "Detection latency labels"
     labels.metrics_data_id.id.data = _get_uuid_str()
     labels.data_type = mp.STRING_ARRAY_DATA_TYPE
     labels.is_indexed = False
@@ -420,8 +421,8 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
     temperature_data = job_metrics.metrics_data.add()
     temperature_data.metrics_data_id.id.data = _get_uuid_str()
     temperature_data.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
-    temperature_probe_locations.name = "Temperatures"
-    temperature_probe_locations.unit = "C"
+    temperature_data.name = "Temperatures"
+    temperature_data.unit = "C"
     temperature_data.is_indexed = True
     temperature_data.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
@@ -431,8 +432,8 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
     temperature_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
-    temperature_probe_locations.name = "Temperature Statuses"
-    temperature_probe_locations.unit = ""
+    temperature_status.name = "Temperature Statuses"
+    temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
@@ -458,8 +459,8 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
     temperature_data = job_metrics.metrics_data.add()
     temperature_data.metrics_data_id.id.data = _get_uuid_str()
     temperature_data.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
-    temperature_probe_locations.name = "Temperatures"
-    temperature_probe_locations.unit = "C"
+    temperature_data.name = "Temperatures 2"
+    temperature_data.unit = "C"
     temperature_data.is_indexed = True
     temperature_data.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
@@ -469,8 +470,8 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
     temperature_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
-    temperature_probe_locations.name = "Temperature Statuses"
-    temperature_probe_locations.unit = ""
+    temperature_status.name = "Temperature Statuses 2"
+    temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
@@ -480,7 +481,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
 
     temperature_metric = job_metrics.job_level_metrics.metrics.add()
     temperature_metric.metric_id.id.data = _get_uuid_str()
-    temperature_metric.name = "Upper Chassis Temperature"
+    temperature_metric.name = "Upper Chassis Temperature 2"
     temperature_metric.description = "The temperature of the upper chassis in Celsius"
     temperature_metric.type = mp.DOUBLE_SUMMARY_METRIC_TYPE
     temperature_metric.status = mp.PASSED_METRIC_STATUS
