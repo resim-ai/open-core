@@ -18,63 +18,63 @@ option  go_package = "github.com/resim-ai/open-core/metrics_proto";
 enum MetricsDataType {
     NO_DATA_TYPE = 0;
 
-    // Regular arrays:
-    DOUBLE_ARRAY_DATA_TYPE        = 1;
-    TIMESTAMP_ARRAY_DATA_TYPE     = 2;
-    UUID_ARRAY_DATA_TYPE          = 3;
-    STRING_ARRAY_DATA_TYPE        = 4;
-    METRIC_STATUS_ARRAY_DATA_TYPE = 5;
+    // Regular series:
+    DOUBLE_SERIES_DATA_TYPE        = 1;
+    TIMESTAMP_SERIES_DATA_TYPE     = 2;
+    UUID_SERIES_DATA_TYPE          = 3;
+    STRING_SERIES_DATA_TYPE        = 4;
+    METRIC_STATUS_SERIES_DATA_TYPE = 5;
 
-    // Indexed arrays:
-    INDEXED_DOUBLE_ARRAY_DATA_TYPE        = 6;
-    INDEXED_TIMESTAMP_ARRAY_DATA_TYPE     = 7;
-    INDEXED_UUID_ARRAY_DATA_TYPE          = 8;
-    INDEXED_STRING_ARRAY_DATA_TYPE        = 9;
-    INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE = 10;
+    // Indexed series:
+    INDEXED_DOUBLE_SERIES_DATA_TYPE        = 6;
+    INDEXED_TIMESTAMP_SERIES_DATA_TYPE     = 7;
+    INDEXED_UUID_SERIES_DATA_TYPE          = 8;
+    INDEXED_STRING_SERIES_DATA_TYPE        = 9;
+    INDEXED_METRIC_STATUS_SERIES_DATA_TYPE = 10;
 }
 
 message MetricsDataId {
     resim.proto.UUID id = 1;
 }
 
-message DoubleArray {
-    repeated double array = 1;
+message DoubleSeries {
+    repeated double series = 1;
 }
 
-message TimestampArray {
-    repeated google.protobuf.Timestamp array = 1;
+message TimestampSeries {
+    repeated google.protobuf.Timestamp series = 1;
 }
 
-message UUIDArray {
-    repeated resim.proto.UUID array = 1;
+message UUIDSeries {
+    repeated resim.proto.UUID series = 1;
 }
 
-message StringArray {
-    repeated string array = 1;
+message StringSeries {
+    repeated string series = 1;
 }
 
-message MetricStatusArray {
-    repeated MetricStatus array = 1;
+message MetricStatusSeries {
+    repeated MetricStatus series = 1;
 }
 
-message Array {
-    oneof array {
-        DoubleArray       doubles    = 1;
-        TimestampArray    timestamps = 2;
-        UUIDArray         uuids      = 3;
-        StringArray       strings    = 4;
-        MetricStatusArray statuses   = 5;
+message Series {
+    oneof series {
+        DoubleSeries       doubles    = 1;
+        TimestampSeries    timestamps = 2;
+        UUIDSeries         uuids      = 3;
+        StringSeries       strings    = 4;
+        MetricStatusSeries statuses   = 5;
     }
 }
 
-// This represents a related list of arrays, each associated with a string. The
+// This represents a related list of series, each associated with a string. The
 // main purpose of this is to enable one chart per string within a single
 // metric, without making tons of different MetricsData objects. For example,
 // this might be used to generate one StatesPerTime chart per actor, or one
 // LinePlot (such as a precision-recall curve) per perception category.
 //
-// This differs from INDEXED_ arrays in that these are almost always intended to
-// represent the axes of a single chart, when  one array is the "axis" on which
+// This differs from INDEXED_ series in that these are almost always intended to
+// represent the axes of a single chart, when one series is the "axis" on which
 // to plot another arrray. Note that because of this, per-category MetricsData
 // can be indexed, and should always be indexed by another per-category
 // MetricsData with the same categories.
@@ -83,8 +83,8 @@ message Array {
 // more first-class in our metrics reporting and UI. A good example might be
 // per-actor metrics - but implementing that will rely on a single common
 // representation of actors and actor IDs.
-message ArrayPerCategory {
-    map<string, Array> category_to_array = 1;
+message SeriesPerCategory {
+    map<string, Series> category_to_series = 1;
 }
 
 message MetricsData {
@@ -105,8 +105,8 @@ message MetricsData {
 
     // Data fields
     oneof data {
-        Array            array              = 10;
-        ArrayPerCategory array_per_category = 11;
+        Series            series              = 10;
+        SeriesPerCategory series_per_category = 11;
     }
 }
 
@@ -217,13 +217,13 @@ message DoubleFailureDefinition {
 }
 
 message DoubleSummaryMetricValues {
-    MetricsDataId value_data_id = 1;  // DOUBLE array, optionally indexed
+    MetricsDataId value_data_id = 1;  // DOUBLE series, optionally indexed
     MetricsDataId status_data_id =
-        2;  // METRIC_STATUS array, optionally indexed
+        2;  // METRIC_STATUS series, optionally indexed
 
     oneof index {
         // Optional select index
-        uint32 array_index = 3;
+        uint32 series_index = 3;
 
         // Optional select timestamp from timestamp-indexed data
         google.protobuf.Timestamp timestamp_index = 4;
@@ -240,9 +240,9 @@ message DoubleSummaryMetricValues {
 
 message DoubleOverTimeMetricValues {
     repeated MetricsDataId doubles_over_time_data_id =
-        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+        1;  // INDEXED_DOUBLE_SERIES_DATA_TYPE, indexed by TIMESTAMP
     repeated MetricsDataId statuses_over_time_data_id =
-        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+        2;  // INDEXED_METRIC_STATUS_SERIES_DATA_TYPE, indexed by TIMESTAMP
 
     repeated DoubleFailureDefinition failure_definition = 3;
     optional google.protobuf.Timestamp start_time       = 4;
@@ -253,8 +253,8 @@ message DoubleOverTimeMetricValues {
 }
 
 message LinePlotMetricValues {
-    repeated MetricsDataId x_doubles_data_id = 1;  // DOUBLE_ARRAY_DATA_TYPE
-    repeated MetricsDataId y_doubles_data_id = 2;  // DOUBLE_ARRAY_DATA_TYPE
+    repeated MetricsDataId x_doubles_data_id = 1;  // DOUBLE_SERIES_DATA_TYPE
+    repeated MetricsDataId y_doubles_data_id = 2;  // DOUBLE_SERIES_DATA_TYPE
 
     repeated MetricsDataId statuses_data_id = 3;
 
@@ -265,12 +265,12 @@ message LinePlotMetricValues {
 
 message BarChartMetricValues {
     repeated MetricsDataId values_data_id =
-        1;  // INDEXED_DOUBLE_ARRAY_DATA_TYPE, indexed by STRING
+        1;  // INDEXED_DOUBLE_SERIES_DATA_TYPE, indexed by STRING
     repeated MetricsDataId statuses_data_id =
-        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by STRING
+        2;  // INDEXED_METRIC_STATUS_SERIES_DATA_TYPE, indexed by STRING
 
     repeated string legend_series_names =
-        3;  // One name per INDEXED_DOUBLE_ARRAY
+        3;  // One name per INDEXED_DOUBLE_SERIES
 
     optional string x_axis_name = 4;
     optional string y_axis_name = 5;
@@ -281,9 +281,9 @@ message BarChartMetricValues {
 
 message StatesOverTimeMetricValues {
     repeated MetricsDataId states_over_time_data_id =
-        1;  // INDEXED_STRING_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+        1;  // INDEXED_STRING_SERIES_DATA_TYPE, indexed by TIMESTAMP
     repeated MetricsDataId statuses_over_time_data_id =
-        2;  // INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE, indexed by TIMESTAMP
+        2;  // INDEXED_METRIC_STATUS_SERIES_DATA_TYPE, indexed by TIMESTAMP
 
     repeated string states_set     = 3;
     repeated string failure_states = 4;
@@ -293,8 +293,8 @@ message StatesOverTimeMetricValues {
 
 message HistogramMetricValues {
     MetricsDataId values_data_id =
-        1;  // DOUBLE_ARRAY_DATA_TYPE, can be INDEXED but INDEX is ignored.
-    MetricsDataId statuses_data_id = 2;  // METRIC_STATUS_ARRAY_DATA_TYPE, can
+        1;  // DOUBLE_SERIES_DATA_TYPE, can be INDEXED but INDEX is ignored.
+    MetricsDataId statuses_data_id = 2;  // METRIC_STATUS_SERIES_DATA_TYPE, can
                                          // be INDEXED but INDEX is ignored.
 
     repeated Bucket buckets = 3;
@@ -316,5 +316,5 @@ message ScalarMetricValues {
     optional DoubleFailureDefinition failure_definition = 2;
 
     optional string unit =
-        3;  // Unit is stored in metric here, as no data arrays are used.
+        3;  // Unit is stored in metric here, as no data series are used.
 }
