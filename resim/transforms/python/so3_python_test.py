@@ -19,20 +19,20 @@ import resim.transforms.python.quaternion as quat
 class SO3PythonTest(unittest.TestCase):
     """Unit tests for SO3 pybinding"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Seed the random number generator"""
         np.random.seed(29)
 
-    def test_dims_dof(self):
+    def test_dims_dof(self) -> None:
         """Test that DIMS and DOF are correct"""
         self.assertEqual(so3.SO3.DIMS, 3)
         self.assertEqual(so3.SO3.DOF, 3)
 
-    def test_default_constructor(self):
+    def test_default_constructor(self) -> None:
         """Check that the default constructor, is_approx, and identity work"""
         self.assertTrue(so3.SO3().is_approx(so3.SO3.identity()))
 
-    def test_quaternion(self):
+    def test_quaternion(self) -> None:
         """Check that the quaternion constructor works."""
         # SETUP
         vec = np.random.rand(4)
@@ -55,7 +55,7 @@ class SO3PythonTest(unittest.TestCase):
                         quaternion.z()]) / np.sin(0.5 * angle_rad)
         self.assertTrue(np.allclose(axis * angle_rad, rotation.log()))
 
-    def test_inverse(self):
+    def test_inverse(self) -> None:
         """Check that inversion works"""
         num_tests = 10
         for _ in range(num_tests):
@@ -68,7 +68,7 @@ class SO3PythonTest(unittest.TestCase):
                  rotation.inverse()).is_approx(
                     so3.SO3.identity()))
 
-    def test_interp(self):
+    def test_interp(self) -> None:
         """Check that interpolation works"""
         num_tests = 10
         for _ in range(num_tests):
@@ -84,7 +84,7 @@ class SO3PythonTest(unittest.TestCase):
                         scale *
                         rotation.log())))
 
-    def test_exp_log(self):
+    def test_exp_log(self) -> None:
         """Test that exponential ang log are correct."""
         num_tests = 10
         for _ in range(num_tests):

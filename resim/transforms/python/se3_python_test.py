@@ -19,20 +19,20 @@ import resim.transforms.python.so3_python as so3
 class SE3PythonTest(unittest.TestCase):
     """Unit tests for SE3 pybinding"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Seed the random number generator"""
         np.random.seed(29)
 
-    def test_dims_dof(self):
+    def test_dims_dof(self) -> None:
         """Test that DIMS and DOF are correct"""
         self.assertEqual(se3.SE3.DIMS, 3)
         self.assertEqual(se3.SE3.DOF, 6)
 
-    def test_default_constructor(self):
+    def test_default_constructor(self) -> None:
         """Check that the default constructor, is_approx, and identity work"""
         self.assertTrue(se3.SE3().is_approx(se3.SE3.identity()))
 
-    def test_inverse(self):
+    def test_inverse(self) -> None:
         """Check that inversion works"""
         num_tests = 10
         for _ in range(num_tests):
@@ -45,7 +45,7 @@ class SE3PythonTest(unittest.TestCase):
                  rotation.inverse()).is_approx(
                     se3.SE3.identity()))
 
-    def test_interp(self):
+    def test_interp(self) -> None:
         """Check that interpolation works"""
         num_tests = 10
         for _ in range(num_tests):
@@ -61,7 +61,7 @@ class SE3PythonTest(unittest.TestCase):
                         scale *
                         rotation.log())))
 
-    def test_exp_log(self):
+    def test_exp_log(self) -> None:
         """Test that exponential ang log are correct."""
         num_tests = 10
         for _ in range(num_tests):
@@ -77,7 +77,7 @@ class SE3PythonTest(unittest.TestCase):
             test_se3 = se3.SE3.exp(arg)
             self.assertTrue(np.allclose(test_se3.log(), arg))
 
-    def test_rotation_and_translation(self):
+    def test_rotation_and_translation(self) -> None:
         """Test that rotation and translation getters work."""
         num_tests = 10
         for _ in range(num_tests):
