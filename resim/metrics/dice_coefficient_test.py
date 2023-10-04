@@ -20,7 +20,10 @@ class DiceCoefficientTest(unittest.TestCase):
     Unit tests for dice_coefficient.py
     """
 
-    def test_compute_dice_coefficient(self):
+    def test_compute_dice_coefficient(self) -> None:
+        """
+        Test that we get the right dice coefficient for a variety of setups.
+        """
         box_a = Detection.BoundingBox2D()
         box_a.center_x = 0.
         box_a.center_y = 0.
@@ -55,8 +58,8 @@ class DiceCoefficientTest(unittest.TestCase):
         expected_dice = [0., 0.25] + 2 * [1. - i / \
             (num_sliding_samples - 1) for i in range(num_sliding_samples)]
 
-        for i in range(len(box_b_samples)):
-            dice = dc.compute_dice_coefficient(box_a, box_b_samples[i])
+        for i, box_b in enumerate(box_b_samples):
+            dice = dc.compute_dice_coefficient(box_a, box_b)
             self.assertAlmostEqual(dice, expected_dice[i])
 
 
