@@ -16,35 +16,36 @@ contents that can be posted to the metrics endpoint.
 import uuid
 
 import resim.metrics.proto.metrics_pb2 as mp
+import resim.utils.proto.uuid_pb2 as uuid_proto
 
 
 class InvalidMetricsException(Exception):
     """A simple exception to raise when our metrics are invalid"""
 
 
-def _metrics_assert(val: bool, msg: str = ''):
+def _metrics_assert(val: bool, msg: str = '') -> None:
     """A function to assert conditions on metrics"""
     if not val:
         raise InvalidMetricsException(msg)
 
 
-def _validate_metrics_data_type(metrics_data_type: mp.MetricsDataType):
+def _validate_metrics_data_type(metrics_data_type: mp.MetricsDataType) -> None:
     _metrics_assert(metrics_data_type != mp.NO_DATA_TYPE)
 
 
-def _validate_metric_status(metric_status: mp.MetricStatus):
+def _validate_metric_status(metric_status: mp.MetricStatus) -> None:
     _metrics_assert(metric_status != mp.NO_METRIC_STATUS)
 
 
-def _validate_metric_type(metric_type: mp.MetricType):
+def _validate_metric_type(metric_type: mp.MetricType) -> None:
     _metrics_assert(metric_type != mp.NO_METRIC_TYPE)
 
 
-def _validate_metric_importance(importance: mp.MetricImportance):
+def _validate_metric_importance(importance: mp.MetricImportance) -> None:
     _metrics_assert(importance != mp.NO_SPECIFIED_IMPORTANCE)
 
 
-def _validate_uuid(unique_id):
+def _validate_uuid(unique_id: uuid_proto.UUID) -> None:
     """Check that the given UUID proto is a valid UUID"""
     try:
         uuid.UUID(hex=unique_id.data)
@@ -52,15 +53,15 @@ def _validate_uuid(unique_id):
         raise InvalidMetricsException() from exc
 
 
-def _validate_metrics_data_id(metrics_data_id: mp.MetricsDataId):
+def _validate_metrics_data_id(metrics_data_id: mp.MetricsDataId) -> None:
     _validate_uuid(metrics_data_id.id)
 
 
-def _validate_job_id(job_id: mp.JobId):
+def _validate_job_id(job_id: mp.JobId) -> None:
     _validate_uuid(job_id.id)
 
 
-def _validate_metric_id(metric_id: mp.MetricId):
+def _validate_metric_id(metric_id: mp.MetricId) -> None:
     _validate_uuid(metric_id.id)
 
 
@@ -78,7 +79,7 @@ _ALL_ARRAY_DATA_TYPES = {
 }
 
 
-def is_indexed(data_type: mp.MetricsDataType):
+def is_indexed(data_type: mp.MetricsDataType) -> bool:
     """Is this one of the indexed array data types or not?"""
     return data_type in (
         mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE,
@@ -88,7 +89,7 @@ def is_indexed(data_type: mp.MetricsDataType):
         mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE)
 
 
-def _array_length(array: mp.Array):
+def _array_length(array: mp.Array) -> int:
     """Get the length of an array regardless of its type"""
     _metrics_assert(array.WhichOneof("array") is not None)
     if array.HasField("doubles"):
@@ -105,7 +106,7 @@ def _array_length(array: mp.Array):
 
 
 def _validate_data_arrays_agree(data_a: mp.MetricsData,
-                                data_b: mp.MetricsData):
+                                data_b: mp.MetricsData) -> None:
     """
     Validate that the data schema for two MetricsDatas agree
 
@@ -151,7 +152,7 @@ def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
                                   metrics_data_map: dict[str, mp.MetricsData],
                                   *,
                                   allowed_value_types: set[mp.MetricsDataType],
-                                  allowed_index_types: set[mp.MetricsDataType]):
+                                  allowed_index_types: set[mp.MetricsDataType]) -> None:
     """
     Validate that the given value data and status data match.
 
@@ -200,7 +201,7 @@ def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
 
 def _validate_double_metric_values(
         double_metric_values: mp.DoubleSummaryMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a DoubleSummaryMetricValues is valid.
 
@@ -238,7 +239,7 @@ def _validate_double_metric_values(
 
 def _validate_double_over_time_metric_values(
         double_over_time_metric_values: mp.DoubleOverTimeMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a DoubleOverTimeMetricValues is valid.
 
@@ -267,7 +268,7 @@ def _validate_double_over_time_metric_values(
 
 def _validate_line_plot_metric_values(
         line_plot_metric_values: mp.LinePlotMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a LinePlotMetricValues is valid.
 
@@ -301,7 +302,7 @@ def _validate_line_plot_metric_values(
 
 def _validate_bar_chart_metric_values(
         bar_chart_metric_values: mp.BarChartMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a BarChartMetricValues is valid.
 
@@ -327,7 +328,7 @@ def _validate_bar_chart_metric_values(
 
 def _validate_states_over_time_metric_values(
         states_over_time_metric_values: mp.StatesOverTimeMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a StatesOverTimeMetricValues is valid.
 
@@ -372,7 +373,7 @@ def _validate_states_over_time_metric_values(
 
 def _validate_histogram_metric_values(
         histogram_metric_values: mp.HistogramMetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a HistogramMetricValues is valid.
 
@@ -402,7 +403,7 @@ def _validate_histogram_metric_values(
 
 
 def _validate_scalar_metric_values(
-        scalar_metric_values: mp.ScalarMetricValues):
+        scalar_metric_values: mp.ScalarMetricValues) -> None:
     """
     Check that a ScalarMetricValues is valid.
 
@@ -414,7 +415,7 @@ def _validate_scalar_metric_values(
 
 def _validate_metric_values(
         metric_values: mp.MetricValues,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a MetricValues is valid.
 
@@ -448,7 +449,7 @@ def _validate_metric_values(
 
 
 def _validate_metric(metric: mp.Metric,
-                     metrics_data_map: dict[str, mp.MetricsData]):
+                     metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a Metric is valid.
 
@@ -491,7 +492,7 @@ def _validate_metric(metric: mp.Metric,
 
 def _validate_job_level_metrics(
         job_level_metrics: mp.MetricCollection,
-        metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that a MetricCollection is valid.
 
@@ -506,7 +507,7 @@ def _validate_job_level_metrics(
 
 def _validate_array_matches_type(
         array: mp.Array,
-        data_type: mp.MetricsDataType):
+        data_type: mp.MetricsDataType) -> None:
     """
     Check that a metric data array matches a given type.
 
@@ -531,7 +532,7 @@ def _validate_array_matches_type(
 
 
 def _validate_metrics_data(
-        metrics_data: mp.MetricsData, metrics_data_map: dict[str, mp.MetricsData]):
+        metrics_data: mp.MetricsData, metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that the MetricsData is valid.
 
@@ -607,7 +608,7 @@ def _get_relevant_status_ids(job_metrics: mp.JobMetrics) -> set[str]:
 
 
 def _validate_statuses(job_metrics: mp.JobMetrics,
-                       metrics_data_map: dict[str, mp.MetricsData]):
+                       metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
     Check that the statuses in this JobMetrics are consistent
 
@@ -664,7 +665,7 @@ def build_metrics_data_map(
     return result
 
 
-def validate_job_metrics(job_metrics: mp.JobMetrics):
+def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     """
     Validate that the given JobMetrics is valid and can be posted to the
     endpoint.
