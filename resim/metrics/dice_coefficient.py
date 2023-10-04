@@ -1,11 +1,20 @@
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
 
+
+"""
+A module for computing Sorensen-Dice coefficient.
+"""
 
 import resim.msg.detection_pb2 as Detection
-
 
 def _intersection(
         box_a: Detection.BoundingBox2D,
         box_b: Detection.BoundingBox2D):
+    """Helper to compute the intersection area between 2D bounding boxes."""
     if box_a.theta_rad != 0. != box_b.theta_rad:
         raise ValueError("Rotated boxes not supported!")
 
@@ -24,10 +33,21 @@ def _intersection(
 
 
 def _area(box: Detection.BoundingBox2D):
+    """Helper to compute the area of a 2D box."""
     return box.size_x * box.size_y
 
 
 def compute_dice_coefficient(
         box_a: Detection.BoundingBox2D,
         box_b: Detection.BoundingBox2D):
+    """
+    Compute the Sorensen-Dice coefficient.
+    
+    Args:
+        box_a: The first box.
+        box_b: The second box.
+
+    Returns:
+        The Sorensen-Dice coefficient between box_a and box_b.
+    """
     return 2.0 * _intersection(box_a, box_b) / (_area(box_a) + _area(box_b))

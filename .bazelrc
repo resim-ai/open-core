@@ -1,6 +1,6 @@
-# Not needed after https://github.com/bazelbuild/bazel/issues/7260 is closed
-build --incompatible_enable_cc_toolchain_resolution
-
+build --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build --crosstool_top=//resim/toolchain:clang_suite
+build --cpu=k8
 build:debug -c dbg
 build:debug --copt="-g"
 build:debug --strip="never"
