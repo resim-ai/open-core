@@ -27,7 +27,7 @@ def _get_uuid_str() -> str:
     return '{' + str(uuid.uuid4()) + '}'
 
 
-def _add_double_summary_metric(job_metrics: mp.JobMetrics):
+def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Maximum Speed"
@@ -62,7 +62,7 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics):
     double_summary_values.failure_definition.fails_above = 29.0576
 
 
-def _add_event_counts(job_metrics: mp.JobMetrics):
+def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Event counts"
@@ -105,7 +105,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics):
     double_summary_values.status_data_id.CopyFrom(status_data.metrics_data_id)
 
 
-def _add_subsystem_states(job_metrics: mp.JobMetrics):
+def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Subsystem states"
@@ -179,7 +179,7 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics):
     states_over_time.failure_states.extend(["FAULTED"])
 
 
-def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
+def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Time to collision"
@@ -292,7 +292,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics):
     values.status_data_id.CopyFrom(actor_ttc_status_ids[0])
 
 
-def _add_line_plot_metric(job_metrics: mp.JobMetrics):
+def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Distance prediction accuracy"
@@ -343,7 +343,7 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics):
     line_plot_values.x_axis_name = "Predicted minimum distance"
 
 
-def _add_bar_chart_metric(job_metrics: mp.JobMetrics):
+def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Detection latency"
@@ -363,7 +363,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics):
     labels.array.strings.array.extend(
         [f"camera_{i}" for i in range(3)])
 
-    data_series = [{
+    data_series: list[dict[str, Any]] = [{
         "name": "Camera timings",
         "data": [1.5, 2.6, 1.8],
         "statuses": [mp.PASSED_METRIC_STATUS, mp.FAILED_METRIC_STATUS,
@@ -409,7 +409,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics):
     bar_chart_values.y_axis_name = "Mean Latency"
 
 
-def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
+def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_probe_locations = job_metrics.metrics_data.add()
     temperature_probe_locations.metrics_data_id.id.data = _get_uuid_str()
     temperature_probe_locations.data_type = mp.STRING_ARRAY_DATA_TYPE
@@ -541,7 +541,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics):
     values.uuid_index.CopyFrom(waypoints.array.uuids.array[0])
 
 
-def _add_states_over_time_metric(job_metrics: mp.JobMetrics):
+def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Lane change states"
@@ -591,7 +591,7 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics):
     states_over_time.failure_states.extend(["COLLISION"])
 
 
-def _add_histogram_metric(job_metrics: mp.JobMetrics):
+def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Number of detections"
@@ -653,7 +653,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics):
         bucket.upper = 10 * (i + 1)
 
 
-def _add_scalar_metric(job_metrics: mp.JobMetrics):
+def _add_scalar_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Ambient Temperature"
@@ -667,7 +667,7 @@ def _add_scalar_metric(job_metrics: mp.JobMetrics):
     metric.metric_values.scalar_metric_values.value = 6.28318530718
 
 
-def _populate_metrics_statuses(job_metrics: mp.JobMetrics):
+def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
 
     job_metrics_status = mp.PASSED_METRIC_STATUS
