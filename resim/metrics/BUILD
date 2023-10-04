@@ -4,7 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_python//python:defs.bzl", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -81,5 +83,29 @@ cc_test(
         "//resim/utils:uuid",
         "//resim/utils/testing:mock_logger",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+pybind_extension(
+    name = "data_series",
+    srcs = ["data_series.cc"],
+    deps = [
+    ],
+)
+
+pybind_extension(
+    name = "some_metric",
+    srcs = ["some_metric.cc"],
+    deps = [
+        ":data_series.so",
+    ],
+)
+
+py_test(
+    name = "some_metric_test",
+    srcs = ["some_metric_test.py"],
+    data = [
+        ":data_series.so",
+        ":some_metric.so",
     ],
 )
