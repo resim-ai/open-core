@@ -1,4 +1,4 @@
-name: hello-world
+name: Release
 on: 
   push:
     branches:
@@ -30,4 +30,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
+          draft: true
           tag: ${{ steps.get_release_tag.outputs.release_tag }}
