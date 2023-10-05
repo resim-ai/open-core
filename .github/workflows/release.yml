@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: my-step
-        run: echo "Hello World from ${GITHUB_REF}!"
+        run: echo "Hello World from ${GITHUB_REF#refs/heads/prod/release-}!"
