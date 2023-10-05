@@ -42,8 +42,8 @@ jobs:
         uses: trunk-io/trunk-action@v1
 
       - name: Draft Release 
-        if: "${{ inputs.tag != '' }}"
+        if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
           draft: true
-          tag: ${{ inputs.tag }} 
+          tag: ${{ github.event.inputs.tag }} 
