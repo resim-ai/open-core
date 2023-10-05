@@ -1,16 +1,14 @@
-name: Release
+name: Draft Release
 on: 
-  push:
-    branches:
-      - prod/release-**
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: "Release Tag"
 jobs:
-  release:
+  draft-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Get Release Tag 
-        run: echo "release_tag=v${GITHUB_REF#refs/heads/prod/release-}" >> $GITHUB_OUTPUT
-        id: get_release_tag
-      
       - name: Checkout
         uses: actions/checkout@v3
 
