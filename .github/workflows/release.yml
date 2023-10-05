@@ -7,5 +7,27 @@ jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
-      - name: my-step
-        run: echo "Hello World from ${GITHUB_REF#refs/heads/prod/release-}!"
+      - name: Get Release Tag 
+        run: echo "release_tag=${GITHUB_REF#refs/heads/prod/release-}" >> $GITHUB_OUTPUT
+        id: get_release_tag
+      
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Build Metrics Tools
+        run: bazel build //resim/metrics:resim_metrics_tools
+
+      - name: Release 
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
+          tag: ${{ steps.get_release_tag.outputs.release_tag }}
