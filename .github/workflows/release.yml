@@ -48,4 +48,4 @@ jobs:
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
           draft: true
-          tag: ${{ steps.get_release_tag.outputs.release_tag }}
+          tag: ${{ inputs.tag }} 
