@@ -7,7 +7,10 @@ on:
         description: "Release Tag"
 jobs:
   draft-release:
-    runs-on: ubuntu-latest
+    name: Draft Release
+    runs-on: ubuntu-20.04
+    container:
+      image: public.ecr.aws/resim/core:latest 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,9 +46,10 @@ jobs:
       - name: Build Metrics Tools
         run: bazel build //resim/metrics:resim_metrics_tools
 
-      - name: Release 
+      - name: Draft Release 
+        if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
           draft: true
-          tag: ${{ inputs.tag }} 
+          tag: ${{ github.event.inputs.tag }} 
