@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Release Tag 
-        run: echo "release_tag=${GITHUB_REF#refs/heads/prod/release-}" >> $GITHUB_OUTPUT
+        run: echo "release_tag=v${GITHUB_REF#refs/heads/prod/release-}" >> $GITHUB_OUTPUT
         id: get_release_tag
       
       - name: Checkout
