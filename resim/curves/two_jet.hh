@@ -33,9 +33,9 @@ namespace resim::curves {
 // tangent space. But, also TwoJetR - with the point frame on the right and
 // derivatives in RIGHT tangent space. For more information on left and right
 // tangent spaces, see the following documentation:
-//  - https://docs.resim.ai/curves/#two-jet
-//  - https://docs.resim.ai/transforms/using_liegroups/
-//  - https://docs.resim.ai/transforms/liegroup_derivatives/
+//  - https://docs.resim.ai/open-core/curves/#two-jet
+//  - https://docs.resim.ai/open-core/transforms/using_liegroups/
+//  - https://docs.resim.ai/open-core/transforms/liegroup_derivatives/
 //
 // In general we expect implementations to be opinionated about whether they
 // prefer to be in LEFT or RIGHT tangent space and use either TwoJetL or
