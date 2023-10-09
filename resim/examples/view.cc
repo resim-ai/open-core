@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the View documentation at
-// https://docs.resim.ai/visualization/
+// https://docs.resim.ai/open-core/visualization/
 
 #include "resim/visualization/view.hh"
 
