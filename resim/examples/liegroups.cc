@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Lie groups documentation at
-// https://docs.resim.ai/transforms/using_liegroups/
+// https://docs.resim.ai/open-core/transforms/using_liegroups/
 
 #include <Eigen/Dense>
 #include <cmath>

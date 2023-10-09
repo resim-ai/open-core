@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Curves documentation at
-// https://docs.resim.ai/curves/
+// https://docs.resim.ai/open-core/curves/
 
 #include <cstdlib>
 

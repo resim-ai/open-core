@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Match documentation at
-// https://docs.resim.ai/utils/match/
+// https://docs.resim.ai/open-core/utils/match/
 
 #include "resim/utils/match.hh"
 
