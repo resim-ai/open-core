@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Gaussian documentation at
-// https://docs.resim.ai/math/gaussian/
+// https://docs.resim.ai/open-core/math/gaussian/
 
 #include <fmt/core.h>
 

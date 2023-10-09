@@ -24,7 +24,7 @@ Currently, the libraries are divided up into:
  - [Curves](resim/curves): Libraries for curves through 3D space.
  - [Actor](resim/actor/state): Libraries for rigid body states and trajectories.
  - [Visualization](resim/visualization): Libraries for visualizing 3D objects
-   with [ReSim View](https://docs.resim.ai/visualization/).
+   with [ReSim View](https://docs.resim.ai/open-core/visualization/).
  - [Testing](resim/testing): Common libraries for testing.
  - [Auth](resim/auth): Device code client for use with oauth.
  - [Dynamics](resim/dynamics): Libraries for defining and integrating dynamics.
