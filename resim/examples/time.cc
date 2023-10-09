@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Time documentation at
-// https://docs.resim.ai/time/time/
+// https://docs.resim.ai/open-core/time/time/
 
 #include <cmath>
 #include <cstdlib>

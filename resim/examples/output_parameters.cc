@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Output Parameters documentation at
-// https://docs.resim.ai/utils/output_parameters/
+// https://docs.resim.ai/open-core/utils/output_parameters/
 
 #include <iostream>
 

@@ -15,7 +15,7 @@ in for ReRun.
 To run this example, it is assumed that you have cloned the `resim-ai/open-core`
 repository and that you are operating inside of the development docker container
 shipped with it. See the [getting started
-guide](https://docs.resim.ai/#getting-started) for more information.
+guide](https://docs.resim.ai/open-core/#getting-started) for more information.
 
 ## Running the example
 
