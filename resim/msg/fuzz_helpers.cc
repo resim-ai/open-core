@@ -96,6 +96,17 @@ bool verify_equality(const Odometry &a, const Odometry &b) {
          verify_equality(a.twist(), b.twist());
 }
 
+bool verify_equality(const ObjectHypothesis &a, const ObjectHypothesis &b) {
+  return a.class_id() == b.class_id() and a.score() == b.score();
+}
+
+bool verify_equality(
+    const ObjectHypothesisWithPose &a,
+    const ObjectHypothesisWithPose &b) {
+  return verify_equality(a.hypothesis(), b.hypothesis()) and
+         verify_equality(a.pose(), b.pose());
+}
+
 bool verify_equality(const Detection3D &a, const Detection3D &b) {
   return verify_equality(a.header(), b.header()) and
          verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
@@ -110,8 +121,20 @@ bool verify_equality(const BoundingBox2D &a, const BoundingBox2D &b) {
 }
 
 bool verify_equality(const Detection2D &a, const Detection2D &b) {
-  return verify_equality(a.header(), b.header()) and
-         verify_equality(a.bbox(), b.bbox()) and a.id() == b.id();
+  if (not(verify_equality(a.header(), b.header()) and
+          verify_equality(a.bbox(), b.bbox()) and a.id() == b.id())) {
+    return false;
+  }
+  if (a.results_size() != b.results_size()) {
+    return false;
+  }
+
+  for (int ii = 0; ii < a.results_size(); ++ii) {
+    if (not verify_equality(a.results(ii), b.results(ii))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool verify_equality(const Detection3DArray &a, const Detection3DArray &b) {
@@ -156,4 +179,5 @@ bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
          resim::verify_equality(a.altitude_m(), b.altitude_m()) and
          a.position_covariance_type() == b.position_covariance_type();
 }
+
 }  // namespace resim::msg

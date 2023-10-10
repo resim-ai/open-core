@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("@rules_python//python:proto.bzl", "py_proto_library")
 
 proto_library(
@@ -73,4 +74,31 @@ py_proto_library(
     name = "metrics_proto_py",
     visibility = ["//visibility:public"],
     deps = [":metrics_proto"],
+)
+
+py_library(
+    name = "generate_test_metrics",
+    testonly = True,
+    srcs = ["generate_test_metrics.py"],
+    deps = [
+        ":metrics_proto_py",
+    ],
+)
+
+py_library(
+    name = "validate_metrics_proto",
+    srcs = ["validate_metrics_proto.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":metrics_proto_py",
+    ],
+)
+
+py_test(
+    name = "validate_metrics_proto_test",
+    srcs = ["validate_metrics_proto_test.py"],
+    deps = [
+        ":generate_test_metrics",
+        ":validate_metrics_proto",
+    ],
 )

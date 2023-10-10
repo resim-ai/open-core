@@ -128,6 +128,29 @@ Odometry random_element(TypeTag<Odometry> /*unused*/, InOut<Rng> rng) {
 }
 
 template <typename Rng>
+ObjectHypothesis random_element(
+    TypeTag<ObjectHypothesis> /*unused*/,
+    InOut<Rng> rng) {
+  ObjectHypothesis result;
+  result.set_class_id(UUID::new_uuid().to_string());
+  constexpr double MIN = 0.;
+  constexpr double MAX = 1.;
+  std::uniform_real_distribution<double> dist{MIN, MAX};
+  result.set_score(dist(*rng));
+  return result;
+}
+
+template <typename Rng>
+ObjectHypothesisWithPose random_element(
+    TypeTag<ObjectHypothesisWithPose> /*unused*/,
+    InOut<Rng> rng) {
+  ObjectHypothesisWithPose result;
+  result.mutable_hypothesis()->CopyFrom(random_element<ObjectHypothesis>(rng));
+  result.mutable_pose()->CopyFrom(random_element<PoseWithCovariance>(rng));
+  return result;
+}
+
+template <typename Rng>
 Detection3D random_element(TypeTag<Detection3D> /*unused*/, InOut<Rng> rng) {
   Detection3D result;
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
@@ -163,6 +186,15 @@ template <typename Rng>
 Detection2D random_element(TypeTag<Detection2D> /*unused*/, InOut<Rng> rng) {
   Detection2D result;
   result.mutable_header()->CopyFrom(random_element<Header>(rng));
+  constexpr int MIN_ELEMENTS = 1;
+  constexpr int MAX_ELEMENTS = 10;
+  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
+  const int num_elements = dist(*rng);
+  for (int ii = 0; ii < num_elements; ++ii) {
+    result.add_results()->CopyFrom(
+        random_element<ObjectHypothesisWithPose>(rng));
+  }
+
   result.mutable_bbox()->CopyFrom(random_element<BoundingBox2D>(rng));
   result.set_id(UUID::new_uuid().to_string());
   return result;
@@ -256,6 +288,12 @@ bool verify_equality(
     const TwistWithCovariance &b);
 
 bool verify_equality(const Odometry &a, const Odometry &b);
+
+bool verify_equality(const ObjectHypothesis &a, const ObjectHypothesis &b);
+
+bool verify_equality(
+    const ObjectHypothesisWithPose &a,
+    const ObjectHypothesisWithPose &b);
 
 bool verify_equality(const Detection3D &a, const Detection3D &b);
 
