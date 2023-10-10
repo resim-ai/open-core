@@ -5,6 +5,8 @@ on:
       tag:
         type: string
         description: "Release Tag"
+  pull_request:
+
 jobs:
   draft-release:
     name: Draft Release
@@ -43,11 +45,13 @@ jobs:
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
 
-        # TODO(michael) Add build commands for artifacts and include them in the release
+      - name: Build Metrics Tools
+        run: bazel build //resim/metrics:resim_metrics_tools
 
       - name: Draft Release 
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
+          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
           draft: true
           tag: ${{ github.event.inputs.tag }} 
