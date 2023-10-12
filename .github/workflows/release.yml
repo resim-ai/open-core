@@ -53,6 +53,6 @@ jobs:
       - name: Draft Release 
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz", "bazel-bin/pkg/*.whl"
+          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
           draft: true
           tag: "wheel_test"
