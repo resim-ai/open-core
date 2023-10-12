@@ -16,7 +16,7 @@ def _intersection(
         box_a: Detection.BoundingBox2D,
         box_b: Detection.BoundingBox2D) -> float:
     """Helper to compute the intersection area between 2D bounding boxes."""
-    if box_a.theta_rad != 0. != box_b.theta_rad:
+    if box_a.theta_rad != 0. or box_b.theta_rad != 0.:
         raise ValueError("Rotated boxes not supported!")
 
     # Since we're not allowing rotations, the intersection area is simple:
