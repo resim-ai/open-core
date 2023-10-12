@@ -39,6 +39,7 @@ def resim_core_transitive_dependencies():
         # We recommend using the same version your team is already standardized on.
         python_version = "3.10",
         ignore_root_user_error = True,
+        register_coverage_tool = True,
     )
 
     hedron_compile_commands_setup()
