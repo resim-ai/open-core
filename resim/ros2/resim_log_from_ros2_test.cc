@@ -6,6 +6,7 @@
 
 #include "resim/ros2/resim_log_from_ros2.hh"
 
+#include <google/protobuf/message.h>
 #include <gtest/gtest.h>
 
 #include <cstring>

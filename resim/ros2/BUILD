@@ -313,6 +313,7 @@ ros2_cpp_test(
         "//resim/utils:tuple_utils",
         "//resim/utils/proto:dependency_file_descriptor_set",
         "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
         "@ros2_rclcpp//:rclcpp",
         "@ros2_rosbag2//:rosbag2_cpp",
         "@ros2_rosbag2//:rosbag2_storage",
