@@ -14,8 +14,8 @@ namespace resim::ros2 {
 
 // ROS2 converters for nav_sat_fixes
 
-NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg);
+msg::NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg);
 
-sensor_msgs::msg::NavSatFix convert_to_ros2(const NavSatFix &resim_msg);
+sensor_msgs::msg::NavSatFix convert_to_ros2(const msg::NavSatFix &resim_msg);
 
 }  // namespace resim::ros2

@@ -20,13 +20,13 @@ namespace resim::ros2 {
 TEST(ConverterPluginTest, TestConstructor) {
   // ACTION / VERIFICATION
   EXPECT_NO_THROW(
-      ConverterPlugin{"resim/msg/testing/good_test_converter_plugin.so"});
+      ConverterPlugin{"resim/ros2/testing/good_test_converter_plugin.so"});
   EXPECT_THROW(ConverterPlugin{"no_such_plugin.so"}, AssertException);
 }
 
 TEST(ConverterPluginTest, TestDestructor) {
   // Make sure we don't free a null handle;
-  ConverterPlugin plugin{"resim/msg/testing/good_test_converter_plugin.so"};
+  ConverterPlugin plugin{"resim/ros2/testing/good_test_converter_plugin.so"};
 
   dlclose(plugin.handle_);
   plugin.handle_ = nullptr;
@@ -35,7 +35,7 @@ TEST(ConverterPluginTest, TestDestructor) {
 TEST(ConverterPluginTest, TestSupportsType) {
   // SETUP
   const ConverterPlugin plugin{
-      "resim/msg/testing/good_test_converter_plugin.so"};
+      "resim/ros2/testing/good_test_converter_plugin.so"};
 
   // ACTION / VERIFICATION
   EXPECT_TRUE(plugin.supports_type("convertible_message_type"));
@@ -45,7 +45,7 @@ TEST(ConverterPluginTest, TestSupportsType) {
 TEST(ConverterPluginTest, TestGetSchema) {
   // SETUP
   const ConverterPlugin plugin{
-      "resim/msg/testing/good_test_converter_plugin.so"};
+      "resim/ros2/testing/good_test_converter_plugin.so"};
 
   // ACITON / VERIFICATION
   const auto schema_info = plugin.get_schema("convertible_message_type");
@@ -70,7 +70,7 @@ TEST(ConverterPluginTest, TestGetSchema) {
 TEST(ConverterPluginTest, TestConvert) {
   // SETUP
   const ConverterPlugin plugin{
-      "resim/msg/testing/good_test_converter_plugin.so"};
+      "resim/ros2/testing/good_test_converter_plugin.so"};
 
   constexpr std::string_view TEST_MESSAGE = "My message content!";
   rclcpp::SerializedMessage ros2_message{TEST_MESSAGE.size()};

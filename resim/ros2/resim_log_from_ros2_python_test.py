@@ -15,7 +15,7 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
         os.environ["AMENT_PREFIX_PATH"] = "resim/msg/resim_log_from_ros2_python_ament/"
 
     def test_resim_log_from_ros2_python(self) -> None:
-        rfr2.resim_log_from_ros2('resim/msg/default_converter_plugin.so', '/workspaces/log.mcap', 'out.mcap')
+        rfr2.resim_log_from_ros2('resim/ros2/default_converter_plugin.so', '/workspaces/log.mcap', 'out.mcap')
 
 if __name__ == '__main__':
     unittest.main()

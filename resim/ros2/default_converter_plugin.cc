@@ -13,7 +13,7 @@
 #include <unordered_map>
 
 #include "resim/assert/assert.hh"
-#include "resim/msg/converter_plugin_types.h"
+#include "resim/ros2/converter_plugin_types.h"
 #include "resim/ros2/detection_from_ros2.hh"
 #include "resim/ros2/header_from_ros2.hh"
 #include "resim/ros2/navsat_from_ros2.hh"
@@ -118,7 +118,7 @@ const std::unordered_map<std::string, ConverterFunctions> converters_map = {
     {"geometry_msgs/msg/Twist",
      {convert_message<geometry_msgs::msg::Twist>,
       generate_type_schema<geometry_msgs::msg::Twist>}},
-    {"geometry_msgs/msg/msg::TwistWithCovariance",
+    {"geometry_msgs/msg/TwistWithCovariance",
      {convert_message<geometry_msgs::msg::TwistWithCovariance>,
       generate_type_schema<geometry_msgs::msg::TwistWithCovariance>}},
     {"nav_msgs/msg/Odometry",

@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-#include "resim/msg/converter_plugin_types.h"
+#include "resim/ros2/converter_plugin_types.h"
 
 namespace resim::ros2 {
 

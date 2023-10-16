@@ -13,7 +13,7 @@
 #include <unordered_map>
 
 #include "resim/assert/assert.hh"
-#include "resim/msg/converter_plugin_types.h"
+#include "resim/ros2/converter_plugin_types.h"
 
 namespace resim {
 

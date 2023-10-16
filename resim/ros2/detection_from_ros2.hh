@@ -20,41 +20,46 @@ namespace resim::ros2 {
 
 // ROS2 converters for detections
 
-ObjectHypothesis convert_from_ros2(
+msg::ObjectHypothesis convert_from_ros2(
     const vision_msgs::msg::ObjectHypothesis &ros2_msg);
 
 vision_msgs::msg::ObjectHypothesis convert_to_ros2(
-    const ObjectHypothesis &resim_msg);
+    const msg::ObjectHypothesis &resim_msg);
 
-ObjectHypothesisWithPose convert_from_ros2(
+msg::ObjectHypothesisWithPose convert_from_ros2(
     const vision_msgs::msg::ObjectHypothesisWithPose &ros2_msg);
 
 vision_msgs::msg::ObjectHypothesisWithPose convert_to_ros2(
-    const ObjectHypothesisWithPose &resim_msg);
+    const msg::ObjectHypothesisWithPose &resim_msg);
 
-Detection3D convert_from_ros2(const vision_msgs::msg::Detection3D &ros2_msg);
+msg::Detection3D convert_from_ros2(
+    const vision_msgs::msg::Detection3D &ros2_msg);
 
-vision_msgs::msg::Detection3D convert_to_ros2(const Detection3D &resim_msg);
+vision_msgs::msg::Detection3D convert_to_ros2(
+    const msg::Detection3D &resim_msg);
 
-Detection3DArray convert_from_ros2(
+msg::Detection3DArray convert_from_ros2(
     const vision_msgs::msg::Detection3DArray &ros2_msg);
 
 vision_msgs::msg::Detection3DArray convert_to_ros2(
-    const Detection3DArray &resim_msg);
+    const msg::Detection3DArray &resim_msg);
 
-BoundingBox2D convert_from_ros2(
+msg::BoundingBox2D convert_from_ros2(
     const vision_msgs::msg::BoundingBox2D &ros2_msg);
 
-vision_msgs::msg::BoundingBox2D convert_to_ros2(const BoundingBox2D &resim_msg);
+vision_msgs::msg::BoundingBox2D convert_to_ros2(
+    const msg::BoundingBox2D &resim_msg);
 
-Detection2D convert_from_ros2(const vision_msgs::msg::Detection2D &ros2_msg);
+msg::Detection2D convert_from_ros2(
+    const vision_msgs::msg::Detection2D &ros2_msg);
 
-vision_msgs::msg::Detection2D convert_to_ros2(const Detection2D &resim_msg);
+vision_msgs::msg::Detection2D convert_to_ros2(
+    const msg::Detection2D &resim_msg);
 
-Detection2DArray convert_from_ros2(
+msg::Detection2DArray convert_from_ros2(
     const vision_msgs::msg::Detection2DArray &ros2_msg);
 
 vision_msgs::msg::Detection2DArray convert_to_ros2(
-    const Detection2DArray &resim_msg);
+    const msg::Detection2DArray &resim_msg);
 
 }  // namespace resim::ros2

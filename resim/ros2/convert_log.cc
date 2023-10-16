@@ -15,7 +15,7 @@ namespace resim::ros2 {
 
 int convert_log(const int argc, char **const argv) {
   cxxopts::Options options{"convert_log", "Convert ROS2 Logs to ReSim Format."};
-  constexpr auto DEFAULT_PLUGIN_PATH = "resim/msg/default_converter_plugin.so";
+  constexpr auto DEFAULT_PLUGIN_PATH = "resim/ros2/default_converter_plugin.so";
   // clang-format off
   options.add_options()
     ("l,log", "Log location (required)", cxxopts::value<std::string>())
@@ -45,4 +45,4 @@ int convert_log(const int argc, char **const argv) {
 
 }  // namespace resim::ros2
 
-int main(int argc, char **argv) { return resim::msg::convert_log(argc, argv); }
+int main(int argc, char **argv) { return resim::ros2::convert_log(argc, argv); }

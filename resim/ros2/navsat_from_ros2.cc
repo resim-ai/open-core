@@ -11,25 +11,25 @@
 
 namespace resim::ros2 {
 
-NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg) {
+msg::NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg) {
   using Status = sensor_msgs::msg::NavSatStatus;
   using Fix = sensor_msgs::msg::NavSatFix;
 
-  NavSatFix result;
+  msg::NavSatFix result;
   result.mutable_header()->CopyFrom(convert_from_ros2(ros2_msg.header));
 
   switch (ros2_msg.status.status) {
     case Status::STATUS_NO_FIX:
-      result.set_status(NavSatFix::STATUS_NO_FIX);
+      result.set_status(msg::NavSatFix::STATUS_NO_FIX);
       break;
     case Status::STATUS_FIX:
-      result.set_status(NavSatFix::STATUS_FIX);
+      result.set_status(msg::NavSatFix::STATUS_FIX);
       break;
     case Status::STATUS_SBAS_FIX:
-      result.set_status(NavSatFix::STATUS_SBAS_FIX);
+      result.set_status(msg::NavSatFix::STATUS_SBAS_FIX);
       break;
     case Status::STATUS_GBAS_FIX:
-      result.set_status(NavSatFix::STATUS_GBAS_FIX);
+      result.set_status(msg::NavSatFix::STATUS_GBAS_FIX);
       break;
     default:
       REASSERT(false, "Unrecognized status!");
@@ -46,18 +46,20 @@ NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg) {
 
   switch (ros2_msg.position_covariance_type) {
     case Fix::COVARIANCE_TYPE_UNKNOWN:
-      result.set_position_covariance_type(NavSatFix::COVARIANCE_TYPE_UNKNOWN);
+      result.set_position_covariance_type(
+          msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN);
       break;
     case Fix::COVARIANCE_TYPE_APPROXIMATED:
       result.set_position_covariance_type(
-          NavSatFix::COVARIANCE_TYPE_APPROXIMATED);
+          msg::NavSatFix::COVARIANCE_TYPE_APPROXIMATED);
       break;
     case Fix::COVARIANCE_TYPE_DIAGONAL_KNOWN:
       result.set_position_covariance_type(
-          NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN);
+          msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN);
       break;
     case Fix::COVARIANCE_TYPE_KNOWN:
-      result.set_position_covariance_type(NavSatFix::COVARIANCE_TYPE_KNOWN);
+      result.set_position_covariance_type(
+          msg::NavSatFix::COVARIANCE_TYPE_KNOWN);
       break;
     default:
       REASSERT(false, "Unrecognized covariance type!");
@@ -65,7 +67,7 @@ NavSatFix convert_from_ros2(const sensor_msgs::msg::NavSatFix &ros2_msg) {
   return result;
 }
 
-sensor_msgs::msg::NavSatFix convert_to_ros2(const NavSatFix &resim_msg) {
+sensor_msgs::msg::NavSatFix convert_to_ros2(const msg::NavSatFix &resim_msg) {
   using Status = sensor_msgs::msg::NavSatStatus;
   using Fix = sensor_msgs::msg::NavSatFix;
 
@@ -73,16 +75,16 @@ sensor_msgs::msg::NavSatFix convert_to_ros2(const NavSatFix &resim_msg) {
   result.header = convert_to_ros2(resim_msg.header());
 
   switch (resim_msg.status()) {
-    case NavSatFix::STATUS_NO_FIX:
+    case msg::NavSatFix::STATUS_NO_FIX:
       result.status.status = Status::STATUS_NO_FIX;
       break;
-    case NavSatFix::STATUS_FIX:
+    case msg::NavSatFix::STATUS_FIX:
       result.status.status = Status::STATUS_FIX;
       break;
-    case NavSatFix::STATUS_SBAS_FIX:
+    case msg::NavSatFix::STATUS_SBAS_FIX:
       result.status.status = Status::STATUS_SBAS_FIX;
       break;
-    case NavSatFix::STATUS_GBAS_FIX:
+    case msg::NavSatFix::STATUS_GBAS_FIX:
       result.status.status = Status::STATUS_GBAS_FIX;
       break;
     default:
@@ -101,16 +103,16 @@ sensor_msgs::msg::NavSatFix convert_to_ros2(const NavSatFix &resim_msg) {
     result.position_covariance.at(ii) = resim_msg.position_covariance_m2(ii);
   }
   switch (resim_msg.position_covariance_type()) {
-    case NavSatFix::COVARIANCE_TYPE_UNKNOWN:
+    case msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN:
       result.position_covariance_type = Fix::COVARIANCE_TYPE_UNKNOWN;
       break;
-    case NavSatFix::COVARIANCE_TYPE_APPROXIMATED:
+    case msg::NavSatFix::COVARIANCE_TYPE_APPROXIMATED:
       result.position_covariance_type = Fix::COVARIANCE_TYPE_APPROXIMATED;
       break;
-    case NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN:
+    case msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN:
       result.position_covariance_type = Fix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
       break;
-    case NavSatFix::COVARIANCE_TYPE_KNOWN:
+    case msg::NavSatFix::COVARIANCE_TYPE_KNOWN:
       result.position_covariance_type = Fix::COVARIANCE_TYPE_KNOWN;
       break;
     default:

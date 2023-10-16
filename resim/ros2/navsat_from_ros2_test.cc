@@ -23,10 +23,11 @@ TEST(NavSatFixFromRos2Test, TestRoundTrip) {
   // Do a lot of tests so we cover all switch branches.
   constexpr int NUM_TESTS = 500;
   for (int ii = 0; ii < NUM_TESTS; ++ii) {
-    const NavSatFix test_nav_sat_fix{random_element<NavSatFix>(InOut{rng})};
+    const msg::NavSatFix test_nav_sat_fix{
+        random_element<msg::NavSatFix>(InOut{rng})};
 
     // ACTION
-    const NavSatFix round_tripped{
+    const msg::NavSatFix round_tripped{
         convert_from_ros2(convert_to_ros2(test_nav_sat_fix))};
 
     // VERIFICATION
@@ -39,11 +40,11 @@ TEST(NavSatFixFromRos2Test, TestBadStatuses) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  NavSatFix nav_sat_fix{random_element<NavSatFix>(InOut{rng})};
+  msg::NavSatFix nav_sat_fix{random_element<msg::NavSatFix>(InOut{rng})};
   auto nav_sat_fix_ros2{convert_to_ros2(nav_sat_fix)};
 
   constexpr int BAD_VALUE = 100;
-  nav_sat_fix.set_status(static_cast<NavSatFix::Status>(BAD_VALUE));
+  nav_sat_fix.set_status(static_cast<msg::NavSatFix::Status>(BAD_VALUE));
   nav_sat_fix_ros2.status.status = BAD_VALUE;
 
   // ACTION / VERIFICATION
@@ -56,12 +57,12 @@ TEST(NavSatFixFromRos2Test, TestBadCovarianceTypes) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  NavSatFix nav_sat_fix{random_element<NavSatFix>(InOut{rng})};
+  msg::NavSatFix nav_sat_fix{random_element<msg::NavSatFix>(InOut{rng})};
   auto nav_sat_fix_ros2{convert_to_ros2(nav_sat_fix)};
 
   constexpr int BAD_VALUE = 100;
   nav_sat_fix.set_position_covariance_type(
-      static_cast<NavSatFix::CovarianceType>(BAD_VALUE));
+      static_cast<msg::NavSatFix::CovarianceType>(BAD_VALUE));
   nav_sat_fix_ros2.position_covariance_type = BAD_VALUE;
 
   // ACTION / VERIFICATION

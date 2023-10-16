@@ -1,4 +1,11 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 cc_library(
     name = "time_from_ros2",
@@ -152,9 +159,9 @@ cc_library(
     srcs = ["detection_from_ros2.cc"],
     hdrs = ["detection_from_ros2.hh"],
     deps = [
-        ":detection_proto_cc",
         ":header_from_ros2",
         ":oriented_box_from_ros2",
+        "//resim/msg:detection_proto_cc",
         "@vision_msgs//:cpp_vision_msgs",
     ],
 )
@@ -164,8 +171,168 @@ cc_test(
     srcs = ["detection_from_ros2_test.cc"],
     deps = [
         ":detection_from_ros2",
-        ":fuzz_helpers",
+        "//resim/msg:fuzz_helpers",
         "//resim/testing:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "navsat_from_ros2",
+    srcs = ["navsat_from_ros2.cc"],
+    hdrs = ["navsat_from_ros2.hh"],
+    deps = [
+        ":header_from_ros2",
+        "//resim/assert",
+        "//resim/msg:navsat_proto_cc",
+        "@ros2_common_interfaces//:cpp_sensor_msgs",
+    ],
+)
+
+cc_test(
+    name = "navsat_from_ros2_test",
+    srcs = ["navsat_from_ros2_test.cc"],
+    deps = [
+        ":navsat_from_ros2",
+        "//resim/msg:fuzz_helpers",
+        "//resim/testing:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "converter_plugin_types",
+    hdrs = ["converter_plugin_types.h"],
+    visibility = ["//resim/ros2:__subpackages__"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "converter_plugin",
+    srcs = ["converter_plugin.cc"],
+    hdrs = ["converter_plugin.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
+    deps = [
+        ":converter_plugin_types",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_prod",
+        "@ros2_rclcpp//:rclcpp",
+    ],
+)
+
+cc_test(
+    name = "converter_plugin_test",
+    srcs = ["converter_plugin_test.cc"],
+    data = [
+        "//resim/ros2/testing:good_test_converter_plugin.so",
+    ],
+    deps = [
+        ":converter_plugin",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "default_converter_plugin.so",
+    srcs = ["default_converter_plugin.cc"],
+    linkshared = True,
+    visibility = ["//resim/ros2:__subpackages__"],
+    deps = [
+        ":converter_plugin_types",
+        ":detection_from_ros2",
+        ":header_from_ros2",
+        ":navsat_from_ros2",
+        ":odometry_from_ros2",
+        ":oriented_box_from_ros2",
+        ":pose_from_ros2",
+        ":time_from_ros2",
+        ":transform_from_ros2",
+        "//resim/assert",
+        "//resim/utils/proto:dependency_file_descriptor_set",
+        "@ros2_rclcpp//:rclcpp",
+    ],
+)
+
+cc_test(
+    name = "default_converter_plugin_test",
+    srcs = ["default_converter_plugin_test.cc"],
+    data = [":default_converter_plugin.so"],
+    deps = [
+        ":converter_plugin",
+        ":detection_from_ros2",
+        ":header_from_ros2",
+        ":navsat_from_ros2",
+        ":odometry_from_ros2",
+        ":oriented_box_from_ros2",
+        ":pose_from_ros2",
+        ":time_from_ros2",
+        ":transform_from_ros2",
+        "//resim/assert",
+        "//resim/msg:fuzz_helpers",
+        "//resim/msg:odometry_proto_cc",
+        "//resim/msg:transform_proto_cc",
+        "//resim/utils:inout",
+        "//resim/utils/proto:dependency_file_descriptor_set",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "resim_log_from_ros2",
+    srcs = ["resim_log_from_ros2.cc"],
+    hdrs = ["resim_log_from_ros2.hh"],
+    deps = [
+        ":converter_plugin",
+        "//resim/assert",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils:inout",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
+    ],
+)
+
+ros2_cpp_test(
+    name = "resim_log_from_ros2_test",
+    testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
+    srcs = ["resim_log_from_ros2_test.cc"],
+    data = [":default_converter_plugin.so"],
+    set_up_ament = True,
+    deps = [
+        ":converter_plugin",
+        ":odometry_from_ros2",
+        ":resim_log_from_ros2",
+        ":transform_from_ros2",
+        "//resim/msg:fuzz_helpers",
+        "//resim/testing:fuzz_helpers",
+        "//resim/testing:test_directory",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/time:timestamp",
+        "//resim/utils:inout",
+        "//resim/utils:tuple_utils",
+        "//resim/utils/proto:dependency_file_descriptor_set",
+        "@com_google_googletest//:gtest_main",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
+        "@ros2_rosbag2//:rosbag2_storage",
+    ],
+)
+
+ros2_cpp_binary(
+    name = "convert_log",
+    srcs = ["convert_log.cc"],
+    data = [":default_converter_plugin.so"],
+    set_up_ament = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":converter_plugin",
+        ":resim_log_from_ros2",
+        "//resim/assert",
+        "//resim/third_party/mcap:mcap_impl",
+        "//resim/utils:inout",
+        "@cxxopts",
+        "@ros2_rclcpp//:rclcpp",
+        "@ros2_rosbag2//:rosbag2_cpp",
     ],
 )
