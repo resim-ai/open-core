@@ -5,7 +5,9 @@
 # https://opensource.org/licenses/MIT.
 
 load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load(":ros2_py_package.bzl", "ros2_py_package")
 
 cc_library(
     name = "time_from_ros2",
@@ -335,5 +337,20 @@ ros2_cpp_binary(
         "@cxxopts",
         "@ros2_rclcpp//:rclcpp",
         "@ros2_rosbag2//:rosbag2_cpp",
+    ],
+)
+
+pybind_extension(
+    name = "resim_log_from_ros2_python",
+    srcs = ["resim_log_from_ros2_python.cc"],
+    deps = [
+        ":resim_log_from_ros2",
+    ],
+)
+
+ros2_py_package(
+    name = "ros2_py_package",
+    deps = [
+        ":resim_log_from_ros2_python.so",
     ],
 )
