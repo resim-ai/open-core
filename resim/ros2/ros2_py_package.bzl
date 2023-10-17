@@ -37,6 +37,8 @@ which need to be taken care of when doing this. Namely:
     - resim-msg
 """
 
+load("@bazel_skylib//lib:paths.bzl", "paths")
+load("@com_github_mvukov_rules_ros2//ros2:ament.bzl", "Ros2AmentSetupInfo", "ros2_ament_setup")
 load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
 
 RelinkedSharedObjectInfo = provider(
@@ -72,6 +74,7 @@ def _relink_dynamic_library(ctx, name, runpath, linker_inputs, **kwargs):
     # to our shared object file and we don't have access to the private API of
     # link needed to avoid this
     output = ctx.actions.declare_file(name)
+    print(name)
     ctx.actions.run(
         inputs = [dynamic_library],
         outputs = [output],
@@ -84,7 +87,7 @@ def _relink_dynamic_library(ctx, name, runpath, linker_inputs, **kwargs):
 _RELINKING_PREFIX = "resim_relinking_prefix/"
 
 def _relink_dynamic_libraries_aspect_impl(target, ctx):
-    relinked_libs = {}
+    relinked_libs = []
     if hasattr(target[OutputGroupInfo], "interface_library"):
         oldlib = target[OutputGroupInfo].interface_library.to_list()[0]
 
@@ -95,7 +98,11 @@ def _relink_dynamic_libraries_aspect_impl(target, ctx):
             runpath = "$ORIGIN"
         else:
             # Otherwise, it will be in the root and we have to compute a relpath
-            runpath = "/".join(["$ORIGIN"] + ([".."] * (len(oldlib.short_path.split("/")) - 1)) + ["resim.libs"])
+            runpath_components = []
+            runpath_components.append("$ORIGIN")
+            runpath_components.extend([".."] * (len(oldlib.short_path.split("/")) - 1))
+            runpath_components.append("resim.libs")
+            runpath = "/".join(runpath_components)
 
         # Collect the linker inputs from the deps of this library
         linker_inputs = []
@@ -107,14 +114,16 @@ def _relink_dynamic_libraries_aspect_impl(target, ctx):
         compilation_outputs = cc_common.create_compilation_outputs(pic_objects = target[OutputGroupInfo].compilation_outputs)
 
         # Create the relinked libraries
-        lib = _relink_dynamic_library(ctx, name = _RELINKING_PREFIX + target.label.name, compilation_outputs = compilation_outputs, runpath = runpath, linker_inputs = linker_inputs)
-        relinked_libs[target[OutputGroupInfo].interface_library.to_list()[0]] = lib
+        lib = _relink_dynamic_library(ctx, name = _RELINKING_PREFIX + oldlib.basename, compilation_outputs = compilation_outputs, runpath = runpath, linker_inputs = linker_inputs)
+        relinked_libs.append(lib)
 
     attrs = ["srcs", "deps", "data"]
+    transitive_libs = []
     for attr in attrs:
         for dep in getattr(ctx.rule.attr, attr, []):
             if RelinkedSharedObjectInfo in dep:
-                relinked_libs.update(dep[RelinkedSharedObjectInfo].shared_libs)
+                transitive_libs.append(dep[RelinkedSharedObjectInfo].shared_libs)
+    relinked_libs = depset(relinked_libs, transitive = transitive_libs)
     return [RelinkedSharedObjectInfo(shared_libs = relinked_libs)]
 
 relink_dynamic_libraries_aspect = aspect(
@@ -129,21 +138,18 @@ relink_dynamic_libraries_aspect = aspect(
     fragments = ["cpp"],
 )
 
-def _ros2_py_package_impl(ctx):
+def _ros2_py_package_rule_impl(ctx):
     outs = []
     runfiles = [dep[DefaultInfo].default_runfiles.files for dep in ctx.attr.deps]
     runfiles = depset(transitive = runfiles).to_list()
-
+    subpackage_prefix = ctx.attr.subpackage_prefix
     for f in runfiles:
-        in_root = f.short_path.startswith("resim/ros2")
-        is_lib = False and f.basename.endswith(".so")
+        in_root = f.short_path.startswith(subpackage_prefix)
+        is_lib = f.basename.endswith(".so")
         if not in_root or is_lib:
             continue
-        if in_root:
-            path = f.short_path
-        print(f.basename)
-
-        out = ctx.actions.declare_file(ctx.attr.name + "/" + path)
+        path = f.short_path
+        out = ctx.actions.declare_file(paths.join(ctx.attr.name, path))
         ctx.actions.run(
             outputs = [out],
             inputs = [f],
@@ -152,16 +158,17 @@ def _ros2_py_package_impl(ctx):
         )
         outs.append(out)
 
-    shared_libs = {}
+    shared_libs = []
     for dep in ctx.attr.deps:
-        shared_libs.update(dep[RelinkedSharedObjectInfo].shared_libs)
+        shared_libs.append(dep[RelinkedSharedObjectInfo].shared_libs)
+    shared_libs = depset(transitive = shared_libs).to_list()
 
     for lib in shared_libs:
-        in_root = lib.short_path.startswith("resim")
+        in_root = lib.short_path.startswith(subpackage_prefix)
         if in_root:
             path = lib.short_path.replace(_RELINKING_PREFIX, "")
         else:
-            path = "resim.libs/" + lib.basename
+            path = paths.join("resim.libs", lib.basename)
         out = ctx.actions.declare_file(ctx.attr.name + "/" + path)
         ctx.actions.run(
             outputs = [out],
@@ -171,51 +178,59 @@ def _ros2_py_package_impl(ctx):
         )
         outs.append(out)
 
-    #
-    #    for k, v in libs.items():
-    #        in_root = k.short_path.startswith("resim")
-    #        if in_root:
-    #            path = k.short_path
-    #        else:
-    #            path = "resim.libs/" + k.basename
-    #
-    #        out = ctx.actions.declare_file(ctx.attr.name + "/" + path)
-    #        ctx.actions.run(
-    #            outputs = [out],
-    #            inputs = [v],
-    #            executable = "cp",
-    #            arguments = [v.path, out.path],
-    #        )
-    #        outs.append(out)
-    #
-    #    for ament_file in ctx.attr.ament[DefaultInfo].files.to_list():
-    #        path = ament_file.short_path.replace("resim/metrics/resim_metrics_tools_ament/", "resim.libs/ament/")
-    #        out = ctx.actions.declare_file(ctx.attr.name + "/" + path)
-    #        ctx.actions.run(
-    #            outputs = [out],
-    #            inputs = [ament_file],
-    #            executable = "cp",
-    #            arguments = [ament_file.path, out.path],
-    #        )
-    #        outs.append(out)
-    #
-    #    for extra_file in ctx.attr.extra_files[DefaultInfo].files.to_list():
-    #        path = extra_file.short_path.replace("resim/metrics/package/", "resim/")
-    #        out = ctx.actions.declare_file(ctx.attr.name + "/" + path)
-    #        ctx.actions.run(
-    #            outputs = [out],
-    #            inputs = [extra_file],
-    #            executable = "cp",
-    #            arguments = [extra_file.path, out.path],
-    #        )
-    #        outs.append(out)
+    ament = ctx.attr.ament
+    prefix_path = ament[Ros2AmentSetupInfo].ament_prefix_path
+
+    for ament_file in ctx.attr.ament[DefaultInfo].files.to_list():
+        path = ament_file.short_path.replace(
+            prefix_path,
+            paths.join("resim.libs", "ament"),
+        )
+        out = ctx.actions.declare_file(paths.join(ctx.attr.name, path))
+        ctx.actions.run(
+            outputs = [out],
+            inputs = [ament_file],
+            executable = "cp",
+            arguments = [ament_file.path, out.path],
+        )
+        outs.append(out)
+
+    initfile = ctx.actions.declare_file(paths.join(ctx.attr.name, subpackage_prefix, "__init__.py"))
+    ctx.actions.write(
+        output = initfile,
+        content = ctx.attr.initcontent,
+    )
+    outs.append(initfile)
 
     return [DefaultInfo(files = depset(outs))]
 
-ros2_py_package = rule(
-    implementation = _ros2_py_package_impl,
+ros2_py_package_rule = rule(
+    implementation = _ros2_py_package_rule_impl,
     attrs = {
-        "ament": attr.label(),
+        "ament": attr.label(providers = [Ros2AmentSetupInfo]),
         "deps": attr.label_list(aspects = [relink_dynamic_libraries_aspect]),
+        "initcontent": attr.string(),
+        "subpackage_prefix": attr.string(),
     },
 )
+
+def ros2_py_package(
+        *,
+        name,
+        deps,
+        subpackage_prefix,
+        initcontent,
+        visibility):
+    ros2_py_package_rule(
+        name = name,
+        deps = deps,
+        subpackage_prefix = subpackage_prefix,
+        ament = ":{}.ament".format(name),
+        initcontent = initcontent,
+        visibility = visibility,
+    )
+
+    ros2_ament_setup(
+        name = "{}.ament".format(name),
+        deps = deps,
+    )

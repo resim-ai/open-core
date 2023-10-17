@@ -348,8 +348,26 @@ pybind_extension(
     ],
 )
 
+INIT_CONTENT = """# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+import os
+import pathlib
+
+RESIM_DIR = pathlib.Path(__file__).parent.resolve()
+LIB_DIR = pathlib.Path(__file__).parent.parent.resolve() / "resim.libs"
+os.environ["AMENT_PREFIX_PATH"] = str(LIB_DIR / "ament")
+os.environ["RMW_IMPLEMENTATION"] = str(LIB_DIR / "librmw_cyclonedds.so")
+"""
+
 ros2_py_package(
     name = "ros2_py_package",
+    initcontent = INIT_CONTENT,
+    subpackage_prefix = "resim/ros2",
+    visibility = ["//visibility:public"],
     deps = [
         ":resim_log_from_ros2_python.so",
     ],

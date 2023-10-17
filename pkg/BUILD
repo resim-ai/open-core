@@ -82,3 +82,22 @@ py_wheel(
     version = version,
     deps = [":metrics_package"],
 )
+
+py_wheel(
+    name = "ros2_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_ros2",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    python_tag = "py3",
+    requires = [
+        "protobuf>=4.24.4",
+    ],
+    strip_path_prefixes = ["resim/ros2/ros2_py_package/"],
+    summary = "ReSim ROS2 Libraries.",
+    version = version,
+    deps = ["//resim/ros2:ros2_py_package"],
+)
