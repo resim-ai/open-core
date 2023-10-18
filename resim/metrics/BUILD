@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -81,5 +82,21 @@ cc_test(
         "//resim/utils:uuid",
         "//resim/utils/testing:mock_logger",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+py_library(
+    name = "dice_coefficient",
+    srcs = ["dice_coefficient.py"],
+    deps = [
+        "//resim/msg:detection_proto_py",
+    ],
+)
+
+py_test(
+    name = "dice_coefficient_test",
+    srcs = ["dice_coefficient_test.py"],
+    deps = [
+        ":dice_coefficient",
     ],
 )

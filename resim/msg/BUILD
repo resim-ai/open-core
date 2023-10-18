@@ -121,6 +121,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "detection_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":detection_proto",
     ],
