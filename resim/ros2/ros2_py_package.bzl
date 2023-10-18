@@ -29,7 +29,7 @@ which need to be taken care of when doing this. Namely:
    environment variables to be correctly set for dynamic loading of
    plugins. In particular, RMW_IMPLEMENTATION and AMENT_PREFIX_PATH
    need to be set, so we do this within a custom __init__.py at
-   resim/ros2/__init__.py in the resultint tree.
+   resim/ros2/__init__.py in the resulting tree.
 
  - We include only runfiles in resim/ros2 and resim.libs in the
    resulting tree. The external dependencies should be provided by
@@ -42,6 +42,7 @@ load("@com_github_mvukov_rules_ros2//ros2:ament.bzl", "Ros2AmentSetupInfo", "ros
 load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
 
 RelinkedSharedObjectInfo = provider(
+    "Info for the shared object files we've relinked with a new runpath.",
     fields = {
         "shared_libs": "The libraries we've re-linked",
     },
@@ -74,7 +75,6 @@ def _relink_dynamic_library(ctx, name, runpath, linker_inputs, **kwargs):
     # to our shared object file and we don't have access to the private API of
     # link needed to avoid this
     output = ctx.actions.declare_file(name)
-    print(name)
     ctx.actions.run(
         inputs = [dynamic_library],
         outputs = [output],
