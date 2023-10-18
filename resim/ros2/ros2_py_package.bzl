@@ -7,7 +7,7 @@
 """
 Tools for packaging ROS2-dependent libs in python
 
-This module defines an aspect, rules, and a macron to be used when
+This module defines an aspect, rules, and a macro to be used when
 assembling a filetree for packaging by py_wheel in
 @rules_python//python:packaging.bzl. There are a number of details
 which need to be taken care of when doing this. Namely:
@@ -31,10 +31,6 @@ which need to be taken care of when doing this. Namely:
    need to be set, so we do this within a custom __init__.py at
    resim/ros2/__init__.py in the resulting tree.
 
- - We include only runfiles in resim/ros2 and resim.libs in the
-   resulting tree. The external dependencies should be provided by
-   other python packages we distribute, namely:
-    - resim-msg
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
