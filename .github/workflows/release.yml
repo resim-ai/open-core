@@ -1,6 +1,5 @@
 name: Draft Release
-on:
-  pull_request:
+on: 
   workflow_dispatch:
     inputs:
       tag:
@@ -51,8 +50,9 @@ jobs:
         run: bazel build //pkg/...
 
       - name: Draft Release 
+        if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
           draft: true
-          tag: "testing_${GITHUB_SHA}"
+          tag: ${{ github.event.inputs.tag }}
