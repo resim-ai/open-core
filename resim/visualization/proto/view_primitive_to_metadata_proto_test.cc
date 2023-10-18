@@ -45,7 +45,8 @@ using PayloadTypes = ::testing::Types<
     SO3,
     curves::DCurve<SE3>,
     curves::TCurve<SE3>,
-    actor::state::Trajectory>;
+    actor::state::Trajectory,
+    FramedVector>;
 
 TYPED_TEST_SUITE(ViewPrimitiveToMetadataProtoTypedTest, PayloadTypes);
 
