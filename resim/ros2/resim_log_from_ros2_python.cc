@@ -7,14 +7,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <iostream>
+
 #include "resim/ros2/resim_log_from_ros2.hh"
 
 namespace resim::ros2 {
 namespace py = pybind11;
 
-// A simple pybinding of Eigen::Quaterniond intended to facilitate the
-// construction of SO3 objects. We leave out functionality like inversion and
-// composition because users should use SO3 for thess.
 PYBIND11_MODULE(resim_log_from_ros2_python, m) {
   m.def(
       "resim_log_from_ros2",
