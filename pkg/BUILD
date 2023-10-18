@@ -62,6 +62,9 @@ py_package(
     packages = ["resim"],
     deps = [
         "//resim/metrics:dice_coefficient",
+        "//resim/transforms/python:quaternion.so",
+        "//resim/transforms/python:se3_python.so",
+        "//resim/transforms/python:so3_python.so",
     ],
 )
 
