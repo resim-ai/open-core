@@ -85,7 +85,7 @@ py_wheel(
 
 py_package(
     name = "msg_package",
-    packages = ["resim"],
+    packages = ["resim.msg"],
     deps = [
         "//resim/msg:detection_proto_py",
         "//resim/msg:header_proto_py",
