@@ -8,7 +8,7 @@
 """
 Unit tests for dice_coefficient.py
 """
-
+import copy
 import unittest
 
 import resim.msg.detection_pb2 as Detection
@@ -55,12 +55,34 @@ class DiceCoefficientTest(unittest.TestCase):
                 size_x=1.,
                 size_y=1.) for i in range(num_sliding_samples)]
 
-        expected_dice = [0., 0.25] + 2 * [1. - i / \
-            (num_sliding_samples - 1) for i in range(num_sliding_samples)]
+        expected_sliding_sample_dice = (
+            [1. - i / (num_sliding_samples - 1) for i in range(num_sliding_samples)])
+        expected_dice = [0., 0.25] + 2 * expected_sliding_sample_dice
 
         for i, box_b in enumerate(box_b_samples):
             dice = dc.compute_dice_coefficient(box_a, box_b)
             self.assertAlmostEqual(dice, expected_dice[i])
+
+    def test_fails_on_spun_box(self) -> None:
+        """
+        Test that we currently fail on boxes with non-zero spin.
+
+        We plan to support this functionality in the future at which point this
+        test should be removed.
+        """
+        box = Detection.BoundingBox2D()
+        box.center_x = 0.
+        box.center_y = 0.
+        box.size_x = 1.
+        box.size_y = 1.
+
+        spun_box = copy.copy(box)
+        spun_box.theta_rad = 1e-5
+
+        with self.assertRaises(ValueError):
+            dc.compute_dice_coefficient(box, spun_box)
+        with self.assertRaises(ValueError):
+            dc.compute_dice_coefficient(spun_box, box)
 
 
 if __name__ == '__main__':
