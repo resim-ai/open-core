@@ -107,6 +107,7 @@ proto_library(
     srcs = ["detection.proto"],
     deps = [
         ":header_proto",
+        ":pose_proto",
         "//resim/geometry/proto:oriented_box_proto",
     ],
 )
