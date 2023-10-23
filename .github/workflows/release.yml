@@ -5,8 +5,6 @@ on:
       tag:
         type: string
         description: "Release Tag"
-  pull_request:
-
 jobs:
   draft-release:
     name: Draft Release
@@ -49,9 +47,9 @@ jobs:
         run: bazel build //resim/metrics:resim_metrics_tools
 
       - name: Draft Release 
-        # if: "${{ github.event.inputs.tag != '' }}"
+        if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz"
           draft: true
-          tag: 8a130c159e6a8849256b0a785ec6d8f40cb43133
+          tag: ${{ github.event.inputs.tag }} 
