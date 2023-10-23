@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 cc_library(
@@ -99,4 +100,25 @@ py_test(
     deps = [
         ":dice_coefficient",
     ],
+)
+
+pkg_tar(
+    name = "resim_metrics_tools",
+    srcs = [
+        ":dice_coefficient",
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/msg:convert_log",
+        "//resim/msg:detection_proto_py",
+        "//resim/msg:header_proto_py",
+        "//resim/msg:navsat_proto_py",
+        "//resim/msg:odometry_proto_py",
+        "//resim/msg:pose_proto_py",
+        "//resim/msg:transform_proto_py",
+        "//resim/transforms/python:se3_python.so",
+        "//resim/transforms/python:so3_python.so",
+    ],
+    extension = "tar.gz",
+    include_runfiles = True,
+    strip_prefix = "/",
 )
