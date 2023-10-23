@@ -8,8 +8,19 @@ syntax = "proto3";
 
 import "resim/msg/header.proto";
 import "resim/geometry/proto/oriented_box.proto";
+import "resim/msg/pose.proto";
 
 package resim.msg;
+
+message ObjectHypothesis {
+    string class_id = 1;
+    double score    = 2;
+}
+
+message ObjectHypothesisWithPose {
+    ObjectHypothesis   hypothesis = 1;
+    PoseWithCovariance pose       = 2;
+}
 
 message Detection3D {
     Header header = 1;
@@ -33,9 +44,8 @@ message BoundingBox2D {
 message Detection2D {
     Header header = 1;
 
-    // TODO(mikebauer) Add results field when we need it to match ROS
-    // vision_msgs::msg::Detection2D message.
-    //
+    repeated ObjectHypothesisWithPose results = 2;
+
     BoundingBox2D bbox = 3;
 
     string id = 4;
