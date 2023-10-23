@@ -11,6 +11,7 @@ load("@rules_python//python:defs.bzl", "py_test")
 pybind_extension(
     name = "quaternion",
     srcs = ["quaternion.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         "@libeigen//:eigen",
     ],
