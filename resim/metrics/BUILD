@@ -89,6 +89,7 @@ cc_test(
 py_library(
     name = "dice_coefficient",
     srcs = ["dice_coefficient.py"],
+    visibility = ["//pkg:__subpackages__"],
     deps = [
         "//resim/msg:detection_proto_py",
     ],
@@ -108,13 +109,13 @@ pkg_tar(
         ":dice_coefficient",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
-        "//resim/msg:convert_log",
         "//resim/msg:detection_proto_py",
         "//resim/msg:header_proto_py",
         "//resim/msg:navsat_proto_py",
         "//resim/msg:odometry_proto_py",
         "//resim/msg:pose_proto_py",
         "//resim/msg:transform_proto_py",
+        "//resim/ros2:convert_log",
         "//resim/transforms/python:se3_python.so",
         "//resim/transforms/python:so3_python.so",
     ],
