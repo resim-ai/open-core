@@ -41,19 +41,19 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
 
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
-    data.data_type = mp.DOUBLE_ARRAY_DATA_TYPE
+    data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
     data.name = "Ad-hoc speed metric"
     data.unit = "m/s"
     data.is_per_category = False
-    data.array.doubles.array.append(27.)
+    data.series.doubles.series.append(27.)
 
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
-    status_data.data_type = mp.METRIC_STATUS_ARRAY_DATA_TYPE
+    status_data.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
     status_data.name = "Speed metric status"
     status_data.unit = ""
     status_data.is_per_category = False
-    status_data.array.statuses.array.append(mp.PASSED_METRIC_STATUS)
+    status_data.series.statuses.series.append(mp.PASSED_METRIC_STATUS)
 
     double_summary_values = metric.metric_values.double_metric_values
     double_summary_values.value_data_id.CopyFrom(data.metrics_data_id)
@@ -76,28 +76,28 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
 
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
-    data.data_type = mp.DOUBLE_ARRAY_DATA_TYPE
+    data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
     data.name = "Event counts"
     data.unit = ""
     data.is_per_category = True
     data.category_names.append("Engage")
     data.category_names.append("Disengage")
-    data.array_per_category.category_to_array["Engage"].doubles.array.append(
+    data.series_per_category.category_to_series["Engage"].doubles.series.append(
         4.)
-    data.array_per_category.category_to_array["Disengage"].doubles.array.append(
+    data.series_per_category.category_to_series["Disengage"].doubles.series.append(
         3.)
 
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
-    status_data.data_type = mp.METRIC_STATUS_ARRAY_DATA_TYPE
+    status_data.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
     status_data.name = "Event Counts Status"
     status_data.unit = ""
     status_data.is_per_category = True
     status_data.category_names.append("Engage")
     status_data.category_names.append("Disengage")
-    status_data.array_per_category.category_to_array["Engage"].statuses.array.append(
+    status_data.series_per_category.category_to_series["Engage"].statuses.series.append(
         mp.PASSED_METRIC_STATUS)
-    status_data.array_per_category.category_to_array["Disengage"].statuses.array.append(
+    status_data.series_per_category.category_to_series["Disengage"].statuses.series.append(
         mp.FAILED_METRIC_STATUS)
 
     double_summary_values = metric.metric_values.double_metric_values
@@ -119,22 +119,22 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
 
     times = job_metrics.metrics_data.add()
     times.metrics_data_id.id.data = _get_uuid_str()
-    times.data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+    times.data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
     times.name = "Subsystem state times"
     times.is_per_category = True
     times.category_names.extend(["Planner", "Localization"])
-    planner_arr = times.array_per_category.category_to_array["Planner"]
-    localization_arr = times.array_per_category.category_to_array["Localization"]
+    planner_arr = times.series_per_category.category_to_series["Planner"]
+    localization_arr = times.series_per_category.category_to_series["Localization"]
 
-    array_length = 10
-    for i in range(array_length):
-        planner_arr.timestamps.array.add().seconds = i
-        localization_arr.timestamps.array.add().seconds = i
+    series_length = 10
+    for i in range(series_length):
+        planner_arr.timestamps.series.add().seconds = i
+        localization_arr.timestamps.series.add().seconds = i
 
-    def create_data_array(*,
+    def create_data_series(*,
                           data_type: mp.MetricsDataType,
                           name: str,
-                          array_getter: str,
+                          series_getter: str,
                           planner_data: list[Any],
                           localization_data: list[Any]) -> mp.MetricsDataId:
         data = job_metrics.metrics_data.add()
@@ -146,29 +146,29 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
 
         data.is_indexed = True
         data.index_data_id.CopyFrom(times.metrics_data_id)
-        data.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+        data.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
 
-        planner_arr = data.array_per_category.category_to_array["Planner"]
-        getattr(planner_arr, array_getter).array.extend(planner_data)
-        localization_arr = data.array_per_category.category_to_array["Localization"]
-        getattr(localization_arr, array_getter).array.extend(localization_data)
+        planner_arr = data.series_per_category.category_to_series["Planner"]
+        getattr(planner_arr, series_getter).series.extend(planner_data)
+        localization_arr = data.series_per_category.category_to_series["Localization"]
+        getattr(localization_arr, series_getter).series.extend(localization_data)
         return data.metrics_data_id
 
-    value_id = create_data_array(
-        data_type=mp.INDEXED_STRING_ARRAY_DATA_TYPE,
+    value_id = create_data_series(
+        data_type=mp.INDEXED_STRING_SERIES_DATA_TYPE,
         name="Subsystem states",
-        array_getter="strings",
+        series_getter="strings",
         planner_data=[
-            "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(array_length)],
-        localization_data=array_length *
+            "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(series_length)],
+        localization_data=series_length *
         ["ENGAGED"])
 
-    status_id = create_data_array(
-        data_type=mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE,
+    status_id = create_data_series(
+        data_type=mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE,
         name="Subsystem states status",
-        array_getter="statuses",
-        planner_data=array_length * [mp.PASSED_METRIC_STATUS],
-        localization_data=array_length * [mp.PASSED_METRIC_STATUS])
+        series_getter="statuses",
+        planner_data=series_length * [mp.PASSED_METRIC_STATUS],
+        localization_data=series_length * [mp.PASSED_METRIC_STATUS])
 
     states_over_time = metric.metric_values.states_over_time_metric_values
     states_over_time.states_over_time_data_id.add().CopyFrom(value_id)
@@ -193,13 +193,13 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
 
     ttc_index = job_metrics.metrics_data.add()
     ttc_index.metrics_data_id.id.data = _get_uuid_str()
-    ttc_index.data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+    ttc_index.data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
     ttc_index.name = "TTC Times"
     ttc_index.unit = ""
 
-    ttc_timestamps = ttc_index.array.timestamps
+    ttc_timestamps = ttc_index.series.timestamps
     for i in range(10):
-        ttc_timestamps.array.add().seconds = i
+        ttc_timestamps.series.add().seconds = i
 
     actor_ttc_data = [
         {
@@ -228,33 +228,33 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
         ttc = job_metrics.metrics_data.add()
         ttc.metrics_data_id.id.data = _get_uuid_str()
         actor_ttc_value_ids.append(ttc.metrics_data_id)
-        ttc.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
+        ttc.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
         ttc.name = f"{actor['name']} TTC"
         ttc.unit = "sec"
         ttc.is_indexed = True
         ttc.index_data_id.CopyFrom(ttc_index.metrics_data_id)
-        ttc.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+        ttc.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
 
-        ttc_doubles = ttc.array.doubles
-        ttc_doubles.array.extend(actor["doubles"])
+        ttc_doubles = ttc.series.doubles
+        ttc_doubles.series.extend(actor["doubles"])
 
         ttc_status = job_metrics.metrics_data.add()
         ttc_status.metrics_data_id.id.data = _get_uuid_str()
         actor_ttc_status_ids.append(ttc_status.metrics_data_id)
-        ttc_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+        ttc_status.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
         ttc_status.name = f"{actor['name']} TTC Statuses"
         ttc_status.unit = ""
         ttc_status.is_indexed = True
         ttc_status.index_data_id.CopyFrom(ttc_index.metrics_data_id)
-        ttc_status.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+        ttc_status.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
 
-        ttc_statuses = ttc_status.array.statuses
-        for val in ttc_doubles.array:
+        ttc_statuses = ttc_status.series.statuses
+        for val in ttc_doubles.series:
             if val < fails_below:
-                ttc_statuses.array.append(mp.FAILED_METRIC_STATUS)
+                ttc_statuses.series.append(mp.FAILED_METRIC_STATUS)
                 metric.status = mp.FAILED_METRIC_STATUS
             else:
-                ttc_statuses.array.append(mp.PASSED_METRIC_STATUS)
+                ttc_statuses.series.append(mp.PASSED_METRIC_STATUS)
 
         double_over_time_values.doubles_over_time_data_id.add().CopyFrom(
             ttc.metrics_data_id)
@@ -272,7 +272,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     summary_metric.importance = mp.ZERO_IMPORTANCE
     summary_metric.job_id.CopyFrom(job_metrics.job_id)
     values = summary_metric.metric_values.double_metric_values
-    values.array_index = 0
+    values.series_index = 0
     values.value_data_id.CopyFrom(actor_ttc_value_ids[0])
     values.status_data_id.CopyFrom(actor_ttc_status_ids[0])
 
@@ -318,20 +318,20 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     for series in data_series:
         metrics_data = job_metrics.metrics_data.add()
         metrics_data.metrics_data_id.id.data = _get_uuid_str()
-        metrics_data.data_type = mp.DOUBLE_ARRAY_DATA_TYPE
+        metrics_data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
         metrics_data.name = series["name"]
         metrics_data.unit = "m/s"
         metrics_data.is_indexed = False
-        metrics_data.array.doubles.array.extend(series["data"])
+        metrics_data.series.doubles.series.extend(series["data"])
         metrics_data_ids.append(metrics_data.metrics_data_id)
 
     line_plot_data_statuses = job_metrics.metrics_data.add()
     line_plot_data_statuses.metrics_data_id.id.data = _get_uuid_str()
-    line_plot_data_statuses.data_type = mp.METRIC_STATUS_ARRAY_DATA_TYPE
+    line_plot_data_statuses.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
     line_plot_data_statuses.name = "D pred statuses"
     line_plot_data_statuses.unit = ""
     line_plot_data_statuses.is_indexed = False
-    line_plot_data_statuses.array.statuses.array.extend(
+    line_plot_data_statuses.series.statuses.series.extend(
         len(data_series[0]["data"]) * [mp.PASSED_METRIC_STATUS])
 
     line_plot_values = metric.metric_values.line_plot_metric_values
@@ -358,9 +358,9 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     labels = job_metrics.metrics_data.add()
     labels.name = "Detection latency labels"
     labels.metrics_data_id.id.data = _get_uuid_str()
-    labels.data_type = mp.STRING_ARRAY_DATA_TYPE
+    labels.data_type = mp.STRING_SERIES_DATA_TYPE
     labels.is_indexed = False
-    labels.array.strings.array.extend(
+    labels.series.strings.series.extend(
         [f"camera_{i}" for i in range(3)])
 
     data_series: list[dict[str, Any]] = [{
@@ -382,23 +382,23 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     for series in data_series:
         metrics_data = job_metrics.metrics_data.add()
         metrics_data.metrics_data_id.id.data = _get_uuid_str()
-        metrics_data.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
+        metrics_data.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
         metrics_data.name = series["name"]
         metrics_data.unit = "msec"
         metrics_data.is_indexed = True
         metrics_data.index_data_id.CopyFrom(labels.metrics_data_id)
-        metrics_data.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-        metrics_data.array.doubles.array.extend(series["data"])
+        metrics_data.index_data_type = mp.STRING_SERIES_DATA_TYPE
+        metrics_data.series.doubles.series.extend(series["data"])
 
         metrics_data_statuses = job_metrics.metrics_data.add()
         metrics_data_statuses.metrics_data_id.id.data = _get_uuid_str()
-        metrics_data_statuses.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+        metrics_data_statuses.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
         metrics_data_statuses.name = series["name"] + " statuses"
         metrics_data_statuses.unit = ""
         metrics_data_statuses.is_indexed = True
         metrics_data_statuses.index_data_id.CopyFrom(labels.metrics_data_id)
-        metrics_data_statuses.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-        metrics_data_statuses.array.statuses.array.extend(series["statuses"])
+        metrics_data_statuses.index_data_type = mp.STRING_SERIES_DATA_TYPE
+        metrics_data_statuses.series.statuses.series.extend(series["statuses"])
         bar_chart_values.values_data_id.add().CopyFrom(metrics_data.metrics_data_id)
         bar_chart_values.statuses_data_id.add().CopyFrom(
             metrics_data_statuses.metrics_data_id)
@@ -412,33 +412,33 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
 def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_probe_locations = job_metrics.metrics_data.add()
     temperature_probe_locations.metrics_data_id.id.data = _get_uuid_str()
-    temperature_probe_locations.data_type = mp.STRING_ARRAY_DATA_TYPE
+    temperature_probe_locations.data_type = mp.STRING_SERIES_DATA_TYPE
     temperature_probe_locations.name = "Temperature probe locations"
     temperature_probe_locations.unit = ""
-    temperature_probe_locations.array.strings.array.extend(
+    temperature_probe_locations.series.strings.series.extend(
         ["Lower Chassis", "Upper Chassis", "Sensors"])
 
     temperature_data = job_metrics.metrics_data.add()
     temperature_data.metrics_data_id.id.data = _get_uuid_str()
-    temperature_data.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
+    temperature_data.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
     temperature_data.name = "Temperatures"
     temperature_data.unit = "C"
     temperature_data.is_indexed = True
     temperature_data.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
-    temperature_data.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-    temperature_data.array.doubles.array.extend([24., 25., 24.])
+    temperature_data.index_data_type = mp.STRING_SERIES_DATA_TYPE
+    temperature_data.series.doubles.series.extend([24., 25., 24.])
 
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
-    temperature_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+    temperature_status.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
     temperature_status.name = "Temperature Statuses"
     temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
-    temperature_status.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-    temperature_status.array.statuses.array.extend(
+    temperature_status.index_data_type = mp.STRING_SERIES_DATA_TYPE
+    temperature_status.series.statuses.series.extend(
         3 * [mp.PASSED_METRIC_STATUS])
 
     temperature_metric = job_metrics.job_level_metrics.metrics.add()
@@ -458,25 +458,25 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
 
     temperature_data = job_metrics.metrics_data.add()
     temperature_data.metrics_data_id.id.data = _get_uuid_str()
-    temperature_data.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
+    temperature_data.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
     temperature_data.name = "Temperatures 2"
     temperature_data.unit = "C"
     temperature_data.is_indexed = True
     temperature_data.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
-    temperature_data.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-    temperature_data.array.doubles.array.extend([24., 25., 24.])
+    temperature_data.index_data_type = mp.STRING_SERIES_DATA_TYPE
+    temperature_data.series.doubles.series.extend([24., 25., 24.])
 
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
-    temperature_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+    temperature_status.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
     temperature_status.name = "Temperature Statuses 2"
     temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
         temperature_probe_locations.metrics_data_id)
-    temperature_status.index_data_type = mp.STRING_ARRAY_DATA_TYPE
-    temperature_status.array.statuses.array.extend(
+    temperature_status.index_data_type = mp.STRING_SERIES_DATA_TYPE
+    temperature_status.series.statuses.series.extend(
         3 * [mp.PASSED_METRIC_STATUS])
 
     temperature_metric = job_metrics.job_level_metrics.metrics.add()
@@ -496,32 +496,32 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
 
     waypoints = job_metrics.metrics_data.add()
     waypoints.metrics_data_id.id.data = _get_uuid_str()
-    waypoints.data_type = mp.UUID_ARRAY_DATA_TYPE
+    waypoints.data_type = mp.UUID_SERIES_DATA_TYPE
     waypoints.name = "Mapped waypoints"
-    waypoints.array.uuids.array.add().data = _get_uuid_str()
-    waypoints.array.uuids.array.add().data = _get_uuid_str()
-    waypoints.array.uuids.array.add().data = _get_uuid_str()
+    waypoints.series.uuids.series.add().data = _get_uuid_str()
+    waypoints.series.uuids.series.add().data = _get_uuid_str()
+    waypoints.series.uuids.series.add().data = _get_uuid_str()
 
     distance_to_waypoints = job_metrics.metrics_data.add()
     distance_to_waypoints.metrics_data_id.id.data = _get_uuid_str()
-    distance_to_waypoints.data_type = mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE
+    distance_to_waypoints.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
     distance_to_waypoints.name = "Distance to mapped waypoints"
     distance_to_waypoints.unit = "m"
     distance_to_waypoints.is_indexed = True
     distance_to_waypoints.index_data_id.CopyFrom(waypoints.metrics_data_id)
-    distance_to_waypoints.index_data_type = mp.UUID_ARRAY_DATA_TYPE
-    distance_to_waypoints.array.doubles.array.extend([10., 20., 15.])
+    distance_to_waypoints.index_data_type = mp.UUID_SERIES_DATA_TYPE
+    distance_to_waypoints.series.doubles.series.extend([10., 20., 15.])
 
     distance_to_waypoints_status = job_metrics.metrics_data.add()
     distance_to_waypoints_status.metrics_data_id.id.data = _get_uuid_str()
-    distance_to_waypoints_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+    distance_to_waypoints_status.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
     distance_to_waypoints_status.name = "Distance to mapped waypoints status"
     distance_to_waypoints_status.unit = ""
     distance_to_waypoints_status.is_indexed = True
     distance_to_waypoints_status.index_data_id.CopyFrom(
         waypoints.metrics_data_id)
-    distance_to_waypoints_status.index_data_type = mp.UUID_ARRAY_DATA_TYPE
-    distance_to_waypoints_status.array.statuses.array.extend(
+    distance_to_waypoints_status.index_data_type = mp.UUID_SERIES_DATA_TYPE
+    distance_to_waypoints_status.series.statuses.series.extend(
         3 * [mp.PASSED_METRIC_STATUS])
 
     waypoint_distance_metric = job_metrics.job_level_metrics.metrics.add()
@@ -538,7 +538,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     values.value_data_id.CopyFrom(distance_to_waypoints.metrics_data_id)
     values.status_data_id.CopyFrom(
         distance_to_waypoints_status.metrics_data_id)
-    values.uuid_index.CopyFrom(waypoints.array.uuids.array[0])
+    values.uuid_index.CopyFrom(waypoints.series.uuids.series[0])
 
 
 def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
@@ -555,32 +555,32 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
 
     times = job_metrics.metrics_data.add()
     times.metrics_data_id.id.data = _get_uuid_str()
-    times.data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
+    times.data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
     times.name = "State Times"
     times.unit = ""
     for i in range(10):
-        times.array.timestamps.array.add().seconds = i
+        times.series.timestamps.series.add().seconds = i
 
     states = job_metrics.metrics_data.add()
     states.metrics_data_id.id.data = _get_uuid_str()
-    states.data_type = mp.INDEXED_STRING_ARRAY_DATA_TYPE
+    states.data_type = mp.INDEXED_STRING_SERIES_DATA_TYPE
     states.name = "Actor 2 state data"
     states.unit = ""
     states.is_indexed = True
     states.index_data_id.CopyFrom(times.metrics_data_id)
-    states.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
-    states.array.strings.array.extend([
+    states.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
+    states.series.strings.series.extend([
         "LANE_CHANGE" if (3 <= i < 7) else "LANE_FOLLOW" for i in range(10)])
 
     states_status = job_metrics.metrics_data.add()
     states_status.metrics_data_id.id.data = _get_uuid_str()
-    states_status.data_type = mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE
+    states_status.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
     states_status.name = "Actor 2 state statuses"
     states_status.unit = ""
     states_status.is_indexed = True
     states_status.index_data_id.CopyFrom(times.metrics_data_id)
-    states_status.index_data_type = mp.TIMESTAMP_ARRAY_DATA_TYPE
-    states_status.array.statuses.array.extend(10 * [mp.PASSED_METRIC_STATUS])
+    states_status.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
+    states_status.series.statuses.series.extend(10 * [mp.PASSED_METRIC_STATUS])
 
     states_over_time = metric.metric_values.states_over_time_metric_values
     states_over_time.states_over_time_data_id.add().CopyFrom(states.metrics_data_id)
@@ -605,7 +605,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
 
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
-    data.data_type = mp.DOUBLE_ARRAY_DATA_TYPE
+    data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
     data.name = "Number of detections"
     data.unit = ""
     data.is_indexed = True
@@ -616,29 +616,29 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
                    58, 43, 46, 54, 66, 47, 55, 24, 71, 18, 31, 22, 56, 12, 62,
                    52, 56, 21, 70, 44, 52, 58, 60, 31, 53, 28, 50, 61, 72, 46,
                    65, 53, 21, 44, 55, 91, 92, 27, 23]
-    data.array.doubles.array.extend(data_values)
+    data.series.doubles.series.extend(data_values)
 
     index = job_metrics.metrics_data.add()
     index.metrics_data_id.id.data = _get_uuid_str()
-    index.data_type = mp.UUID_ARRAY_DATA_TYPE
+    index.data_type = mp.UUID_SERIES_DATA_TYPE
     index.name = "Image ID"
     index.unit = ""
     index.is_indexed = False
     for _ in range(len(data_values)):
-        index.array.uuids.array.add().data = _get_uuid_str()
+        index.series.uuids.series.add().data = _get_uuid_str()
 
     data.index_data_id.CopyFrom(index.metrics_data_id)
-    data.index_data_type = mp.UUID_ARRAY_DATA_TYPE
+    data.index_data_type = mp.UUID_SERIES_DATA_TYPE
 
     data_status = job_metrics.metrics_data.add()
     data_status.metrics_data_id.id.data = _get_uuid_str()
-    data_status.data_type = mp.METRIC_STATUS_ARRAY_DATA_TYPE
+    data_status.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
     data_status.name = "Number of detections status"
     data_status.unit = ""
     data_status.is_indexed = True
     data_status.index_data_id.CopyFrom(index.metrics_data_id)
-    data_status.index_data_type = mp.UUID_ARRAY_DATA_TYPE
-    data_status.array.statuses.array.extend(
+    data_status.index_data_type = mp.UUID_SERIES_DATA_TYPE
+    data_status.series.statuses.series.extend(
         len(data_values) * [mp.NOT_APPLICABLE_METRIC_STATUS])
 
     histogram_values = metric.metric_values.histogram_metric_values
