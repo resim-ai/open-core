@@ -29,6 +29,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "header_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":header_proto",
     ],
@@ -52,6 +53,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "transform_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":transform_proto",
     ],
@@ -74,6 +76,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "pose_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":pose_proto",
     ],
@@ -97,6 +100,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "odometry_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":odometry_proto",
     ],
@@ -107,6 +111,7 @@ proto_library(
     srcs = ["detection.proto"],
     deps = [
         ":header_proto",
+        ":pose_proto",
         "//resim/geometry/proto:oriented_box_proto",
     ],
 )
@@ -120,6 +125,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "detection_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":detection_proto",
     ],
@@ -142,6 +148,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "navsat_proto_py",
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":navsat_proto",
     ],
@@ -468,6 +475,7 @@ ros2_cpp_binary(
     srcs = ["convert_log.cc"],
     data = [":default_converter_plugin.so"],
     set_up_ament = True,
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin",
         ":resim_log_from_ros2",

@@ -30,6 +30,7 @@ py_test(
 pybind_extension(
     name = "se3_python",
     srcs = ["se3_python.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":so3_python.so",
         "//resim/transforms:se3",
@@ -41,6 +42,7 @@ pybind_extension(
 pybind_extension(
     name = "so3_python",
     srcs = ["so3_python.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":quaternion.so",
         "//resim/transforms:so3",

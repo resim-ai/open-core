@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Error handling documentation at
-// https://docs.resim.ai/assert/
+// https://docs.resim.ai/open-core/assert/
 
 #include <cstdlib>
 #include <iostream>

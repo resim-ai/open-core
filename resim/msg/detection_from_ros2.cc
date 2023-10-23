@@ -8,8 +8,41 @@
 
 #include "resim/msg/header_from_ros2.hh"
 #include "resim/msg/oriented_box_from_ros2.hh"
+#include "resim/msg/pose_from_ros2.hh"
 
 namespace resim::msg {
+
+ObjectHypothesis convert_from_ros2(
+    const vision_msgs::msg::ObjectHypothesis &ros2_msg) {
+  ObjectHypothesis result;
+  result.set_class_id(ros2_msg.class_id);
+  result.set_score(ros2_msg.score);
+  return result;
+}
+
+vision_msgs::msg::ObjectHypothesis convert_to_ros2(
+    const ObjectHypothesis &resim_msg) {
+  vision_msgs::msg::ObjectHypothesis result;
+  result.class_id = resim_msg.class_id();
+  result.score = resim_msg.score();
+  return result;
+}
+
+ObjectHypothesisWithPose convert_from_ros2(
+    const vision_msgs::msg::ObjectHypothesisWithPose &ros2_msg) {
+  ObjectHypothesisWithPose result;
+  result.mutable_hypothesis()->CopyFrom(convert_from_ros2(ros2_msg.hypothesis));
+  result.mutable_pose()->CopyFrom(convert_from_ros2(ros2_msg.pose));
+  return result;
+}
+
+vision_msgs::msg::ObjectHypothesisWithPose convert_to_ros2(
+    const ObjectHypothesisWithPose &resim_msg) {
+  vision_msgs::msg::ObjectHypothesisWithPose result;
+  result.hypothesis = convert_to_ros2(resim_msg.hypothesis());
+  result.pose = convert_to_ros2(resim_msg.pose());
+  return result;
+}
 
 Detection3D convert_from_ros2(const vision_msgs::msg::Detection3D &ros2_msg) {
   Detection3D result;
@@ -73,6 +106,9 @@ vision_msgs::msg::BoundingBox2D convert_to_ros2(
 Detection2D convert_from_ros2(const vision_msgs::msg::Detection2D &ros2_msg) {
   Detection2D result;
   result.mutable_header()->CopyFrom(convert_from_ros2(ros2_msg.header));
+  for (const auto &ros2_result : ros2_msg.results) {
+    result.add_results()->CopyFrom(convert_from_ros2(ros2_result));
+  }
   result.mutable_bbox()->CopyFrom(convert_from_ros2(ros2_msg.bbox));
   result.set_id(ros2_msg.id);
   return result;
@@ -81,6 +117,10 @@ Detection2D convert_from_ros2(const vision_msgs::msg::Detection2D &ros2_msg) {
 vision_msgs::msg::Detection2D convert_to_ros2(const Detection2D &resim_msg) {
   vision_msgs::msg::Detection2D result;
   result.header = convert_to_ros2(resim_msg.header());
+  result.results.reserve(resim_msg.results_size());
+  for (const auto &resim_result : resim_msg.results()) {
+    result.results.push_back(convert_to_ros2(resim_result));
+  }
   result.bbox = convert_to_ros2(resim_msg.bbox());
   result.id = resim_msg.id();
   return result;

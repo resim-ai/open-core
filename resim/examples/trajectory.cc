@@ -5,7 +5,7 @@
 // https://opensource.org/licenses/MIT.
 
 // This file is a companion for the Rigid Body State documentation at
-// https://docs.resim.ai/curves/rigid_body_state/
+// https://docs.resim.ai/open-core/curves/rigid_body_state/
 
 #include "resim/actor/state/trajectory.hh"
 
