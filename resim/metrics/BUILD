@@ -89,6 +89,7 @@ cc_test(
 py_library(
     name = "dice_coefficient",
     srcs = ["dice_coefficient.py"],
+    visibility = ["//pkg:__subpackages__"],
     deps = [
         "//resim/msg:detection_proto_py",
     ],
