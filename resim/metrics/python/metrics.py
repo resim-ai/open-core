@@ -11,8 +11,12 @@ import numpy as np
 
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.proto.metrics_pb2 import MetricStatus, MetricImportance
+from resim.utils.proto import uuid_pb2
+from google.protobuf import timestamp_pb2
 
+# ----
 # Misc
+# ----
 
 
 @dataclass
@@ -20,34 +24,72 @@ class Timestamp:
     secs: int
     nanos: int
 
+    def pack(self) -> timestamp_pb2.Timestamp():
+        msg = timestamp_pb2.Timestamp()
+        msg.seconds = self.secs
+        msg.nanos = self.nanos
+        return msg
+
 
 @dataclass
 class DoubleFailureDefinition:
     fails_above: float
     fails_below: float
 
+# ----------------------
 # Overall metrics object
+# ----------------------
 
 
+@dataclass(init=False, repr=True, kw_only=True)
 class ResimMetrics:
-    def __init__(self):
-        raise NotImplementedError()
+    metrics: Dict[uuid.UUID, Metric]
+    metrics_data: Dict[uuid.UUID, MetricsData]
+    job_id: uuid.UUID
+    names: Set
+
+    def __init__(self, job_id: UUID):
+        self.job_id = job_id
+        self.metrics = {}
+        self.metrics_data = {}
+        self.names = set()
 
     def add_metrics_data(self, data: MetricsData) -> MetricsData:
-        # Only adds if type is valid for job metrics data - i.e. can be packed.
-        # Also adds index
-        raise NotImplementedError()
+        assert data.name not in self.names
+        self.names.add(data.name)
+        self.metrics_data[data.id] = data
+        return data
 
     def add_metric(self, metric: Metric) -> Metric:
-        raise NotImplementedError()
+        assert metric.name not in self.names
+        self.names.add(metric.name)
+        self.metrics[metric.id] = metric
+        return metric
+
+    def add_series_metrics_data(self, name: str) -> SeriesMetricsData:
+        metrics_data = SeriesMetricsData(name=name)
+        self.add_metrics_data(metrics_data)
+        return metrics_data
+
+    def add_grouped_metrics_data(self, name: str) -> GroupedMetricsData:
+        metrics_data = GroupedMetricsData(name=name)
+        self.add_metrics_data(metrics_data)
+        return metrics_data
+
+    def add_states_over_time_metric(self, name: str) -> StatesOverTimeMetric:
+        metric = StatesOverTimeMetric(name=name)
+        self.add_metric(metric)
+        return metric
 
     def pack(self) -> metrics_pb2.JobMetrics:
         raise NotImplementedError()
 
-# Metrics representation
+# ---------------------
+# Metric representation
+# ---------------------
 
 
-@dataclass(init=False, repr=True)
+@dataclass(init=False, repr=True, kw_only=True)
 class Metric(ABC):
     id: uuid.UUID
     name: str
@@ -62,11 +104,11 @@ class Metric(ABC):
     @abstractmethod
     def __init__(self,
                  name: str,
-                 description: Optional[str],
-                 status: Optional[MetricStatus],
-                 importance: Optional[MetricImportance],
-                 should_display: Optional[bool],
-                 blocking: Optional[bool]):
+                 description: Optional[str] = None,
+                 status: Optional[MetricStatus] = None,
+                 importance: Optional[MetricImportance] = None,
+                 should_display: Optional[bool] = None,
+                 blocking: Optional[bool] = None):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -100,7 +142,7 @@ class Metric(ABC):
         return self
 
 
-@dataclass(init=False, repr=True)
+@dataclass(init=False, repr=True, kw_only=True)
 class ScalarMetric(Metric):
     value: float
 
@@ -118,13 +160,27 @@ class ScalarMetric(Metric):
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
         super().__init__(name, description, status, importance, blocking, should_display)
-        raise NotImplementedError()
+        self.value = value
+        self.failure_definition = failure_definition
+        self.unit = unit
+
+    def with_value(self, value: float) -> ScalarMetric:
+        self.value = value
+        return self
+
+    def with_unit(self, unit: str) -> ScalarMetric:
+        self.unit = unit
+        return self
+
+    def with_failure_definition(self, failure_definition: DoubleFailureDefinition) -> ScalarMetric:
+        self.failure_definition = failure_definition
+        return self
 
     def pack(self) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
 
-@dataclass(init=False, repr=True)
+@dataclass(init=False, repr=True, kw_only=True)
 class DoubleOverTimeMetric(Metric):
     doubles_over_time: Optional[MetricsData]
     statuses_over_time: Optional[MetricsData]
@@ -161,8 +217,10 @@ class DoubleOverTimeMetric(Metric):
     def pack(self) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
+    # TODO(tknowles): Lots of missing methods here!
 
-@dataclass(init=False, repr=True)
+
+@dataclass(init=False, repr=True, kw_only=True)
 class StatesOverTimeMetric(Metric):
     states_over_time_data: Optional[MetricsData]
     statuses_over_time_data: Optional[MetricsData]
@@ -184,8 +242,16 @@ class StatesOverTimeMetric(Metric):
                  states_set: Optional[Set[str]] = None,
                  failures_states: Optional[Set[str]] = None,
                  legend_series_names: Optional[List[str]] = None):
-        super().__init__(name, description, status, importance, blocking, should_display)
+        super().__init__(name=name, description=description, status=status,
+                         importance=importance, blocking=blocking, should_display=should_display)
+        if (name == "dog"):
+            print("GOT HERE!")
+            print(states_over_time_data)
+
         self.states_over_time_data = states_over_time_data
+
+        if (name == "dog"):
+            print(self.states_over_time_data)
         self.statuses_over_time_data = statuses_over_time_data
         self.states_set = states_set
         self.failure_states = failures_states
@@ -193,6 +259,26 @@ class StatesOverTimeMetric(Metric):
 
     def with_states_over_time_data(self, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.states_over_time_data = states_over_time_data
+        return self
+
+    def with_states_over_time_series(self,
+                                     states_over_time_series: Dict[str, np.ndarray],
+                                     units: Dict[str, str] = None,
+                                     indices: Dict[str, np.ndarray] = None) -> StatesOverTimeMetric:
+        # Major TODO before pack, if we're keeping this method: Make sure these series are actually added to metrics object
+        for name, series in states_over_time_series.items():
+            unit, index_data = None, None
+            if indices is not None and name in indices:
+                index = indices[name]
+                index_data = SeriesMetricsData(f'{name}_series_index', index)
+
+            if units is not None and name in units:
+                unit = units[name]
+
+            data = SeriesMetricsData(name, series, unit, index_data)
+
+            self.states_over_time_data.append(data)
+
         return self
 
     def append_states_over_time_data(self, states_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
@@ -225,8 +311,8 @@ class StatesOverTimeMetric(Metric):
 
 # Data representation
 
-@dataclass(init=False, repr=True)
-class MetricsData:
+@dataclass(init=False, repr=True, kw_only=True)
+class MetricsData(ABC):
     id: uuid.UUID
     name: str
     unit: Optional[str]
@@ -235,8 +321,8 @@ class MetricsData:
     @abstractmethod
     def __init__(self,
                  name: str,
-                 unit: Optional[str],
-                 index_data: Optional[MetricsData]):
+                 unit: Optional[str] = None,
+                 index_data: Optional[MetricsData] = None):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -255,7 +341,7 @@ class MetricsData:
         return self
 
 
-@dataclass(init=False, repr=True)
+@dataclass(init=False, repr=True, kw_only=True)
 class SeriesMetricsData(MetricsData):
     series: np.ndarray  # normally, dtype='object'
 
@@ -284,7 +370,9 @@ class SeriesMetricsData(MetricsData):
             index_data=self.index_data
         )
 
-    def group_by(self, grouping_series: SeriesMetricsData, grouped_data_name: Optional[str] = None) -> GroupedMetricsData:
+    def group_by(self, grouping_series: SeriesMetricsData,
+                 grouped_data_name: Optional[str] = None,
+                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         assert self.series is not None
         assert grouping_series.series is not None
         assert len(self.series) == len(grouping_series.series)
@@ -300,7 +388,7 @@ class SeriesMetricsData(MetricsData):
 
         grouped = dict(grouped)
 
-        grouped_index = None
+        grouped_index_data = None
         if self.index_data is not None:
             grouped_index = defaultdict(list)
             for val, cat in zip(self.index_data.series, grouping_series.series):
@@ -312,12 +400,21 @@ class SeriesMetricsData(MetricsData):
 
             grouped_index = dict(grouped_index)
 
+            grouped_index_data = GroupedMetricsData(
+                grouped_index_name if grouped_index_name is not None else (
+                    f'{self.index_data.name}-grouped-by-{grouping_series.name}'
+                ),
+                category_to_series=grouped_index,
+                unit=self.unit,
+                index_data=None
+            )
+
         grouped_data = GroupedMetricsData(
             grouped_data_name if grouped_data_name is not None else (
                 f'{self.name}-grouped-by-{grouping_series.name}'),
             category_to_series=grouped,
             unit=self.unit,
-            index_data=grouped_index
+            index_data=grouped_index_data
         )
 
         return grouped_data
@@ -326,13 +423,71 @@ class SeriesMetricsData(MetricsData):
         raise NotImplementedError()
 
 
-@dataclass(init=False, repr=True)
+def pack_uuid_to_proto(uuid: uuid.UUID) -> uuid_pb2.UUID:
+    uuid_msg = uuid_pb2.UUID()
+    uuid.data = str(uuid)
+    return uuid_msg
+
+
+def pack_series_to_proto(series: np.ndarray, indexed: bool):
+    data_type, series_msg = metrics_pb2.MetricsDataType.Value(
+        'NO_DATA_TYPE'), metrics_pb2.Series()
+
+    if len(series) == 0:
+        data_type = metrics_pb2.MetricsDataType.Value('NO_DATA_TYPE')
+    elif isinstance(series[0], float):
+        if not indexed:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'DOUBLE_SERIES_DATA_TYPE')
+        else:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'INDEXED_DOUBLE_SERIES_DATA_TYPE')
+        series_msg.doubles.series.extend(list(series))
+    elif isinstance(series[0], Timestamp):
+        if not indexed:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'TIMESTAMP_SERIES_DATA_TYPE')
+        else:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'INDEXED_TIMESTAMP_SERIES_DATA_TYPE')
+        series_msg.timestamps.series.extend([t.pack() for t in series])
+    elif isinstance(series[0], uuid.UUID):
+        if not indexed:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'UUID_SERIES_DATA_TYPE')
+        else:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'INDEXED_UUID_SERIES_DATA_TYPE')
+        series_msg.uuids.series.extend([pack_uuid_to_proto(i) for i in series])
+    elif isinstance(series[0], str):
+        if not indexed:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'STRING_SERIES_DATA_TYPE')
+        else:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'INDEXED_STRING_SERIES_DATA_TYPE')
+        series_msg.strings.series.extend(list(series))
+    elif isinstance(series[0], MetricStatus):
+        if not indexed:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'METRIC_STATUS_SERIES_DATA_TYPE')
+        else:
+            data_type = metrics_pb2.MetricsDataType.Value(
+                'INDEXED_METRIC_STATUS_SERIES_DATA_TYPE')
+        series_msg.statuses.series.extend(list(series))
+    else:
+        raise ValueError("Invalid data type packed.")
+
+    return data_type, series_msg
+
+
+@dataclass(init=False, repr=True, match_args=False)
 class GroupedMetricsData(MetricsData):
     category_to_series: Dict[str, np.ndarray]  # normally, dtype='object'
 
     def __init__(self,
                  name: str,
-                 category_to_series: Optional[Dict[str, np.ndarray]],
+                 category_to_series: Optional[Dict[str, np.ndarray]] = None,
                  unit: Optional[str] = None,
                  index_data: Optional[MetricsData] = None):
         super().__init__(name, unit, index_data)
@@ -359,84 +514,31 @@ class GroupedMetricsData(MetricsData):
 
     def pack(self) -> metrics_pb2.MetricsData:
         msg = metrics_pb2.MetricsData()
-        msg.name = self.name
+        msg.metrics_data_id.id.data = str(self.id)
+
+        assert len(self.category_to_series.keys()
+                   ) > 0, "Cannot pack grouped data with no categories."
+        categories = list(self.category_to_series.keys())
+        example_category = categories[0]
+        example_series = self.category_to_series[example_category]
+        assert len(example_series) > 0, "Cannot pack an empty series."
 
         if self.unit is not None:
             msg.unit = self.unit
 
+        msg.is_per_category = True
+        msg.category_names.extend(list(self.category_to_series.keys()))
+
+        msg.is_indexed = (self.index_data is not None)
+
         if self.index_data is not None:
-            msg.
+            msg.index_data_id.id.data = str(self.id)
 
+        for cat, series in self.category_to_series.items():
+            assert len(series) > 0, "Cannot pack an empty series."
 
+            data_type, series = pack_series_to_proto(
+                series, self.index_data is not None)
 
-random.seed(194842)
-
-# Fake data, assume this is read in
-NUM_ACTORS = 10
-EXAMPLE_ID_SET = [uuid.uuid4() for i in range(NUM_ACTORS)]
-EXAMPLE_COUNTS = [10 * (i + 1) for i in range(NUM_ACTORS)]
-EXAMPLE_STATES_SET = ['CAR', 'TRUCK', 'BIKE',
-                      'PEDESTRIAN', 'DEBRIS', 'UNKNOWN']
-EXAMPLE_DETECTIONS_SET = ['CAR_VEHICLE', 'TRUCK_VEHICLE',
-                          'BIKE_VEHICLE', 'PEDESTRIAN_VEHICLE', 'DEBRIS_VEHICLE', 'UNKNOWN']
-EXAMPLE_FAILURE_STATES = ['UNKNOWN']
-EXAMPLE_LEGEND_SERIES_NAMES = ['Labels', 'Detections']
-
-EXAMPLE_IDS = np.array([EXAMPLE_ID_SET[i] for i in range(
-    NUM_ACTORS) for _ in range(EXAMPLE_COUNTS[i])])
-EXAMPLE_TIMESTAMPS = np.array(
-    [Timestamp(secs=i + 1, nanos=0) for i, _ in enumerate(EXAMPLE_IDS)])
-EXAMPLE_LABELS = np.array([random.choice(EXAMPLE_STATES_SET)
-                          for _ in EXAMPLE_IDS])
-EXAMPLE_DETECTIONS = np.array(
-    [random.choice(EXAMPLE_DETECTIONS_SET) for _ in EXAMPLE_IDS])
-
-# Actual data code
-timestamp_data = SeriesMetricsData(
-    'Timestamps', EXAMPLE_TIMESTAMPS, 'seconds', None)
-id_data = SeriesMetricsData('Actor IDs', EXAMPLE_IDS).with_unit(
-    'UUID').with_index_data(timestamp_data)
-labels = SeriesMetricsData('Labels').with_series(
-    EXAMPLE_LABELS).with_unit('Category').with_index_data(timestamp_data)
-detections = SeriesMetricsData('Detections').with_series(
-    EXAMPLE_DETECTIONS).with_unit('Category').with_index_data(timestamp_data)
-remapped_detections = detections.map(
-    lambda series, index: series[index] if not series[index].endswith(
-        '_VEHICLE') else series[index][:-len('_VEHICLE')],
-    'Remapped detections',
-    detections.unit
-)
-
-grouped_labels = labels.group_by(id_data)
-grouped_detections = remapped_detections.group_by(id_data)
-
-states_over_time_metric = StatesOverTimeMetric('Labels vs detections')
-states_over_time_metric = (states_over_time_metric
-                           .with_description('Plot of category labels vs detections, grouped by actor')
-                           .with_states_over_time_data([grouped_labels, grouped_detections])
-                           .with_legend_series_names(["Labels", "Detections"])
-                           .with_blocking(True)
-                           .with_should_display(True)
-                           .with_status(MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS'))
-                           .with_states_set(EXAMPLE_STATES_SET)
-                           .with_importance(MetricImportance.Value("HIGH_IMPORTANCE"))
-                           )
-
-label_statuses = grouped_labels.map(
-    lambda s, i, c: MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS'),
-    'Label pass/fail'
-)
-
-detections_statuses = grouped_detections.map(
-    lambda series, index, cat: MetricStatus.Value(
-        'PASSED_METRIC_STATUS') if series[index] == grouped_labels.category_to_series[cat][index] else MetricStatus.Value('FAILED_METRIC_STATUS'),
-    'Detection pass/fail'
-)
-
-states_over_time_metric = (
-    states_over_time_metric
-    .append_statuses_over_time_data(label_statuses)
-    .append_statuses_over_time_data(detections_statuses)
-)
-
-print(states_over_time_metric)
+            msg.series_per_category.category_to_series[cat].CopyFrom(series)
+            assert msg.data_type == 0 or msg.data_type == data_type
