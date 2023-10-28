@@ -41,13 +41,7 @@ class DoubleFailureDefinition:
 # ----------------------
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class ResimMetrics:
-    metrics: Dict[uuid.UUID, Metric]
-    metrics_data: Dict[uuid.UUID, MetricsData]
-    job_id: uuid.UUID
-    names: Set
-
     def __init__(self, job_id: UUID):
         self.job_id = job_id
         self.metrics = {}
@@ -89,18 +83,7 @@ class ResimMetrics:
 # ---------------------
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class Metric(ABC):
-    id: uuid.UUID
-    name: str
-    description: Optional[str]
-
-    status: Optional[MetricStatus]
-    importance: Optional[MetricImportance]
-
-    should_display: Optional[bool]
-    blocking: Optional[bool]
-
     @abstractmethod
     def __init__(self,
                  name: str,
@@ -142,13 +125,7 @@ class Metric(ABC):
         return self
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class ScalarMetric(Metric):
-    value: float
-
-    failure_definition: Optional[DoubleFailureDefinition]
-    unit: Optional[str]
-
     def __init__(self,
                  name: str,
                  description: Optional[str] = None,
@@ -180,19 +157,7 @@ class ScalarMetric(Metric):
         raise NotImplementedError()
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class DoubleOverTimeMetric(Metric):
-    doubles_over_time: Optional[MetricsData]
-    statuses_over_time: Optional[MetricsData]
-
-    failure_definition: Optional[DoubleFailureDefinition]
-
-    start_time: Optional[Timestamp]
-    end_time: Optional[Timestamp]
-
-    y_axis_name: Optional[str]
-    legend_series_names: Optional[List[str]]
-
     def __init__(self,
                  name: str,
                  description: Optional[str] = None,
@@ -220,16 +185,7 @@ class DoubleOverTimeMetric(Metric):
     # TODO(tknowles): Lots of missing methods here!
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class StatesOverTimeMetric(Metric):
-    states_over_time_data: Optional[MetricsData]
-    statuses_over_time_data: Optional[MetricsData]
-
-    states_set: Optional[Set[str]]
-    failure_states: Optional[Set[str]]
-
-    legend_series_names: Optional[List[str]]
-
     def __init__(self,
                  name: str,
                  description: Optional[str] = None,
@@ -242,16 +198,13 @@ class StatesOverTimeMetric(Metric):
                  states_set: Optional[Set[str]] = None,
                  failures_states: Optional[Set[str]] = None,
                  legend_series_names: Optional[List[str]] = None):
+
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
-        if (name == "dog"):
-            print("GOT HERE!")
-            print(states_over_time_data)
-
         self.states_over_time_data = states_over_time_data
+        if (name == "Test example"):
+            print('Test example', statuses_over_time_data)
 
-        if (name == "dog"):
-            print(self.states_over_time_data)
         self.statuses_over_time_data = statuses_over_time_data
         self.states_set = states_set
         self.failure_states = failures_states
@@ -311,13 +264,7 @@ class StatesOverTimeMetric(Metric):
 
 # Data representation
 
-@dataclass(init=False, repr=True, kw_only=True)
 class MetricsData(ABC):
-    id: uuid.UUID
-    name: str
-    unit: Optional[str]
-    index_data: Optional[MetricsData]
-
     @abstractmethod
     def __init__(self,
                  name: str,
@@ -341,10 +288,7 @@ class MetricsData(ABC):
         return self
 
 
-@dataclass(init=False, repr=True, kw_only=True)
 class SeriesMetricsData(MetricsData):
-    series: np.ndarray  # normally, dtype='object'
-
     def __init__(self,
                  name: str,
                  series: Optional[np.ndarray] = None,
@@ -481,7 +425,6 @@ def pack_series_to_proto(series: np.ndarray, indexed: bool):
     return data_type, series_msg
 
 
-@dataclass(init=False, repr=True, match_args=False)
 class GroupedMetricsData(MetricsData):
     category_to_series: Dict[str, np.ndarray]  # normally, dtype='object'
 

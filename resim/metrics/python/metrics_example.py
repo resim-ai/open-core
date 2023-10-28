@@ -105,29 +105,40 @@ detections_statuses = metrics.add_metrics_data(grouped_detections.map(
     'Detection pass/fail'
 ))
 
+print('Before', states_over_time_metric.statuses_over_time_data)
+
 states_over_time_metric = (
     states_over_time_metric
     .append_statuses_over_time_data(label_statuses)
     .append_statuses_over_time_data(detections_statuses)
 )
 
+print('After', states_over_time_metric.statuses_over_time_data)
+
 # We can do a more simple metric in one chain
-states_over_time_simple_metric = (metrics
-                                  .add_states_over_time_metric("Simple lables vs detections")
-                                  .with_description(f'Plot of category labels vs detections for actor {FIRST_VEHICLE_IDS[0]}')
-                                  .with_blocking(True)
-                                  .with_should_display(True)
-                                  .with_status(MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS'))
-                                  .with_states_set(EXAMPLE_STATES_SET)
-                                  .with_importance(MetricImportance.Value("HIGH_IMPORTANCE"))
-                                  .with_states_over_time_series(
-                                      states_over_time_series={
-                                          "Labels": FIRST_VEHICLE_LABELS,
-                                          "Detections": FIRST_VEHICLE_DETECTIONS
-                                      },
-                                      indices={
-                                          "Labels": FIRST_VEHICLE_TIMESTAMPS,
-                                          "Detections": FIRST_VEHICLE_TIMESTAMPS
-                                      }
-                                  )
-                                  .with_legend_series_names(["Labels", "Detections"]))
+# states_over_time_simple_metric = (metrics
+#                                   .add_states_over_time_metric("Simple labels vs detections"))
+
+print(label_statuses, detections_statuses)
+
+a = StatesOverTimeMetric("Dog", statuses_over_time_data="Cat")
+StatesOverTimeMetric("Test example")
+#   .with_description(f'Plot of category labels vs detections for actor {FIRST_VEHICLE_IDS[0]}')
+#   .with_blocking(True)
+#   .with_should_display(True)
+#   .with_status(MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS'))
+#   .with_states_set(EXAMPLE_STATES_SET)
+#   .with_importance(MetricImportance.Value("HIGH_IMPORTANCE"))
+#   .with_states_over_time_series(
+#       states_over_time_series={
+#           "Labels": FIRST_VEHICLE_LABELS,
+#           "Detections": FIRST_VEHICLE_DETECTIONS
+#       },
+#       indices={
+#           "Labels": FIRST_VEHICLE_TIMESTAMPS,
+#           "Detections": FIRST_VEHICLE_TIMESTAMPS
+#       }
+#   )
+#   .with_legend_series_names(["Labels", "Detections"]))
+
+# print(states_over_time_simple_metric.statuses_over_time_data)
