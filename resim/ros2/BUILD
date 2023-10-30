@@ -9,6 +9,7 @@ load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_python//python:defs.bzl", "py_test")
+load(":ros2_py_package.bzl", "ros2_py_package")
 
 cc_library(
     name = "time_from_ros2",
@@ -387,5 +388,31 @@ py_test(
         ":resim_log_from_ros2_python.so",
         ":resim_log_from_ros2_python_test_ament",
         ":resim_log_from_ros2_test_helpers_python.so",
+    ],
+)
+
+INIT_CONTENT = """# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+import os
+import pathlib
+
+RESIM_DIR = pathlib.Path(__file__).parent.parent.resolve()
+LIB_DIR = pathlib.Path(__file__).parent.parent.parent.resolve() / "resim.libs"
+os.environ["AMENT_PREFIX_PATH"] = str(LIB_DIR / "ament")
+os.environ["RMW_IMPLEMENTATION"] = str(LIB_DIR / "librmw_cyclonedds.so")
+"""
+
+ros2_py_package(
+    name = "ros2_py_package",
+    initcontent = INIT_CONTENT,
+    subpackage_prefix = "resim/ros2",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":default_converter_plugin.so",
+        ":resim_log_from_ros2_python.so",
     ],
 )
