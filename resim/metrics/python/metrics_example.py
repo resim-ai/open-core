@@ -73,7 +73,7 @@ grouped_labels = metrics.add_metrics_data(labels.group_by(id_data))
 grouped_detections = metrics.add_metrics_data(
     remapped_detections.group_by(id_data))
 
-grouped_detections.pack()
+# grouped_detections.pack()
 
 states_over_time_metric = metrics.add_states_over_time_metric(
     'Labels vs detections')

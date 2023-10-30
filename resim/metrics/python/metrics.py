@@ -14,9 +14,9 @@ from resim.metrics.proto.metrics_pb2 import MetricStatus, MetricImportance
 from resim.utils.proto import uuid_pb2
 from google.protobuf import timestamp_pb2
 
-# ----
-# Misc
-# ----
+# ---------------
+# Misc Data Types
+# ---------------
 
 
 @dataclass
@@ -24,7 +24,7 @@ class Timestamp:
     secs: int
     nanos: int
 
-    def pack(self) -> timestamp_pb2.Timestamp():
+    def pack(self: Timestamp) -> timestamp_pb2.Timestamp:
         msg = timestamp_pb2.Timestamp()
         msg.seconds = self.secs
         msg.nanos = self.nanos
@@ -33,8 +33,18 @@ class Timestamp:
 
 @dataclass
 class DoubleFailureDefinition:
-    fails_above: float
-    fails_below: float
+    fails_above: Optional[float]
+    fails_below: Optional[float]
+
+    def pack(self: DoubleFailureDefinition) -> metrics_pb2.DoubleFailureDefinition:
+        msg = metrics_pb2.DoubleFailureDefinition()
+        if self.fails_above is not None:
+            msg.fails_above = self.fails_above
+
+        if self.fails_below is not None:
+            msg.fails_below = self.fails_below
+            
+        return msg
 
 # ----------------------
 # Overall metrics object
@@ -145,6 +155,14 @@ class Metric(ABC, Generic[MetricType]):
         self.blocking = blocking
         return self
 
+    @abstractmethod
+    def pack(self: MetricType) -> metrics_pb2.Metric:
+        ...
+
+    @abstractmethod
+    def recursively_pack_into(self, job_metrics: metrics_pb2.JobMetrics):
+        ...
+
 
 @dataclass(init=False, kw_only=True, repr=True)
 class ScalarMetric(Metric['ScalarMetric']):
@@ -180,6 +198,10 @@ class ScalarMetric(Metric['ScalarMetric']):
         return self
 
     def pack(self: ScalarMetric) -> metrics_pb2.MetricsData:
+        raise NotImplementedError()
+
+    def recursively_pack_into(self: ScalarMetric, job_metrics: metrics_pb2.JobMetrics):
+        return super().recursively_pack_into(job_metrics)
         raise NotImplementedError()
 
 
@@ -247,8 +269,12 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         self.legend_series_names = legend_series_names
         return self
 
-    def pack(self: DoubleOverTimeMetric) -> metrics_pb2.MetricsData:
+    def pack(self: DoubleOverTimeMetric) -> metrics_pb2.Metric:
+        packed_metric = super().pack()
         raise NotImplementedError()
+
+    def recursively_pack_into(self: DoubleOverTimeMetric, job_metrics: metrics_pb2.JobMetrics):
+        super().recursively_pack_into(job_metrics)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -337,8 +363,11 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
     def pack(self: StatesOverTimeMetric) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
+    def recursively_pack_into(self: StatesOverTimeMetric, job_metrics: metrics_pb2.JobMetrics):
+        raise NotImplementedError()
 
 # Data representation
+
 
 MetricsDataType = TypeVar('MetricsDataType', bound='MetricsData')
 
@@ -371,6 +400,14 @@ class MetricsData(ABC, Generic[MetricsDataType]):
     def with_index_data(self, index_data: MetricsData) -> MetricsData:
         self.index_data = index_data
         return self
+
+    @abstractmethod
+    def pack(self: MetricsDataType) -> metrics_pb2.MetricsData:
+        ...
+
+    @abstractmethod
+    def recursively_pack_into(self: MetricsDataType, job_metrics: metrics_pb2.JobMetrics):
+        ...
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -455,7 +492,10 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
         return grouped_data
 
-    def pack(self) -> metrics_pb2.MetricsData:
+    def pack(self: SeriesMetricsData) -> metrics_pb2.MetricsData:
+        raise NotImplementedError()
+
+    def recursively_pack_into(self: SeriesMetricsData, job_metrics: metrics_pb2.JobMetrics):
         raise NotImplementedError()
 
 
@@ -582,3 +622,9 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
 
             msg.series_per_category.category_to_series[cat].CopyFrom(series)
             assert msg.data_type == 0 or msg.data_type == data_type
+
+    def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
+        raise NotImplementedError()
+
+    def recursively_pack_into(self: GroupedMetricsData, job_metrics: metrics_pb2.JobMetrics):
+        raise NotImplementedError()
