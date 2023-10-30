@@ -13,7 +13,7 @@ namespace resim::ros2 {
 void populate_log(const std::filesystem::path &log_path);
 
 // Helper function to confirm that the ReSim log at the given path contains the
-// same messages as the test_messages map.
+// same messages as the test messages added by populate_log().
 void verify_log_contents(const std::filesystem::path &log_path);
 
 }  // namespace resim::ros2
