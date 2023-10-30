@@ -4,8 +4,11 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@com_github_mvukov_rules_ros2//ros2:ament.bzl", "ros2_ament_setup")
 load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_python//python:defs.bzl", "py_test")
 
 cc_library(
     name = "time_from_ros2",
@@ -293,20 +296,16 @@ cc_library(
     ],
 )
 
-ros2_cpp_test(
-    name = "resim_log_from_ros2_test",
-    testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
-    srcs = ["resim_log_from_ros2_test.cc"],
-    data = [":default_converter_plugin.so"],
-    set_up_ament = True,
+cc_library(
+    name = "resim_log_from_ros2_test_helpers",
+    testonly = True,
+    srcs = ["resim_log_from_ros2_test_helpers.cc"],
+    hdrs = ["resim_log_from_ros2_test_helpers.hh"],
     deps = [
-        ":converter_plugin",
         ":odometry_from_ros2",
-        ":resim_log_from_ros2",
         ":transform_from_ros2",
         "//resim/msg:fuzz_helpers",
         "//resim/testing:fuzz_helpers",
-        "//resim/testing:test_directory",
         "//resim/third_party/mcap:mcap_impl",
         "//resim/time:timestamp",
         "//resim/utils:inout",
@@ -317,6 +316,21 @@ ros2_cpp_test(
         "@ros2_rclcpp//:rclcpp",
         "@ros2_rosbag2//:rosbag2_cpp",
         "@ros2_rosbag2//:rosbag2_storage",
+    ],
+)
+
+ros2_cpp_test(
+    name = "resim_log_from_ros2_test",
+    testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
+    srcs = ["resim_log_from_ros2_test.cc"],
+    data = [":default_converter_plugin.so"],
+    set_up_ament = True,
+    deps = [
+        ":resim_log_from_ros2",
+        ":resim_log_from_ros2_test_helpers",
+        "//resim/testing:test_directory",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -335,5 +349,43 @@ ros2_cpp_binary(
         "@cxxopts",
         "@ros2_rclcpp//:rclcpp",
         "@ros2_rosbag2//:rosbag2_cpp",
+    ],
+)
+
+pybind_extension(
+    name = "resim_log_from_ros2_test_helpers_python",
+    testonly = True,
+    srcs = ["resim_log_from_ros2_test_helpers_python.cc"],
+    deps = [
+        ":resim_log_from_ros2_test_helpers",
+    ],
+)
+
+pybind_extension(
+    name = "resim_log_from_ros2_python",
+    srcs = ["resim_log_from_ros2_python.cc"],
+    deps = [
+        ":resim_log_from_ros2",
+    ],
+)
+
+ros2_ament_setup(
+    name = "resim_log_from_ros2_python_test_ament",
+    testonly = True,
+    deps = [
+        ":default_converter_plugin.so",
+        ":resim_log_from_ros2_python.so",
+        ":resim_log_from_ros2_test_helpers_python.so",
+    ],
+)
+
+py_test(
+    name = "resim_log_from_ros2_python_test",
+    srcs = ["resim_log_from_ros2_python_test.py"],
+    data = [
+        ":default_converter_plugin.so",
+        ":resim_log_from_ros2_python.so",
+        ":resim_log_from_ros2_python_test_ament",
+        ":resim_log_from_ros2_test_helpers_python.so",
     ],
 )
