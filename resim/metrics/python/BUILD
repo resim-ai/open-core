@@ -23,3 +23,11 @@ py_binary(
         "@com_google_protobuf//:protobuf_python",
     ],
 )
+
+py_binary(
+    name = "metrics_sanitycheck",
+    srcs = ["metrics_sanitycheck.py"],
+    deps = [
+        ":metrics",
+    ],
+)

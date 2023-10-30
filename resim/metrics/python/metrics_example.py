@@ -1,6 +1,4 @@
 from __future__ import annotations
-import random
-
 import uuid
 
 import numpy as np
@@ -43,7 +41,7 @@ FIRST_VEHICLE_DETECTIONS = EXAMPLE_DETECTIONS[FIRST_VEHICLE_MASK]
 JOB_ID = uuid.uuid4()
 
 # Actual data code
-metrics = ResimMetrics(JOB_ID)
+metrics = ResimMetricsWriter(JOB_ID)
 timestamp_data = (metrics
                   .add_series_metrics_data('Timestamps').
                   with_series(EXAMPLE_TIMESTAMPS).
@@ -119,10 +117,11 @@ print('After', states_over_time_metric.statuses_over_time_data)
 # states_over_time_simple_metric = (metrics
 #                                   .add_states_over_time_metric("Simple labels vs detections"))
 
-print(label_statuses, detections_statuses)
+a = StatesOverTimeMetric(
+    "Intermediate", statuses_over_time_data="Something else")
 
-a = StatesOverTimeMetric("Dog", statuses_over_time_data="Cat")
-StatesOverTimeMetric("Test example")
+print(StatesOverTimeMetric("Test example"))
+
 #   .with_description(f'Plot of category labels vs detections for actor {FIRST_VEHICLE_IDS[0]}')
 #   .with_blocking(True)
 #   .with_should_display(True)

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar
 
 import numpy as np
 
@@ -41,8 +41,15 @@ class DoubleFailureDefinition:
 # ----------------------
 
 
-class ResimMetrics:
-    def __init__(self, job_id: UUID):
+@dataclass(init=False, repr=True, kw_only=True)
+class ResimMetricsWriter:
+    job_id: uuid.UUID
+    metrics: Dict[uuid.UUID, Metric]
+    metrics_data: Dict[uuid.UUID, MetricsData]
+
+    names: Set[str]
+
+    def __init__(self, job_id: uuid.UUID):
         self.job_id = job_id
         self.metrics = {}
         self.metrics_data = {}
@@ -83,9 +90,23 @@ class ResimMetrics:
 # ---------------------
 
 
-class Metric(ABC):
+MetricType = TypeVar('MetricType', bound='Metric')
+
+
+@dataclass(init=False, kw_only=True, repr=True)
+class Metric(ABC, Generic[MetricType]):
+    id: uuid.UUID
+    name: str
+    description: Optional[str]
+
+    status: Optional[MetricStatus]
+    importance: Optional[MetricImportance]
+
+    should_display: Optional[bool]
+    blocking: Optional[bool]
+
     @abstractmethod
-    def __init__(self,
+    def __init__(self: MetricType,
                  name: str,
                  description: Optional[str] = None,
                  status: Optional[MetricStatus] = None,
@@ -101,32 +122,37 @@ class Metric(ABC):
         self.should_display = should_display
         self.blocking = blocking
 
-    def __eq__(self, __value: object) -> bool:
+    def __eq__(self: MetricType, __value: object) -> bool:
         return type(self) == type(__value) and self.id == __value.id
 
-    def with_description(self, description: str) -> Metric:
+    def with_description(self: MetricType, description: str) -> MetricType:
         self.description = description
         return self
 
-    def with_status(self, status: MetricStatus) -> Metric:
+    def with_status(self: MetricType, status: MetricStatus) -> MetricType:
         self.status = status
         return self
 
-    def with_importance(self, importance: MetricImportance) -> Metric:
+    def with_importance(self: MetricType, importance: MetricImportance) -> MetricType:
         self.importance = importance
         return self
 
-    def with_should_display(self, should_display: bool) -> Metric:
+    def with_should_display(self: MetricType, should_display: bool) -> MetricType:
         self.should_display = should_display
         return self
 
-    def with_blocking(self, blocking: bool) -> Metric:
+    def with_blocking(self: MetricType, blocking: bool) -> MetricType:
         self.blocking = blocking
         return self
 
 
-class ScalarMetric(Metric):
-    def __init__(self,
+@dataclass(init=False, kw_only=True, repr=True)
+class ScalarMetric(Metric['ScalarMetric']):
+    value: Optional[float]
+    failure_definition: Optional[DoubleFailureDefinition]
+    unit: Optional[str]
+
+    def __init__(self: ScalarMetric,
                  name: str,
                  description: Optional[str] = None,
                  status: Optional[MetricStatus] = None,
@@ -141,80 +167,126 @@ class ScalarMetric(Metric):
         self.failure_definition = failure_definition
         self.unit = unit
 
-    def with_value(self, value: float) -> ScalarMetric:
+    def with_value(self: ScalarMetric, value: float) -> ScalarMetric:
         self.value = value
         return self
 
-    def with_unit(self, unit: str) -> ScalarMetric:
+    def with_unit(self: ScalarMetric, unit: str) -> ScalarMetric:
         self.unit = unit
         return self
 
-    def with_failure_definition(self, failure_definition: DoubleFailureDefinition) -> ScalarMetric:
+    def with_failure_definition(self: ScalarMetric, failure_definition: DoubleFailureDefinition) -> ScalarMetric:
         self.failure_definition = failure_definition
         return self
 
-    def pack(self) -> metrics_pb2.MetricsData:
+    def pack(self: ScalarMetric) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
 
-class DoubleOverTimeMetric(Metric):
-    def __init__(self,
+@dataclass(init=False, kw_only=True, repr=True)
+class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
+    doubles_over_time: Optional[List[MetricsData]]
+    statuses_over_time: Optional[List[MetricsData]]
+
+    failure_definition: Optional[DoubleFailureDefinition]
+
+    start_time: Optional[Timestamp]
+    end_time: Optional[Timestamp]
+
+    y_axis_name: Optional[str]
+    legend_series_names: Optional[List[str]]
+
+    def __init__(self: DoubleOverTimeMetric,
                  name: str,
                  description: Optional[str] = None,
                  status: Optional[MetricStatus] = None,
                  importance: Optional[MetricImportance] = None,
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
-                 doubles_over_time_data: Optional[MetricsData] = None,
-                 statuses_over_time_data: Optional[MetricsData] = None,
+                 doubles_over_time_data: Optional[List[MetricsData]] = None,
+                 statuses_over_time_data: Optional[List[MetricsData]] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  start_time: Optional[Timestamp] = None,
                  end_time: Optional[Timestamp] = None,
                  y_axis_name: Optional[str] = None,
-                 legend_series_name: Optional[List[str]] = None):
+                 legend_series_names: Optional[List[str]] = None):
         super().__init__(name, description, status, importance, blocking, should_display)
-        raise NotImplementedError()
+        self.doubles_over_time_data = doubles_over_time_data
+        self.statuses_over_time_data = statuses_over_time_data
+        self.failure_definition = failure_definition
+        self.start_time = start_time
+        self.end_time = end_time
+        self.y_axis_name = y_axis_name
+        self.legend_series_names = legend_series_names
 
-    def with_doubles_over_time_data(self, doubles_over_time_data: MetricsData) -> MetricsData:
+    def with_doubles_over_time_data(self: DoubleOverTimeMetric, doubles_over_time_data: MetricsData) -> DoubleOverTimeMetric:
         self.doubles_over_time_data = doubles_over_time_data
         return self
 
-    def pack(self) -> metrics_pb2.MetricsData:
+    def with_statuses_over_time_data(self: DoubleOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
+        self.statuses_over_time_data = statuses_over_time_data
+        return self
+
+    def with_failure_definition(self: DoubleOverTimeMetric, failure_definition: DoubleFailureDefinition) -> DoubleOverTimeMetric:
+        self.failure_definition = failure_definition
+        return self
+
+    def with_start_time(self: DoubleOverTimeMetric, start_time: Timestamp) -> DoubleOverTimeMetric:
+        self.start_time = start_time
+        return self
+
+    def with_end_time(self: DoubleOverTimeMetric, end_time: Timestamp) -> DoubleOverTimeMetric:
+        self.end_time = end_time
+        return self
+
+    def with_y_axis_name(self: DoubleOverTimeMetric, y_axis_name: str) -> DoubleOverTimeMetric:
+        self.y_axis_name = y_axis_name
+        return self
+
+    def with_legend_series_names(self: DoubleOverTimeMetric, legend_series_names: List[str]) -> DoubleOverTimeMetric:
+        self.legend_series_names = legend_series_names
+        return self
+
+    def pack(self: DoubleOverTimeMetric) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
-    # TODO(tknowles): Lots of missing methods here!
 
+@dataclass(init=False, kw_only=True, repr=True)
+class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
+    states_over_time_data: Optional[MetricsData]
+    statuses_over_time_data: Optional[MetricsData]
 
-class StatesOverTimeMetric(Metric):
-    def __init__(self,
+    states_set: Optional[Set[str]]
+    failure_states: Optional[Set[str]]
+
+    legend_series_names: Optional[List[str]]
+
+    def __init__(self: StatesOverTimeMetric,
                  name: str,
                  description: Optional[str] = None,
                  status: Optional[MetricStatus] = None,
                  importance: Optional[MetricImportance] = None,
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
-                 states_over_time_data: List[MetricsData] = [],
-                 statuses_over_time_data: List[MetricsData] = [],
+                 states_over_time_data: Optional[List[MetricsData]] = None,
+                 statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
                  failures_states: Optional[Set[str]] = None,
                  legend_series_names: Optional[List[str]] = None):
-
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
         self.states_over_time_data = states_over_time_data
-        if (name == "Test example"):
-            print('Test example', statuses_over_time_data)
 
         self.statuses_over_time_data = statuses_over_time_data
         self.states_set = states_set
         self.failure_states = failures_states
         self.legend_series_names = legend_series_names
 
-    def with_states_over_time_data(self, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
+    def with_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.states_over_time_data = states_over_time_data
         return self
 
-    def with_states_over_time_series(self,
+    def with_states_over_time_series(self: StatesOverTimeMetric,
                                      states_over_time_series: Dict[str, np.ndarray],
                                      units: Dict[str, str] = None,
                                      indices: Dict[str, np.ndarray] = None) -> StatesOverTimeMetric:
@@ -234,39 +306,52 @@ class StatesOverTimeMetric(Metric):
 
         return self
 
-    def append_states_over_time_data(self, states_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
+    def append_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
+        if self.states_over_time_data is None:
+            self.states_over_time_data = []
         self.states_over_time_data.append(states_over_time_data_element)
         return self
 
-    def with_statuses_over_time_data(self, statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
+    def with_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.statuses_over_time_data = statuses_over_time_data
         return self
 
-    def append_statuses_over_time_data(self, statuses_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
+    def append_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
+        if self.statuses_over_time_data is None:
+            self.statuses_over_time_data = []
         self.statuses_over_time_data.append(statuses_over_time_data_element)
         return self
 
-    def with_states_set(self, states_set: Set[str]) -> StatesOverTimeMetric:
+    def with_states_set(self: StatesOverTimeMetric, states_set: Set[str]) -> StatesOverTimeMetric:
         self.states_set = states_set
         return self
 
-    def with_failures_states(self, failures_states: Set[str]) -> StatesOverTimeMetric:
+    def with_failures_states(self: StatesOverTimeMetric, failures_states: Set[str]) -> StatesOverTimeMetric:
         self.failures_states = failures_states
         return self
 
-    def with_legend_series_names(self, legend_series_names: List[str]) -> StatesOverTimeMetric:
+    def with_legend_series_names(self: StatesOverTimeMetric, legend_series_names: List[str]) -> StatesOverTimeMetric:
         self.legend_series_names = legend_series_names
         return self
 
-    def pack(self) -> metrics_pb2.MetricsData:
+    def pack(self: StatesOverTimeMetric) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
 
 # Data representation
 
-class MetricsData(ABC):
+MetricsDataType = TypeVar('MetricsDataType', bound='MetricsData')
+
+
+@dataclass(init=False, kw_only=True, repr=True)
+class MetricsData(ABC, Generic[MetricsDataType]):
+    id: uuid.UUID
+    name: str
+    unit: Optional[str]
+    index_data: Optional[MetricsData]
+
     @abstractmethod
-    def __init__(self,
+    def __init__(self: MetricsDataType,
                  name: str,
                  unit: Optional[str] = None,
                  index_data: Optional[MetricsData] = None):
@@ -288,8 +373,11 @@ class MetricsData(ABC):
         return self
 
 
-class SeriesMetricsData(MetricsData):
-    def __init__(self,
+@dataclass(init=False, kw_only=True, repr=True)
+class SeriesMetricsData(MetricsData['SeriesMetricsData']):
+    series: np.ndarray  # normally, dtype = 'object'
+
+    def __init__(self: SeriesMetricsData,
                  name: str,
                  series: Optional[np.ndarray] = None,
                  unit: Optional[str] = None,
@@ -297,11 +385,14 @@ class SeriesMetricsData(MetricsData):
         super().__init__(name, unit, index_data)
         self.series = series
 
-    def with_series(self, series: np.ndarray) -> SeriesMetricsData:
+    def with_series(self: SeriesMetricsData, series: np.ndarray) -> SeriesMetricsData:
         self.series = series
         return self
 
-    def map(self, f: Callable[[np.ndarray, int], Any], applied_data_name: str, applied_unit: Optional[str] = None) -> SeriesMetricsData:
+    def map(self: SeriesMetricsData,
+            f: Callable[[np.ndarray, int], Any],
+            applied_data_name: str,
+            applied_unit: Optional[str] = None) -> SeriesMetricsData:
         new_series = np.empty_like(self.series)
 
         for i in range(len(self.series)):
@@ -314,7 +405,8 @@ class SeriesMetricsData(MetricsData):
             index_data=self.index_data
         )
 
-    def group_by(self, grouping_series: SeriesMetricsData,
+    def group_by(self: SeriesMetricsData,
+                 grouping_series: SeriesMetricsData,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         assert self.series is not None
@@ -425,10 +517,11 @@ def pack_series_to_proto(series: np.ndarray, indexed: bool):
     return data_type, series_msg
 
 
-class GroupedMetricsData(MetricsData):
+@dataclass(init=False, kw_only=True, repr=True)
+class GroupedMetricsData(MetricsData['GroupedMetricsData']):
     category_to_series: Dict[str, np.ndarray]  # normally, dtype='object'
 
-    def __init__(self,
+    def __init__(self: GroupedMetricsData,
                  name: str,
                  category_to_series: Optional[Dict[str, np.ndarray]] = None,
                  unit: Optional[str] = None,
@@ -436,7 +529,10 @@ class GroupedMetricsData(MetricsData):
         super().__init__(name, unit, index_data)
         self.category_to_series = category_to_series
 
-    def map(self, f: Callable[[np.ndarray, int, str], Any], applied_data_name: str, applied_unit: Optional[str] = None) -> SeriesMetricsData:
+    def map(self: GroupedMetricsData,
+            f: Callable[[np.ndarray, int, str], Any],
+            applied_data_name: str,
+            applied_unit: Optional[str] = None) -> GroupedMetricsData:
         new_category_to_series = {}
         for cat, series in self.category_to_series.items():
             new_category_to_series[cat] = np.empty_like(series)
@@ -451,11 +547,12 @@ class GroupedMetricsData(MetricsData):
             index_data=self.index_data
         )
 
-    def with_category_to_series(self, category_to_series: Dict[str, np.ndarray]) -> GroupedMetricsData:
+    def with_category_to_series(self: GroupedMetricsData,
+                                category_to_series: Dict[str, np.ndarray]) -> GroupedMetricsData:
         self.category_to_series = category_to_series
         return self
 
-    def pack(self) -> metrics_pb2.MetricsData:
+    def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
         msg = metrics_pb2.MetricsData()
         msg.metrics_data_id.id.data = str(self.id)
 
