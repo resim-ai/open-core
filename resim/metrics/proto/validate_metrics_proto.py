@@ -65,59 +65,59 @@ def _validate_metric_id(metric_id: mp.MetricId) -> None:
     _validate_uuid(metric_id.id)
 
 
-_ALL_ARRAY_DATA_TYPES = {
-    mp.DOUBLE_ARRAY_DATA_TYPE,
-    mp.TIMESTAMP_ARRAY_DATA_TYPE,
-    mp.UUID_ARRAY_DATA_TYPE,
-    mp.STRING_ARRAY_DATA_TYPE,
-    mp.METRIC_STATUS_ARRAY_DATA_TYPE,
-    mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE,
-    mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE,
-    mp.INDEXED_UUID_ARRAY_DATA_TYPE,
-    mp.INDEXED_STRING_ARRAY_DATA_TYPE,
-    mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE,
+_ALL_SERIES_DATA_TYPES = {
+    mp.DOUBLE_SERIES_DATA_TYPE,
+    mp.TIMESTAMP_SERIES_DATA_TYPE,
+    mp.UUID_SERIES_DATA_TYPE,
+    mp.STRING_SERIES_DATA_TYPE,
+    mp.METRIC_STATUS_SERIES_DATA_TYPE,
+    mp.INDEXED_DOUBLE_SERIES_DATA_TYPE,
+    mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE,
+    mp.INDEXED_UUID_SERIES_DATA_TYPE,
+    mp.INDEXED_STRING_SERIES_DATA_TYPE,
+    mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE,
 }
 
 
 def is_indexed(data_type: mp.MetricsDataType) -> bool:
-    """Is this one of the indexed array data types or not?"""
+    """Is this one of the indexed series data types or not?"""
     return data_type in (
-        mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE,
-        mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE,
-        mp.INDEXED_UUID_ARRAY_DATA_TYPE,
-        mp.INDEXED_STRING_ARRAY_DATA_TYPE,
-        mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE)
+        mp.INDEXED_DOUBLE_SERIES_DATA_TYPE,
+        mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE,
+        mp.INDEXED_UUID_SERIES_DATA_TYPE,
+        mp.INDEXED_STRING_SERIES_DATA_TYPE,
+        mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE)
 
 
-def _array_length(array: mp.Array) -> int:
-    """Get the length of an array regardless of its type"""
-    _metrics_assert(array.WhichOneof("array") is not None)
-    if array.HasField("doubles"):
-        return len(array.doubles.array)
-    if array.HasField("timestamps"):
-        return len(array.timestamps.array)
-    if array.HasField("uuids"):
-        return len(array.uuids.array)
-    if array.HasField("strings"):
-        return len(array.strings.array)
-    # if array.HasField("statuses"):
+def _series_length(series: mp.Series) -> int:
+    """Get the length of an series regardless of its type"""
+    _metrics_assert(series.WhichOneof("series") is not None)
+    if series.HasField("doubles"):
+        return len(series.doubles.series)
+    if series.HasField("timestamps"):
+        return len(series.timestamps.series)
+    if series.HasField("uuids"):
+        return len(series.uuids.series)
+    if series.HasField("strings"):
+        return len(series.strings.series)
+    # if series.HasField("statuses"):
     # This is commented out for code coverage reasons
-    return len(array.statuses.array)
+    return len(series.statuses.series)
 
 
-def _validate_data_arrays_agree(data_a: mp.MetricsData,
+def _validate_data_series_agree(data_a: mp.MetricsData,
                                 data_b: mp.MetricsData) -> None:
     """
     Validate that the data schema for two MetricsDatas agree
 
     When we say "agree", we mean that the contained data are the same type
-    (array or array_per_category)
+    (series or series_per_category)
     *and*
 
-      - if that type is "array" they have the same length
+      - if that type is "series" they have the same length
 
-      - if that type is "array_per_category"  they have the same categories and
-        each category has the same length in each array.
+      - if that type is "series_per_category"  they have the same categories and
+        each category has the same length in each series.
 
     Args:
         data_a: The first MetricsData to compare.
@@ -129,22 +129,22 @@ def _validate_data_arrays_agree(data_a: mp.MetricsData,
 
     _metrics_assert(data_a.WhichOneof("data") is not None)
     _metrics_assert(data_a.WhichOneof("data") == data_b.WhichOneof("data"))
-    if data_a.HasField("array"):
+    if data_a.HasField("series"):
         _metrics_assert(
-            _array_length(
-                data_a.array) == _array_length(
-                data_b.array))
-    else:  # data_a.HasField("array_per_category")
-        data_a_arrays = data_a.array_per_category.category_to_array
-        data_b_arrays = data_b.array_per_category.category_to_array
+            _series_length(
+                data_a.series) == _series_length(
+                data_b.series))
+    else:  # data_a.HasField("series_per_category")
+        data_a_series = data_a.series_per_category.category_to_series
+        data_b_series = data_b.series_per_category.category_to_series
 
-        _metrics_assert(len(data_a_arrays) == len(data_b_arrays))
-        for key in data_a_arrays:
-            _metrics_assert(key in data_b_arrays)
+        _metrics_assert(len(data_a_series) == len(data_b_series))
+        for key in data_a_series:
+            _metrics_assert(key in data_b_series)
             _metrics_assert(
-                _array_length(
-                    data_a_arrays[key]) == _array_length(
-                    data_b_arrays[key]))
+                _series_length(
+                    data_a_series[key]) == _series_length(
+                    data_b_series[key]))
 
 
 def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
@@ -159,7 +159,7 @@ def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
     Here we check that the status data is indexed if and only if the value data
     is indexed, and confirm that both the value data and status data use the
     same index data if they are indexed. We also validate that the status data
-    has INDEX_METRIC_STATUS_ARRAY_DATA_TYPE or METRIC_STATUS_ARRAY_DATA_TYPE as
+    has INDEX_METRIC_STATUS_SERIES_DATA_TYPE or METRIC_STATUS_SERIES_DATA_TYPE as
     appropriate.
 
     Furthermore, we also allow users to specify restrictions on the allowed
@@ -188,15 +188,15 @@ def _validate_values_and_statuses(value_data_id: mp.MetricsDataId,
 
     if not is_indexed(value_data.data_type):
         _metrics_assert(status_data.data_type ==
-                        mp.METRIC_STATUS_ARRAY_DATA_TYPE)
+                        mp.METRIC_STATUS_SERIES_DATA_TYPE)
     else:
         _metrics_assert(status_data.data_type ==
-                        mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE)
+                        mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE)
         _metrics_assert(status_data.index_data_id == value_data.index_data_id)
         _metrics_assert(status_data.index_data_type in allowed_index_types)
         _metrics_assert(value_data.index_data_type in allowed_index_types)
 
-    _validate_data_arrays_agree(value_data, status_data)
+    _validate_data_series_agree(value_data, status_data)
 
 
 def _validate_double_metric_values(
@@ -211,22 +211,22 @@ def _validate_double_metric_values(
     """
 
     if double_metric_values.HasField('timestamp_index'):
-        allowed_value_types = {mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE}
-        allowed_index_types = {mp.TIMESTAMP_ARRAY_DATA_TYPE,
-                               mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE}
+        allowed_value_types = {mp.INDEXED_DOUBLE_SERIES_DATA_TYPE}
+        allowed_index_types = {mp.TIMESTAMP_SERIES_DATA_TYPE,
+                               mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE}
     elif double_metric_values.HasField('uuid_index'):
-        allowed_value_types = {mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE}
-        allowed_index_types = {mp.UUID_ARRAY_DATA_TYPE,
-                               mp.INDEXED_UUID_ARRAY_DATA_TYPE}
+        allowed_value_types = {mp.INDEXED_DOUBLE_SERIES_DATA_TYPE}
+        allowed_index_types = {mp.UUID_SERIES_DATA_TYPE,
+                               mp.INDEXED_UUID_SERIES_DATA_TYPE}
     elif double_metric_values.HasField('string_index'):
-        allowed_value_types = {mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE}
-        allowed_index_types = {mp.STRING_ARRAY_DATA_TYPE,
-                               mp.INDEXED_STRING_ARRAY_DATA_TYPE}
+        allowed_value_types = {mp.INDEXED_DOUBLE_SERIES_DATA_TYPE}
+        allowed_index_types = {mp.STRING_SERIES_DATA_TYPE,
+                               mp.INDEXED_STRING_SERIES_DATA_TYPE}
     else:
-        # array_index or no index
-        allowed_value_types = {mp.DOUBLE_ARRAY_DATA_TYPE,
-                               mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE}
-        allowed_index_types = _ALL_ARRAY_DATA_TYPES
+        # series_index or no index
+        allowed_value_types = {mp.DOUBLE_SERIES_DATA_TYPE,
+                               mp.INDEXED_DOUBLE_SERIES_DATA_TYPE}
+        allowed_index_types = _ALL_SERIES_DATA_TYPES
 
     _validate_values_and_statuses(double_metric_values.value_data_id,
                                   double_metric_values.status_data_id,
@@ -260,10 +260,10 @@ def _validate_double_over_time_metric_values(
             double_over_time_metric_values.doubles_over_time_data_id[i],
             double_over_time_metric_values.statuses_over_time_data_id[i],
             metrics_data_map,
-            allowed_value_types={mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
+            allowed_value_types={mp.INDEXED_DOUBLE_SERIES_DATA_TYPE},
             allowed_index_types={
-                mp.TIMESTAMP_ARRAY_DATA_TYPE,
-                mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE})
+                mp.TIMESTAMP_SERIES_DATA_TYPE,
+                mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE})
 
 
 def _validate_line_plot_metric_values(
@@ -293,11 +293,11 @@ def _validate_line_plot_metric_values(
                 statuses_data_id,
                 metrics_data_map,
                 allowed_value_types={
-                    mp.DOUBLE_ARRAY_DATA_TYPE,
-                    mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
+                    mp.DOUBLE_SERIES_DATA_TYPE,
+                    mp.INDEXED_DOUBLE_SERIES_DATA_TYPE},
                 allowed_index_types={
-                    mp.TIMESTAMP_ARRAY_DATA_TYPE,
-                    mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE})
+                    mp.TIMESTAMP_SERIES_DATA_TYPE,
+                    mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE})
 
 
 def _validate_bar_chart_metric_values(
@@ -320,10 +320,10 @@ def _validate_bar_chart_metric_values(
             bar_chart_metric_values.values_data_id[i],
             bar_chart_metric_values.statuses_data_id[i],
             metrics_data_map,
-            allowed_value_types={mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
+            allowed_value_types={mp.INDEXED_DOUBLE_SERIES_DATA_TYPE},
             allowed_index_types={
-                mp.STRING_ARRAY_DATA_TYPE,
-                mp.INDEXED_STRING_ARRAY_DATA_TYPE})
+                mp.STRING_SERIES_DATA_TYPE,
+                mp.INDEXED_STRING_SERIES_DATA_TYPE})
 
 
 def _validate_states_over_time_metric_values(
@@ -347,23 +347,23 @@ def _validate_states_over_time_metric_values(
             value_data_id,
             states_over_time_metric_values.statuses_over_time_data_id[i],
             metrics_data_map,
-            allowed_value_types={mp.INDEXED_STRING_ARRAY_DATA_TYPE},
+            allowed_value_types={mp.INDEXED_STRING_SERIES_DATA_TYPE},
             allowed_index_types={
-                mp.TIMESTAMP_ARRAY_DATA_TYPE,
-                mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE})
+                mp.TIMESTAMP_SERIES_DATA_TYPE,
+                mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE})
 
         # Check that all the states are in the states set
         id_str = value_data_id.id.data
         value_data = metrics_data_map[id_str]
-        if value_data.HasField('array'):
-            _metrics_assert(value_data.array.HasField('strings'))
-            for state in value_data.array.strings.array:
+        if value_data.HasField('series'):
+            _metrics_assert(value_data.series.HasField('strings'))
+            for state in value_data.series.strings.series:
                 _metrics_assert(
                     state in states_over_time_metric_values.states_set)
         else:
-            for _, array in value_data.array_per_category.category_to_array.items():
-                _metrics_assert(array.HasField('strings'))
-                for state in array.strings.array:
+            for _, series in value_data.series_per_category.category_to_series.items():
+                _metrics_assert(series.HasField('strings'))
+                for state in series.strings.series:
                     _metrics_assert(
                         state in states_over_time_metric_values.states_set)
 
@@ -386,9 +386,9 @@ def _validate_histogram_metric_values(
         histogram_metric_values.statuses_data_id,
         metrics_data_map,
         allowed_value_types={
-            mp.DOUBLE_ARRAY_DATA_TYPE,
-            mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE},
-        allowed_index_types=_ALL_ARRAY_DATA_TYPES)
+            mp.DOUBLE_SERIES_DATA_TYPE,
+            mp.INDEXED_DOUBLE_SERIES_DATA_TYPE},
+        allowed_index_types=_ALL_SERIES_DATA_TYPES)
 
     last_ub = None
     for bucket in histogram_metric_values.buckets:
@@ -505,30 +505,30 @@ def _validate_job_level_metrics(
     _validate_metric_status(job_level_metrics.metrics_status)
 
 
-def _validate_array_matches_type(
-        array: mp.Array,
+def _validate_series_matches_type(
+        series: mp.Series,
         data_type: mp.MetricsDataType) -> None:
     """
-    Check that a metric data array matches a given type.
+    Check that a metric data series matches a given type.
 
     Args:
-        array: The array to check
+        series: The series to check
         data_type: The type we expect it to contain
     """
     if data_type in (
-            mp.DOUBLE_ARRAY_DATA_TYPE,
-            mp.INDEXED_DOUBLE_ARRAY_DATA_TYPE):
-        _metrics_assert(array.HasField('doubles'))
-    elif data_type in (mp.TIMESTAMP_ARRAY_DATA_TYPE, mp.INDEXED_TIMESTAMP_ARRAY_DATA_TYPE):
-        _metrics_assert(array.HasField('timestamps'))
-    elif data_type in (mp.UUID_ARRAY_DATA_TYPE, mp.INDEXED_UUID_ARRAY_DATA_TYPE):
-        _metrics_assert(array.HasField('uuids'))
-    elif data_type in (mp.STRING_ARRAY_DATA_TYPE, mp.INDEXED_STRING_ARRAY_DATA_TYPE):
-        _metrics_assert(array.HasField('strings'))
-    # data_type in (mp.METRIC_STATUS_ARRAY_DATA_TYPE,
-    # mp.INDEXED_METRIC_STATUS_ARRAY_DATA_TYPE):
+            mp.DOUBLE_SERIES_DATA_TYPE,
+            mp.INDEXED_DOUBLE_SERIES_DATA_TYPE):
+        _metrics_assert(series.HasField('doubles'))
+    elif data_type in (mp.TIMESTAMP_SERIES_DATA_TYPE, mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE):
+        _metrics_assert(series.HasField('timestamps'))
+    elif data_type in (mp.UUID_SERIES_DATA_TYPE, mp.INDEXED_UUID_SERIES_DATA_TYPE):
+        _metrics_assert(series.HasField('uuids'))
+    elif data_type in (mp.STRING_SERIES_DATA_TYPE, mp.INDEXED_STRING_SERIES_DATA_TYPE):
+        _metrics_assert(series.HasField('strings'))
+    # data_type in (mp.METRIC_STATUS_SERIES_DATA_TYPE,
+    # mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE):
     else:
-        _metrics_assert(array.HasField('statuses'))
+        _metrics_assert(series.HasField('statuses'))
 
 
 def _validate_metrics_data(
@@ -544,18 +544,18 @@ def _validate_metrics_data(
     _validate_metrics_data_type(metrics_data.data_type)
 
     if metrics_data.is_per_category:
-        _metrics_assert(metrics_data.HasField('array_per_category'))
-        for _, array in metrics_data.array_per_category.category_to_array.items():
-            _metrics_assert(_array_length(array) > 0)
-            _validate_array_matches_type(array, metrics_data.data_type)
+        _metrics_assert(metrics_data.HasField('series_per_category'))
+        for _, series in metrics_data.series_per_category.category_to_series.items():
+            _metrics_assert(_series_length(series) > 0)
+            _validate_series_matches_type(series, metrics_data.data_type)
         _metrics_assert(len(metrics_data.category_names) > 0)
-        _metrics_assert(set(metrics_data.array_per_category.category_to_array.keys(
+        _metrics_assert(set(metrics_data.series_per_category.category_to_series.keys(
         )) == set(metrics_data.category_names))
     else:
-        _metrics_assert(metrics_data.HasField('array'))
-        _metrics_assert(_array_length(metrics_data.array) > 0)
-        _validate_array_matches_type(
-            metrics_data.array, metrics_data.data_type)
+        _metrics_assert(metrics_data.HasField('series'))
+        _metrics_assert(_series_length(metrics_data.series) > 0)
+        _validate_series_matches_type(
+            metrics_data.series, metrics_data.data_type)
 
     if metrics_data.is_indexed:
         _validate_metrics_data_id(metrics_data.index_data_id)
@@ -563,7 +563,7 @@ def _validate_metrics_data(
         _metrics_assert(id_str in metrics_data_map)
         index_data = metrics_data_map[id_str]
 
-        _validate_data_arrays_agree(metrics_data,
+        _validate_data_series_agree(metrics_data,
                                     index_data)
 
         _metrics_assert(metrics_data.index_data_type == index_data.data_type)
@@ -625,15 +625,15 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
     expected_status = mp.PASSED_METRIC_STATUS
     for status_id in relevant_status_ids:
         status_data = metrics_data_map[status_id]
-        if status_data.HasField('array'):
-            _metrics_assert(status_data.array.HasField('statuses'))
-            for status in status_data.array.statuses.array:
+        if status_data.HasField('series'):
+            _metrics_assert(status_data.series.HasField('statuses'))
+            for status in status_data.series.statuses.series:
                 if status == mp.FAILED_METRIC_STATUS:
                     expected_status = mp.FAILED_METRIC_STATUS
         else:
-            for _, array in status_data.array_per_category.category_to_array.items():
-                _metrics_assert(array.HasField('statuses'))
-                for status in array.statuses.array:
+            for _, series in status_data.series_per_category.category_to_series.items():
+                _metrics_assert(series.HasField('statuses'))
+                for status in series.statuses.series:
                     if status == mp.FAILED_METRIC_STATUS:
                         expected_status = mp.FAILED_METRIC_STATUS
     _metrics_assert(expected_status == job_metrics.metrics_status)

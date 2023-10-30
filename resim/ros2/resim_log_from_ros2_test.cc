@@ -14,8 +14,6 @@
 
 namespace resim::ros2 {
 
-namespace {}  // namespace
-
 TEST(ResimLogFromRos2Test, TestConversion) {
   // SETUP
   // Make sure we clean up protobuf:
