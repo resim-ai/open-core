@@ -290,6 +290,18 @@ def resim_core_dependencies():
         url = "https://github.com/mvukov/rules_ros2/archive/e5ca0b2f86a3e9f1b97ff8d6b2a8e3e03185ad81.tar.gz",
     )
 
+    # Override rules_ros2's dependency on this so we can insert our own patch for it
+    maybe(
+        http_archive,
+        name = "ros2_rmw_implementation",
+        build_file = "@com_github_mvukov_rules_ros2//repositories:rmw_implementation.BUILD.bazel",
+        patch_args = ["-p1"],
+        patches = ["@resim_open_core//resim/third_party/ros2:ros2_rmw_implementation.patch"],
+        sha256 = "46067d692a9606c12132980cad8dbf00f9cac7bda358f2ce14a96c877e04aee9",
+        strip_prefix = "rmw_implementation-2.8.2",
+        url = "https://github.com/ros2/rmw_implementation/archive/refs/tags/2.8.2.tar.gz",
+    )
+
     maybe(
         http_archive,
         name = "vision_msgs",
