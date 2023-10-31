@@ -1,6 +1,5 @@
 name: Draft Release
-on: 
-  pull_request:
+on:
   workflow_dispatch:
     inputs:
       tag:
@@ -56,4 +55,4 @@ jobs:
         with:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
           draft: true
-          tag: "testing_12345"
+          tag: ${{ github.event.inputs.tag }}
