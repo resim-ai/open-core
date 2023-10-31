@@ -1,5 +1,5 @@
 name: Draft Release
-on:
+on: 
   workflow_dispatch:
     inputs:
       tag:
