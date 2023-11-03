@@ -53,7 +53,9 @@ class MockServer:
                 return self.handle_device_code(data=data)
             if endpoint == "/oauth/token":
                 return self.handle_token(data=data)
-        raise RuntimeError("Invalid uri!")
+        result = types.SimpleNamespace()
+        result.status_code = HTTPStatus.NOT_FOUND
+        return result
 
     def _generate_device_code(self) -> str:
         """Generate a random device code."""
@@ -133,12 +135,14 @@ class DeviceCodeClientTest(unittest.TestCase):
     """
     Our actual unit test case.
     """
+
     def test_device_code_client(self) -> None:
         """
         Test that we can get the expected token with the expected queries to the server.
         """
         with unittest.mock.patch("requests.post") as mock, tempfile.TemporaryDirectory() as tmpdir:
-            def side_effect(uri: str, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
+            def side_effect(
+                    uri: str, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
                 return server.handle_post(uri, data=data)
             mock.side_effect = side_effect
 
@@ -173,6 +177,25 @@ class DeviceCodeClientTest(unittest.TestCase):
             self.assertEqual(token["access_token"], TOKEN)
             self.assertEqual(server.num_device_code_requests, 1)
             self.assertEqual(server.num_token_requests, 2)
+
+    def test_fail_on_404(self) -> None:
+        """
+        Verify that we raise on 404.
+        """
+        with unittest.mock.patch("requests.post") as mock, tempfile.TemporaryDirectory() as tmpdir:
+            def side_effect(
+                    uri: str, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
+                return server.handle_post(uri, data=data)
+            mock.side_effect = side_effect
+
+            server = MockServer(testcase=self)
+            client = dcc.DeviceCodeClient(
+                domain="www.mybaddomain.com",
+                client_id=CLIENT_ID,
+                cache_location=pathlib.Path(tmpdir) /
+                "token.json")
+            with self.assertRaises(RuntimeError):
+                client.get_jwt()
 
 
 if __name__ == '__main__':
