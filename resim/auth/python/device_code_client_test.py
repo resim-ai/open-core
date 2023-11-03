@@ -4,11 +4,16 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+"""
+Unit test for our python device code client.
+"""
+
 import pathlib
 import random
 import string
 import tempfile
 import types
+import typing
 import unittest
 import unittest.mock
 
@@ -17,34 +22,45 @@ import resim.auth.python.device_code_client as dcc
 
 DOMAIN = "https://resim.us.auth0.com"
 CLIENT_ID = "U6EHPrmAIJf8QUUzldGa4cN26XP58I2a"
-TOKEN = "h8aNbLY2kkR1Pvr6q59ap6hFW5IU18IXm4mASp3QMc6dd3QeZJNqjqyMBy3aWuWCTFiav3T0wRBUTtmGToJJkhFpoU3fjaJ7HEBKNZwvA8HtF8noqaBO5oLE854fsL8p2r9xkxwG6pvaoVQAx0lQ8ubO94qty2CIhuLXkZyt6riZhdo6w8Mkxi0L36UBDK02TC5uZlbDtMRURzkessDYxZhrIwHDEJX5aURCvkyznJmSHJlJIvN3W2vGr6ljYIMw"
-REFRESH_TOKEN = "qaBO5oLE854fsL8p2r9xkxwG6pvaoVQAx0lQ8ubO94qty2CIhuLXkZyt6riZhdo6w8Mkxi0L36UBDK02TC5uZl"
+TOKEN = (
+    "h8aNbLY2kkR1Pvr6q59ap6hFW5IU18IXm4mASp3QMc6dd3QeZJNqjqyMBy3aWuWCTFiav3T0wRBUTtmG" +
+    "ToJJkhFpoU3fjaJ7HEBKNZwvA8HtF8noqaBO5oLE854fsL8p2r9xkxwG6pvaoVQAx0lQ8ubO94qty2CI" +
+    "huLXkZyt6riZhdo6w8Mkxi0L36UBDK02TC5uZlbDtMRURzkessDYxZhrIwHDEJX5aURCvkyznJmSHJlJ" +
+    "IvN3W2vGr6ljYIMw")
+REFRESH_TOKEN = (
+    "qaBO5oLE854fsL8p2r9xkxwG6pvaoVQAx0lQ8ubO94qty2CIhuLXkZyt6riZhdo6w8Mkxi0L36UBDK02" +
+    "TC5uZl")
 
 
 class MockServer:
+    """A mock server to be patched into our DeviceCodeClient unit test below"""
+
     def __init__(self, *, testcase: unittest.TestCase):
         self._device_code = self._generate_device_code()
         self._user_code = self._generate_user_code()
-        self._verification_uri = DOMAIN + "/activate"
         self._authenticated = False
         self._testcase = testcase
+        self._scope = ""
 
         self.num_device_code_requests = 0
         self.num_token_requests = 0
 
-    def handle_post(self, uri, *, data: dict[str, any]) -> dict[str, any]:
+    def handle_post(self, uri: str, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
+        """Handle an incoming post to the mock server and delegate based on endpoint."""
         if uri.startswith(DOMAIN):
             endpoint = uri[len(DOMAIN):]
             if endpoint == "/oauth/device/code":
                 return self.handle_device_code(data=data)
-            elif endpoint == "/oauth/token":
+            if endpoint == "/oauth/token":
                 return self.handle_token(data=data)
         raise RuntimeError("Invalid uri!")
 
-    def _generate_device_code(self):
+    def _generate_device_code(self) -> str:
+        """Generate a random device code."""
         return ''.join(random.choices(string.ascii_letters, k=24))
 
-    def _generate_user_code(self):
+    def _generate_user_code(self) -> str:
+        """Generate a random user code."""
         return ''.join(
             random.choices(
                 string.ascii_uppercase,
@@ -54,7 +70,9 @@ class MockServer:
                 string.ascii_uppercase,
                 k=4))
 
-    def handle_device_code(self, *, data: dict[str, any]) -> dict[str, any]:
+    def handle_device_code(
+            self, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
+        """Handle a device code post and test its contents."""
         self.num_device_code_requests += 1
         self._testcase.assertIn("client_id", data)
         self._testcase.assertIn("scope", data)
@@ -66,17 +84,29 @@ class MockServer:
         self._scope = data["scope"]
         result = types.SimpleNamespace()
         result.status_code = HTTPStatus.OK
+        verification_uri = DOMAIN + "/activate"
         result.json = lambda: {
             "device_code": self._device_code,
             "user_code": self._user_code,
-            "verification_uri": self._verification_uri,
+            "verification_uri": verification_uri,
             "expires_in": 900,
             "interval": 0,  # Since this is a unit test
-            "verification_uri_complete": f"{self._verification_uri}?user_code={self._user_code}",
+            "verification_uri_complete": f"{verification_uri}?user_code={self._user_code}",
         }
         return result
 
-    def handle_token(self, *, data: dict[str, any]) -> dict[str, any]:
+    def handle_token(
+            self, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
+        """Handle a token post and test its contents."""
+        self._testcase.assertIn("client_id", data)
+        self._testcase.assertIn("device_code", data)
+        self._testcase.assertIn("grant_type", data)
+        self._testcase.assertEqual(data["client_id"], CLIENT_ID)
+        self._testcase.assertEqual(data["device_code"], self._device_code)
+        self._testcase.assertEqual(
+            data["grant_type"],
+            "urn:ietf:params:oauth:grant-type:device_code")
+
         self.num_token_requests += 1
         result = types.SimpleNamespace()
         if not self._authenticated:
@@ -100,9 +130,15 @@ class MockServer:
 
 
 class DeviceCodeClientTest(unittest.TestCase):
-    def test_device_code_client(self):
+    """
+    Our actual unit test case.
+    """
+    def test_device_code_client(self) -> None:
+        """
+        Test that we can get the expected token with the expected queries to the server.
+        """
         with unittest.mock.patch("requests.post") as mock, tempfile.TemporaryDirectory() as tmpdir:
-            def side_effect(uri: str, *, data: dict[str, any] = {}):
+            def side_effect(uri: str, *, data: dict[str, typing.Any]) -> types.SimpleNamespace:
                 return server.handle_post(uri, data=data)
             mock.side_effect = side_effect
 
