@@ -22,6 +22,7 @@ import requests
 DEFAULT_SCOPE = "offline_access"
 DEFAULT_AUDIENCE = "https://api.resim.ai"
 DEFAULT_CACHE_LOCATION = pathlib.Path.home() / ".resim" / "token.json"
+DEFAULT_CLIENT_ID = "gTp1Y0kOyQ7QzIo2lZm0auGM6FJZZVvy"
 
 
 class DeviceCodeClient:
@@ -29,7 +30,8 @@ class DeviceCodeClient:
     The client class which manages the token as well as other
     configuration data for authentication.
     """
-    def __init__(self, *, domain: str, client_id: str,
+    def __init__(self, *, domain: str,
+                 client_id: str = DEFAULT_CLIENT_ID,
                  scope: str = DEFAULT_SCOPE,
                  audience: str = DEFAULT_AUDIENCE,
                  cache_location: pathlib.Path = DEFAULT_CACHE_LOCATION):
