@@ -7,6 +7,7 @@
 """Macro to help bring in direct dependencies of this workspace.
 """
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
@@ -325,4 +326,27 @@ def resim_core_dependencies():
         build_file = "@pybind11_bazel//:pybind11.BUILD",
         strip_prefix = "pybind11-2.11.1",
         url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.zip",
+    )
+
+    BUILD_FILE_CONTENT = """
+load("@rules_python//python:defs.bzl", "py_library")
+load("@resim_python_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "resim_python_client",
+    visibility = ["//visibility:public"],
+    srcs = glob(["**/*.py"]),
+    deps = [
+        requirement("httpx"),
+        requirement("attrs"),
+        requirement("python-dateutil"),        
+    ],
+)
+    """
+    maybe(
+        git_repository,
+        name = "resim_python_client",
+        branch = "mikebauer/generation",
+        remote = "git@github.com:resim-ai/resim-python-client.git",
+        build_file_content = BUILD_FILE_CONTENT,
     )

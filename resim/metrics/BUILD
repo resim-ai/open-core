@@ -103,6 +103,24 @@ py_test(
     ],
 )
 
+py_library(
+    name = "fetch_job_metrics",
+    srcs = ["fetch_job_metrics.py"],
+    deps = [
+        "//resim/auth/python:device_code_client",
+        "//resim/metrics/proto:metrics_proto_py",
+        "@resim_python_client",
+    ],
+)
+
+py_test(
+    name = "fetch_job_metrics_test",
+    srcs = ["fetch_job_metrics_test.py"],
+    deps = [
+        ":fetch_job_metrics",
+    ],
+)
+
 pkg_tar(
     name = "resim_metrics_tools",
     srcs = [
