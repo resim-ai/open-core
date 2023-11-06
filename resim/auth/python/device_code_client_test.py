@@ -173,7 +173,7 @@ class DeviceCodeClientTest(unittest.TestCase):
             # Test refreshing
             server = MockServer(testcase=self)
             client.refresh()
-            client.refresh() # Called intentionally for coverage            
+            client.refresh() # Called intentionally for coverage
             token = client.get_jwt()
             self.assertEqual(token, client.get_jwt())
             self.assertEqual(token["access_token"], TOKEN)
