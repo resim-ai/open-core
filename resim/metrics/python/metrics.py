@@ -812,7 +812,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         assert len(self.series) == len(grouping_series.series)
         assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
 
-        grouped = defaultdict(list)
+        grouped: Dict[Any, List[Any]] = defaultdict(list)
         for val, cat in zip(self.series, grouping_series.series):
             grouped[cat].append(val)
 
@@ -824,7 +824,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
         grouped_index_data = None
         if self.index_data is not None:
-            grouped_index = defaultdict(list)
+            grouped_index: Dict[Any, List[Any]] = defaultdict(list)
             assert self.index_data.series is not None
             for val, cat in zip(self.index_data.series, grouping_series.series):
                 grouped_index[cat].append(val)
