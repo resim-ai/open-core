@@ -180,7 +180,12 @@ class Metric(ABC, Generic[MetricType]):
         self.blocking = blocking
 
     def __eq__(self: MetricType, __value: object) -> bool:
-        return type(self) == type(__value) and self.id == __value.id
+        if not isinstance(__value, type(self)):
+            return False
+
+        assert self.id is not None and __value.id is not None, "Cannot compare values without valid ids"
+
+        return self.id == __value.id
 
     def with_description(self: MetricType, description: str) -> MetricType:
         self.description = description
@@ -254,8 +259,8 @@ class ScalarMetric(Metric['ScalarMetric']):
 
 @dataclass(init=False, kw_only=True, repr=True)
 class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
-    doubles_over_time_data: Optional[List[MetricsData]]
-    statuses_over_time_data: Optional[List[MetricsData]]
+    doubles_over_time_data: List[MetricsData]
+    statuses_over_time_data: List[MetricsData]
 
     failure_definition: Optional[DoubleFailureDefinition]
 
@@ -280,22 +285,26 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name, description, status, importance, blocking, should_display)
-        self.doubles_over_time_data = doubles_over_time_data
-        self.statuses_over_time_data = statuses_over_time_data
+
+        if doubles_over_time_data is None:
+            self.doubles_over_time_data = []
+        else:
+            self.doubles_over_time_data = doubles_over_time_data
+
+        if statuses_over_time_data is None:
+            self.statuses_over_time_data = []
+        else:
+            self.statuses_over_time_data = statuses_over_time_data
+
         self.failure_definition = failure_definition
         self.start_time = start_time
         self.end_time = end_time
         self.y_axis_name = y_axis_name
-        self.legend_series_names = legend_series_names
 
-        if self.doubles_over_time_data is None:
-            self.doubles_over_time_data = []
-
-        if self.statuses_over_time_data is None:
-            self.statuses_over_time_data = []
-
-        if self.legend_series_names is None:
+        if legend_series_names is None:
             self.legend_series_names = []
+        else:
+            self.legend_series_names = legend_series_names
 
     def with_doubles_over_time_data(self: DoubleOverTimeMetric, doubles_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
         self.doubles_over_time_data = doubles_over_time_data
@@ -340,8 +349,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
 
 @dataclass(init=False, kw_only=True, repr=True)
 class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
-    states_over_time_data: Optional[List[MetricsData]]
-    statuses_over_time_data: Optional[List[MetricsData]]
+    states_over_time_data: List[MetricsData]
+    statuses_over_time_data: List[MetricsData]
 
     states_set: Optional[Set[str]]
     failure_states: Optional[Set[str]]
@@ -362,21 +371,23 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
-        self.states_over_time_data = states_over_time_data
+        if states_over_time_data is None:
+            self.states_over_time_data = []
+        else:
+            self.states_over_time_data = states_over_time_data
 
-        self.statuses_over_time_data = statuses_over_time_data
+        if statuses_over_time_data is None:
+            self.statuses_over_time_data = []
+        else:
+            self.statuses_over_time_data = statuses_over_time_data
+
         self.states_set = states_set
         self.failure_states = failure_states
-        self.legend_series_names = legend_series_names
 
-        if self.states_over_time_data is None:
-            self.states_over_time_data = []
-
-        if self.statuses_over_time_data is None:
-            self.statuses_over_time_data = []
-
-        if self.legend_series_names is None:
+        if legend_series_names is None:
             self.legend_series_names = []
+        else:
+            self.legend_series_names = legend_series_names
 
     def with_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.states_over_time_data = states_over_time_data
@@ -442,9 +453,9 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
 
 @dataclass(init=False, kw_only=True, repr=True)
 class LinePlotMetric(Metric['LinePlotMetric']):
-    x_doubles_data: Optional[List[MetricsData]]
-    y_doubles_data: Optional[List[MetricsData]]
-    statuses_data: Optional[List[MetricsData]]
+    x_doubles_data: List[MetricsData]
+    y_doubles_data: List[MetricsData]
+    statuses_data: List[MetricsData]
 
     x_axis_name: Optional[str]
     y_axis_name: Optional[str]
@@ -466,25 +477,29 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
-        self.x_doubles_data = x_doubles_data
-        self.y_doubles_data = y_doubles_data
-        self.statuses_data = statuses_data
+        if x_doubles_data is None:
+            self.x_doubles_data = []
+        else:
+            self.x_doubles_data = x_doubles_data
+
+        if y_doubles_data is None:
+            self.y_doubles_data = []
+        else:
+            self.y_doubles_data = y_doubles_data
+
+        if statuses_data is None:
+            self.statuses_data = []
+        else:
+            self.statuses_data = statuses_data
 
         self.x_axis_name = x_axis_name
         self.y_axis_name = y_axis_name
         self.legend_series_names = legend_series_names
 
-        if self.x_doubles_data is None:
-            self.x_doubles_data = []
-
-        if self.y_doubles_data is None:
-            self.y_doubles_data = []
-
-        if self.statuses_data is None:
-            self.statuses_data = []
-
-        if self.legend_series_names is None:
+        if legend_series_names is None:
             self.legend_series_names = []
+        else:
+            self.legend_series_names = legend_series_names
 
     def add_series_data(self: LinePlotMetric, x_doubles_data: MetricsData, y_doubles_data: MetricsData, legend_series_name: Optional[str] = None) -> LinePlotMetric:
         self.x_doubles_data.append(x_doubles_data)
@@ -537,21 +552,25 @@ class BarChartMetric(Metric['BarChartMetric']):
                  ):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
-        self.values_data = values_data
-        self.statuses_data = statuses_data
-        self.legend_series_names = legend_series_names
+
+        if values_data is None:
+            self.values_data = []
+        else:
+            self.values_data = values_data
+
+        if statuses_data is None:
+            self.statuses_data = []
+        else:
+            self.statuses_data = statuses_data
+
+        if legend_series_names is None:
+            self.legend_series_names = []
+        else:
+            self.legend_series_names = legend_series_names
+
         self.x_axis_name = x_axis_name
         self.y_axis_name = y_axis_name
         self.stack_bars = stack_bars
-
-        if self.values_data is None:
-            self.values_data = []
-
-        if self.statuses_data is None:
-            self.statuses_data = []
-
-        if self.legend_series_names is None:
-            self.legend_series_names = []
 
     def append_values_data(self: BarChartMetric, values_data_element: MetricsData, legend_series_name: Optional[str] = None) -> BarChartMetric:
         self.values_data.append(values_data_element)
