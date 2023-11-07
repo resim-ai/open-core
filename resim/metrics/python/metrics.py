@@ -232,7 +232,8 @@ class ScalarMetric(Metric['ScalarMetric']):
                  value: Optional[float] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
-        super().__init__(name, description, status, importance, blocking, should_display)
+        super().__init__(name=name, description=description, status=status,
+                         importance=importance, blocking=blocking, should_display=should_display)
         self.value = value
         self.failure_definition = failure_definition
         self.unit = unit
@@ -268,7 +269,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
     end_time: Optional[Timestamp]
 
     y_axis_name: Optional[str]
-    legend_series_names: Optional[List[Optional[str]]]
+    legend_series_names: List[Optional[str]]
 
     def __init__(self: DoubleOverTimeMetric,
                  name: str,
@@ -284,8 +285,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  end_time: Optional[Timestamp] = None,
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
-        super().__init__(name, description, status, importance, blocking, should_display)
-
+        super().__init__(name=name, description=description, status=status,
+                         importance=importance, blocking=blocking, should_display=should_display)
         if doubles_over_time_data is None:
             self.doubles_over_time_data = []
         else:
@@ -355,7 +356,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
     states_set: Optional[Set[str]]
     failure_states: Optional[Set[str]]
 
-    legend_series_names: Optional[List[Optional[str]]]
+    legend_series_names: List[Optional[str]]
 
     def __init__(self: StatesOverTimeMetric,
                  name: str,
@@ -460,7 +461,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
     x_axis_name: Optional[str]
     y_axis_name: Optional[str]
 
-    legend_series_names: Optional[List[Optional[str]]]
+    legend_series_names: List[Optional[str]]
 
     def __init__(self: LinePlotMetric,
                  name: str,
@@ -494,7 +495,6 @@ class LinePlotMetric(Metric['LinePlotMetric']):
 
         self.x_axis_name = x_axis_name
         self.y_axis_name = y_axis_name
-        self.legend_series_names = legend_series_names
 
         if legend_series_names is None:
             self.legend_series_names = []
@@ -532,9 +532,9 @@ class BarChartMetric(Metric['BarChartMetric']):
     values_data: List[MetricsData]
     statuses_data: List[MetricsData]
     legend_series_names: List[Optional[str]]
-    x_axis_name: str
-    y_axis_name: str
-    stack_bars: bool
+    x_axis_name: Optional[str]
+    y_axis_name: Optional[str]
+    stack_bars: Optional[bool]
 
     def __init__(self: BarChartMetric,
                  name: str,
@@ -780,7 +780,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
                  series: Optional[np.ndarray] = None,
                  unit: Optional[str] = None,
                  index_data: Optional[MetricsData] = None):
-        super().__init__(name, unit, index_data)
+        super().__init__(name=name, unit=unit, index_data=index_data)
         self.series = series
 
     def with_series(self: SeriesMetricsData, series: np.ndarray) -> SeriesMetricsData:
@@ -870,8 +870,11 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
                  category_to_series: Optional[Dict[str, np.ndarray]] = None,
                  unit: Optional[str] = None,
                  index_data: Optional[MetricsData] = None):
-        super().__init__(name, unit, index_data)
-        self.category_to_series = category_to_series
+        super().__init__(name=name, unit=unit, index_data=index_data)
+        if category_to_series is None:
+            self.category_to_series = {}
+        else:
+            self.category_to_series = category_to_series
 
     def map(self: GroupedMetricsData,
             f: Callable[[np.ndarray, int, str], Any],
