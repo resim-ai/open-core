@@ -263,7 +263,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
     end_time: Optional[Timestamp]
 
     y_axis_name: Optional[str]
-    legend_series_names: Optional[List[str]]
+    legend_series_names: Optional[List[Optional[str]]]
 
     def __init__(self: DoubleOverTimeMetric,
                  name: str,
@@ -278,7 +278,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  start_time: Optional[Timestamp] = None,
                  end_time: Optional[Timestamp] = None,
                  y_axis_name: Optional[str] = None,
-                 legend_series_names: Optional[List[str]] = None):
+                 legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name, description, status, importance, blocking, should_display)
         self.doubles_over_time_data = doubles_over_time_data
         self.statuses_over_time_data = statuses_over_time_data
@@ -326,7 +326,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: DoubleOverTimeMetric, legend_series_names: List[str]) -> DoubleOverTimeMetric:
+    def with_legend_series_names(self: DoubleOverTimeMetric, legend_series_names: List[Optional[str]]) -> DoubleOverTimeMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -346,7 +346,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
     states_set: Optional[Set[str]]
     failure_states: Optional[Set[str]]
 
-    legend_series_names: Optional[List[str]]
+    legend_series_names: Optional[List[Optional[str]]]
 
     def __init__(self: StatesOverTimeMetric,
                  name: str,
@@ -359,7 +359,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
                  failures_states: Optional[Set[str]] = None,
-                 legend_series_names: Optional[List[str]] = None):
+                 legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
         self.states_over_time_data = states_over_time_data
@@ -429,7 +429,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
         self.failures_states = failures_states
         return self
 
-    def with_legend_series_names(self: StatesOverTimeMetric, legend_series_names: List[str]) -> StatesOverTimeMetric:
+    def with_legend_series_names(self: StatesOverTimeMetric, legend_series_names: List[Optional[str]]) -> StatesOverTimeMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -449,7 +449,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
     x_axis_name: Optional[str]
     y_axis_name: Optional[str]
 
-    legend_series_names: Optional[List[str]]
+    legend_series_names: Optional[List[Optional[str]]]
 
     def __init__(self: LinePlotMetric,
                  name: str,
@@ -463,7 +463,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  statuses_data: Optional[List[MetricsData]] = None,
                  x_axis_name: Optional[str] = None,
                  y_axis_name: Optional[str] = None,
-                 legend_series_names: Optional[List[str]] = None):
+                 legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
         self.x_doubles_data = x_doubles_data
@@ -501,7 +501,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: LinePlotMetric, legend_series_names: List[str]) -> LinePlotMetric:
+    def with_legend_series_names(self: LinePlotMetric, legend_series_names: List[Optional[str]]) -> LinePlotMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -516,7 +516,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
 class BarChartMetric(Metric['BarChartMetric']):
     values_data: List[MetricsData]
     statuses_data: List[MetricsData]
-    legend_series_names: List[str]
+    legend_series_names: List[Optional[str]]
     x_axis_name: str
     y_axis_name: str
     stack_bars: bool
@@ -530,7 +530,7 @@ class BarChartMetric(Metric['BarChartMetric']):
                  should_display: Optional[bool] = None,
                  values_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
-                 legend_series_names: Optional[List[str]] = None,
+                 legend_series_names: Optional[List[Optional[str]]] = None,
                  x_axis_name: Optional[str] = None,
                  y_axis_name: Optional[str] = None,
                  stack_bars: Optional[bool] = None
@@ -570,7 +570,7 @@ class BarChartMetric(Metric['BarChartMetric']):
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: BarChartMetric, legend_series_names: List[str]) -> BarChartMetric:
+    def with_legend_series_names(self: BarChartMetric, legend_series_names: List[Optional[str]]) -> BarChartMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -629,11 +629,11 @@ class HistogramMetric(Metric['HistogramMetric']):
         self.buckets = buckets
         return self
 
-    def lower_bound(self: HistogramMetric, lower_bound: float) -> HistogramMetric:
+    def with_lower_bound(self: HistogramMetric, lower_bound: float) -> HistogramMetric:
         self.lower_bound = lower_bound
         return self
 
-    def upper_bound(self: HistogramMetric, upper_bound: float) -> HistogramMetric:
+    def with_upper_bound(self: HistogramMetric, upper_bound: float) -> HistogramMetric:
         self.upper_bound = upper_bound
         return self
 
@@ -655,7 +655,7 @@ IndexType = TypeVar("IndexType", int, str, Timestamp, uuid.UUID, str)
 class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
     value_data: Optional[MetricsData]
     status_data: Optional[MetricsData]
-    index: Optional[IndexType]
+    index: Optional[Generic[IndexType]]
     failure_definition: Optional[DoubleFailureDefinition]
 
     def __init__(self: DoubleSummaryMetric,
@@ -785,7 +785,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         assert self.series is not None
         assert grouping_series.series is not None
         assert len(self.series) == len(grouping_series.series)
-        assert grouping_series.index_data == None or grouping_series.index_data == self.index_data
+        assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
 
         grouped = defaultdict(list)
         for val, cat in zip(self.series, grouping_series.series):
@@ -800,6 +800,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         grouped_index_data = None
         if self.index_data is not None:
             grouped_index = defaultdict(list)
+            assert self.index_data.series is not None
             for val, cat in zip(self.index_data.series, grouping_series.series):
                 grouped_index[cat].append(val)
 
