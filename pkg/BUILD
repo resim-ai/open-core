@@ -77,6 +77,7 @@ py_wheel(
     distribution = "resim_metrics",
     homepage = "https://www.resim.ai/",
     license = LICENSE,
+    platform = "manylinux2014_x86_64",
     python_tag = "py3",
     requires = [
         "protobuf>=4.24.4",
@@ -84,4 +85,55 @@ py_wheel(
     summary = "ReSim Metrics Libraries.",
     version = version,
     deps = [":metrics_package"],
+)
+
+py_package(
+    name = "msg_package",
+    packages = ["resim.msg"],
+    deps = [
+        "//resim/msg:detection_proto_py",
+        "//resim/msg:header_proto_py",
+        "//resim/msg:navsat_proto_py",
+        "//resim/msg:odometry_proto_py",
+        "//resim/msg:pose_proto_py",
+        "//resim/msg:transform_proto_py",
+    ],
+)
+
+py_wheel(
+    name = "msg_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_msg",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    python_tag = "py3",
+    requires = [
+        "protobuf>=4.24.4",
+    ],
+    summary = "ReSim Metrics Libraries.",
+    version = version,
+    deps = [":msg_package"],
+)
+
+py_wheel(
+    name = "ros2_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_ros2",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    platform = "manylinux2014_x86_64",
+    python_tag = "py3",
+    requires = [
+        "protobuf>=4.24.4",
+    ],
+    strip_path_prefixes = ["resim/ros2/ros2_py_package/"],
+    summary = "ReSim ROS2 Libraries.",
+    version = version,
+    deps = ["//resim/ros2:ros2_py_package"],
 )
