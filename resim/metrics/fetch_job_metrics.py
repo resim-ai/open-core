@@ -5,6 +5,7 @@ import collections
 import requests
 from http import HTTPStatus
 import threading
+from typing import Any
 
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.auth.python.device_code_client as dcc
@@ -18,23 +19,6 @@ import resim_python_client.resim_python_client.api.batches.list_metrics_data_for
 def _get_token():
     client = dcc.DeviceCodeClient(domain="https://resim.us.auth0.com")
     return client.get_jwt()["access_token"]
-
-
-def _fetch_single_job_metrics(metrics_map,
-                              metrics_map_lock,
-                              *,
-                              thread_list,
-                              thread_list_lock,
-                              client: AuthenticatedClient,
-                              batch_id: uuid.UUID,
-                              job_id: uuid.UUID):
-    metrics_response = list_metrics_for_job.sync(
-        str(batch_id), str(job_id), client=client)
-    for metric in metrics_response.metrics:
-
-        metric_message_response = requests.get(metric.metric_url)
-        assert metric_message_response.status_code == HTTPStatus.OK
-        print(metric_message_response.content)
 
 
 def _get_metrics_urls(*,
@@ -64,33 +48,20 @@ def _get_metrics_data_urls(*,
 
 
 def _fetch_metrics(*,
+                   message_type: type[Any],
                    session: requests.Session,
                    job_id: uuid.UUID,
-                   metrics_url: str,
-                   metrics_protos,
-                   metrics_protos_lock):
-    response = session.get(metrics_url)
+                   url: str,
+                   protos: list[Any],
+                   protos_lock: threading.Lock):
+    response = session.get(url)
     assert response.status_code == HTTPStatus.OK
-    metrics_protos_lock.acquire()
-    metric = mp.Metric()
-    metric.ParseFromString(response.content)
-    metrics_protos[job_id].append(metric)
-    metrics_protos_lock.release()
+    protos_lock.acquire()
+    message = message_type()
+    message.ParseFromString(response.content)
+    protos[job_id].append(message)
+    protos_lock.release()
 
-def _fetch_metrics_data(*,
-                   session: requests.Session,                        
-                   job_id: uuid.UUID,
-                   metrics_data_url: str,
-                   metrics_data_protos,
-                   metrics_data_protos_lock):
-    response = session.get(metrics_data_url)
-    assert response.status_code == HTTPStatus.OK
-    metrics_data_protos_lock.acquire()
-    metrics_data = mp.MetricsData()
-    metrics_data.ParseFromString(response.content)
-    metrics_data_protos[job_id].append(metrics_data)
-    metrics_data_protos_lock.release()
-    
 
 
 def fetch_job_metrics(*, batch_ids: list[uuid.UUID], job_ids: list[uuid.UUID]):
@@ -155,22 +126,25 @@ def fetch_job_metrics(*, batch_ids: list[uuid.UUID], job_ids: list[uuid.UUID]):
                 threading.Thread(
                     target=_fetch_metrics,
                     kwargs={
+                        "message_type": mp.Metric,
                         "session": session,
                         "job_id": job_id,
-                        "metrics_url": url,
-                        "metrics_protos": metrics_protos,
-                        "metrics_protos_lock": metrics_protos_lock}))
+                        "url": url,
+                        "protos": metrics_protos,
+                        "protos_lock": metrics_protos_lock}))
+            
     for job_id, urllist in metrics_data_urls.items():
         for url in urllist:
             threads.append(
                 threading.Thread(
-                target=_fetch_metrics_data,
+                target=_fetch_metrics,
                 kwargs={
+                    "message_type": mp.MetricsData,                    
                     "session": session,                    
                     "job_id": job_id,
-                    "metrics_data_url": url,
-                    "metrics_data_protos": metrics_data_protos,
-                    "metrics_data_protos_lock": metrics_data_protos_lock}))
+                    "url": url,
+                    "protos": metrics_data_protos,
+                    "protos_lock": metrics_data_protos_lock}))
             
             
     for thread in threads:
@@ -179,5 +153,6 @@ def fetch_job_metrics(*, batch_ids: list[uuid.UUID], job_ids: list[uuid.UUID]):
         thread.join()
 
     session.close()
+    client.get_httpx_client().close()
 
     return metrics_protos, metrics_data_protos
