@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 import uuid
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeAlias, TypeVar, Union
 
 import numpy as np
 
@@ -358,7 +358,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  states_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
-                 failures_states: Optional[Set[str]] = None,
+                 failure_states: Optional[Set[str]] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display)
@@ -366,7 +366,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
 
         self.statuses_over_time_data = statuses_over_time_data
         self.states_set = states_set
-        self.failure_states = failures_states
+        self.failure_states = failure_states
         self.legend_series_names = legend_series_names
 
         if self.states_over_time_data is None:
@@ -425,8 +425,8 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
         self.states_set = states_set
         return self
 
-    def with_failures_states(self: StatesOverTimeMetric, failures_states: Set[str]) -> StatesOverTimeMetric:
-        self.failures_states = failures_states
+    def with_failure_states(self: StatesOverTimeMetric, failure_states: Set[str]) -> StatesOverTimeMetric:
+        self.failure_states = failure_states
         return self
 
     def with_legend_series_names(self: StatesOverTimeMetric, legend_series_names: List[Optional[str]]) -> StatesOverTimeMetric:
@@ -648,14 +648,15 @@ class HistogramMetric(Metric['HistogramMetric']):
         raise NotImplementedError()
 
 
-IndexType = TypeVar("IndexType", int, str, Timestamp, uuid.UUID, str)
+# Indices are a simple union, as we don't bind the type
+IndexType: TypeAlias = Union[int, str, Timestamp, uuid.UUID, str]
 
 
 @dataclass(init=False, kw_only=True, repr=True)
 class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
     value_data: Optional[MetricsData]
     status_data: Optional[MetricsData]
-    index: Optional[Generic[IndexType]]
+    index: Optional[IndexType]
     failure_definition: Optional[DoubleFailureDefinition]
 
     def __init__(self: DoubleSummaryMetric,
@@ -727,7 +728,12 @@ class MetricsData(ABC, Generic[MetricsDataType]):
         self.index_data = index_data
 
     def __eq__(self, __value: object) -> bool:
-        return type(self) == type(__value) and self.id == __value.id
+        if not isinstance(__value, type(self)):
+            return False
+
+        assert self.id is not None and __value.id is not None, "Cannot compare values without valid ids"
+
+        return self.id == __value.id
 
     def with_unit(self, unit: str) -> MetricsData[MetricsDataType]:
         self.unit = unit
