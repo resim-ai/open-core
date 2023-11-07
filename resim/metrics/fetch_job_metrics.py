@@ -8,7 +8,7 @@ import uuid
 import collections
 from http import HTTPStatus
 import threading
-from typing import Any
+from typing import Any, Callable
 
 import requests
 from resim_python_client.resim_python_client.client import AuthenticatedClient
@@ -25,17 +25,34 @@ def _get_token() -> str:
     return token
 
 
+def _fetch_all_pages(endpoint: Callable, *args, **kwargs):
+    responses = []
+    responses.append(endpoint(*args, **kwargs))
+    assert responses[-1] is not None
+
+    page_token = responses[-1].next_page_token
+    while page_token:
+        responses.append(endpoint(*args, **kwargs, page_token=page_token))
+        assert responses[-1] is not None
+        page_token = responses[-1].next_page_token
+    return responses
+
+
 def _get_metrics_urls(*,
                       batch_id: uuid.UUID,
                       job_id: uuid.UUID,
                       client: AuthenticatedClient,
                       metrics_urls: dict[uuid.UUID, list[str]],
                       metrics_urls_lock: threading.Lock) -> None:
-    metrics_response = list_metrics_for_job.sync(
-        str(batch_id), str(job_id), client=client)
+    metrics = [
+        metric for metrics_response in _fetch_all_pages(
+            list_metrics_for_job.sync,
+            str(batch_id),
+            str(job_id),
+            client=client) for metric in metrics_response.metrics]
     metrics_urls_lock.acquire()
     metrics_urls[job_id] = [
-        metric.metric_url for metric in metrics_response.metrics]
+        metric.metric_url for metric in metrics]
     metrics_urls_lock.release()
 
 
@@ -45,11 +62,15 @@ def _get_metrics_data_urls(*,
                            client: AuthenticatedClient,
                            metrics_data_urls: dict[uuid.UUID, list[str]],
                            metrics_data_urls_lock: threading.Lock) -> None:
-    metrics_data_response = list_metrics_data_for_job.sync(
-        str(batch_id), str(job_id), client=client)
+    metrics_datas = [
+        metrics_data for metrics_data_response in _fetch_all_pages(
+            list_metrics_data_for_job.sync,
+            str(batch_id),
+            str(job_id),
+            client=client) for metrics_data in metrics_data_response.metrics_data]
     metrics_data_urls_lock.acquire()
     metrics_data_urls[job_id] = [
-        metrics_data.metrics_data_url for metrics_data in metrics_data_response.metrics_data]
+        metrics_data.metrics_data_url for metrics_data in metrics_datas]
     metrics_data_urls_lock.release()
 
 
@@ -94,8 +115,13 @@ def fetch_job_metrics(*,
 
     threads = []
     for batch_id in batch_ids:
-        response = list_jobs.sync(batch_id, client=client)
-        for job in response.jobs:
+        jobs = [
+            job for response in _fetch_all_pages(
+                list_jobs.sync,
+                batch_id,
+                client=client) for
+            job in response.jobs]
+        for job in jobs:
             job_id = uuid.UUID(job.job_id)
             if job_id in job_ids_set:
                 threads.append(
@@ -166,5 +192,7 @@ def fetch_job_metrics(*,
 
     session.close()
     client.get_httpx_client().close()
+
+    print(metrics_data_protos)
 
     return metrics_protos, metrics_data_protos
