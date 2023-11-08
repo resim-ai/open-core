@@ -9,6 +9,7 @@ import collections
 from http import HTTPStatus
 import threading
 from typing import Any, Callable
+from dataclasses import dataclass
 
 import requests
 from resim_python_client.resim_python_client.client import AuthenticatedClient
@@ -23,11 +24,6 @@ from resim.metrics import fetch_metrics_urls
 from resim.metrics.get_metrics_proto import get_metrics_proto
 
 
-def _get_token() -> str:
-    client = dcc.DeviceCodeClient(domain="https://resim.us.auth0.com")
-    token: str = client.get_jwt()["access_token"]
-    return token
-
 def _get_metrics_urls(*,
                       batch_id: uuid.UUID,
                       job_id: uuid.UUID,
@@ -35,9 +31,8 @@ def _get_metrics_urls(*,
                       metrics_urls: dict[uuid.UUID, list[str]],
                       metrics_urls_lock: threading.Lock) -> None:
     metrics_urls_lock.acquire()
-    metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(batch_id=batch_id,
-                                                                 job_id=job_id,
-                                                                 client=client)
+    metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(
+        batch_id=batch_id, job_id=job_id, client=client)
     metrics_urls_lock.release()
 
 
@@ -48,9 +43,8 @@ def _get_metrics_data_urls(*,
                            metrics_data_urls: dict[uuid.UUID, list[str]],
                            metrics_data_urls_lock: threading.Lock) -> None:
     metrics_data_urls_lock.acquire()
-    metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(batch_id=batch_id,
-                                                                           job_id=job_id,
-                                                                           client=client)
+    metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(
+        batch_id=batch_id, job_id=job_id, client=client)
     metrics_data_urls_lock.release()
 
 
@@ -62,26 +56,33 @@ def _fetch_metrics(*,
                    protos: dict[uuid.UUID, list[Any]],
                    protos_lock: threading.Lock) -> None:
     protos_lock.acquire()
-    protos[job_id].append(get_metrics_proto(message_type=message_type, session=session, url=url))
+    protos[job_id].append(
+        get_metrics_proto(
+            message_type=message_type,
+            session=session,
+            url=url))
     protos_lock.release()
 
 
+@dataclass
+class JobInfo:
+    job_id: uuid.UUID
+    batch_id: uuid.UUID
+
+
 def fetch_job_metrics(*,
-                      batch_ids: list[uuid.UUID],
-                      job_ids: list[uuid.UUID]) -> tuple[collections.defaultdict[uuid.UUID,
-                                                                                 mp.Metric],
-                                                         collections.defaultdict[uuid.UUID,
-                                                                                 mp.MetricsData]]:
+                      token: str,
+                      jobs: list[JobInfo]) -> tuple[collections.defaultdict[uuid.UUID,
+                                                                            mp.Metric],
+                                                    collections.defaultdict[uuid.UUID,
+                                                                            mp.MetricsData]]:
     """
     This function fetches all job metrics from job_ids whose batch ids are in batch_ids.
     """
-    token = _get_token()
 
     client = AuthenticatedClient(
         base_url="https://api.resim.ai/v1",
         token=token)
-
-    job_ids_set = set(job_ids)
 
     metrics_urls: dict[uuid.UUID, list[str]] = {}
     metrics_urls_lock = threading.Lock()
@@ -90,34 +91,25 @@ def fetch_job_metrics(*,
     metrics_data_urls_lock = threading.Lock()
 
     threads = []
-    for batch_id in batch_ids:
-        jobs = [
-            job for response in fetch_all_pages.fetch_all_pages(
-                list_jobs.sync,
-                batch_id,
-                client=client) for
-            job in response.jobs]
-        for job in jobs:
-            job_id = uuid.UUID(job.job_id)
-            if job_id in job_ids_set:
-                threads.append(
-                    threading.Thread(
-                        target=_get_metrics_urls,
-                        kwargs={
-                            "batch_id": batch_id,
-                            "job_id": job_id,
-                            "client": client,
-                            "metrics_urls": metrics_urls,
-                            "metrics_urls_lock": metrics_urls_lock}))
-                threads.append(
-                    threading.Thread(
-                        target=_get_metrics_data_urls,
-                        kwargs={
-                            "batch_id": batch_id,
-                            "job_id": job_id,
-                            "client": client,
-                            "metrics_data_urls": metrics_data_urls,
-                            "metrics_data_urls_lock": metrics_data_urls_lock}))
+    for job in jobs:
+        threads.append(
+            threading.Thread(
+                target=_get_metrics_urls,
+                kwargs={
+                    "batch_id": job.batch_id,
+                    "job_id": job.job_id,
+                    "client": client,
+                    "metrics_urls": metrics_urls,
+                    "metrics_urls_lock": metrics_urls_lock}))
+        threads.append(
+            threading.Thread(
+                target=_get_metrics_data_urls,
+                kwargs={
+                    "batch_id": job.batch_id,
+                    "job_id": job.job_id,
+                    "client": client,
+                    "metrics_data_urls": metrics_data_urls,
+                    "metrics_data_urls_lock": metrics_data_urls_lock}))
 
     for thread in threads:
         thread.start()
@@ -168,7 +160,5 @@ def fetch_job_metrics(*,
 
     session.close()
     client.get_httpx_client().close()
-
-    print(metrics_data_protos)
 
     return metrics_protos, metrics_data_protos

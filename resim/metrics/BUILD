@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
@@ -141,6 +142,16 @@ py_library(
     name = "get_metrics_proto",
     srcs = ["get_metrics_proto.py"],
     deps = [
+        "@com_google_protobuf//:protobuf_python",
+        requirement("requests"),
+    ],
+)
+
+py_test(
+    name = "get_metrics_proto_test",
+    srcs = ["get_metrics_proto_test.py"],
+    deps = [
+        ":get_metrics_proto",
     ],
 )
 

@@ -8,18 +8,19 @@
 This module contains a single function for getting a protobuf message from a URL.
 """
 
-import google.protobuf
+from google.protobuf.message import Message
 import requests
 import uuid
 import typing
 from http import HTTPStatus
 
-T = typing.TypeVar("T", bound=google.protobuf.message.Message)
+T = typing.TypeVar("T", bound=Message)
+
 
 def get_metrics_proto(*,
-                   message_type: type[T],
-                   session: requests.Session,
-                   url: str) -> T:
+                      message_type: type[T],
+                      session: requests.Session,
+                      url: str) -> T:
     """
     Get a metrics protobuf message from a url.
 
