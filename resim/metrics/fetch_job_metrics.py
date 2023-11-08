@@ -19,6 +19,8 @@ import resim.metrics.proto.metrics_pb2 as mp
 import resim.auth.python.device_code_client as dcc
 from resim.metrics import fetch_all_pages
 
+from resim.metrics import fetch_metrics_urls
+
 
 def _get_token() -> str:
     client = dcc.DeviceCodeClient(domain="https://resim.us.auth0.com")
@@ -31,15 +33,10 @@ def _get_metrics_urls(*,
                       client: AuthenticatedClient,
                       metrics_urls: dict[uuid.UUID, list[str]],
                       metrics_urls_lock: threading.Lock) -> None:
-    metrics = [
-        metric for metrics_response in fetch_all_pages.fetch_all_pages(
-            list_metrics_for_job.sync,
-            str(batch_id),
-            str(job_id),
-            client=client) for metric in metrics_response.metrics]
     metrics_urls_lock.acquire()
-    metrics_urls[job_id] = [
-        metric.metric_url for metric in metrics]
+    metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(batch_id=batch_id,
+                                                                 job_id=job_id,
+                                                                 client=client)
     metrics_urls_lock.release()
 
 
@@ -49,15 +46,10 @@ def _get_metrics_data_urls(*,
                            client: AuthenticatedClient,
                            metrics_data_urls: dict[uuid.UUID, list[str]],
                            metrics_data_urls_lock: threading.Lock) -> None:
-    metrics_datas = [
-        metrics_data for metrics_data_response in fetch_all_pages.fetch_all_pages(
-            list_metrics_data_for_job.sync,
-            str(batch_id),
-            str(job_id),
-            client=client) for metrics_data in metrics_data_response.metrics_data]
     metrics_data_urls_lock.acquire()
-    metrics_data_urls[job_id] = [
-        metrics_data.metrics_data_url for metrics_data in metrics_datas]
+    metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(batch_id=batch_id,
+                                                                           job_id=job_id,
+                                                                           client=client)
     metrics_data_urls_lock.release()
 
 
@@ -180,6 +172,6 @@ def fetch_job_metrics(*,
     session.close()
     client.get_httpx_client().close()
 
-    print(metrics_protos)
+    print(metrics_data_protos)
 
     return metrics_protos, metrics_data_protos
