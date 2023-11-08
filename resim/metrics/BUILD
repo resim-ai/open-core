@@ -127,6 +127,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "fetch_metrics_urls_test",
+    srcs = ["fetch_metrics_urls_test.py"],
+    deps = [
+        ":fetch_all_pages",
+        ":fetch_metrics_urls",
+        "@resim_python_client",
+    ],
+)
+
 py_library(
     name = "get_metrics_proto",
     srcs = ["get_metrics_proto.py"],

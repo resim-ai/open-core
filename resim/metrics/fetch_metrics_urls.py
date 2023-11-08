@@ -8,7 +8,6 @@
 """
 This module contains functions for querying the presigned urls of metrics and
 metrics data.
-
 """
 
 import uuid
