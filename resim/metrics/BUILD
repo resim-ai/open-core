@@ -128,11 +128,19 @@ py_library(
 )
 
 py_library(
+    name = "get_metrics_proto",
+    srcs = ["get_metrics_proto.py"],
+    deps = [
+    ],
+)
+
+py_library(
     name = "fetch_job_metrics",
     srcs = ["fetch_job_metrics.py"],
     deps = [
         ":fetch_all_pages",
         ":fetch_metrics_urls",
+        ":get_metrics_proto",
         "//resim/auth/python:device_code_client",
         "//resim/metrics/proto:metrics_proto_py",
         "@resim_python_client",

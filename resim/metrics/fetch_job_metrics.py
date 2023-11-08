@@ -20,6 +20,7 @@ import resim.auth.python.device_code_client as dcc
 from resim.metrics import fetch_all_pages
 
 from resim.metrics import fetch_metrics_urls
+from resim.metrics.get_metrics_proto import get_metrics_proto
 
 
 def _get_token() -> str:
@@ -60,12 +61,8 @@ def _fetch_metrics(*,
                    url: str,
                    protos: dict[uuid.UUID, list[Any]],
                    protos_lock: threading.Lock) -> None:
-    response = session.get(url)
-    assert response.status_code == HTTPStatus.OK
     protos_lock.acquire()
-    message = message_type()
-    message.ParseFromString(response.content)
-    protos[job_id].append(message)
+    protos[job_id].append(get_metrics_proto(message_type=message_type, session=session, url=url))
     protos_lock.release()
 
 
