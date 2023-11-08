@@ -104,9 +104,25 @@ py_test(
 )
 
 py_library(
+    name = "fetch_all_pages",
+    srcs = ["fetch_all_pages.py"],
+    deps = [
+    ],
+)
+
+py_test(
+    name = "fetch_all_pages_test",
+    srcs = ["fetch_all_pages_test.py"],
+    deps = [
+        ":fetch_all_pages",
+    ],
+)
+
+py_library(
     name = "fetch_job_metrics",
     srcs = ["fetch_job_metrics.py"],
     deps = [
+        ":fetch_all_pages",
         "//resim/auth/python:device_code_client",
         "//resim/metrics/proto:metrics_proto_py",
         "@resim_python_client",

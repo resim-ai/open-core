@@ -17,26 +17,13 @@ from resim_python_client.resim_python_client.api.batches import (
 
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.auth.python.device_code_client as dcc
+from resim.metrics import fetch_all_pages
 
 
 def _get_token() -> str:
     client = dcc.DeviceCodeClient(domain="https://resim.us.auth0.com")
     token: str = client.get_jwt()["access_token"]
     return token
-
-
-def _fetch_all_pages(endpoint: Callable, *args, **kwargs):
-    responses = []
-    responses.append(endpoint(*args, **kwargs))
-    assert responses[-1] is not None
-
-    page_token = responses[-1].next_page_token
-    while page_token:
-        responses.append(endpoint(*args, **kwargs, page_token=page_token))
-        assert responses[-1] is not None
-        page_token = responses[-1].next_page_token
-    return responses
-
 
 def _get_metrics_urls(*,
                       batch_id: uuid.UUID,
@@ -45,7 +32,7 @@ def _get_metrics_urls(*,
                       metrics_urls: dict[uuid.UUID, list[str]],
                       metrics_urls_lock: threading.Lock) -> None:
     metrics = [
-        metric for metrics_response in _fetch_all_pages(
+        metric for metrics_response in fetch_all_pages.fetch_all_pages(
             list_metrics_for_job.sync,
             str(batch_id),
             str(job_id),
@@ -63,7 +50,7 @@ def _get_metrics_data_urls(*,
                            metrics_data_urls: dict[uuid.UUID, list[str]],
                            metrics_data_urls_lock: threading.Lock) -> None:
     metrics_datas = [
-        metrics_data for metrics_data_response in _fetch_all_pages(
+        metrics_data for metrics_data_response in fetch_all_pages.fetch_all_pages(
             list_metrics_data_for_job.sync,
             str(batch_id),
             str(job_id),
@@ -116,7 +103,7 @@ def fetch_job_metrics(*,
     threads = []
     for batch_id in batch_ids:
         jobs = [
-            job for response in _fetch_all_pages(
+            job for response in fetch_all_pages.fetch_all_pages(
                 list_jobs.sync,
                 batch_id,
                 client=client) for
@@ -193,6 +180,6 @@ def fetch_job_metrics(*,
     session.close()
     client.get_httpx_client().close()
 
-    print(metrics_data_protos)
+    print(metrics_protos)
 
     return metrics_protos, metrics_data_protos
