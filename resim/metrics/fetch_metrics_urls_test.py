@@ -43,7 +43,7 @@ class MockMetricsDataResponse:
 
 @patch("resim_python_client.resim_python_client.client.AuthenticatedClient")
 class FetchMetricsUrlsTest(unittest.TestCase):
-    def test_fetch_metrics_urls(self, AuthenticatedClientMock):
+    def test_fetch_metrics_urls(self, AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
         def mock_fetch_all_pages(
@@ -51,7 +51,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                 batch_id: str,
                 job_id: str,
                 *,
-                client: AuthenticatedClient):
+                client: AuthenticatedClient) -> list[MockMetricsResponse]:
             self.assertEqual(endpoint, list_metrics_for_job.sync)
             self.assertEqual(uuid.UUID(batch_id), test_batch_id)
             self.assertEqual(uuid.UUID(job_id), test_job_id)
@@ -75,7 +75,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                     f"https://www.test_url.com/metrics_{i}_{j}.binproto"
                     for j in range(3) for i in range(3)])
             
-    def test_fetch_metrics_data_urls(self, AuthenticatedClientMock):
+    def test_fetch_metrics_data_urls(self, AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
         def mock_fetch_all_pages(
@@ -83,7 +83,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                 batch_id: str,
                 job_id: str,
                 *,
-                client: AuthenticatedClient):
+                client: AuthenticatedClient) -> list[MockMetricsDataResponse]:
             self.assertEqual(endpoint, list_metrics_data_for_job.sync)
             self.assertEqual(uuid.UUID(batch_id), test_batch_id)
             self.assertEqual(uuid.UUID(job_id), test_job_id)

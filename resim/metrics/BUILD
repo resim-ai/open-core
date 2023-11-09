@@ -152,6 +152,7 @@ py_test(
     srcs = ["get_metrics_proto_test.py"],
     deps = [
         ":get_metrics_proto",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 

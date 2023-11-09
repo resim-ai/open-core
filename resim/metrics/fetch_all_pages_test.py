@@ -40,7 +40,7 @@ def _test_endpoint(test_arg: str, *,
         
 
 class FetchAllPagesTest(unittest.TestCase):
-    def test_fetch_all_pages(self):
+    def test_fetch_all_pages(self) -> None:
         all_pages = fetch_all_pages(_test_endpoint, _TEST_ARG, testcase=self)
         self.assertEqual(len(all_pages), len(_PAGE_TOKENS))
         for page in all_pages:

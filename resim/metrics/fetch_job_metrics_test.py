@@ -73,7 +73,7 @@ T = typing.TypeVar("T")
 def _mock_get_metrics_proto(*,
                             message_type: type[T],
                             session: requests.Session,
-                            url: str):
+                            url: str) -> str:
     if message_type is MockMetric:
         return _METRICS_URL_TO_MESSAGE_MAP[url]
     elif message_type is MockMetricsData:
@@ -90,7 +90,7 @@ def _mock_get_metrics_proto(*,
 @patch("resim.metrics.fetch_job_metrics.mp.Metric", MockMetric)
 @patch("resim.metrics.fetch_job_metrics.mp.MetricsData", MockMetricsData)
 class FetchJobMetricsTest(unittest.TestCase):
-    def test_fetch_job_metrics(self):
+    def test_fetch_job_metrics(self) -> None:
         metrics_protos, metrics_data_protos = fjm.fetch_job_metrics(
             token=_TOKEN,
             jobs=[fjm.JobInfo(
