@@ -11,16 +11,20 @@ metrics data.
 """
 
 import uuid
+
 from resim_python_client.resim_python_client.client import AuthenticatedClient
-from resim.metrics.fetch_all_pages import fetch_all_pages
 from resim_python_client.resim_python_client.api.batches import (
     list_metrics_for_job, list_metrics_data_for_job)
+
+from resim.metrics.fetch_all_pages import fetch_all_pages
+
 
 
 def fetch_metrics_urls(*,
                        batch_id: uuid.UUID,
                        job_id: uuid.UUID,
                        client: AuthenticatedClient) -> list[str]:
+    """Fetch all metrics urls for a given job_id."""
     return [
         metric.metric_url for metrics_response in fetch_all_pages(
             list_metrics_for_job.sync,
@@ -33,6 +37,7 @@ def fetch_metrics_data_urls(*,
                             batch_id: uuid.UUID,
                             job_id: uuid.UUID,
                             client: AuthenticatedClient) -> list[str]:
+    """Fetch all metrics data urls for a given job_id."""    
     return [
         metrics_data.metrics_data_url for metrics_data_response in fetch_all_pages(
             list_metrics_data_for_job.sync,

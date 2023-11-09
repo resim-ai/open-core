@@ -22,8 +22,6 @@ returned.
 import typing
 
 # pylint: disable-next=too-few-public-methods
-
-
 class HasNextPageToken(typing.Protocol):
     """A simple protocol for classes having the next_page_token field"""
     next_page_token: str

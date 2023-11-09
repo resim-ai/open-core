@@ -25,6 +25,7 @@ from resim.metrics.get_metrics_proto import get_metrics_proto
 
 @dataclass
 class JobInfo:
+    """A simple class representing the job_id and batch_id for a job."""
     job_id: uuid.UUID
     batch_id: uuid.UUID
 
@@ -63,7 +64,7 @@ def _fetch_all_urls(*,
                                                        list[str]]]:
     """
     Fetch all metrics and metrics data urls
-    
+
     This helper fetches all of the urls for the metrics and metrics
     data objects in each job and places them into a dictionary keyed
     by the job ids.

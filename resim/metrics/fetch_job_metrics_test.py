@@ -1,33 +1,37 @@
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+
+"""
+Unit test for fetch_job_metrics().
+"""
 
 import unittest
 import uuid
-
+import typing
 from dataclasses import dataclass
+from unittest.mock import patch
 
 import requests
-import typing
-from unittest.mock import patch
 from resim_python_client.resim_python_client.client import AuthenticatedClient
+
 import resim.metrics.fetch_job_metrics as fjm
-import resim.auth.python.device_code_client as dcc
-
-
-def _get_token() -> str:
-    client = dcc.DeviceCodeClient(domain="https://resim.us.auth0.com")
-    token: str = client.get_jwt()["access_token"]
-    return token
-
 
 _TOKEN = "wowwhatacoincidentaltoken"
 
 
 @dataclass
 class MockMetric:
+    """A mock for a resim.metric.proto.Metric protobuf message."""
     data: str
 
 
 @dataclass
 class MockMetricsData:
+    """A mock for a resim.metric.proto.MetricsData protobuf message."""
     data: str
 
 
@@ -45,6 +49,11 @@ _JOB_ID_METRICS_DATA_URL_MAP = {
         [f"https://example.com/metrics_data_{i}.binproto" for i in range(3, 6)],
 }
 
+_BATCH_IDS = {
+    uuid.UUID("b6ff9ce1-a481-4793-a9ea-d607f6efe628"),
+    uuid.UUID("0a74e080-7782-4a6c-ac26-248caa575405"),
+}
+
 _METRICS_URL_TO_MESSAGE_MAP = {
     f"https://example.com/metrics_{i}.binproto": f"metric_{i}" for i in range(6)
 }
@@ -58,6 +67,7 @@ def _mock_fetch_metrics_urls(*,
                              batch_id: uuid.UUID,
                              job_id: uuid.UUID,
                              client: AuthenticatedClient) -> list[str]:
+    assert batch_id in _BATCH_IDS
     assert client.token == _TOKEN
     return list(_JOB_ID_METRICS_URL_MAP[job_id])
 
@@ -66,6 +76,7 @@ def _mock_fetch_metrics_data_urls(*,
                                   batch_id: uuid.UUID,
                                   job_id: uuid.UUID,
                                   client: AuthenticatedClient) -> list[str]:
+    assert batch_id in _BATCH_IDS
     assert client.token == _TOKEN
     return list(_JOB_ID_METRICS_DATA_URL_MAP[job_id])
 
@@ -77,12 +88,12 @@ def _mock_get_metrics_proto(*,
                             message_type: type[T],
                             session: requests.Session,
                             url: str) -> str:
+    assert session is not None
     if message_type is MockMetric:
         return _METRICS_URL_TO_MESSAGE_MAP[url]
-    elif message_type is MockMetricsData:
+    if message_type is MockMetricsData:
         return _METRICS_DATA_URL_TO_MESSAGE_MAP[url]
-    else:
-        raise RuntimeError("Bad type encountered!")
+    raise RuntimeError("Bad type encountered!")
 
 
 @patch("resim.metrics.fetch_job_metrics.fetch_metrics_urls.fetch_metrics_urls",
@@ -94,7 +105,15 @@ def _mock_get_metrics_proto(*,
 @patch("resim.metrics.fetch_job_metrics.mp.Metric", MockMetric)
 @patch("resim.metrics.fetch_job_metrics.mp.MetricsData", MockMetricsData)
 class FetchJobMetricsTest(unittest.TestCase):
+    """
+    The unit test case itself.
+    """
+
     def test_fetch_job_metrics(self) -> None:
+        """
+        Test that we can fetch job metrics while mocking the metrics url and
+        proto getters.
+        """
         metrics_protos, metrics_data_protos = fjm.fetch_job_metrics(
             token=_TOKEN,
             jobs=[fjm.JobInfo(

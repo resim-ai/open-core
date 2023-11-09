@@ -9,26 +9,33 @@ Unit test for get_metrics_proto.
 """
 
 import typing
-import requests
 import unittest
 from dataclasses import dataclass
 from http import HTTPStatus
 from unittest.mock import patch
 from google.protobuf.message import Message
 
-import resim.metrics.get_metrics_proto as get_metrics_proto
+from resim.metrics import get_metrics_proto
 
 
 @dataclass
 class MockMessage(Message):
+    """
+    A simple mock of a protobuf message.
+    """
     data: str = ""
 
+    # pylint: disable-next=invalid-name
     def ParseFromString(self, data: typing.Any) -> typing.Any:
+        """This message type's serialization matches its data field."""
         self.data = data
 
 
 @dataclass
 class MockResponse:
+    """
+    A mock of a response from requests.get()
+    """
     status_code: HTTPStatus
     content: str
 
@@ -38,7 +45,10 @@ _RESPONSE_MAP = {
 }
 
 
-def get(url: str) -> MockResponse:
+def mocked_get(url: str) -> MockResponse:
+    """
+    The mock for our get request.
+    """
     if url in _RESPONSE_MAP:
         return MockResponse(
             status_code=HTTPStatus.OK,
@@ -51,9 +61,16 @@ def get(url: str) -> MockResponse:
 
 
 class GetMetricsProtoTest(unittest.TestCase):
+    """
+    The unit test case.
+    """
     @patch("requests.Session")
     def test_get_metrics_proto(self, session: unittest.mock.MagicMock) -> None:
-        session.get = get
+        """
+        Test that we can fetch and deserialize protobuf with a
+        mocked message and requests.Session.get()
+        """
+        session.get = mocked_get
         message_type = MockMessage
         for url, data in _RESPONSE_MAP.items():
             self.assertEqual(
