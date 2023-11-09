@@ -43,9 +43,12 @@ class MockMetricsDataResponse:
 
 @patch("resim_python_client.resim_python_client.client.AuthenticatedClient")
 class FetchMetricsUrlsTest(unittest.TestCase):
-    def test_fetch_metrics_urls(self, AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
+    def test_fetch_metrics_urls(
+            self,
+            AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
+
         def mock_fetch_all_pages(
                 endpoint: typing.Callable,
                 batch_id: str,
@@ -61,7 +64,6 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                         MockMetric(
                             metric_url=f"https://www.test_url.com/metrics_{i}_{j}.binproto",
                         ) for i in range(3)]) for j in range(3)]
-        
 
         with patch("resim.metrics.fetch_metrics_urls.fetch_all_pages",
                    new=mock_fetch_all_pages) as p:
@@ -74,10 +76,12 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                 metrics_urls, [
                     f"https://www.test_url.com/metrics_{i}_{j}.binproto"
                     for j in range(3) for i in range(3)])
-            
-    def test_fetch_metrics_data_urls(self, AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
+
+    def test_fetch_metrics_data_urls(
+            self, AuthenticatedClientMock: unittest.mock.MagicMock) -> None:
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
+
         def mock_fetch_all_pages(
                 endpoint: typing.Callable,
                 batch_id: str,
@@ -93,7 +97,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                         MockMetricsData(
                             metrics_data_url=f"https://www.test_url.com/metrics_{i}_{j}.binproto",
                         ) for i in range(3)]) for j in range(3)]
-        
+
         with patch("resim.metrics.fetch_metrics_urls.fetch_all_pages",
                    new=mock_fetch_all_pages) as p:
             client = AuthenticatedClientMock()

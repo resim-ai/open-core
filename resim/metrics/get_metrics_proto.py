@@ -5,17 +5,17 @@
 # https://opensource.org/licenses/MIT.
 
 """
-This module contains a single function for getting a protobuf message from a URL.
+This module contains a single function for getting a protobuf message from a
+URL.
 """
 
-from google.protobuf.message import Message
-import requests
-import uuid
 import typing
 from http import HTTPStatus
 
-T = typing.TypeVar("T", bound=Message)
+import requests
+from google.protobuf.message import Message
 
+T = typing.TypeVar("T", bound=Message)
 
 def get_metrics_proto(*,
                       message_type: type[T],

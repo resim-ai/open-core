@@ -22,7 +22,7 @@ import resim.metrics.get_metrics_proto as get_metrics_proto
 @dataclass
 class MockMessage(Message):
     data: str = ""
-    
+
     def ParseFromString(self, data: typing.Any) -> typing.Any:
         self.data = data
 

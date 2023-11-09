@@ -1,4 +1,8 @@
-
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
 
 """
 This module contains functions for fetching a set of job metrics from resim's API.
@@ -6,62 +10,17 @@ This module contains functions for fetching a set of job metrics from resim's AP
 
 import uuid
 import collections
-from http import HTTPStatus
 import threading
-from typing import Any, Callable
+from typing import Any
 from dataclasses import dataclass
 
 import requests
 from resim_python_client.resim_python_client.client import AuthenticatedClient
-from resim_python_client.resim_python_client.api.batches import (
-    list_jobs, list_metrics_for_job, list_metrics_data_for_job)
 
 import resim.metrics.proto.metrics_pb2 as mp
-import resim.auth.python.device_code_client as dcc
-from resim.metrics import fetch_all_pages
 
 from resim.metrics import fetch_metrics_urls
 from resim.metrics.get_metrics_proto import get_metrics_proto
-
-
-def _get_metrics_urls(*,
-                      batch_id: uuid.UUID,
-                      job_id: uuid.UUID,
-                      client: AuthenticatedClient,
-                      metrics_urls: dict[uuid.UUID, list[str]],
-                      metrics_urls_lock: threading.Lock) -> None:
-    metrics_urls_lock.acquire()
-    metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(
-        batch_id=batch_id, job_id=job_id, client=client)
-    metrics_urls_lock.release()
-
-
-def _get_metrics_data_urls(*,
-                           batch_id: uuid.UUID,
-                           job_id: uuid.UUID,
-                           client: AuthenticatedClient,
-                           metrics_data_urls: dict[uuid.UUID, list[str]],
-                           metrics_data_urls_lock: threading.Lock) -> None:
-    metrics_data_urls_lock.acquire()
-    metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(
-        batch_id=batch_id, job_id=job_id, client=client)
-    metrics_data_urls_lock.release()
-
-
-def _fetch_metrics(*,
-                   message_type: type[Any],
-                   session: requests.Session,
-                   job_id: uuid.UUID,
-                   url: str,
-                   protos: dict[uuid.UUID, list[Any]],
-                   protos_lock: threading.Lock) -> None:
-    protos_lock.acquire()
-    protos[job_id].append(
-        get_metrics_proto(
-            message_type=message_type,
-            session=session,
-            url=url))
-    protos_lock.release()
 
 
 @dataclass
@@ -72,18 +31,43 @@ class JobInfo:
 
 def fetch_job_metrics(*,
                       token: str,
-                      jobs: list[JobInfo]) -> tuple[collections.defaultdict[uuid.UUID,
-                                                                            mp.Metric],
-                                                    collections.defaultdict[uuid.UUID,
-                                                                            mp.MetricsData]]:
+                      jobs: list[JobInfo]) -> tuple[dict[uuid.UUID,
+                                                         mp.Metric],
+                                                    dict[uuid.UUID,
+                                                         mp.MetricsData]]:
     """
     This function fetches all job metrics from job_ids whose batch ids are in batch_ids.
     """
 
+    # Step 1: Fetch all the presigned urls per job
     client = AuthenticatedClient(
         base_url="https://api.resim.ai/v1",
         token=token)
 
+    metrics_urls, metrics_data_urls = _fetch_all_urls(client=client, jobs=jobs)
+
+    client.get_httpx_client().close()
+
+    # Step 2: Fetch all of the protos per job
+    metrics_protos, metrics_data_protos = _fetch_all_protos(
+        metrics_urls=metrics_urls, metrics_data_urls=metrics_data_urls)
+
+    return metrics_protos, metrics_data_protos
+
+
+def _fetch_all_urls(*,
+                    client: AuthenticatedClient,
+                    jobs: list[JobInfo]) -> tuple[dict[uuid.UUID,
+                                                       list[str]],
+                                                  dict[uuid.UUID,
+                                                       list[str]]]:
+    """
+    Fetch all metrics and metrics data urls
+    
+    This helper fetches all of the urls for the metrics and metrics
+    data objects in each job and places them into a dictionary keyed
+    by the job ids.
+    """
     metrics_urls: dict[uuid.UUID, list[str]] = {}
     metrics_urls_lock = threading.Lock()
 
@@ -115,7 +99,25 @@ def fetch_job_metrics(*,
         thread.start()
     for thread in threads:
         thread.join()
+    return metrics_urls, metrics_data_urls
 
+
+def _fetch_all_protos(*,
+                      metrics_urls: dict[uuid.UUID,
+                                         list[str]],
+                      metrics_data_urls: dict[uuid.UUID,
+                                              list[str]]) -> tuple[dict[uuid.UUID,
+                                                                        list[mp.Metric]],
+                                                                   dict[uuid.UUID,
+                                                                        list[mp.MetricsData]]]:
+    """
+    Get and parse the protobuf data from the given urls
+
+    This helper reads in dictionaries of job_id -> metrics_proto_url
+    for both metrics and metrics data, fetches from the given urls,
+    and deserializes the content into the appropriate protobuf metrics
+    types.
+    """
     threads = []
 
     metrics_protos: collections.defaultdict[uuid.UUID, mp.Metric] = (
@@ -159,6 +161,57 @@ def fetch_job_metrics(*,
         thread.join()
 
     session.close()
-    client.get_httpx_client().close()
 
     return metrics_protos, metrics_data_protos
+
+
+def _get_metrics_urls(*,
+                      batch_id: uuid.UUID,
+                      job_id: uuid.UUID,
+                      client: AuthenticatedClient,
+                      metrics_urls: dict[uuid.UUID, list[str]],
+                      metrics_urls_lock: threading.Lock) -> None:
+    """
+    Simple wrapper around fetch_metrics_urls which locks a mutex
+    so we can multithread this.
+    """
+    metrics_urls_lock.acquire()
+    metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(
+        batch_id=batch_id, job_id=job_id, client=client)
+    metrics_urls_lock.release()
+
+
+def _get_metrics_data_urls(*,
+                           batch_id: uuid.UUID,
+                           job_id: uuid.UUID,
+                           client: AuthenticatedClient,
+                           metrics_data_urls: dict[uuid.UUID, list[str]],
+                           metrics_data_urls_lock: threading.Lock) -> None:
+    """
+    Simple wrapper around fetch_metrics_data_urls which locks a mutex
+    so we can multithread this.
+    """
+    metrics_data_urls_lock.acquire()
+    metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(
+        batch_id=batch_id, job_id=job_id, client=client)
+    metrics_data_urls_lock.release()
+
+
+def _fetch_metrics(*,
+                   message_type: type[Any],
+                   session: requests.Session,
+                   job_id: uuid.UUID,
+                   url: str,
+                   protos: dict[uuid.UUID, list[Any]],
+                   protos_lock: threading.Lock) -> None:
+    """
+    Simple wrapper around get_metrics_proto which locks a mutex
+    so we can multithread this.
+    """
+    protos_lock.acquire()
+    protos[job_id].append(
+        get_metrics_proto(
+            message_type=message_type,
+            session=session,
+            url=url))
+    protos_lock.release()
