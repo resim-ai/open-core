@@ -11,61 +11,22 @@ import numpy as np
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.proto.metrics_pb2 import MetricStatus, MetricImportance
 from resim.utils.proto import uuid_pb2
+from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
 from google.protobuf import timestamp_pb2
 
-# ---------------
-# Misc Data Types
-# ---------------
+# ----------------------
+# Metrics writer objects
+# ----------------------
 
 
-@dataclass
-class Timestamp:
-    secs: int
-    nanos: int
-
-    def pack(self: Timestamp) -> timestamp_pb2.Timestamp:
-        msg = timestamp_pb2.Timestamp()
-        msg.seconds = self.secs
-        msg.nanos = self.nanos
-        return msg
-
-
-@dataclass
-class HistogramBucket:
-    lower: float
-    upper: float
-
-
-@dataclass
-class DoubleFailureDefinition:
-    fails_above: Optional[float]
-    fails_below: Optional[float]
-
-    def pack(self: DoubleFailureDefinition) -> metrics_pb2.DoubleFailureDefinition:
-        msg = metrics_pb2.DoubleFailureDefinition()
-        if self.fails_above is not None:
-            msg.fails_above = self.fails_above
-
-        if self.fails_below is not None:
-            msg.fails_below = self.fails_below
-
-        return msg
-
-
-def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_pb2.UUID:
-    uuid_msg = uuid_pb2.UUID()
-    uuid_msg.data = str(uuid_obj)
-    return uuid_msg
-
-
-@dataclass(repr=True)
+@dataclass(init=False, repr=True)
 class ResimMetricsOutput:
-    metrics_msg: metrics_pb2.MetricsData
+    metrics_msg: metrics_pb2.JobMetrics
     packed_ids: Set[uuid.UUID]
 
-# ----------------------
-# Overall metrics object
-# ----------------------
+    def __init__(self) -> None:
+        self.metrics_msg = metrics_pb2.JobMetrics()
+        self.packed_ids = set()
 
 
 @dataclass(init=False, repr=True, kw_only=True)
@@ -139,8 +100,16 @@ class ResimMetricsWriter:
         self.add_metric(metric)
         return metric
 
-    def pack(self) -> ResimMetricsOutput:
-        raise NotImplementedError()
+    def write(self) -> ResimMetricsOutput:
+        output = ResimMetricsOutput()
+
+        for metric in self.metrics.values():
+            metric.recursively_pack_into(output)
+
+        for metric_data in self.metrics_data.values():
+            metric_data.recursively_pack_into(output)
+
+        return output
 
 # ---------------------
 # Metric representation
@@ -209,10 +178,27 @@ class Metric(ABC, Generic[MetricType]):
 
     @abstractmethod
     def pack(self: MetricType) -> metrics_pb2.Metric:
-        ...
+        msg = metrics_pb2.Metric()
+
+        msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.name = self.name
+
+        if self.description is not None:
+            msg.description = self.description
+
+        if self.status is not None:
+            msg.status = self.status
+
+        if self.importance is not None:
+            msg.importance = self.importance
+
+        if self.should_display is not None:
+            msg.should_display = self.should_display
+
+        return msg
 
     @abstractmethod
-    def recursively_pack_into(self, job_metrics: ResimMetricsOutput) -> None:
+    def recursively_pack_into(self, metrics_output: ResimMetricsOutput) -> None:
         ...
 
 
@@ -251,11 +237,29 @@ class ScalarMetric(Metric['ScalarMetric']):
         return self
 
     def pack(self: ScalarMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('SCALAR_METRIC_TYPE')
 
-    def recursively_pack_into(self: ScalarMetric, job_metrics: ResimMetricsOutput) -> None:
-        super().recursively_pack_into(job_metrics)
-        raise NotImplementedError()
+        metric_values = msg.metric_values.scalar_metric_values
+        if self.value is not None:
+            metric_values.value = self.value
+
+        if self.failure_definition is not None:
+            metric_values.failure_definition.CopyFrom(
+                self.failure_definition.pack())
+
+        if self.unit is not None:
+            metric_values.unit = self.unit
+
+        return msg
+
+    def recursively_pack_into(self: ScalarMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -263,7 +267,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
     doubles_over_time_data: List[MetricsData]
     statuses_over_time_data: List[MetricsData]
 
-    failure_definition: Optional[DoubleFailureDefinition]
+    failure_definitions: List[DoubleFailureDefinition]
 
     start_time: Optional[Timestamp]
     end_time: Optional[Timestamp]
@@ -280,7 +284,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  should_display: Optional[bool] = None,
                  doubles_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
-                 failure_definition: Optional[DoubleFailureDefinition] = None,
+                 failure_definitions: Optional[List[DoubleFailureDefinition]] = None,
                  start_time: Optional[Timestamp] = None,
                  end_time: Optional[Timestamp] = None,
                  y_axis_name: Optional[str] = None,
@@ -297,7 +301,11 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         else:
             self.statuses_over_time_data = statuses_over_time_data
 
-        self.failure_definition = failure_definition
+        if failure_definitions is None:
+            self.failure_definitions = []
+        else:
+            self.failure_definitions = failure_definitions
+
         self.start_time = start_time
         self.end_time = end_time
         self.y_axis_name = y_axis_name
@@ -320,8 +328,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         self.legend_series_names.append(legend_series_name)
         return self
 
-    def with_failure_definition(self: DoubleOverTimeMetric, failure_definition: DoubleFailureDefinition) -> DoubleOverTimeMetric:
-        self.failure_definition = failure_definition
+    def with_failure_definitions(self: DoubleOverTimeMetric, failure_definitions: List[DoubleFailureDefinition]) -> DoubleOverTimeMetric:
+        self.failure_definitions = failure_definitions
         return self
 
     def with_start_time(self: DoubleOverTimeMetric, start_time: Timestamp) -> DoubleOverTimeMetric:
@@ -341,11 +349,55 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         return self
 
     def pack(self: DoubleOverTimeMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE')
 
-    def recursively_pack_into(self: DoubleOverTimeMetric, job_metrics: ResimMetricsOutput) -> None:
-        super().recursively_pack_into(job_metrics)
-        raise NotImplementedError()
+        metric_values = msg.metric_values.double_over_time_metric_values
+
+        for data in self.doubles_over_time_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.doubles_over_time_data_id.extend([id_msg])
+
+        for data in self.statuses_over_time_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.statuses_over_time_data_id.extend([id_msg])
+
+        metric_values.failure_definition.extend(
+            [d.pack() for d in self.failure_definitions])
+
+        if self.start_time is not None:
+            metric_values.start_time.CopyFrom(self.start_time.pack())
+
+        if self.end_time is not None:
+            metric_values.end_time.CopyFrom(self.end_time.pack())
+
+        if self.y_axis_name is not None:
+            metric_values.y_axis_name = self.y_axis_name
+
+        for i, name in enumerate(self.legend_series_names):
+            if name is not None:
+                metric_values.legend_series_names.extend([name])
+            else:
+                metric_values.legend_series_names.extend(
+                    [self.doubles_over_time_data[i].name])
+
+        return msg
+
+    def recursively_pack_into(self: DoubleOverTimeMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        for data in self.doubles_over_time_data:
+            data.recursively_pack_into(metrics_output)
+
+        for data in self.statuses_over_time_data:
+            data.recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -446,10 +498,49 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
         return self
 
     def pack(self: StatesOverTimeMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE')
 
-    def recursively_pack_into(self: StatesOverTimeMetric, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        metric_values = msg.metric_values.states_over_time_metric_values
+
+        for data in self.states_over_time_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.states_over_time_data_id.extend([id_msg])
+
+        for data in self.statuses_over_time_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.statuses_over_time_data_id.extend([id_msg])
+
+        if self.states_set is not None:
+            metric_values.states_set.extend(list(self.states_set))
+
+        if self.failure_states is not None:
+            metric_values.failure_states.extend(list(self.failure_states))
+
+        for i, name in enumerate(self.legend_series_names):
+            if name is not None:
+                metric_values.legend_series_names.extend([name])
+            else:
+                metric_values.legend_series_names.extend(
+                    [self.statuses_over_time_data[i].name])
+
+        return msg
+
+    def recursively_pack_into(self: StatesOverTimeMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        for data in self.states_over_time_data:
+            data.recursively_pack_into(metrics_output)
+
+        for data in self.statuses_over_time_data:
+            data.recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -501,7 +592,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
         else:
             self.legend_series_names = legend_series_names
 
-    def add_series_data(self: LinePlotMetric, x_doubles_data: MetricsData, y_doubles_data: MetricsData, legend_series_name: Optional[str] = None) -> LinePlotMetric:
+    def append_series_data(self: LinePlotMetric, x_doubles_data: MetricsData, y_doubles_data: MetricsData, legend_series_name: Optional[str] = None) -> LinePlotMetric:
         self.x_doubles_data.append(x_doubles_data)
         self.y_doubles_data.append(y_doubles_data)
         self.legend_series_names.append(legend_series_name)
@@ -521,10 +612,57 @@ class LinePlotMetric(Metric['LinePlotMetric']):
         return self
 
     def pack(self: LinePlotMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('LINE_PLOT_METRIC_TYPE')
 
-    def recursively_pack_into(self: LinePlotMetric, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        metric_values = msg.metric_values.line_plot_metric_values
+
+        for data in self.x_doubles_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.x_doubles_data_id.extend([id_msg])
+
+        for data in self.y_doubles_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.y_doubles_data_id.extend([id_msg])
+
+        for data in self.statuses_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.statuses_data_id.extend([id_msg])
+
+        if self.x_axis_name is not None:
+            metric_values.x_axis_name = self.x_axis_name
+
+        if self.y_axis_name is not None:
+            metric_values.y_axis_name = self.y_axis_name
+
+        for i, name in enumerate(self.legend_series_names):
+            if name is not None:
+                metric_values.legend_series_names.extend([name])
+            else:
+                metric_values.legend_series_names.extend(
+                    [self.y_doubles_data[i].name])
+
+        return msg
+
+    def recursively_pack_into(self: LinePlotMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        for data in self.x_doubles_data:
+            data.recursively_pack_into(metrics_output)
+
+        for data in self.y_doubles_data:
+            data.recursively_pack_into(metrics_output)
+
+        for data in self.statuses_data:
+            data.recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -598,10 +736,52 @@ class BarChartMetric(Metric['BarChartMetric']):
         return self
 
     def pack(self: BarChartMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('BAR_CHART_METRIC_TYPE')
 
-    def recursively_pack_into(self: BarChartMetric, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        metric_values = msg.metric_values.bar_chart_metric_values
+
+        for data in self.values_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.values_data_id.extend([id_msg])
+
+        for data in self.statuses_data:
+            id_msg = metrics_pb2.MetricsDataId()
+            id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
+            metric_values.statuses_data_id.extend([id_msg])
+
+        if self.x_axis_name is not None:
+            metric_values.x_axis_name = self.x_axis_name
+
+        if self.y_axis_name is not None:
+            metric_values.y_axis_name = self.y_axis_name
+
+        if self.stack_bars is not None:
+            metric_values.stack_bars = self.stack_bars
+
+        for i, name in enumerate(self.legend_series_names):
+            if name is not None:
+                metric_values.legend_series_names.extend([name])
+            else:
+                metric_values.legend_series_names.extend(
+                    [self.values_data[i].name])
+
+        return msg
+
+    def recursively_pack_into(self: BarChartMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        for data in self.values_data:
+            data.recursively_pack_into(metrics_output)
+
+        for data in self.statuses_data:
+            data.recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -661,14 +841,49 @@ class HistogramMetric(Metric['HistogramMetric']):
         return self
 
     def pack(self: HistogramMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('HISTOGRAM_METRIC_TYPE')
 
-    def recursively_pack_into(self: HistogramMetric, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        metric_values = msg.metric_values.histogram_metric_values
+
+        if self.values_data is not None:
+            metric_values.values_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.values_data.id))
+
+        if self.statuses_data is not None:
+            metric_values.statuses_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.statuses_data.id))
+
+        if self.x_axis_name is not None:
+            metric_values.x_axis_name = self.x_axis_name
+
+        if self.lower_bound is not None:
+            metric_values.lower_bound = self.lower_bound
+
+        if self.upper_bound is not None:
+            metric_values.upper_bound = self.upper_bound
+
+        if self.buckets is not None:
+            metric_values.buckets.extend([b.pack() for b in self.buckets])
+
+        return msg
+
+    def recursively_pack_into(self: HistogramMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+        if self.values_data is not None:
+            self.values_data.recursively_pack_into(metrics_output)
+
+        if self.statuses_data is not None:
+            self.statuses_data.recursively_pack_into(metrics_output)
 
 
 # Indices are a simple union, as we don't bind the type
-IndexType: TypeAlias = Union[int, str, Timestamp, uuid.UUID, str]
+IndexType: TypeAlias = Union[int, str, Timestamp, uuid.UUID]
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -715,10 +930,53 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
         return self
 
     def pack(self: DoubleSummaryMetric) -> metrics_pb2.Metric:
-        raise NotImplementedError()
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE')
 
-    def recursively_pack_into(self: DoubleSummaryMetric, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        metric_values = msg.metric_values.double_metric_values
+
+        if self.value_data is not None:
+            metric_values.value_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.value_data.id))
+
+        if self.status_data is not None:
+            metric_values.status_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.status_data.id))
+
+        if self.index is not None:
+            # int, str, Timestamp, uuid.UUID
+            if isinstance(self.index, int):
+                metric_values.series_index = self.index
+            elif isinstance(self.index, str):
+                metric_values.string_index = self.index
+            elif isinstance(self.index, Timestamp):
+                metric_values.timestamp_index.CopyFrom(self.index.pack())
+            elif isinstance(self.index, uuid.UUID):
+                metric_values.uuid_index.CopyFrom(
+                    pack_uuid_to_proto(self.index))
+            else:
+                raise ValueError(
+                    f"Packed invalid index type: {type(self.index)}")
+
+        if self.failure_definition is not None:
+            metric_values.failure_definition.CopyFrom(
+                self.failure_definition.pack())
+
+        return msg
+
+    def recursively_pack_into(self: DoubleSummaryMetric, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        if self.value_data is not None:
+            self.value_data.recursively_pack_into(metrics_output)
+
+        if self.status_data is not None:
+            self.status_data.recursively_pack_into(metrics_output)
 
 # -------------------
 # Data representation
@@ -767,8 +1025,17 @@ class MetricsData(ABC, Generic[MetricsDataType]):
         ...
 
     @abstractmethod
-    def recursively_pack_into(self: MetricsDataType, job_metrics: ResimMetricsOutput) -> None:
-        ...
+    def recursively_pack_into(self: MetricsDataType, metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        output = self.pack()
+
+        metrics_output.metrics_msg.metrics_data.extend([output])
+
+        if self.index_data is not None:
+            self.index_data.recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -855,10 +1122,31 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         return grouped_data
 
     def pack(self: SeriesMetricsData) -> metrics_pb2.MetricsData:
-        raise NotImplementedError()
+        msg = metrics_pb2.MetricsData()
+        msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
 
-    def recursively_pack_into(self: SeriesMetricsData, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        if self.unit is not None:
+            msg.unit = self.unit
+
+        msg.is_per_category = False
+        msg.is_indexed = self.index_data is not None
+
+        if self.index_data is not None:
+            msg.index_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.index_data.id))
+
+        assert len(self.series) > 0, "Cannot pack an empty series."
+
+        data_type, series = pack_series_to_proto(
+            self.series, self.index_data is not None)
+
+        msg.series.CopyFrom(series)
+        msg.data_type = data_type
+
+        return msg
+
+    def recursively_pack_into(self: SeriesMetricsData, metrics_output: ResimMetricsOutput) -> None:
+        super().recursively_pack_into(metrics_output)
 
 
 @dataclass(init=False, kw_only=True, repr=True)
@@ -899,8 +1187,46 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
         self.category_to_series = category_to_series
         return self
 
-    def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
-        raise NotImplementedError()
+    def add_category(self: GroupedMetricsData, category: str, series: np.ndarray) -> GroupedMetricsData:
+        self.category_to_series[category] = series
+        return self
 
-    def recursively_pack_into(self: GroupedMetricsData, job_metrics: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+    def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
+        msg = metrics_pb2.MetricsData()
+        msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+
+        assert len(self.category_to_series.keys()
+                   ) > 0, "Cannot pack grouped data with no categories."
+
+        categories = list(self.category_to_series.keys())
+        if self.unit is not None:
+            msg.unit = self.unit
+
+        msg.is_per_category = True
+        msg.category_names.extend(categories)
+        msg.is_indexed = self.index_data is not None
+
+        if self.index_data is not None:
+            msg.index_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.index_data.id))
+
+        data_types = set()
+        for cat in categories:
+            series = self.category_to_series[cat]
+            assert len(series) > 0, "Cannot pack an empty series."
+
+            data_type, series = pack_series_to_proto(
+                series, self.index_data is not None)
+
+            data_types.add(data_type)
+
+            msg.series_per_category.category_to_series[cat].CopyFrom(series)
+
+        assert len(
+            data_types) == 1, f"Invalid number of data types: {len(data_types)}"
+        msg.data_type = data_types.pop()
+
+        return msg
+
+    def recursively_pack_into(self: GroupedMetricsData, metrics_output: ResimMetricsOutput) -> None:
+        super().recursively_pack_into(metrics_output)
