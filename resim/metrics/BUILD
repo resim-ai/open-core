@@ -124,7 +124,7 @@ py_library(
     srcs = ["fetch_metrics_urls.py"],
     deps = [
         ":fetch_all_pages",
-        "@resim_python_client",
+        "@resim-python-client//:resim_python_client",
     ],
 )
 
@@ -134,7 +134,7 @@ py_test(
     deps = [
         ":fetch_all_pages",
         ":fetch_metrics_urls",
-        "@resim_python_client",
+        "@resim-python-client//:resim_python_client",
     ],
 )
 
@@ -165,7 +165,7 @@ py_library(
         ":get_metrics_proto",
         "//resim/auth/python:device_code_client",
         "//resim/metrics/proto:metrics_proto_py",
-        "@resim_python_client",
+        "@resim-python-client//:resim_python_client",
     ],
 )
 

@@ -345,8 +345,7 @@ py_library(
     """
     maybe(
         git_repository,
-        name = "resim_python_client",
-        branch = "mikebauer/generation",
+        name = "resim-python-client",
+        branch = "mikebauer/bazel",
         remote = "git@github.com:resim-ai/resim-python-client.git",
-        build_file_content = BUILD_FILE_CONTENT,
     )

@@ -12,8 +12,8 @@ metrics data.
 
 import uuid
 
-from resim_python_client.resim_python_client.client import AuthenticatedClient
-from resim_python_client.resim_python_client.api.batches import (
+from resim_python_client.client import AuthenticatedClient
+from resim_python_client.api.batches import (
     list_metrics_for_job, list_metrics_data_for_job)
 
 from resim.metrics.fetch_all_pages import fetch_all_pages

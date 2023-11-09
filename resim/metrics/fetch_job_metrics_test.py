@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 import requests
-from resim_python_client.resim_python_client.client import AuthenticatedClient
+from resim_python_client.client import AuthenticatedClient
 
 import resim.metrics.fetch_job_metrics as fjm
 

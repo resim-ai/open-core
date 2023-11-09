@@ -15,8 +15,8 @@ from dataclasses import dataclass
 import typing
 from unittest.mock import patch
 
-from resim_python_client.resim_python_client.client import AuthenticatedClient
-from resim_python_client.resim_python_client.api.batches import (
+from resim_python_client.client import AuthenticatedClient
+from resim_python_client.api.batches import (
     list_metrics_for_job, list_metrics_data_for_job)
 
 from resim.metrics import fetch_metrics_urls
@@ -49,7 +49,7 @@ class MockMetricsDataResponse:
     metrics_data: list[MockMetricsData]
 
 
-@patch("resim_python_client.resim_python_client.client.AuthenticatedClient")
+@patch("resim_python_client.client.AuthenticatedClient")
 class FetchMetricsUrlsTest(unittest.TestCase):
     """The unit test case itself."""
 

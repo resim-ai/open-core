@@ -15,7 +15,7 @@ from typing import Any
 from dataclasses import dataclass
 
 import requests
-from resim_python_client.resim_python_client.client import AuthenticatedClient
+from resim_python_client.client import AuthenticatedClient
 
 import resim.metrics.proto.metrics_pb2 as mp
 
