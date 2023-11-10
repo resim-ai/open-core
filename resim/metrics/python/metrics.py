@@ -8,15 +8,14 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeAlias,
 
 import numpy as np
 
+# trunk-ignore(mypy/attr-defined)
 from resim.metrics.proto import metrics_pb2
-from resim.metrics.proto.metrics_pb2 import MetricImportance, MetricStatus, MetricType
-from resim.metrics.python.metrics_utils import ResimMetricsOutput, Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
+from resim.metrics.python.metrics_utils import ResimMetricsOutput, Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto, MetricImportance, MetricStatus
 
 
 # ---------------------
 # Metric representation
 # ---------------------
-
 
 MetricT = TypeVar('MetricT', bound='Metric')
 
@@ -92,10 +91,10 @@ class Metric(ABC, Generic[MetricT]):
             msg.description = self.description
 
         if self.status is not None:
-            msg.status = self.status
+            msg.status = self.status.value
 
         if self.importance is not None:
-            msg.importance = self.importance
+            msg.importance = self.importance.value
 
         if self.should_display is not None:
             msg.should_display = self.should_display
@@ -110,21 +109,21 @@ class Metric(ABC, Generic[MetricT]):
 
     @classmethod
     def unpack_common_fields(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
-        if msg.type == MetricType.Value('NO_METRIC_TYPE'):
+        if msg.type == metrics_pb2.MetricType.Value('NO_METRIC_TYPE'):
             raise ValueError('Cannot unpack with no metric type')
-        elif msg.type == MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'):
             unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
-        elif msg.type == MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE'):
             unpacked = DoubleOverTimeMetric(name=msg.name)
-        elif msg.type == MetricType.Value('LINE_PLOT_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('LINE_PLOT_METRIC_TYPE'):
             unpacked = LinePlotMetric(name=msg.name)
-        elif msg.type == MetricType.Value('BAR_CHART_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('BAR_CHART_METRIC_TYPE'):
             unpacked = BarChartMetric(name=msg.name)
-        elif msg.type == MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'):
             unpacked = StatesOverTimeMetric(name=msg.name)
-        elif msg.type == MetricType.Value('HISTOGRAM_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('HISTOGRAM_METRIC_TYPE'):
             unpacked = HistogramMetric(name=msg.name)
-        elif msg.type == MetricType.Value('SCALAR_METRIC_TYPE'):
+        elif msg.type == metrics_pb2.MetricType.Value('SCALAR_METRIC_TYPE'):
             unpacked = ScalarMetric(name=msg.name)
         else:
             raise ValueError('Invalid metric type')
@@ -191,7 +190,7 @@ class ScalarMetric(Metric['ScalarMetric']):
 
     def pack(self: ScalarMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('SCALAR_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('SCALAR_METRIC_TYPE')
 
         metric_values = msg.metric_values.scalar_metric_values
         if self.value is not None:
@@ -308,7 +307,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
 
     def pack(self: DoubleOverTimeMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE')
 
         metric_values = msg.metric_values.double_over_time_metric_values
 
@@ -458,7 +457,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
 
     def pack(self: StatesOverTimeMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('STATES_OVER_TIME_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE')
 
         metric_values = msg.metric_values.states_over_time_metric_values
 
@@ -577,7 +576,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
 
     def pack(self: LinePlotMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('LINE_PLOT_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('LINE_PLOT_METRIC_TYPE')
 
         metric_values = msg.metric_values.line_plot_metric_values
 
@@ -702,7 +701,7 @@ class BarChartMetric(Metric['BarChartMetric']):
 
     def pack(self: BarChartMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('BAR_CHART_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('BAR_CHART_METRIC_TYPE')
 
         metric_values = msg.metric_values.bar_chart_metric_values
 
@@ -808,7 +807,7 @@ class HistogramMetric(Metric['HistogramMetric']):
 
     def pack(self: HistogramMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('HISTOGRAM_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('HISTOGRAM_METRIC_TYPE')
 
         metric_values = msg.metric_values.histogram_metric_values
 
@@ -898,7 +897,7 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
 
     def pack(self: DoubleSummaryMetric) -> metrics_pb2.Metric:
         msg = super().pack()
-        msg.type = MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE')
+        msg.type = metrics_pb2.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE')
 
         metric_values = msg.metric_values.double_metric_values
 

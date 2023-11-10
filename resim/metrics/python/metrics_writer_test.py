@@ -7,9 +7,13 @@ from typing import List, Optional
 
 import numpy as np
 
-from resim.metrics.proto import metrics_pb2
-from resim.metrics.proto.metrics_pb2 import MetricStatus
-from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket
+from resim.metrics.python.metrics_utils import (
+  Timestamp,
+  DoubleFailureDefinition,
+  HistogramBucket,
+  MetricStatus,
+  MetricImportance
+)
 from resim.metrics.python.metrics import SeriesMetricsData
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
@@ -31,7 +35,9 @@ EXAMPLE_DETECTIONS_SET = ['CAR_VEHICLE', 'TRUCK_VEHICLE',
                           'BIKE_VEHICLE', 'PEDESTRIAN_VEHICLE', 'DEBRIS_VEHICLE', 'UNKNOWN']
 EXAMPLE_FAILURE_STATES = ['UNKNOWN']
 EXAMPLE_LEGEND_SERIES_NAMES = ['Labels', 'Detections']
-EXAMPLE_STATUSES = ['PASSED_METRIC_STATUS', 'FAILED_METRIC_STATUS']
+EXAMPLE_STATUSES = [
+    MetricStatus.PASSED_METRIC_STATUS,
+    MetricStatus.FAILED_METRIC_STATUS]
 
 EXAMPLE_IDS = np.array([EXAMPLE_ID_SET[i] for i in range(
     NUM_ACTORS) for _ in range(EXAMPLE_COUNTS[i])])
@@ -44,7 +50,7 @@ EXAMPLE_DETECTIONS = np.array(
 EXAMPLE_FLOATS = np.array([rd.random() for _ in EXAMPLE_IDS])
 EXAMPLE_UUIDS = np.array([consistent_uuid() for _ in EXAMPLE_IDS])
 EXAMPLE_STATUSES = np.array(
-    [MetricStatus.Value(rd.choice(EXAMPLE_STATUSES)) for _ in EXAMPLE_IDS])
+    [MetricStatus(rd.choice(EXAMPLE_STATUSES)) for _ in EXAMPLE_IDS])
 
 
 FIRST_VEHICLE_MASK = (EXAMPLE_IDS == EXAMPLE_ID_SET[0])
@@ -67,9 +73,8 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_DESCRIPTION = "Description"
         METRIC_BLOCKING = True
         METRIC_DISPLAY = True
-        METRIC_IMPORTANCE = metrics_pb2.MetricImportance.Value(
-            'HIGH_IMPORTANCE')
-        METRIC_STATUS = metrics_pb2.MetricStatus.Value('PASSED_METRIC_STATUS')
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
         METRIC_VALUE = 5.0
 
         (
@@ -96,8 +101,8 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
         self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
         self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
-        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE)
-        self.assertEqual(metric_base.status, METRIC_STATUS)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
         self.assertEqual(metric_base.name, METRIC_NAME)
         self.assertEqual(metric_values.value, METRIC_VALUE)
         self.assertEqual(metric_values.unit, METRIC_UNIT)
@@ -387,7 +392,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_LEGEND_SERIES_NAMES: List[Optional[str]] = ['Labels', 'Detections']
         METRIC_BLOCKING = True
         METRIC_SHOULD_DISPLAY = True
-        METRIC_STATUS = MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS')
+        METRIC_STATUS = MetricStatus.NOT_APPLICABLE_METRIC_STATUS
 
         timestamp_data = (SeriesMetricsData('Timestamps')
                         .with_series(EXAMPLE_TIMESTAMPS)
@@ -444,7 +449,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(base_metric.description, METRIC_DESCRIPTION)
         self.assertEqual(base_metric.blocking, METRIC_BLOCKING)
         self.assertEqual(base_metric.should_display, METRIC_SHOULD_DISPLAY)
-        self.assertEqual(base_metric.status, METRIC_STATUS)
+        self.assertEqual(base_metric.status, METRIC_STATUS.value)
 
         self.assertEqual(set(metric_values.states_set), set(EXAMPLE_STATES_SET))
         self.assertEqual(len(metric_values.failure_states), 0)
@@ -457,8 +462,8 @@ class TestMetricsWriter(unittest.TestCase):
                     set(data.series_per_category.category_to_series.keys()),
                     # trunk-ignore(mypy/attr-defined)
                     set(grouped_labels.category_to_series.keys()))
-                    
-            
+
+
     def tearDown(self) -> None:
         pass
 

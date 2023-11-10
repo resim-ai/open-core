@@ -2,9 +2,11 @@ from __future__ import annotations
 
 
 import uuid
+from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, Set, Tuple
 
+from google.protobuf import timestamp_pb2
 import numpy as np
 
 # trunk-ignore(mypy/attr-defined)
@@ -12,8 +14,23 @@ from resim.metrics.proto import metrics_pb2
 # trunk-ignore(mypy/attr-defined)
 from resim.utils.proto import uuid_pb2
 
-from google.protobuf import timestamp_pb2
 
+class MetricStatus(Enum):
+    NO_METRIC_STATUS             = 0
+    PASSED_METRIC_STATUS         = 1
+    FAILED_METRIC_STATUS         = 2
+    NOT_APPLICABLE_METRIC_STATUS = 3
+    RAW_METRIC_STATUS            = 4
+
+class MetricImportance(Enum):
+    NO_SPECIFIED_IMPORTANCE = 0
+    ZERO_IMPORTANCE         = 1
+    LOW_IMPORTANCE          = 2
+    MEDIUM_IMPORTANCE       = 3
+    HIGH_IMPORTANCE         = 4
+    CRITICAL_IMPORTANCE     = 5
+
+    
 @dataclass(init=False, repr=True)
 class ResimMetricsOutput:
     metrics_msg: metrics_pb2.JobMetrics
@@ -108,17 +125,15 @@ def pack_series_to_proto(series: np.ndarray, indexed: bool) -> Tuple[metrics_pb2
             data_type = metrics_pb2.MetricsDataType.Value(
                 'INDEXED_STRING_SERIES_DATA_TYPE')
         series_msg.strings.series.extend(list(series))
-    elif isinstance(series[0], np.int64):
-        # TODO(tknowles): We assume all ints are metric statuses!
+    elif isinstance(series[0], MetricStatus):
         if not indexed:
             data_type = metrics_pb2.MetricsDataType.Value(
                 'METRIC_STATUS_SERIES_DATA_TYPE')
         else:
             data_type = metrics_pb2.MetricsDataType.Value(
                 'INDEXED_METRIC_STATUS_SERIES_DATA_TYPE')
-        series_msg.statuses.series.extend(list(series))
+        series_msg.statuses.series.extend([s.value for s in series])
     else:
-        print(type(metrics_pb2.MetricStatus.Value('NO_METRIC_STATUS')))
         raise ValueError(
             f"Invalid data type packed to proto: {type(series[0])}")
 
