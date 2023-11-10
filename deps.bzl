@@ -7,7 +7,6 @@
 """Macro to help bring in direct dependencies of this workspace.
 """
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
@@ -329,8 +328,9 @@ def resim_core_dependencies():
     )
 
     maybe(
-        git_repository,
+        http_archive,
         name = "resim-python-client",
-        branch = "mikebauer/bazel",
-        remote = "git@github.com:resim-ai/resim-python-client.git",
+        sha256 = "002bf30a7c4830fcf7071f14e5407f167cf57690c94671e259f6020e848fd7d0",
+        strip_prefix = "resim-python-client-d9d32be25cefbee192687d4bd6eecba32dac7f85",
+        url = "https://github.com/resim-ai/resim-python-client/archive/d9d32be25cefbee192687d4bd6eecba32dac7f85.zip",
     )
