@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, TypeAlias, TypeVar, Union
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -96,7 +96,8 @@ def pack_series_to_proto(series: np.ndarray, indexed: bool) -> Tuple[metrics_pb2
             data_type = metrics_pb2.MetricsDataType.Value(
                 'INDEXED_STRING_SERIES_DATA_TYPE')
         series_msg.strings.series.extend(list(series))
-    elif isinstance(series[0], metrics_pb2.MetricStatus):
+    elif isinstance(series[0], np.int64):
+        # TODO(tknowles): We assume all ints are metric statuses!
         if not indexed:
             data_type = metrics_pb2.MetricsDataType.Value(
                 'METRIC_STATUS_SERIES_DATA_TYPE')
@@ -105,6 +106,7 @@ def pack_series_to_proto(series: np.ndarray, indexed: bool) -> Tuple[metrics_pb2
                 'INDEXED_METRIC_STATUS_SERIES_DATA_TYPE')
         series_msg.statuses.series.extend(list(series))
     else:
+        print(type(metrics_pb2.MetricStatus.Value('NO_METRIC_STATUS')))
         raise ValueError(
             f"Invalid data type packed to proto: {type(series[0])}")
 
