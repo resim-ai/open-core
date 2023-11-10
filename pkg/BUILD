@@ -77,6 +77,7 @@ py_wheel(
     distribution = "resim_metrics",
     homepage = "https://www.resim.ai/",
     license = LICENSE,
+    platform = "manylinux2014_x86_64",
     python_tag = "py3",
     requires = [
         "protobuf>=4.24.4",
@@ -126,6 +127,7 @@ py_wheel(
     distribution = "resim_ros2",
     homepage = "https://www.resim.ai/",
     license = LICENSE,
+    platform = "manylinux2014_x86_64",
     python_tag = "py3",
     requires = [
         "protobuf>=4.24.4",
