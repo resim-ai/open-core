@@ -28,6 +28,7 @@ py_binary(
     srcs = ["metrics_example.py"],
     deps = [
         requirement("numpy"),
+        ":metrics_utils",
         ":metrics_writer",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/utils/proto:uuid_proto_py",
