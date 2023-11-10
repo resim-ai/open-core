@@ -5,26 +5,11 @@ import uuid
 from typing import Dict, Set
 
 from resim.metrics.proto import metrics_pb2
+from resim.metrics.python.metrics_utils import ResimMetricsOutput
 from resim.metrics.python.metrics import (
   ScalarMetric, BarChartMetric, LinePlotMetric, DoubleSummaryMetric, 
   DoubleOverTimeMetric, HistogramMetric, StatesOverTimeMetric, GroupedMetricsData, 
-  SeriesMetricsData)
-
-
-# ----------------------
-# Metrics writer objects
-# ----------------------
-
-
-@dataclass(init=False, repr=True)
-class ResimMetricsOutput:
-    metrics_msg: metrics_pb2.JobMetrics
-    packed_ids: Set[uuid.UUID]
-
-    def __init__(self) -> None:
-        self.metrics_msg = metrics_pb2.JobMetrics()
-        self.packed_ids = set()
-
+  SeriesMetricsData, Metric, MetricsData)
 
 @dataclass(init=False, repr=True, kw_only=True)
 class ResimMetricsWriter:

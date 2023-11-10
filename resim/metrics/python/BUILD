@@ -48,8 +48,8 @@ py_binary(
 )
 
 py_test(
-    name = "metrics_test",
-    srcs = ["metrics_test.py"],
+    name = "metrics_writer_test",
+    srcs = ["metrics_writer_test.py"],
     deps = [
         requirement("numpy"),
         ":metrics",

@@ -10,7 +10,7 @@ import numpy as np
 
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.proto.metrics_pb2 import MetricImportance, MetricStatus, MetricType
-from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
+from resim.metrics.python.metrics_utils import ResimMetricsOutput, Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
 
 
 # ---------------------
