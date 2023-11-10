@@ -198,9 +198,14 @@ message Metric {
         JobId job_id = 10;
     }
 
-    // an optional float allowing for the user to indicate a numeric order for metrics. 
-    // Ordering semantics are via '<' and unspecified if '='. 
-    // If not explicitly set, it is assumed to be ordered as downstream consumers please. 
+    // an optional float allowing for the user to indicate a numeric order for metrics 
+    // in any ordering context. 
+    //
+    // If explicitly set (even as 0) the implied ordering semantics are via '<' 
+    // and alphabetically if '=='. 
+    //
+    // If not explicitly set, it is assumed to be greater than MAX_FLOAT and therefore
+    // ordered (alphabetically in the case of multiple) after any set fields.
     optional float order = 11;
 }
 
