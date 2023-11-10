@@ -3,13 +3,22 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Set, Tuple
 
 import numpy as np
 
 from resim.metrics.proto import metrics_pb2
 from resim.utils.proto import uuid_pb2
 from google.protobuf import timestamp_pb2
+
+@dataclass(init=False, repr=True)
+class ResimMetricsOutput:
+    metrics_msg: metrics_pb2.JobMetrics
+    packed_ids: Set[uuid.UUID]
+
+    def __init__(self) -> None:
+        self.metrics_msg = metrics_pb2.JobMetrics()
+        self.packed_ids = set()
 
 
 @dataclass(repr=True)

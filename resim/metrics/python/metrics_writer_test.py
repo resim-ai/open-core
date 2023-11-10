@@ -7,15 +7,13 @@ import random
 
 import numpy as np
 
-from resim.metrics.python import metrics_writer
 
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.proto.metrics_pb2 import MetricStatus, MetricImportance
-from resim.utils.proto import uuid_pb2
-from google.protobuf import timestamp_pb2
 from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
 
-from resim.metrics.python.metrics_writer import ResimMetricsWriter, GroupedMetricsData, SeriesMetricsData
+from resim.metrics.python.metrics import SeriesMetricsData
+from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
 rd = random.Random()
 rd.seed(194842)
@@ -301,7 +299,6 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_X_AXIS = "Line plot x axis"
         METRIC_Y_AXIS = "Line plot y axis"
 
-
         doubles_data_one = SeriesMetricsData(
             "Doubles one", EXAMPLE_FLOATS, "Double unit", None
         )
@@ -334,7 +331,8 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 4)
 
-        metric_values = output.metrics_msg.job_level_metrics.metrics[0].metric_values.line_plot_metric_values
+        metric_values = output.metrics_msg.job_level_metrics.metrics[
+            0].metric_values.line_plot_metric_values
 
         self.assertEqual(len(metric_values.x_doubles_data_id), 2)
         self.assertEqual(len(metric_values.y_doubles_data_id), 2)
@@ -342,14 +340,18 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(len(metric_values.legend_series_names), 2)
 
         for i in range(2):
-            self.assertIn(uuid.UUID(metric_values.x_doubles_data_id[i].id.data), output.packed_ids)
-            self.assertIn(uuid.UUID(metric_values.y_doubles_data_id[i].id.data), output.packed_ids)
-            self.assertIn(uuid.UUID(metric_values.statuses_data_id[i].id.data), output.packed_ids)
-            self.assertEqual(metric_values.legend_series_names[i], legend_series_names[i])
+            self.assertIn(
+                uuid.UUID(metric_values.x_doubles_data_id[i].id.data), output.packed_ids)
+            self.assertIn(
+                uuid.UUID(metric_values.y_doubles_data_id[i].id.data), output.packed_ids)
+            self.assertIn(
+                uuid.UUID(metric_values.statuses_data_id[i].id.data), output.packed_ids)
+            self.assertEqual(
+                metric_values.legend_series_names[i], legend_series_names[i])
 
         self.assertEqual(metric_values.x_axis_name, METRIC_X_AXIS)
         self.assertEqual(metric_values.y_axis_name, METRIC_Y_AXIS)
-    
+
     def test_double_summary_metrics(self) -> None:
         pass
 
