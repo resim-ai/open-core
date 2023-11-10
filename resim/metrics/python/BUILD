@@ -1,5 +1,5 @@
 load("@resim_python_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 py_library(
     name = "metrics",
@@ -27,20 +27,6 @@ py_library(
     srcs = ["metrics_utils.py"],
     deps = [
         requirement("numpy"),
-        "//resim/metrics/proto:metrics_proto_py",
-        "//resim/utils/proto:uuid_proto_py",
-        "@com_google_protobuf//:protobuf_python",
-    ],
-)
-
-py_binary(
-    name = "metrics_example",
-    srcs = ["metrics_example.py"],
-    deps = [
-        requirement("numpy"),
-        ":metrics",
-        ":metrics_utils",
-        ":metrics_writer",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/utils/proto:uuid_proto_py",
         "@com_google_protobuf//:protobuf_python",
