@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-
 import uuid
 import unittest
 import random
+from typing import List, Optional
 
 import numpy as np
 
-
 from resim.metrics.proto import metrics_pb2
-from resim.metrics.proto.metrics_pb2 import MetricStatus, MetricImportance
-from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto
-
+from resim.metrics.proto.metrics_pb2 import MetricStatus
+from resim.metrics.python.metrics_utils import Timestamp, DoubleFailureDefinition, HistogramBucket
 from resim.metrics.python.metrics import SeriesMetricsData
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
@@ -64,7 +62,6 @@ class TestMetricsWriter(unittest.TestCase):
     def test_scalar_metric(self) -> None:
         METRIC_NAME = "Scalar metric"
         METRIC_UNIT = "Scalar unit"
-        METRIC_LEGEND_NAME = "Scalar legend name"
         METRIC_FAILURE_DEFINITION = DoubleFailureDefinition(
             fails_above=3.0, fails_below=8.0)
         METRIC_DESCRIPTION = "Description"
@@ -75,17 +72,17 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_STATUS = metrics_pb2.MetricStatus.Value('PASSED_METRIC_STATUS')
         METRIC_VALUE = 5.0
 
-        scalar_metric = (
+        (
             self.writer
             .add_scalar_metric(METRIC_NAME)
             .with_failure_definition(METRIC_FAILURE_DEFINITION)
             .with_unit(METRIC_UNIT)
+            .with_value(METRIC_VALUE)
             .with_description(METRIC_DESCRIPTION)
             .with_blocking(METRIC_BLOCKING)
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
-            .with_value(METRIC_VALUE)
         )
 
         output = self.writer.write()
@@ -126,7 +123,7 @@ class TestMetricsWriter(unittest.TestCase):
             "Statuses", EXAMPLE_STATUSES, "Double unit", time_metrics_data
         )
 
-        double_over_time_metric = (
+        (
             self.writer
             .add_double_over_time_metric(METRIC_NAME)
             .with_failure_definitions([METRIC_FAILURE_DEFINITION])
@@ -183,7 +180,7 @@ class TestMetricsWriter(unittest.TestCase):
             metric_values.legend_series_names[0], METRIC_LEGEND_NAME
         )
 
-    def test_bar_chart_metric(self):
+    def test_bar_chart_metric(self) -> None:
         METRIC_NAME = "Bar chart metric metric"
         METRIC_Y_AXIS = "Bar chart y axis"
         METRIC_X_AXIS = "Bar chart x axis"
@@ -200,7 +197,7 @@ class TestMetricsWriter(unittest.TestCase):
             "Statuses", EXAMPLE_STATUSES, "Double unit", strings_metrics_data
         )
 
-        bar_chart_metric = (
+        (
             self.writer
             .add_bar_chart_metric(METRIC_NAME)
             .with_y_axis_name(METRIC_Y_AXIS)
@@ -242,7 +239,7 @@ class TestMetricsWriter(unittest.TestCase):
             metric_values.legend_series_names[0], METRIC_LEGEND_NAME
         )
 
-    def test_histogram_metric(self):
+    def test_histogram_metric(self) -> None:
         METRIC_NAME = "Histogram metric"
         METRIC_X_AXIS = "Histogram x axis"
         METRIC_LOWER_BOUND = 0.0
@@ -258,7 +255,7 @@ class TestMetricsWriter(unittest.TestCase):
             "Statuses", EXAMPLE_STATUSES, "Double unit", None
         )
 
-        histogram_metric = (
+        (
             self.writer
             .add_histogram_metric(METRIC_NAME)
             .with_x_axis_name(METRIC_X_AXIS)
@@ -294,7 +291,7 @@ class TestMetricsWriter(unittest.TestCase):
             self.assertEqual(bucket.lower, metric_values.buckets[i].lower)
             self.assertEqual(bucket.upper, metric_values.buckets[i].upper)
 
-    def test_line_plot_metrics(self):
+    def test_line_plot_metrics(self) -> None:
         METRIC_NAME = "Line plot metric"
         METRIC_X_AXIS = "Line plot x axis"
         METRIC_Y_AXIS = "Line plot y axis"
@@ -315,7 +312,7 @@ class TestMetricsWriter(unittest.TestCase):
 
         legend_series_names = ["Double legend one", "Double legend two"]
 
-        histogram_metric = (
+        (
             self.writer
             .add_line_plot_metric(METRIC_NAME)
             .with_x_axis_name(METRIC_X_AXIS)
@@ -353,8 +350,115 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_values.y_axis_name, METRIC_Y_AXIS)
 
     def test_double_summary_metrics(self) -> None:
-        pass
+        METRIC_NAME = "Double summary metric"
+        METRIC_INDEX = 23
+        doubles_data = SeriesMetricsData(
+            "Doubles", EXAMPLE_FLOATS, "Double unit", None
+        )
 
+        (
+            self.writer
+            .add_double_summary_metric(METRIC_NAME)
+            .with_value_data(doubles_data)
+            .with_index(METRIC_INDEX)
+        )
+
+        output = self.writer.write()
+
+        self.assertEqual(len(output.packed_ids), 2)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
+        metric_values = output.metrics_msg.job_level_metrics.metrics[0].metric_values.double_metric_values
+
+        self.assertEqual(metric_values.series_index, METRIC_INDEX)
+
+        self.assertFalse(metric_values.failure_definition.HasField('fails_above'))
+        self.assertFalse(metric_values.failure_definition.HasField('fails_below'))
+
+        self.assertEqual(len(output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
+
+        for i, x in enumerate(EXAMPLE_FLOATS):
+            self.assertEqual(output.metrics_msg.metrics_data[0].series.doubles.series[i], x)
+
+    def test_states_over_time_metric(self) -> None:
+        METRIC_NAME = 'States over time metric'
+        METRIC_DESCRIPTION = 'Plot of labels vs detections, grouped by UUID'
+        METRIC_LEGEND_SERIES_NAMES: List[Optional[str]] = ['Labels', 'Detections']
+        METRIC_BLOCKING = True
+        METRIC_SHOULD_DISPLAY = True
+        METRIC_STATUS = MetricStatus.Value('NOT_APPLICABLE_METRIC_STATUS')
+
+        timestamp_data = (SeriesMetricsData('Timestamps')
+                        .with_series(EXAMPLE_TIMESTAMPS)
+                        .with_unit('seconds'))
+        id_data = (SeriesMetricsData('Actor IDs')
+                .with_series([str(i) for i in EXAMPLE_IDS])
+                .with_unit('UUID')
+                .with_index_data(timestamp_data))
+        labels = (self.writer.
+                add_series_metrics_data('Labels')
+                .with_series(EXAMPLE_LABELS)
+                .with_unit('Category')
+                .with_index_data(timestamp_data))
+        detections = (self.writer
+                    .add_series_metrics_data('Detections')
+                    .with_series(EXAMPLE_DETECTIONS)
+                    .with_unit('Category')
+                    .with_index_data(timestamp_data))
+        remapped_detections = self.writer.add_metrics_data(detections.map(
+            lambda series, index: series[index] if not series[index].endswith(
+                '_VEHICLE') else series[index][:-len('_VEHICLE')],
+            'Remapped detections',
+            detections.unit
+        ))
+
+        # Example for a grouped metric, handling data fairly manually
+        grouped_labels = self.writer.add_metrics_data(labels.group_by(id_data))
+        grouped_detections = self.writer.add_metrics_data(remapped_detections.group_by(id_data))
+
+        (
+            self.writer
+                .add_states_over_time_metric(METRIC_NAME)
+                .with_states_over_time_data([grouped_labels, grouped_detections])
+                .with_legend_series_names(METRIC_LEGEND_SERIES_NAMES)
+                .with_states_set(set(EXAMPLE_STATES_SET))
+                .with_failure_states(set())
+                .with_description(METRIC_DESCRIPTION)
+                .with_blocking(METRIC_BLOCKING)
+                .with_should_display(METRIC_SHOULD_DISPLAY)
+                .with_status(METRIC_STATUS)
+        )
+
+
+        output = self.writer.write()
+
+        self.assertEqual(len(output.packed_ids), 9)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 8)
+
+        base_metric = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = base_metric.metric_values.states_over_time_metric_values
+
+        self.assertEqual(base_metric.name, METRIC_NAME)
+        self.assertEqual(base_metric.description, METRIC_DESCRIPTION)
+        self.assertEqual(base_metric.blocking, METRIC_BLOCKING)
+        self.assertEqual(base_metric.should_display, METRIC_SHOULD_DISPLAY)
+        self.assertEqual(base_metric.status, METRIC_STATUS)
+
+        self.assertEqual(set(metric_values.states_set), set(EXAMPLE_STATES_SET))
+        self.assertEqual(len(metric_values.failure_states), 0)
+
+        self.assertIn(grouped_labels.id, output.packed_ids)
+        for data in output.metrics_msg.metrics_data:
+            if uuid.UUID(data.metrics_data_id.id.data) == grouped_labels.id:
+                self.assertTrue(data.is_per_category)
+                self.assertEqual(
+                    set(data.series_per_category.category_to_series.keys()),
+                    # trunk-ignore(mypy/attr-defined)
+                    set(grouped_labels.category_to_series.keys()))
+                    
+            
     def tearDown(self) -> None:
         pass
 

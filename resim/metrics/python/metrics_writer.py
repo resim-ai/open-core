@@ -4,12 +4,11 @@ from dataclasses import dataclass
 import uuid
 from typing import Dict, Set
 
-from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import ResimMetricsOutput
 from resim.metrics.python.metrics import (
   ScalarMetric, BarChartMetric, LinePlotMetric, DoubleSummaryMetric, 
   DoubleOverTimeMetric, HistogramMetric, StatesOverTimeMetric, GroupedMetricsData, 
-  SeriesMetricsData, Metric, MetricsData)
+  SeriesMetricsData, Metric, MetricsData, MetricsDataT, MetricT)
 
 @dataclass(init=False, repr=True, kw_only=True)
 class ResimMetricsWriter:
@@ -25,13 +24,13 @@ class ResimMetricsWriter:
         self.metrics_data = {}
         self.names = set()
 
-    def add_metrics_data(self, data: MetricsData) -> MetricsData:
+    def add_metrics_data(self, data: MetricsData['MetricsDataT']) -> MetricsData['MetricsDataT']:
         assert data.name not in self.names
         self.names.add(data.name)
         self.metrics_data[data.id] = data
         return data
 
-    def add_metric(self, metric: Metric) -> Metric:
+    def add_metric(self, metric: Metric['MetricT']) -> Metric['MetricT']:
         assert metric.name not in self.names
         self.names.add(metric.name)
         self.metrics[metric.id] = metric

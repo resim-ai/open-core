@@ -401,6 +401,10 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
         else:
             self.legend_series_names = legend_series_names
 
+    def with_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
+        self.statuses_over_time_data = statuses_over_time_data
+        return self
+
     def with_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.states_over_time_data = states_over_time_data
         return self
@@ -434,10 +438,6 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
     def append_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data_element: MetricsData, legend_series_name: Optional[str] = None) -> StatesOverTimeMetric:
         self.states_over_time_data.append(states_over_time_data_element)
         self.legend_series_names.append(legend_series_name)
-        return self
-
-    def with_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
-        self.statuses_over_time_data = statuses_over_time_data
         return self
 
     def append_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
@@ -988,6 +988,21 @@ class MetricsData(ABC, Generic[MetricsDataT]):
         return self
 
     @abstractmethod
+    def map(self: MetricsData[MetricsDataT],
+            f: Callable[..., Any],
+            applied_data_name: str,
+            applied_unit: Optional[str] = None) -> MetricsData[MetricsDataT]:
+        raise NotImplementedError()
+    
+    @abstractmethod
+    def group_by(self: MetricsData[MetricsDataT],
+                 grouping_series: MetricsData[MetricsDataT],
+                 grouped_data_name: Optional[str] = None,
+                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
+        raise NotImplementedError()
+
+
+    @abstractmethod
     def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
         ...
 
@@ -1038,16 +1053,19 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         )
 
     def group_by(self: SeriesMetricsData,
-                 grouping_series: SeriesMetricsData,
+                 grouping_series: MetricsData['SeriesMetricsData'],
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         assert self.series is not None
-        assert grouping_series.series is not None
-        assert len(self.series) == len(grouping_series.series)
+
+        # trunk-ignore(mypy/assignment)
+        typed_grouping_series: SeriesMetricsData = grouping_series
+        assert typed_grouping_series.series is not None
+        assert len(self.series) == len(typed_grouping_series.series)
         assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
 
         grouped: Dict[Any, List[Any]] = defaultdict(list)
-        for val, cat in zip(self.series, grouping_series.series):
+        for val, cat in zip(self.series, typed_grouping_series.series):
             grouped[cat].append(val)
 
         # Convert the lists into numpy arrays for further processing
@@ -1063,7 +1081,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
             grouped_index: Dict[Any, List[Any]] = defaultdict(list)
             assert index_series.series is not None
-            for val, cat in zip(index_series.series, grouping_series.series):
+            for val, cat in zip(index_series.series, typed_grouping_series.series):
                 grouped_index[cat].append(val)
 
             # Convert the lists into numpy arrays for further processing
@@ -1151,6 +1169,12 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
             unit=applied_unit,
             index_data=self.index_data
         )
+    
+    def group_by(self: GroupedMetricsData,
+                 grouping_series: MetricsData['GroupedMetricsData'],
+                 grouped_data_name: Optional[str] = None,
+                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
+        raise NotImplementedError('Cannot group pre-grouped data')
 
     def with_category_to_series(self: GroupedMetricsData,
                                 category_to_series: Dict[str, np.ndarray]) -> GroupedMetricsData:

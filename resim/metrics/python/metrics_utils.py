@@ -7,8 +7,11 @@ from typing import Optional, Set, Tuple
 
 import numpy as np
 
+# trunk-ignore(mypy/attr-defined)
 from resim.metrics.proto import metrics_pb2
+# trunk-ignore(mypy/attr-defined)
 from resim.utils.proto import uuid_pb2
+
 from google.protobuf import timestamp_pb2
 
 @dataclass(init=False, repr=True)

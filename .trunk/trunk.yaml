@@ -36,6 +36,7 @@ lint:
         run: mypy --version
       extra_packages:
         - types-requests
+        - types-protobuf
   enabled:
     - buildifier@6.1.0
     - clang-tidy@15.0.6
