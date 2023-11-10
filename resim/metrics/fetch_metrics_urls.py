@@ -19,7 +19,6 @@ from resim_python_client.api.batches import (
 from resim.metrics.fetch_all_pages import fetch_all_pages
 
 
-
 def fetch_metrics_urls(*,
                        batch_id: uuid.UUID,
                        job_id: uuid.UUID,

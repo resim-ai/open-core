@@ -9,10 +9,10 @@
 Tests for fetch_metrics_urls.py
 """
 
-import uuid
-import unittest
-from dataclasses import dataclass
 import typing
+import unittest
+import uuid
+from dataclasses import dataclass
 from unittest.mock import patch
 
 from resim_python_client.client import AuthenticatedClient

@@ -163,7 +163,6 @@ py_library(
         ":fetch_all_pages",
         ":fetch_metrics_urls",
         ":get_metrics_proto",
-        "//resim/auth/python:device_code_client",
         "//resim/metrics/proto:metrics_proto_py",
         "@resim-python-client//:resim_python_client",
     ],
