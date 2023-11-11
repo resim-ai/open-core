@@ -460,7 +460,6 @@ class TestMetricsWriter(unittest.TestCase):
                 self.assertTrue(data.is_per_category)
                 self.assertEqual(
                     set(data.series_per_category.category_to_series.keys()),
-                    # trunk-ignore(mypy/attr-defined)
                     set(grouped_labels.category_to_series.keys()))
 
 

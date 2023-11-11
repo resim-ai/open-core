@@ -60,28 +60,28 @@ class Metric(ABC, Generic[MetricT]):
 
         return self.id == __value.id
 
-    def with_description(self: Metric[MetricT], description: str) -> Metric[MetricT]:
+    def with_description(self: MetricT, description: str) -> MetricT:
         self.description = description
         return self
 
-    def with_status(self: Metric[MetricT], status: MetricStatus) -> Metric[MetricT]:
+    def with_status(self: MetricT, status: MetricStatus) -> MetricT:
         self.status = status
         return self
 
-    def with_importance(self: Metric[MetricT], importance: MetricImportance) -> Metric[MetricT]:
+    def with_importance(self: MetricT, importance: MetricImportance) -> MetricT:
         self.importance = importance
         return self
 
-    def with_should_display(self: Metric[MetricT], should_display: bool) -> Metric[MetricT]:
+    def with_should_display(self: MetricT, should_display: bool) -> MetricT:
         self.should_display = should_display
         return self
 
-    def with_blocking(self: Metric[MetricT], blocking: bool) -> Metric[MetricT]:
+    def with_blocking(self: MetricT, blocking: bool) -> MetricT:
         self.blocking = blocking
         return self
 
     @abstractmethod
-    def pack(self: Metric[MetricT]) -> metrics_pb2.Metric:
+    def pack(self: MetricT) -> metrics_pb2.Metric:
         msg = metrics_pb2.Metric()
 
         msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
@@ -957,13 +957,14 @@ class MetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
     unit: Optional[str]
-    index_data: Optional[MetricsData]
+    index_data: Optional[MetricsDataT]
+
 
     @abstractmethod
     def __init__(self: MetricsDataT,
                  name: str,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[MetricsDataT] = None):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -978,24 +979,24 @@ class MetricsData(ABC, Generic[MetricsDataT]):
 
         return self.id == __value.id
 
-    def with_unit(self, unit: str) -> MetricsData[MetricsDataT]:
+    def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
         self.unit = unit
         return self
 
-    def with_index_data(self, index_data: MetricsData) -> MetricsData[MetricsDataT]:
+    def with_index_data(self: MetricsDataT, index_data: MetricsDataT) -> MetricsDataT:
         self.index_data = index_data
         return self
 
     @abstractmethod
-    def map(self: MetricsData[MetricsDataT],
+    def map(self: MetricsDataT,
             f: Callable[..., Any],
             applied_data_name: str,
-            applied_unit: Optional[str] = None) -> MetricsData[MetricsDataT]:
+            applied_unit: Optional[str] = None) -> MetricsDataT:
         raise NotImplementedError()
-    
+
     @abstractmethod
-    def group_by(self: MetricsData[MetricsDataT],
-                 grouping_series: MetricsData[MetricsDataT],
+    def group_by(self: MetricsDataT,
+                 grouping_series: MetricsDataT,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         raise NotImplementedError()
@@ -1027,7 +1028,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
                  name: str,
                  series: Optional[np.ndarray] = None,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[SeriesMetricsData] = None):
         super().__init__(name=name, unit=unit, index_data=index_data)
         self.series = series
 
@@ -1052,19 +1053,17 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         )
 
     def group_by(self: SeriesMetricsData,
-                 grouping_series: MetricsData['SeriesMetricsData'],
+                 grouping_series: SeriesMetricsData,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         assert self.series is not None
 
-        # trunk-ignore(mypy/assignment)
-        typed_grouping_series: SeriesMetricsData = grouping_series
-        assert typed_grouping_series.series is not None
-        assert len(self.series) == len(typed_grouping_series.series)
+        assert grouping_series.series is not None
+        assert len(self.series) == len(grouping_series.series)
         assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
 
         grouped: Dict[Any, List[Any]] = defaultdict(list)
-        for val, cat in zip(self.series, typed_grouping_series.series):
+        for val, cat in zip(self.series, grouping_series.series):
             grouped[cat].append(val)
 
         # Convert the lists into numpy arrays for further processing
@@ -1075,12 +1074,11 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
         grouped_index_data = None
         if self.index_data is not None:
-            # trunk-ignore(mypy/assignment)
             index_series: SeriesMetricsData = self.index_data
 
             grouped_index: Dict[Any, List[Any]] = defaultdict(list)
             assert index_series.series is not None
-            for val, cat in zip(index_series.series, typed_grouping_series.series):
+            for val, cat in zip(index_series.series, grouping_series.series):
                 grouped_index[cat].append(val)
 
             # Convert the lists into numpy arrays for further processing
@@ -1144,7 +1142,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
                  name: str,
                  category_to_series: Optional[Dict[str, np.ndarray]] = None,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[GroupedMetricsData] = None):
         super().__init__(name=name, unit=unit, index_data=index_data)
         if category_to_series is None:
             self.category_to_series = {}
@@ -1170,7 +1168,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
         )
     
     def group_by(self: GroupedMetricsData,
-                 grouping_series: MetricsData['GroupedMetricsData'],
+                 grouping_series: GroupedMetricsData,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         raise NotImplementedError('Cannot group pre-grouped data')
