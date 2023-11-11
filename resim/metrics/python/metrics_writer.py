@@ -24,13 +24,13 @@ class ResimMetricsWriter:
         self.metrics_data = {}
         self.names = set()
 
-    def add_metrics_data(self, data: MetricsData['MetricsDataT']) -> MetricsData['MetricsDataT']:
+    def add_metrics_data(self, data: MetricsDataT) -> MetricsDataT:
         assert data.name not in self.names
         self.names.add(data.name)
         self.metrics_data[data.id] = data
         return data
 
-    def add_metric(self, metric: Metric['MetricT']) -> Metric['MetricT']:
+    def add_metric(self, metric: MetricT) -> MetricT:
         assert metric.name not in self.names
         self.names.add(metric.name)
         self.metrics[metric.id] = metric
