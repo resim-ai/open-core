@@ -59,6 +59,7 @@ py_test(
     srcs = ["unpack_metrics_test.py"],
     deps = [
         ":metrics",
+        ":metrics_writer",
         ":unpack_metrics",
         "//resim/metrics/proto:generate_test_metrics",
         "//resim/metrics/proto:metrics_proto_py",

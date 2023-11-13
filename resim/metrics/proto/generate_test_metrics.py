@@ -77,7 +77,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
     data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
-    data.name = "Event counts"
+    data.name = "Event counts data"
     data.unit = ""
     data.is_per_category = True
     data.category_names.append("Engage")
@@ -90,7 +90,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
     status_data.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
-    status_data.name = "Event Counts Status"
+    status_data.name = "Event counts status"
     status_data.unit = ""
     status_data.is_per_category = True
     status_data.category_names.append("Engage")
@@ -156,7 +156,7 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
 
     value_id = create_data_series(
         data_type=mp.INDEXED_STRING_SERIES_DATA_TYPE,
-        name="Subsystem states",
+        name="Subsystem states data",
         series_getter="strings",
         planner_data=[
             "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(series_length)],
@@ -606,7 +606,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
     data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
-    data.name = "Number of detections"
+    data.name = "Number of detections data"
     data.unit = ""
     data.is_indexed = True
     data_values = [84, 58, 31, 17, 54, 19, 78, 38, 40, 58, 47, 44, 55, 4, 33,

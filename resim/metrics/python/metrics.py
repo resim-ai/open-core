@@ -130,7 +130,7 @@ class Metric(ABC, Generic[MetricT]):
 
         unpacked.id = uuid.UUID(msg.metric_id.id.data)
         unpacked.description = msg.description
-        unpacked.status = msg.status
+        unpacked.status = MetricStatus(msg.status)
         if msg.HasField('should_display'):
             unpacked.should_display = msg.should_display
         else:

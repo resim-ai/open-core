@@ -31,6 +31,8 @@ class ResimMetricsWriter:
         return data
 
     def add_metric(self, metric: Metric['MetricT']) -> Metric['MetricT']:
+        if metric.name in self.names:
+            print(metric.name)
         assert metric.name not in self.names
         self.names.add(metric.name)
         self.metrics[metric.id] = metric
