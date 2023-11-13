@@ -11,15 +11,20 @@ set of Metric and MetricsData objects referencing each other as
 appropriate.
 """
 
-import numpy as np
 import uuid
 from dataclasses import dataclass
+from typing import Any, Callable
 
+import numpy as np
 from google.protobuf import timestamp_pb2
-import resim.metrics.proto.metrics_pb2 as mp
-from resim.utils.proto import uuid_pb2
 
-from resim.metrics.python.metrics_utils import Timestamp, MetricStatus, DoubleFailureDefinition, HistogramBucket
+import resim.metrics.proto.metrics_pb2 as mp
+import resim.utils.proto.uuid_pb2 as uuid_proto
+from resim.metrics.python.metrics_utils import (
+    Timestamp,
+    MetricStatus,
+    DoubleFailureDefinition,
+    HistogramBucket)
 from resim.metrics.python.metrics import (
     ScalarMetric,
     BarChartMetric,
@@ -36,6 +41,7 @@ from resim.metrics.python.metrics import (
 
 @dataclass
 class UnpackedMetrics:
+    """A class representing unpacked metrics."""
     metrics: list[Metric]
     metrics_data: list[MetricsData]
     names: set[str]
@@ -44,11 +50,18 @@ class UnpackedMetrics:
 def unpack_metrics(*,
                    metrics: list[mp.Metric],
                    metrics_data: list[mp.MetricsData]) -> UnpackedMetrics:
+    """The main unpacker for metrics and metrics data
+
+    This function reads a list of metrics and metrics data protobuf messages and
+    unpacks them into Metric and MetricsData classes wrapped in the
+    UnpackedMetrics class.
+    """
+
     id_to_metrics_data_map = {
         _unpack_uuid(
             md.metrics_data_id.id): md for md in metrics_data}
 
-    id_to_unpacked_metrics_data = {}
+    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData] = {}
 
     def recursive_unpack_metrics_data(current_id: uuid.UUID) -> None:
         if current_id in id_to_unpacked_metrics_data:
@@ -79,11 +92,11 @@ def unpack_metrics(*,
         names=set())
 
 
-def _unpack_timestamp(timestamp: timestamp_pb2.Timestamp):
+def _unpack_timestamp(timestamp: timestamp_pb2.Timestamp) -> Timestamp:
     return Timestamp(secs=timestamp.seconds, nanos=timestamp.nanos)
 
 
-def _unpack_uuid(uuid_msg: uuid_pb2.UUID):
+def _unpack_uuid(uuid_msg: uuid_proto.UUID) -> uuid.UUID:
     return uuid.UUID(uuid_msg.data)
 
 
@@ -93,23 +106,23 @@ def _unpack_series(series_proto: mp.Series) -> np.ndarray:
         return np.array(
             series_proto.doubles.series,
             dtype=np.float64)
-    elif data_case == "timestamps":
+    if data_case == "timestamps":
         return np.array([_unpack_timestamp(
             ts) for ts in series_proto.timestamps.series], dtype=Timestamp)
-    elif data_case == "uuids":
+    if data_case == "uuids":
         return np.array(
             [_unpack_uuid(element) for element in series_proto.uuids.series],
             dtype=uuid.UUID)
-    elif data_case == "strings":
+    if data_case == "strings":
         return np.array(series_proto.strings.series, dtype=str)
-    elif data_case == "statuses":
-        return np.array([MetricStatus(status)
+    assert data_case == "statuses"
+    return np.array([MetricStatus(status)
                          for status in series_proto.statuses.series], dtype=MetricStatus)
 
 
 def _unpack_metrics_data(metrics_data: mp.MetricsData,
                          id_to_unpacked_metrics_data: dict[uuid.UUID,
-                                                           MetricsData]):
+                                                           MetricsData]) -> None:
     data_id = _unpack_uuid(metrics_data.metrics_data_id.id)
     if metrics_data.is_per_category:
         assert metrics_data.WhichOneof("data") == "series_per_category"
@@ -121,10 +134,11 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
 
         index = id_to_unpacked_metrics_data[_unpack_uuid(
             metrics_data.index_data_id.id)] if metrics_data.is_indexed else None
-        unpacked = GroupedMetricsData(name=metrics_data.name,
-                                      category_to_series=category_to_series,
-                                      unit=metrics_data.unit,
-                                      index_data=index)
+        unpacked: MetricsData = GroupedMetricsData(
+            name=metrics_data.name,
+            category_to_series=category_to_series,
+            unit=metrics_data.unit,
+            index_data=index)
 
     else:
         assert metrics_data.WhichOneof("data") == "series"
@@ -146,7 +160,7 @@ def _unpack_metric(metric: mp.Metric,
                                                      MetricsData]) -> Metric:
 
     unpacked = Metric.unpack_common_fields(metric)
-    unpackers = {
+    unpackers: dict[type[Any], Callable] = {
         DoubleSummaryMetric: _unpack_double_summary_metric,
         DoubleOverTimeMetric: _unpack_double_over_time_metric,
         LinePlotMetric: _unpack_line_plot_metric,
@@ -155,16 +169,20 @@ def _unpack_metric(metric: mp.Metric,
         HistogramMetric: _unpack_histogram_metric,
         ScalarMetric: _unpack_scalar_metric,
     }
-    unpacker = unpackers.get(type(unpacked))
+    unpacker: Callable = unpackers[type(unpacked)]
     unpacker(metric, unpacked, id_to_unpacked_metrics_data)
     return unpacked
 
 
 def _unpack_double_failure_definition(
-        failure_definition: mp.DoubleFailureDefinition):
+        failure_definition: mp.DoubleFailureDefinition) -> DoubleFailureDefinition:
     return DoubleFailureDefinition(
-        fails_above=failure_definition.fails_above if failure_definition.HasField("fails_above") else None,
-        fails_below=failure_definition.fails_below if failure_definition.HasField("fails_below") else None)
+        fails_above=failure_definition.fails_above
+        if failure_definition.HasField("fails_above")
+        else None,
+        fails_below=failure_definition.fails_below
+        if failure_definition.HasField("fails_below")
+        else None)
 
 
 def _unpack_double_summary_metric(metric: mp.Metric,
@@ -300,8 +318,7 @@ def _unpack_histogram_metric(metric: mp.Metric,
 
 def _unpack_scalar_metric(metric: mp.Metric,
                           unpacked: ScalarMetric,
-                          id_to_unpacked_metrics_data: dict[uuid.UUID,
-                                                            MetricsData]) -> None:
+                          _: dict[uuid.UUID, MetricsData]) -> None:
     values = metric.metric_values.scalar_metric_values
     unpacked.with_value(
         values.value).with_failure_definition(
