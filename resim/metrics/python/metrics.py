@@ -32,6 +32,7 @@ class Metric(ABC, Generic[MetricT]):
     should_display: Optional[bool]
     blocking: Optional[bool]
     parent_job_id: Optional[uuid.UUID]
+    order: Optional[float]
 
     @abstractmethod
     def __init__(self: Metric[MetricT],
@@ -41,7 +42,9 @@ class Metric(ABC, Generic[MetricT]):
                  importance: Optional[MetricImportance] = None,
                  should_display: Optional[bool] = None,
                  blocking: Optional[bool] = None,
-                 parent_job_id: Optional[uuid.UUID] = None):
+                 parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None
+                 ):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -51,6 +54,7 @@ class Metric(ABC, Generic[MetricT]):
         self.should_display = should_display
         self.blocking = blocking
         self.parent_job_id = parent_job_id
+        self.order = order
 
     def __eq__(self: MetricT, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -60,28 +64,28 @@ class Metric(ABC, Generic[MetricT]):
 
         return self.id == __value.id
 
-    def with_description(self: Metric[MetricT], description: str) -> Metric[MetricT]:
+    def with_description(self: MetricT, description: str) -> MetricT:
         self.description = description
         return self
 
-    def with_status(self: Metric[MetricT], status: MetricStatus) -> Metric[MetricT]:
+    def with_status(self: MetricT, status: MetricStatus) -> MetricT:
         self.status = status
         return self
 
-    def with_importance(self: Metric[MetricT], importance: MetricImportance) -> Metric[MetricT]:
+    def with_importance(self: MetricT, importance: MetricImportance) -> MetricT:
         self.importance = importance
         return self
 
-    def with_should_display(self: Metric[MetricT], should_display: bool) -> Metric[MetricT]:
+    def with_should_display(self: MetricT, should_display: bool) -> MetricT:
         self.should_display = should_display
         return self
 
-    def with_blocking(self: Metric[MetricT], blocking: bool) -> Metric[MetricT]:
+    def with_blocking(self: MetricT, blocking: bool) -> MetricT:
         self.blocking = blocking
         return self
 
     @abstractmethod
-    def pack(self: Metric[MetricT]) -> metrics_pb2.Metric:
+    def pack(self: MetricT) -> metrics_pb2.Metric:
         msg = metrics_pb2.Metric()
 
         msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
@@ -104,6 +108,9 @@ class Metric(ABC, Generic[MetricT]):
 
         if self.parent_job_id is not None:
             msg.job_id.id.CopyFrom(pack_uuid_to_proto(self.parent_job_id))
+
+        if self.order is not None:
+            msg.order = self.order
 
         return msg
 
@@ -146,6 +153,11 @@ class Metric(ABC, Generic[MetricT]):
         else:
             unpacked.parent_job_id = None
 
+        if msg.HasField('order'):
+            unpacked.order = msg.order
+        else:
+            unpacked.order = None
+
         return unpacked
 
     @abstractmethod
@@ -167,11 +179,13 @@ class ScalarMetric(Metric['ScalarMetric']):
                  should_display: Optional[bool] = None,
                  blocking: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  value: Optional[float] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                         importance=importance, blocking=blocking, should_display=should_display,
+                         parent_job_id=parent_job_id, order=order)
         self.value = value
         self.failure_definition = failure_definition
         self.unit = unit
@@ -235,6 +249,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  doubles_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  failure_definitions: Optional[List[DoubleFailureDefinition]] = None,
@@ -243,7 +258,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
         if doubles_over_time_data is None:
             self.doubles_over_time_data = []
         else:
@@ -375,6 +391,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  states_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
@@ -382,6 +399,9 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+        super().__init__(name=name, description=description, status=status,
+                importance=importance, blocking=blocking, should_display=should_display,
+                parent_job_id=parent_job_id, order=order)
         if states_over_time_data is None:
             self.states_over_time_data = []
         else:
@@ -520,6 +540,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  x_doubles_data: Optional[List[MetricsData]] = None,
                  y_doubles_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
@@ -527,7 +548,8 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
         if x_doubles_data is None:
             self.x_doubles_data = []
         else:
@@ -645,6 +667,7 @@ class BarChartMetric(Metric['BarChartMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  values_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None,
@@ -653,7 +676,8 @@ class BarChartMetric(Metric['BarChartMetric']):
                  stack_bars: Optional[bool] = None
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         if values_data is None:
             self.values_data = []
@@ -764,6 +788,7 @@ class HistogramMetric(Metric['HistogramMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  values_data: Optional[MetricsData] = None,
                  statuses_data: Optional[MetricsData] = None,
                  buckets: Optional[List[HistogramBucket]] = None,
@@ -772,7 +797,8 @@ class HistogramMetric(Metric['HistogramMetric']):
                  x_axis_name: Optional[str] = None
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         self.values_data = values_data
         self.statuses_data = statuses_data
@@ -866,13 +892,15 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  value_data: Optional[MetricsData] = None,
                  status_data: Optional[MetricsData] = None,
                  index: Optional[IndexType] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         self.value_data = value_data
         self.status_data = status_data
@@ -957,13 +985,14 @@ class MetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
     unit: Optional[str]
-    index_data: Optional[MetricsData]
+    index_data: Optional[MetricsDataT]
+
 
     @abstractmethod
     def __init__(self: MetricsDataT,
                  name: str,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[MetricsDataT] = None):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -978,24 +1007,24 @@ class MetricsData(ABC, Generic[MetricsDataT]):
 
         return self.id == __value.id
 
-    def with_unit(self, unit: str) -> MetricsData[MetricsDataT]:
+    def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
         self.unit = unit
         return self
 
-    def with_index_data(self, index_data: MetricsData) -> MetricsData[MetricsDataT]:
+    def with_index_data(self: MetricsDataT, index_data: MetricsDataT) -> MetricsDataT:
         self.index_data = index_data
         return self
 
     @abstractmethod
-    def map(self: MetricsData[MetricsDataT],
+    def map(self: MetricsDataT,
             f: Callable[..., Any],
             applied_data_name: str,
-            applied_unit: Optional[str] = None) -> MetricsData[MetricsDataT]:
+            applied_unit: Optional[str] = None) -> MetricsDataT:
         raise NotImplementedError()
-    
+
     @abstractmethod
-    def group_by(self: MetricsData[MetricsDataT],
-                 grouping_series: MetricsData[MetricsDataT],
+    def group_by(self: MetricsDataT,
+                 grouping_series: MetricsDataT,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         raise NotImplementedError()
@@ -1027,7 +1056,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
                  name: str,
                  series: Optional[np.ndarray] = None,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[SeriesMetricsData] = None):
         super().__init__(name=name, unit=unit, index_data=index_data)
         self.series = series
 
@@ -1052,19 +1081,17 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         )
 
     def group_by(self: SeriesMetricsData,
-                 grouping_series: MetricsData['SeriesMetricsData'],
+                 grouping_series: SeriesMetricsData,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         assert self.series is not None
 
-        # trunk-ignore(mypy/assignment)
-        typed_grouping_series: SeriesMetricsData = grouping_series
-        assert typed_grouping_series.series is not None
-        assert len(self.series) == len(typed_grouping_series.series)
+        assert grouping_series.series is not None
+        assert len(self.series) == len(grouping_series.series)
         assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
 
         grouped: Dict[Any, List[Any]] = defaultdict(list)
-        for val, cat in zip(self.series, typed_grouping_series.series):
+        for val, cat in zip(self.series, grouping_series.series):
             grouped[cat].append(val)
 
         # Convert the lists into numpy arrays for further processing
@@ -1075,12 +1102,11 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
         grouped_index_data = None
         if self.index_data is not None:
-            # trunk-ignore(mypy/assignment)
             index_series: SeriesMetricsData = self.index_data
 
             grouped_index: Dict[Any, List[Any]] = defaultdict(list)
             assert index_series.series is not None
-            for val, cat in zip(index_series.series, typed_grouping_series.series):
+            for val, cat in zip(index_series.series, grouping_series.series):
                 grouped_index[cat].append(val)
 
             # Convert the lists into numpy arrays for further processing
@@ -1144,7 +1170,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
                  name: str,
                  category_to_series: Optional[Dict[str, np.ndarray]] = None,
                  unit: Optional[str] = None,
-                 index_data: Optional[MetricsData] = None):
+                 index_data: Optional[GroupedMetricsData] = None):
         super().__init__(name=name, unit=unit, index_data=index_data)
         if category_to_series is None:
             self.category_to_series = {}
@@ -1170,7 +1196,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
         )
     
     def group_by(self: GroupedMetricsData,
-                 grouping_series: MetricsData['GroupedMetricsData'],
+                 grouping_series: GroupedMetricsData,
                  grouped_data_name: Optional[str] = None,
                  grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
         raise NotImplementedError('Cannot group pre-grouped data')
