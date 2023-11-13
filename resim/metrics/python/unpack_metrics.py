@@ -85,11 +85,21 @@ def unpack_metrics(*,
                 metric,
                 id_to_unpacked_metrics_data))
 
+    unpacked_metrics_data = list(id_to_unpacked_metrics_data.values())
+    names = ({metric.name for metric in unpacked_metrics} |
+             {metrics_data.name for metrics_data in unpacked_metrics_data})
+
+    print("================================================================================")
+    print("v")
+    print(names)
+    print("================================================================================")
+    
+    assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data)
+
     return UnpackedMetrics(
         metrics=unpacked_metrics,
-        metrics_data=list(
-            id_to_unpacked_metrics_data.values()),
-        names=set())
+        metrics_data=unpacked_metrics_data,
+        names=names)
 
 
 def _unpack_timestamp(timestamp: timestamp_pb2.Timestamp) -> Timestamp:
