@@ -198,7 +198,7 @@ message Metric {
         JobId job_id = 10;
     }
 
-    // an optional float allowing for the user to indicate a numeric order for metrics 
+    // An optional float allowing for the user to indicate a numeric order for metrics 
     // in any ordering context. 
     //
     // If explicitly set (even as 0) the implied ordering semantics are via '<' 
