@@ -24,13 +24,13 @@ class ResimMetricsWriter:
         self.metrics_data = {}
         self.names = set()
 
-    def add_metrics_data(self, data: MetricsData['MetricsDataT']) -> MetricsData['MetricsDataT']:
+    def add_metrics_data(self, data: MetricsDataT) -> MetricsDataT:
         assert data.name not in self.names
         self.names.add(data.name)
         self.metrics_data[data.id] = data
         return data
 
-    def add_metric(self, metric: Metric['MetricT']) -> Metric['MetricT']:
+    def add_metric(self, metric: MetricT) -> MetricT:
         assert metric.name not in self.names
         self.names.add(metric.name)
         self.metrics[metric.id] = metric
@@ -84,7 +84,9 @@ class ResimMetricsWriter:
     def write(self) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
-        for metric in self.metrics.values():
+        for i, metric in enumerate(self.metrics.values()):
+            if metric.order is None:
+                metric.order = float(i)
             metric.recursively_pack_into(output)
 
         for metric_data in self.metrics_data.values():
