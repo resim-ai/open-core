@@ -37,6 +37,7 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
+    metric.order = 1.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     data = job_metrics.metrics_data.add()
@@ -72,6 +73,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
+    metric.order = 2.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     data = job_metrics.metrics_data.add()
@@ -115,6 +117,7 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = True
     metric.importance = mp.CRITICAL_IMPORTANCE
+    metric.order = 3.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     times = job_metrics.metrics_data.add()
@@ -189,6 +192,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = True
     metric.importance = mp.CRITICAL_IMPORTANCE
+    metric.order = 4.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     ttc_index = job_metrics.metrics_data.add()
@@ -270,6 +274,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     summary_metric.should_display = True
     summary_metric.blocking = False
     summary_metric.importance = mp.ZERO_IMPORTANCE
+    summary_metric.order = 5.0
     summary_metric.job_id.CopyFrom(job_metrics.job_id)
     values = summary_metric.metric_values.double_metric_values
     values.series_index = 0
@@ -285,6 +290,7 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     summary_metric.should_display = True
     summary_metric.blocking = False
     summary_metric.importance = mp.ZERO_IMPORTANCE
+    summary_metric.order = 5.1
     summary_metric.job_id.CopyFrom(job_metrics.job_id)
     values = summary_metric.metric_values.double_metric_values
     values.timestamp_index.seconds = 5
@@ -303,6 +309,7 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.LOW_IMPORTANCE
+    metric.order = 1.2
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     data_series = [
@@ -353,6 +360,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
+    metric.order = 6.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     labels = job_metrics.metrics_data.add()
@@ -450,6 +458,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_metric.should_display = True
     temperature_metric.blocking = False
     temperature_metric.importance = mp.ZERO_IMPORTANCE
+    temperature_metric.order = 7.0
     temperature_metric.job_id.CopyFrom(job_metrics.job_id)
     values = temperature_metric.metric_values.double_metric_values
     values.value_data_id.CopyFrom(temperature_data.metrics_data_id)
@@ -488,6 +497,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_metric.should_display = True
     temperature_metric.blocking = False
     temperature_metric.importance = mp.ZERO_IMPORTANCE
+    temperature_metric.order = 8.0
     temperature_metric.job_id.CopyFrom(job_metrics.job_id)
     values = temperature_metric.metric_values.double_metric_values
     values.value_data_id.CopyFrom(temperature_data.metrics_data_id)
@@ -533,6 +543,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     waypoint_distance_metric.should_display = True
     waypoint_distance_metric.blocking = False
     waypoint_distance_metric.importance = mp.ZERO_IMPORTANCE
+    waypoint_distance_metric.order = 9.0
     waypoint_distance_metric.job_id.CopyFrom(job_metrics.job_id)
     values = waypoint_distance_metric.metric_values.double_metric_values
     values.value_data_id.CopyFrom(distance_to_waypoints.metrics_data_id)
@@ -551,6 +562,7 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = False
     metric.blocking = False
     metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 10.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     times = job_metrics.metrics_data.add()
@@ -601,6 +613,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 11.0
     metric.job_id.CopyFrom(job_metrics.job_id)
 
     data = job_metrics.metrics_data.add()
@@ -663,6 +676,7 @@ def _add_scalar_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 12.0
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.scalar_metric_values.value = 6.28318530718
 
