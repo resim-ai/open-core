@@ -32,6 +32,7 @@ class Metric(ABC, Generic[MetricT]):
     should_display: Optional[bool]
     blocking: Optional[bool]
     parent_job_id: Optional[uuid.UUID]
+    order: Optional[float]
 
     @abstractmethod
     def __init__(self: Metric[MetricT],
@@ -41,7 +42,9 @@ class Metric(ABC, Generic[MetricT]):
                  importance: Optional[MetricImportance] = None,
                  should_display: Optional[bool] = None,
                  blocking: Optional[bool] = None,
-                 parent_job_id: Optional[uuid.UUID] = None):
+                 parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None
+                 ):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -51,6 +54,7 @@ class Metric(ABC, Generic[MetricT]):
         self.should_display = should_display
         self.blocking = blocking
         self.parent_job_id = parent_job_id
+        self.order = order
 
     def __eq__(self: MetricT, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -105,6 +109,9 @@ class Metric(ABC, Generic[MetricT]):
         if self.parent_job_id is not None:
             msg.job_id.id.CopyFrom(pack_uuid_to_proto(self.parent_job_id))
 
+        if self.order is not None:
+            msg.order = self.order
+
         return msg
 
     @classmethod
@@ -146,6 +153,11 @@ class Metric(ABC, Generic[MetricT]):
         else:
             unpacked.parent_job_id = None
 
+        if msg.HasField('order'):
+            unpacked.order = msg.order
+        else:
+            unpacked.order = None
+
         return unpacked
 
     @abstractmethod
@@ -167,11 +179,13 @@ class ScalarMetric(Metric['ScalarMetric']):
                  should_display: Optional[bool] = None,
                  blocking: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  value: Optional[float] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                         importance=importance, blocking=blocking, should_display=should_display,
+                         parent_job_id=parent_job_id, order=order)
         self.value = value
         self.failure_definition = failure_definition
         self.unit = unit
@@ -235,6 +249,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  doubles_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  failure_definitions: Optional[List[DoubleFailureDefinition]] = None,
@@ -243,7 +258,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
         if doubles_over_time_data is None:
             self.doubles_over_time_data = []
         else:
@@ -375,6 +391,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  states_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
@@ -382,6 +399,9 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
                          importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+        super().__init__(name=name, description=description, status=status,
+                importance=importance, blocking=blocking, should_display=should_display,
+                parent_job_id=parent_job_id, order=order)
         if states_over_time_data is None:
             self.states_over_time_data = []
         else:
@@ -520,6 +540,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  x_doubles_data: Optional[List[MetricsData]] = None,
                  y_doubles_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
@@ -527,7 +548,8 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
         if x_doubles_data is None:
             self.x_doubles_data = []
         else:
@@ -645,6 +667,7 @@ class BarChartMetric(Metric['BarChartMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  values_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None,
@@ -653,7 +676,8 @@ class BarChartMetric(Metric['BarChartMetric']):
                  stack_bars: Optional[bool] = None
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         if values_data is None:
             self.values_data = []
@@ -764,6 +788,7 @@ class HistogramMetric(Metric['HistogramMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  values_data: Optional[MetricsData] = None,
                  statuses_data: Optional[MetricsData] = None,
                  buckets: Optional[List[HistogramBucket]] = None,
@@ -772,7 +797,8 @@ class HistogramMetric(Metric['HistogramMetric']):
                  x_axis_name: Optional[str] = None
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         self.values_data = values_data
         self.statuses_data = statuses_data
@@ -866,13 +892,15 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
                  blocking: Optional[bool] = None,
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
                  value_data: Optional[MetricsData] = None,
                  status_data: Optional[MetricsData] = None,
                  index: Optional[IndexType] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  ):
         super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
+                        importance=importance, blocking=blocking, should_display=should_display,
+                        parent_job_id=parent_job_id, order=order)
 
         self.value_data = value_data
         self.status_data = status_data

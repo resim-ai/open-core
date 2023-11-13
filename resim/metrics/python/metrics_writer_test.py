@@ -435,7 +435,6 @@ class TestMetricsWriter(unittest.TestCase):
                 .with_status(METRIC_STATUS)
         )
 
-
         output = self.writer.write()
 
         self.assertEqual(len(output.packed_ids), 9)
@@ -450,6 +449,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(base_metric.blocking, METRIC_BLOCKING)
         self.assertEqual(base_metric.should_display, METRIC_SHOULD_DISPLAY)
         self.assertEqual(base_metric.status, METRIC_STATUS.value)
+        self.assertEqual(base_metric.order, 0.0)
 
         self.assertEqual(set(metric_values.states_set), set(EXAMPLE_STATES_SET))
         self.assertEqual(len(metric_values.failure_states), 0)
@@ -461,6 +461,43 @@ class TestMetricsWriter(unittest.TestCase):
                 self.assertEqual(
                     set(data.series_per_category.category_to_series.keys()),
                     set(grouped_labels.category_to_series.keys()))
+                
+    def test_two_metrics(self) -> None:
+        METRIC_NAMES = ["Double summary metric one", "Double summary metric two"]
+        METRIC_INDICES = [23, 25]
+        doubles_data = SeriesMetricsData(
+            "Doubles", EXAMPLE_FLOATS, "Double unit", None
+        )
+
+        for i in range(len(METRIC_NAMES)):
+            (
+                self.writer
+                .add_double_summary_metric(METRIC_NAMES[i])
+                .with_value_data(doubles_data)
+                .with_index(METRIC_INDICES[i])
+            )
+
+        output = self.writer.write()
+
+        self.assertEqual(len(output.packed_ids), len(METRIC_NAMES) + 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), len(METRIC_NAMES))
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
+        metrics_data_id = output.metrics_msg.metrics_data[0].metrics_data_id.id.data
+
+        for i in range(len(METRIC_NAMES)):
+            metric_values = output.metrics_msg.job_level_metrics.metrics[i].metric_values.double_metric_values
+
+            self.assertEqual(metric_values.series_index, METRIC_INDICES[i])
+
+            self.assertFalse(metric_values.failure_definition.HasField('fails_above'))
+            self.assertFalse(metric_values.failure_definition.HasField('fails_below'))
+
+            self.assertEqual(metric_values.value_data_id.id.data, metrics_data_id)
+
+            self.assertEqual(output.metrics_msg.job_level_metrics.metrics[i].order, float(i))
+
+        self.assertEqual(len(output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
 
 
     def tearDown(self) -> None:

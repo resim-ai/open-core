@@ -84,7 +84,9 @@ class ResimMetricsWriter:
     def write(self) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
-        for metric in self.metrics.values():
+        for i, metric in enumerate(self.metrics.values()):
+            if metric.order is None:
+                metric.order = float(i)
             metric.recursively_pack_into(output)
 
         for metric_data in self.metrics_data.values():
