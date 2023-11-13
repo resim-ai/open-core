@@ -89,11 +89,7 @@ def unpack_metrics(*,
     names = ({metric.name for metric in unpacked_metrics} |
              {metrics_data.name for metrics_data in unpacked_metrics_data})
 
-    print("================================================================================")
-    print("v")
-    print(names)
-    print("================================================================================")
-    
+    # Enforce name uniqueness
     assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data)
 
     return UnpackedMetrics(
