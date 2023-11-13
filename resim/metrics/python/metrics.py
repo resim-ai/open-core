@@ -1026,7 +1026,8 @@ class MetricsData(ABC, Generic[MetricsDataT]):
     def group_by(self: MetricsDataT,
                  grouping_series: MetricsDataT,
                  grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
+                 grouped_index_name: Optional[str] = None,
+                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         raise NotImplementedError()
 
 
@@ -1083,12 +1084,19 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
     def group_by(self: SeriesMetricsData,
                  grouping_series: SeriesMetricsData,
                  grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
+                 grouped_index_name: Optional[str] = None,
+                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         assert self.series is not None
 
         assert grouping_series.series is not None
         assert len(self.series) == len(grouping_series.series)
-        assert grouping_series.index_data is None or grouping_series.index_data == self.index_data
+        assert (
+            self.index_data is None
+            or grouping_series.index_data is None
+            or self.index_data == grouping_series.index_data
+            or self == grouping_series.index_data
+            or self.index_data == grouping_series
+        )
 
         grouped: Dict[Any, List[Any]] = defaultdict(list)
         for val, cat in zip(self.series, grouping_series.series):
@@ -1101,10 +1109,10 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         grouped = dict(grouped)
 
         grouped_index_data = None
-        if self.index_data is not None:
-            index_series: SeriesMetricsData = self.index_data
-
+        if self.index_data is not None and override_grouped_index_data is None:
+            index_series = self.index_data
             grouped_index: Dict[Any, List[Any]] = defaultdict(list)
+
             assert index_series.series is not None
             for val, cat in zip(index_series.series, grouping_series.series):
                 grouped_index[cat].append(val)
@@ -1120,9 +1128,11 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
                     f'{self.index_data.name}-grouped-by-{grouping_series.name}'
                 ),
                 category_to_series=grouped_index,
-                unit=self.unit,
+                unit=self.index_data.unit,
                 index_data=None
             )
+        elif override_grouped_index_data is not None:
+            grouped_index_data = override_grouped_index_data
 
         grouped_data = GroupedMetricsData(
             grouped_data_name if grouped_data_name is not None else (
@@ -1137,6 +1147,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
     def pack(self: SeriesMetricsData) -> metrics_pb2.MetricsData:
         msg = metrics_pb2.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.name = self.name
 
         if self.unit is not None:
             msg.unit = self.unit
@@ -1198,7 +1209,8 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
     def group_by(self: GroupedMetricsData,
                  grouping_series: GroupedMetricsData,
                  grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None) -> GroupedMetricsData:
+                 grouped_index_name: Optional[str] = None,
+                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         raise NotImplementedError('Cannot group pre-grouped data')
 
     def with_category_to_series(self: GroupedMetricsData,
@@ -1213,6 +1225,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
     def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
         msg = metrics_pb2.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.name = self.name
 
         assert len(self.category_to_series.keys()
                    ) > 0, "Cannot pack grouped data with no categories."
