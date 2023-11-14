@@ -138,7 +138,7 @@ class Metric(ABC, Generic[MetricT]):
         unpacked.id = uuid.UUID(msg.metric_id.id.data)
         unpacked.description = msg.description
         unpacked.status = MetricStatus(msg.status)
-        unpacked.importance = MetricImportance(msg.importance)        
+        unpacked.importance = MetricImportance(msg.importance)
         if msg.HasField('should_display'):
             unpacked.should_display = msg.should_display
         else:
@@ -1252,7 +1252,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
             assert len(
                 index_data_types) == 1, f"Invalid number of index data types: {len(index_data_types)}"
             msg.index_data_type = index_data_types.pop()
-            
+
         data_types = set()
         for cat in categories:
             series = self.category_to_series[cat]

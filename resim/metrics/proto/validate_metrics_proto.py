@@ -671,6 +671,7 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     endpoint.
     """
     metrics_data_map = build_metrics_data_map(job_metrics)
+
     _validate_job_id(job_metrics.job_id)
     _validate_job_level_metrics(
         job_metrics.job_level_metrics,
