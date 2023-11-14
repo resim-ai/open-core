@@ -5,6 +5,8 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -82,4 +84,42 @@ cc_test(
         "//resim/utils/testing:mock_logger",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+py_library(
+    name = "dice_coefficient",
+    srcs = ["dice_coefficient.py"],
+    visibility = ["//pkg:__subpackages__"],
+    deps = [
+        "//resim/msg:detection_proto_py",
+    ],
+)
+
+py_test(
+    name = "dice_coefficient_test",
+    srcs = ["dice_coefficient_test.py"],
+    deps = [
+        ":dice_coefficient",
+    ],
+)
+
+pkg_tar(
+    name = "resim_metrics_tools",
+    srcs = [
+        ":dice_coefficient",
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/msg:detection_proto_py",
+        "//resim/msg:header_proto_py",
+        "//resim/msg:navsat_proto_py",
+        "//resim/msg:odometry_proto_py",
+        "//resim/msg:pose_proto_py",
+        "//resim/msg:transform_proto_py",
+        "//resim/ros2:convert_log",
+        "//resim/transforms/python:se3_python.so",
+        "//resim/transforms/python:so3_python.so",
+    ],
+    extension = "tar.gz",
+    include_runfiles = True,
+    strip_prefix = "/",
 )

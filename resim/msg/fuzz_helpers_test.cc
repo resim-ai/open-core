@@ -221,6 +221,52 @@ TEST(FuzzHelpersTest, TestOdometryEqual) {
   EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
 }
 
+TEST(FuzzHelpersTest, TestObjectHypothesisEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const ObjectHypothesis hypothesis{
+      random_element<ObjectHypothesis>(InOut{rng})};
+
+  ObjectHypothesis hypothesis_different_class{hypothesis};
+  hypothesis_different_class.set_class_id(hypothesis.class_id() + "_different");
+
+  ObjectHypothesis hypothesis_different_score{hypothesis};
+  hypothesis_different_score.set_score(1.0 - hypothesis.score());
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(hypothesis, hypothesis));
+  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_class));
+  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_score));
+  EXPECT_FALSE(verify_equality(hypothesis_different_class, hypothesis));
+  EXPECT_FALSE(verify_equality(hypothesis_different_score, hypothesis));
+}
+
+TEST(FuzzHelpersTest, TestObjectHypothesisWithPoseEqual) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const ObjectHypothesisWithPose hypothesis{
+      random_element<ObjectHypothesisWithPose>(InOut{rng})};
+
+  ObjectHypothesisWithPose hypothesis_different_hypothesis{hypothesis};
+  hypothesis_different_hypothesis.mutable_hypothesis()->CopyFrom(
+      random_element<ObjectHypothesis>(InOut{rng}));
+
+  ObjectHypothesisWithPose hypothesis_different_pose{hypothesis};
+  hypothesis_different_pose.mutable_pose()->CopyFrom(
+      random_element<PoseWithCovariance>(InOut{rng}));
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(hypothesis, hypothesis));
+  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_hypothesis));
+  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_pose));
+  EXPECT_FALSE(verify_equality(hypothesis_different_hypothesis, hypothesis));
+  EXPECT_FALSE(verify_equality(hypothesis_different_pose, hypothesis));
+}
+
 TEST(FuzzHelpersTest, TestDetection3DEqual) {
   // SETUP
   constexpr std::size_t SEED = 913U;
@@ -304,13 +350,25 @@ TEST(FuzzHelpersTest, TestDetection2DEqual) {
   Detection2D detection_different_id{detection};
   detection_different_id.set_id(detection.id() + "_different");
 
+  Detection2D detection_different_results{detection};
+  detection_different_results.mutable_results(0)->CopyFrom(
+      random_element<ObjectHypothesisWithPose>(InOut{rng}));
+
+  Detection2D detection_different_results_size{detection};
+  detection_different_results_size.add_results();
+
   // ACTION / VERIFICATION
   EXPECT_TRUE(verify_equality(detection, detection));
   EXPECT_FALSE(verify_equality(detection, detection_different_header));
   EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
+  EXPECT_FALSE(verify_equality(detection, detection_different_results));
+  EXPECT_FALSE(verify_equality(detection, detection_different_results_size));
+
   EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
   EXPECT_FALSE(verify_equality(detection, detection_different_id));
   EXPECT_FALSE(verify_equality(detection_different_id, detection));
+  EXPECT_FALSE(verify_equality(detection_different_results, detection));
+  EXPECT_FALSE(verify_equality(detection_different_results_size, detection));
 }
 
 TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {

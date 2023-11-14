@@ -18,11 +18,11 @@ import resim.transforms.python.quaternion as quat
 class QuaternionTest(unittest.TestCase):
     """Unit tests for Quaternion pybinding"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Seed the random number generator"""
         np.random.seed(29)
 
-    def test_quaternion(self):
+    def test_quaternion(self) -> None:
         """Test that we can construct and access quaternions."""
         # SETUP
         quat_dof = 4
