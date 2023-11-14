@@ -32,6 +32,7 @@ class JobInfo:
 
 def fetch_job_metrics(*,
                       token: str,
+                      base_url: str,
                       jobs: list[JobInfo]) -> tuple[dict[uuid.UUID,
                                                          mp.Metric],
                                                     dict[uuid.UUID,
@@ -42,7 +43,7 @@ def fetch_job_metrics(*,
 
     # Step 1: Fetch all the presigned urls per job
     client = AuthenticatedClient(
-        base_url="https://api.resim.ai/v1",
+        base_url=base_url,
         token=token)
 
     metrics_urls, metrics_data_urls = _fetch_all_urls(client=client, jobs=jobs)
