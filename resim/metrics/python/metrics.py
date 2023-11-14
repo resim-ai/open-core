@@ -137,7 +137,8 @@ class Metric(ABC, Generic[MetricT]):
 
         unpacked.id = uuid.UUID(msg.metric_id.id.data)
         unpacked.description = msg.description
-        unpacked.status = msg.status
+        unpacked.status = MetricStatus(msg.status)
+        unpacked.importance = MetricImportance(msg.importance)
         if msg.HasField('should_display'):
             unpacked.should_display = msg.should_display
         else:
@@ -1158,6 +1159,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         if self.index_data is not None:
             msg.index_data_id.id.CopyFrom(
                 pack_uuid_to_proto(self.index_data.id))
+            msg.index_data_type, _ = pack_series_to_proto(self.index_data.series, self.index_data.index_data is not None)
 
         assert len(self.series) > 0, "Cannot pack an empty series."
 
@@ -1241,6 +1243,15 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
         if self.index_data is not None:
             msg.index_data_id.id.CopyFrom(
                 pack_uuid_to_proto(self.index_data.id))
+            index_data_types = set()
+            for cat in categories:
+                series = self.index_data.category_to_series[cat]
+                assert len(series) > 0, "Cannot pack an empty series."
+                index_data_type, _ = pack_series_to_proto(series, self.index_data.index_data is not None)
+                index_data_types.add(index_data_type)
+            assert len(
+                index_data_types) == 1, f"Invalid number of index data types: {len(index_data_types)}"
+            msg.index_data_type = index_data_types.pop()
 
         data_types = set()
         for cat in categories:
