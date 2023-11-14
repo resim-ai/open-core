@@ -86,7 +86,6 @@ def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_pb2.UUID:
     uuid_msg.data = str(uuid_obj)
     return uuid_msg
 
-
 def pack_series_to_proto(series: np.ndarray, indexed: bool) -> Tuple[metrics_pb2.MetricsDataType, metrics_pb2.Series]:
     data_type, series_msg = metrics_pb2.MetricsDataType.Value(
         'NO_DATA_TYPE'), metrics_pb2.Series()

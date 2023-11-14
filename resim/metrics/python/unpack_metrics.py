@@ -13,7 +13,7 @@ appropriate.
 
 import uuid
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Optional, cast
 
 import numpy as np
 from google.protobuf import timestamp_pb2
@@ -123,7 +123,7 @@ def _unpack_series(series_proto: mp.Series) -> np.ndarray:
         return np.array(series_proto.strings.series, dtype=str)
     assert data_case == "statuses"
     return np.array([MetricStatus(status)
-                         for status in series_proto.statuses.series], dtype=MetricStatus)
+                     for status in series_proto.statuses.series], dtype=MetricStatus)
 
 
 def _unpack_metrics_data(metrics_data: mp.MetricsData,
@@ -140,6 +140,7 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
 
         index = id_to_unpacked_metrics_data[_unpack_uuid(
             metrics_data.index_data_id.id)] if metrics_data.is_indexed else None
+        index = cast(Optional[GroupedMetricsData], index)
         unpacked: MetricsData = GroupedMetricsData(
             name=metrics_data.name,
             category_to_series=category_to_series,
@@ -150,6 +151,7 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
         assert metrics_data.WhichOneof("data") == "series"
         index = id_to_unpacked_metrics_data[_unpack_uuid(
             metrics_data.index_data_id.id)] if metrics_data.is_indexed else None
+        index = cast(Optional[SeriesMetricsData], index)
         unpacked = SeriesMetricsData(
             name=metrics_data.name,
             series=_unpack_series(

@@ -63,5 +63,6 @@ py_test(
         ":unpack_metrics",
         "//resim/metrics/proto:generate_test_metrics",
         "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
     ],
 )

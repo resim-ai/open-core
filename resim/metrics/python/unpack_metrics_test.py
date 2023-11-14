@@ -13,6 +13,7 @@ import unittest
 import resim.metrics.python.unpack_metrics as um
 import resim.metrics.proto.generate_test_metrics as gtm
 import resim.metrics.python.metrics_writer as mw
+import resim.metrics.proto.validate_metrics_proto as vmp
 
 
 class UnpackMetricsTest(unittest.TestCase):
@@ -36,6 +37,7 @@ class UnpackMetricsTest(unittest.TestCase):
             writer.add_metric(metric)
 
         repacked = writer.write().metrics_msg
+        vmp.validate_job_metrics(repacked)
 
         reunpacked = um.unpack_metrics(
             metrics=repacked.job_level_metrics.metrics,
