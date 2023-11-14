@@ -116,6 +116,7 @@ class FetchJobMetricsTest(unittest.TestCase):
         """
         metrics_protos, metrics_data_protos = fjm.fetch_job_metrics(
             token=_TOKEN,
+            base_url="https://api.resim.ai/v1",
             jobs=[fjm.JobInfo(
                 job_id=uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"),
                 batch_id=uuid.UUID("b6ff9ce1-a481-4793-a9ea-d607f6efe628"),
