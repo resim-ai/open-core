@@ -4,6 +4,7 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 py_library(
     name = "metrics",
     srcs = ["metrics.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
@@ -13,6 +14,7 @@ py_library(
 py_library(
     name = "metrics_writer",
     srcs = ["metrics_writer.py"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
         ":metrics",
@@ -48,6 +50,7 @@ py_test(
 py_library(
     name = "unpack_metrics",
     srcs = ["unpack_metrics.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":metrics",
         "//resim/metrics/proto:metrics_proto_py",

@@ -59,9 +59,18 @@ py_wheel(
 
 py_package(
     name = "metrics_package",
-    packages = ["resim"],
+    packages = [
+        "resim.geometry",
+        "resim.metrics",
+        "resim.transforms",
+        "resim.utils",
+    ],
     deps = [
         "//resim/metrics:dice_coefficient",
+        "//resim/metrics:fetch_job_metrics",
+        "//resim/metrics/python:metrics",
+        "//resim/metrics/python:metrics_writer",
+        "//resim/metrics/python:unpack_metrics",
         "//resim/transforms/python:quaternion.so",
         "//resim/transforms/python:se3_python.so",
         "//resim/transforms/python:so3_python.so",
