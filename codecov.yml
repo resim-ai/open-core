@@ -5,8 +5,8 @@ comment: # this is a top-level key
   require_base: no # [if yes :: must have a base report to post]
   require_head: yes # [if yes :: must have a head report to post]
 coverage:
-  range: 70...100
+  range: 95...100
   status:
     project:
       default:
-        threshold: 20%
+        target: 80%
