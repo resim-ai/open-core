@@ -8,11 +8,11 @@ from typing import List, Optional
 import numpy as np
 
 from resim.metrics.python.metrics_utils import (
-  Timestamp,
-  DoubleFailureDefinition,
-  HistogramBucket,
-  MetricStatus,
-  MetricImportance
+    Timestamp,
+    DoubleFailureDefinition,
+    HistogramBucket,
+    MetricStatus,
+    MetricImportance
 )
 from resim.metrics.python.metrics import SeriesMetricsData
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
@@ -31,8 +31,13 @@ EXAMPLE_ID_SET = [consistent_uuid() for i in range(NUM_ACTORS)]
 EXAMPLE_COUNTS = [10 * (i + 1) for i in range(NUM_ACTORS)]
 EXAMPLE_STATES_SET = ['CAR', 'TRUCK', 'BIKE',
                       'PEDESTRIAN', 'DEBRIS', 'UNKNOWN']
-EXAMPLE_DETECTIONS_SET = ['CAR_VEHICLE', 'TRUCK_VEHICLE',
-                          'BIKE_VEHICLE', 'PEDESTRIAN_VEHICLE', 'DEBRIS_VEHICLE', 'UNKNOWN']
+EXAMPLE_DETECTIONS_SET = [
+    'CAR_VEHICLE',
+    'TRUCK_VEHICLE',
+    'BIKE_VEHICLE',
+    'PEDESTRIAN_VEHICLE',
+    'DEBRIS_VEHICLE',
+    'UNKNOWN']
 EXAMPLE_FAILURE_STATES = ['UNKNOWN']
 EXAMPLE_LEGEND_SERIES_NAMES = ['Labels', 'Detections']
 EXAMPLE_STATUSES = [
@@ -53,7 +58,7 @@ EXAMPLE_STATUSES = np.array(
     [MetricStatus(rd.choice(EXAMPLE_STATUSES)) for _ in EXAMPLE_IDS])
 
 
-FIRST_VEHICLE_MASK = (EXAMPLE_IDS == EXAMPLE_ID_SET[0])
+FIRST_VEHICLE_MASK = EXAMPLE_IDS == EXAMPLE_ID_SET[0]
 FIRST_VEHICLE_IDS = EXAMPLE_IDS[FIRST_VEHICLE_MASK]
 FIRST_VEHICLE_TIMESTAMPS = EXAMPLE_TIMESTAMPS[FIRST_VEHICLE_MASK]
 FIRST_VEHICLE_LABELS = EXAMPLE_LABELS[FIRST_VEHICLE_MASK]
@@ -145,20 +150,31 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
 
         metric_values = (
-            output.metrics_msg.job_level_metrics.metrics[0].metric_values.double_over_time_metric_values)
+            output
+            .metrics_msg
+            .job_level_metrics
+            .metrics[0]
+            .metric_values
+            .double_over_time_metric_values)
 
         self.assertEqual(len(metric_values.doubles_over_time_data_id), 1)
         self.assertIn(
-            uuid.UUID(metric_values.doubles_over_time_data_id[0].id.data), output.packed_ids)
+            uuid.UUID(
+                metric_values.doubles_over_time_data_id[0].id.data),
+            output.packed_ids)
         self.assertEqual(len(metric_values.statuses_over_time_data_id), 1)
         self.assertIn(
-            uuid.UUID(metric_values.statuses_over_time_data_id[0].id.data), output.packed_ids)
+            uuid.UUID(
+                metric_values.statuses_over_time_data_id[0].id.data),
+            output.packed_ids)
 
         self.assertEqual(len(metric_values.failure_definition), 1)
         self.assertEqual(
-            metric_values.failure_definition[0].fails_above, METRIC_FAILURE_DEFINITION.fails_above)
+            metric_values.failure_definition[0].fails_above,
+            METRIC_FAILURE_DEFINITION.fails_above)
         self.assertEqual(
-            metric_values.failure_definition[0].fails_below, METRIC_FAILURE_DEFINITION.fails_below)
+            metric_values.failure_definition[0].fails_below,
+            METRIC_FAILURE_DEFINITION.fails_below)
 
         self.assertEqual(
             metric_values.start_time.nanos, METRIC_START_TIME.nanos
@@ -222,10 +238,14 @@ class TestMetricsWriter(unittest.TestCase):
 
         self.assertEqual(len(metric_values.values_data_id), 1)
         self.assertIn(
-            uuid.UUID(metric_values.values_data_id[0].id.data), output.packed_ids)
+            uuid.UUID(
+                metric_values.values_data_id[0].id.data),
+            output.packed_ids)
         self.assertEqual(len(metric_values.statuses_data_id), 1)
         self.assertIn(
-            uuid.UUID(metric_values.statuses_data_id[0].id.data), output.packed_ids)
+            uuid.UUID(
+                metric_values.statuses_data_id[0].id.data),
+            output.packed_ids)
 
         self.assertEqual(
             metric_values.y_axis_name, METRIC_Y_AXIS
@@ -281,7 +301,9 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertIn(
             uuid.UUID(metric_values.values_data_id.id.data), output.packed_ids)
         self.assertIn(
-            uuid.UUID(metric_values.statuses_data_id.id.data), output.packed_ids)
+            uuid.UUID(
+                metric_values.statuses_data_id.id.data),
+            output.packed_ids)
 
         self.assertEqual(
             metric_values.x_axis_name, METRIC_X_AXIS
@@ -343,11 +365,17 @@ class TestMetricsWriter(unittest.TestCase):
 
         for i in range(2):
             self.assertIn(
-                uuid.UUID(metric_values.x_doubles_data_id[i].id.data), output.packed_ids)
+                uuid.UUID(
+                    metric_values.x_doubles_data_id[i].id.data),
+                output.packed_ids)
             self.assertIn(
-                uuid.UUID(metric_values.y_doubles_data_id[i].id.data), output.packed_ids)
+                uuid.UUID(
+                    metric_values.y_doubles_data_id[i].id.data),
+                output.packed_ids)
             self.assertIn(
-                uuid.UUID(metric_values.statuses_data_id[i].id.data), output.packed_ids)
+                uuid.UUID(
+                    metric_values.statuses_data_id[i].id.data),
+                output.packed_ids)
             self.assertEqual(
                 metric_values.legend_series_names[i], legend_series_names[i])
 
@@ -374,43 +402,49 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 1)
 
-        metric_values = output.metrics_msg.job_level_metrics.metrics[0].metric_values.double_metric_values
+        metric_values = output.metrics_msg.job_level_metrics.metrics[
+            0].metric_values.double_metric_values
 
         self.assertEqual(metric_values.series_index, METRIC_INDEX)
 
-        self.assertFalse(metric_values.failure_definition.HasField('fails_above'))
-        self.assertFalse(metric_values.failure_definition.HasField('fails_below'))
+        self.assertFalse(
+            metric_values.failure_definition.HasField('fails_above'))
+        self.assertFalse(
+            metric_values.failure_definition.HasField('fails_below'))
 
-        self.assertEqual(len(output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
+        self.assertEqual(len(
+            output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
 
         for i, x in enumerate(EXAMPLE_FLOATS):
-            self.assertEqual(output.metrics_msg.metrics_data[0].series.doubles.series[i], x)
+            self.assertEqual(
+                output.metrics_msg.metrics_data[0].series.doubles.series[i], x)
 
     def test_states_over_time_metric(self) -> None:
         METRIC_NAME = 'States over time metric'
         METRIC_DESCRIPTION = 'Plot of labels vs detections, grouped by UUID'
-        METRIC_LEGEND_SERIES_NAMES: List[Optional[str]] = ['Labels', 'Detections']
+        METRIC_LEGEND_SERIES_NAMES: List[Optional[str]] = [
+            'Labels', 'Detections']
         METRIC_BLOCKING = True
         METRIC_SHOULD_DISPLAY = True
         METRIC_STATUS = MetricStatus.NOT_APPLICABLE_METRIC_STATUS
 
         timestamp_data = (SeriesMetricsData('Timestamps')
-                        .with_series(EXAMPLE_TIMESTAMPS)
-                        .with_unit('seconds'))
+                          .with_series(EXAMPLE_TIMESTAMPS)
+                          .with_unit('seconds'))
         id_data = (SeriesMetricsData('Actor IDs')
-                .with_series([str(i) for i in EXAMPLE_IDS])
-                .with_unit('UUID')
-                .with_index_data(timestamp_data))
+                   .with_series([str(i) for i in EXAMPLE_IDS])
+                   .with_unit('UUID')
+                   .with_index_data(timestamp_data))
         labels = (self.writer.
-                add_series_metrics_data('Labels')
-                .with_series(EXAMPLE_LABELS)
-                .with_unit('Category')
-                .with_index_data(timestamp_data))
+                  add_series_metrics_data('Labels')
+                  .with_series(EXAMPLE_LABELS)
+                  .with_unit('Category')
+                  .with_index_data(timestamp_data))
         detections = (self.writer
-                    .add_series_metrics_data('Detections')
-                    .with_series(EXAMPLE_DETECTIONS)
-                    .with_unit('Category')
-                    .with_index_data(timestamp_data))
+                      .add_series_metrics_data('Detections')
+                      .with_series(EXAMPLE_DETECTIONS)
+                      .with_unit('Category')
+                      .with_index_data(timestamp_data))
         remapped_detections = self.writer.add_metrics_data(detections.map(
             lambda series, index: series[index] if not series[index].endswith(
                 '_VEHICLE') else series[index][:-len('_VEHICLE')],
@@ -420,7 +454,8 @@ class TestMetricsWriter(unittest.TestCase):
 
         # Example for a grouped metric, handling data fairly manually
         grouped_labels = self.writer.add_metrics_data(labels.group_by(id_data))
-        grouped_detections = self.writer.add_metrics_data(remapped_detections.group_by(id_data))
+        grouped_detections = self.writer.add_metrics_data(
+            remapped_detections.group_by(id_data))
 
         (
             self.writer
@@ -451,7 +486,8 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(base_metric.status, METRIC_STATUS.value)
         self.assertEqual(base_metric.order, 0.0)
 
-        self.assertEqual(set(metric_values.states_set), set(EXAMPLE_STATES_SET))
+        self.assertEqual(set(metric_values.states_set),
+                         set(EXAMPLE_STATES_SET))
         self.assertEqual(len(metric_values.failure_states), 0)
 
         self.assertIn(grouped_labels.id, output.packed_ids)
@@ -461,44 +497,54 @@ class TestMetricsWriter(unittest.TestCase):
                 self.assertEqual(
                     set(data.series_per_category.category_to_series.keys()),
                     set(grouped_labels.category_to_series.keys()))
-                
+
     def test_two_metrics(self) -> None:
-        METRIC_NAMES = ["Double summary metric one", "Double summary metric two"]
+        METRIC_NAMES = [
+            "Double summary metric one",
+            "Double summary metric two"]
         METRIC_INDICES = [23, 25]
         doubles_data = SeriesMetricsData(
             "Doubles", EXAMPLE_FLOATS, "Double unit", None
         )
 
-        for i in range(len(METRIC_NAMES)):
+        for name, index in zip(METRIC_NAMES, METRIC_INDICES):
             (
                 self.writer
-                .add_double_summary_metric(METRIC_NAMES[i])
+                .add_double_summary_metric(name)
                 .with_value_data(doubles_data)
-                .with_index(METRIC_INDICES[i])
+                .with_index(index)
             )
 
         output = self.writer.write()
 
         self.assertEqual(len(output.packed_ids), len(METRIC_NAMES) + 1)
-        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), len(METRIC_NAMES))
+        self.assertEqual(
+            len(output.metrics_msg.job_level_metrics.metrics), len(METRIC_NAMES))
         self.assertEqual(len(output.metrics_msg.metrics_data), 1)
 
         metrics_data_id = output.metrics_msg.metrics_data[0].metrics_data_id.id.data
 
         for i in range(len(METRIC_NAMES)):
-            metric_values = output.metrics_msg.job_level_metrics.metrics[i].metric_values.double_metric_values
+            metric_values = output.metrics_msg.job_level_metrics.metrics[
+                i].metric_values.double_metric_values
 
             self.assertEqual(metric_values.series_index, METRIC_INDICES[i])
 
-            self.assertFalse(metric_values.failure_definition.HasField('fails_above'))
-            self.assertFalse(metric_values.failure_definition.HasField('fails_below'))
+            self.assertFalse(
+                metric_values.failure_definition.HasField('fails_above'))
+            self.assertFalse(
+                metric_values.failure_definition.HasField('fails_below'))
 
-            self.assertEqual(metric_values.value_data_id.id.data, metrics_data_id)
+            self.assertEqual(
+                metric_values.value_data_id.id.data,
+                metrics_data_id)
 
-            self.assertEqual(output.metrics_msg.job_level_metrics.metrics[i].order, float(i))
+            self.assertEqual(
+                output.metrics_msg.job_level_metrics.metrics[i].order,
+                float(i))
 
-        self.assertEqual(len(output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
-
+        self.assertEqual(len(
+            output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
 
     def tearDown(self) -> None:
         pass
