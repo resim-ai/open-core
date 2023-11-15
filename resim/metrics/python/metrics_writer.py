@@ -7,9 +7,20 @@ from typing import Dict, Set
 from resim.metrics.proto.metrics_pb2 import MetricStatus
 from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 from resim.metrics.python.metrics import (
-  ScalarMetric, BarChartMetric, LinePlotMetric, DoubleSummaryMetric, 
-  DoubleOverTimeMetric, HistogramMetric, StatesOverTimeMetric, GroupedMetricsData, 
-  SeriesMetricsData, Metric, MetricsData, MetricsDataT, MetricT)
+    ScalarMetric,
+    BarChartMetric,
+    LinePlotMetric,
+    DoubleSummaryMetric,
+    DoubleOverTimeMetric,
+    HistogramMetric,
+    StatesOverTimeMetric,
+    GroupedMetricsData,
+    SeriesMetricsData,
+    Metric,
+    MetricsData,
+    MetricsDataT,
+    MetricT)
+
 
 @dataclass(init=False, repr=True, kw_only=True)
 class ResimMetricsWriter:
@@ -96,12 +107,12 @@ class ResimMetricsWriter:
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        failed = any([metric.status == MetricStatus.Value("FAILED_METRIC_STATUS")
-                      for metric in output.metrics_msg.job_level_metrics.metrics])
+        failed = any(metric.status == MetricStatus.Value("FAILED_METRIC_STATUS")
+                      for metric in output.metrics_msg.job_level_metrics.metrics)
         metrics_status = (
             MetricStatus.Value("FAILED_METRIC_STATUS")
-                if failed
-                else MetricStatus.Value("PASSED_METRIC_STATUS"))
+            if failed
+            else MetricStatus.Value("PASSED_METRIC_STATUS"))
         output.metrics_msg.metrics_status = metrics_status
         output.metrics_msg.job_level_metrics.metrics_status = metrics_status
         return output
