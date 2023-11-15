@@ -10,7 +10,15 @@ import numpy as np
 
 # trunk-ignore(mypy/attr-defined)
 from resim.metrics.proto import metrics_pb2
-from resim.metrics.python.metrics_utils import ResimMetricsOutput, Timestamp, DoubleFailureDefinition, HistogramBucket, pack_uuid_to_proto, pack_series_to_proto, MetricImportance, MetricStatus
+from resim.metrics.python.metrics_utils import (
+    ResimMetricsOutput,
+    Timestamp,
+    DoubleFailureDefinition,
+    HistogramBucket,
+    pack_uuid_to_proto,
+    pack_series_to_proto,
+    MetricImportance,
+    MetricStatus)
 
 
 # ---------------------
@@ -60,7 +68,8 @@ class Metric(ABC, Generic[MetricT]):
         if not isinstance(__value, type(self)):
             return False
 
-        assert self.id is not None and __value.id is not None, "Cannot compare values without valid ids"
+        assert (self.id is not None and
+                __value.id is not None), "Cannot compare values without valid ids"
 
         return self.id == __value.id
 
@@ -72,7 +81,9 @@ class Metric(ABC, Generic[MetricT]):
         self.status = status
         return self
 
-    def with_importance(self: MetricT, importance: MetricImportance) -> MetricT:
+    def with_importance(
+            self: MetricT,
+            importance: MetricImportance) -> MetricT:
         self.importance = importance
         return self
 
@@ -118,7 +129,8 @@ class Metric(ABC, Generic[MetricT]):
     def unpack_common_fields(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
         if msg.type == metrics_pb2.MetricType.Value('NO_METRIC_TYPE'):
             raise ValueError('Cannot unpack with no metric type')
-        elif msg.type == metrics_pb2.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'):
+        if msg.type == metrics_pb2.MetricType.Value(
+                'DOUBLE_SUMMARY_METRIC_TYPE'):
             unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
         elif msg.type == metrics_pb2.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE'):
             unpacked = DoubleOverTimeMetric(name=msg.name)
@@ -162,7 +174,9 @@ class Metric(ABC, Generic[MetricT]):
         return unpacked
 
     @abstractmethod
-    def recursively_pack_into(self, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self,
+            metrics_output: ResimMetricsOutput) -> None:
         ...
 
 
@@ -184,9 +198,15 @@ class ScalarMetric(Metric['ScalarMetric']):
                  value: Optional[float] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
-        super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display,
-                         parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
         self.value = value
         self.failure_definition = failure_definition
         self.unit = unit
@@ -199,7 +219,9 @@ class ScalarMetric(Metric['ScalarMetric']):
         self.unit = unit
         return self
 
-    def with_failure_definition(self: ScalarMetric, failure_definition: DoubleFailureDefinition) -> ScalarMetric:
+    def with_failure_definition(
+            self: ScalarMetric,
+            failure_definition: DoubleFailureDefinition) -> ScalarMetric:
         self.failure_definition = failure_definition
         return self
 
@@ -220,7 +242,8 @@ class ScalarMetric(Metric['ScalarMetric']):
 
         return msg
 
-    def recursively_pack_into(self: ScalarMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(self: ScalarMetric,
+                              metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -258,9 +281,15 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  end_time: Optional[Timestamp] = None,
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
-        super().__init__(name=name, description=description, status=status,
-                        importance=importance, blocking=blocking, should_display=should_display,
-                        parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
         if doubles_over_time_data is None:
             self.doubles_over_time_data = []
         else:
@@ -285,40 +314,56 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
         else:
             self.legend_series_names = legend_series_names
 
-    def with_doubles_over_time_data(self: DoubleOverTimeMetric, doubles_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
+    def with_doubles_over_time_data(
+            self: DoubleOverTimeMetric,
+            doubles_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
         self.doubles_over_time_data = doubles_over_time_data
         return self
 
-    def with_statuses_over_time_data(self: DoubleOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
+    def with_statuses_over_time_data(
+            self: DoubleOverTimeMetric,
+            statuses_over_time_data: List[MetricsData]) -> DoubleOverTimeMetric:
         self.statuses_over_time_data = statuses_over_time_data
         return self
 
-    def append_doubles_over_time_data(self: DoubleOverTimeMetric, double_over_time_data_element: MetricsData, legend_series_name: Optional[str] = None) -> DoubleOverTimeMetric:
+    def append_doubles_over_time_data(
+            self: DoubleOverTimeMetric,
+            double_over_time_data_element: MetricsData,
+            legend_series_name: Optional[str] = None) -> DoubleOverTimeMetric:
         self.doubles_over_time_data.append(double_over_time_data_element)
         self.legend_series_names.append(legend_series_name)
         return self
 
-    def append_statuses_over_time_data(self: DoubleOverTimeMetric, statuses_over_time_data_element: MetricsData) -> DoubleOverTimeMetric:
+    def append_statuses_over_time_data(
+            self: DoubleOverTimeMetric,
+            statuses_over_time_data_element: MetricsData) -> DoubleOverTimeMetric:
         self.statuses_over_time_data.append(statuses_over_time_data_element)
         return self
 
-    def with_failure_definitions(self: DoubleOverTimeMetric, failure_definitions: List[DoubleFailureDefinition]) -> DoubleOverTimeMetric:
+    def with_failure_definitions(
+            self: DoubleOverTimeMetric,
+            failure_definitions: List[DoubleFailureDefinition]) -> DoubleOverTimeMetric:
         self.failure_definitions = failure_definitions
         return self
 
-    def with_start_time(self: DoubleOverTimeMetric, start_time: Timestamp) -> DoubleOverTimeMetric:
+    def with_start_time(self: DoubleOverTimeMetric,
+                        start_time: Timestamp) -> DoubleOverTimeMetric:
         self.start_time = start_time
         return self
 
-    def with_end_time(self: DoubleOverTimeMetric, end_time: Timestamp) -> DoubleOverTimeMetric:
+    def with_end_time(self: DoubleOverTimeMetric,
+                      end_time: Timestamp) -> DoubleOverTimeMetric:
         self.end_time = end_time
         return self
 
-    def with_y_axis_name(self: DoubleOverTimeMetric, y_axis_name: str) -> DoubleOverTimeMetric:
+    def with_y_axis_name(
+            self: DoubleOverTimeMetric,
+            y_axis_name: str) -> DoubleOverTimeMetric:
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: DoubleOverTimeMetric, legend_series_names: List[Optional[str]]) -> DoubleOverTimeMetric:
+    def with_legend_series_names(self: DoubleOverTimeMetric,
+                                 legend_series_names: List[Optional[str]]) -> DoubleOverTimeMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -359,7 +404,9 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
 
         return msg
 
-    def recursively_pack_into(self: DoubleOverTimeMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: DoubleOverTimeMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -398,11 +445,23 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  states_set: Optional[Set[str]] = None,
                  failure_states: Optional[Set[str]] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
-        super().__init__(name=name, description=description, status=status,
-                         importance=importance, blocking=blocking, should_display=should_display, parent_job_id=parent_job_id)
-        super().__init__(name=name, description=description, status=status,
-                importance=importance, blocking=blocking, should_display=should_display,
-                parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
         if states_over_time_data is None:
             self.states_over_time_data = []
         else:
@@ -421,20 +480,25 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
         else:
             self.legend_series_names = legend_series_names
 
-    def with_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
+    def with_statuses_over_time_data(
+            self: StatesOverTimeMetric,
+            statuses_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.statuses_over_time_data = statuses_over_time_data
         return self
 
-    def with_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
+    def with_states_over_time_data(
+            self: StatesOverTimeMetric,
+            states_over_time_data: List[MetricsData]) -> StatesOverTimeMetric:
         self.states_over_time_data = states_over_time_data
         return self
 
-    def with_states_over_time_series(self: StatesOverTimeMetric,
-                                     states_over_time_series: Dict[str, np.ndarray],
-                                     units: Optional[Dict[str, str]] = None,
-                                     indices: Optional[Dict[str,
-                                                            np.ndarray]] = None,
-                                     legend_series_names: Optional[Dict[str, str]] = None) -> StatesOverTimeMetric:
+    def with_states_over_time_series(
+            self: StatesOverTimeMetric,
+            states_over_time_series: Dict[str, np.ndarray],
+            units: Optional[Dict[str, str]] = None,
+            indices: Optional[Dict[str,
+                                   np.ndarray]] = None,
+            legend_series_names: Optional[Dict[str, str]] = None) -> StatesOverTimeMetric:
         for name, series in states_over_time_series.items():
             unit, index_data = None, None
             if indices is not None and name in indices:
@@ -455,24 +519,32 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
 
         return self
 
-    def append_states_over_time_data(self: StatesOverTimeMetric, states_over_time_data_element: MetricsData, legend_series_name: Optional[str] = None) -> StatesOverTimeMetric:
+    def append_states_over_time_data(
+            self: StatesOverTimeMetric,
+            states_over_time_data_element: MetricsData,
+            legend_series_name: Optional[str] = None) -> StatesOverTimeMetric:
         self.states_over_time_data.append(states_over_time_data_element)
         self.legend_series_names.append(legend_series_name)
         return self
 
-    def append_statuses_over_time_data(self: StatesOverTimeMetric, statuses_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
+    def append_statuses_over_time_data(
+            self: StatesOverTimeMetric,
+            statuses_over_time_data_element: MetricsData) -> StatesOverTimeMetric:
         self.statuses_over_time_data.append(statuses_over_time_data_element)
         return self
 
-    def with_states_set(self: StatesOverTimeMetric, states_set: Set[str]) -> StatesOverTimeMetric:
+    def with_states_set(self: StatesOverTimeMetric,
+                        states_set: Set[str]) -> StatesOverTimeMetric:
         self.states_set = states_set
         return self
 
-    def with_failure_states(self: StatesOverTimeMetric, failure_states: Set[str]) -> StatesOverTimeMetric:
+    def with_failure_states(self: StatesOverTimeMetric,
+                            failure_states: Set[str]) -> StatesOverTimeMetric:
         self.failure_states = failure_states
         return self
 
-    def with_legend_series_names(self: StatesOverTimeMetric, legend_series_names: List[Optional[str]]) -> StatesOverTimeMetric:
+    def with_legend_series_names(self: StatesOverTimeMetric,
+                                 legend_series_names: List[Optional[str]]) -> StatesOverTimeMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -507,7 +579,9 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
 
         return msg
 
-    def recursively_pack_into(self: StatesOverTimeMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: StatesOverTimeMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -548,9 +622,15 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  x_axis_name: Optional[str] = None,
                  y_axis_name: Optional[str] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None):
-        super().__init__(name=name, description=description, status=status,
-                        importance=importance, blocking=blocking, should_display=should_display,
-                        parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
         if x_doubles_data is None:
             self.x_doubles_data = []
         else:
@@ -574,26 +654,36 @@ class LinePlotMetric(Metric['LinePlotMetric']):
         else:
             self.legend_series_names = legend_series_names
 
-    def append_series_data(self: LinePlotMetric, x_doubles_data: MetricsData, y_doubles_data: MetricsData, legend_series_name: Optional[str] = None) -> LinePlotMetric:
+    def append_series_data(
+            self: LinePlotMetric,
+            x_doubles_data: MetricsData,
+            y_doubles_data: MetricsData,
+            legend_series_name: Optional[str] = None) -> LinePlotMetric:
         self.x_doubles_data.append(x_doubles_data)
         self.y_doubles_data.append(y_doubles_data)
         self.legend_series_names.append(legend_series_name)
 
         return self
 
-    def append_statuses_data(self: LinePlotMetric, statuses_data: MetricsData) -> LinePlotMetric:
+    def append_statuses_data(self: LinePlotMetric,
+                             statuses_data: MetricsData) -> LinePlotMetric:
         self.statuses_data.append(statuses_data)
         return self
 
-    def with_x_axis_name(self: LinePlotMetric, x_axis_name: str) -> LinePlotMetric:
+    def with_x_axis_name(
+            self: LinePlotMetric,
+            x_axis_name: str) -> LinePlotMetric:
         self.x_axis_name = x_axis_name
         return self
 
-    def with_y_axis_name(self: LinePlotMetric, y_axis_name: str) -> LinePlotMetric:
+    def with_y_axis_name(
+            self: LinePlotMetric,
+            y_axis_name: str) -> LinePlotMetric:
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: LinePlotMetric, legend_series_names: List[Optional[str]]) -> LinePlotMetric:
+    def with_legend_series_names(
+            self: LinePlotMetric, legend_series_names: List[Optional[str]]) -> LinePlotMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -633,7 +723,9 @@ class LinePlotMetric(Metric['LinePlotMetric']):
 
         return msg
 
-    def recursively_pack_into(self: LinePlotMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: LinePlotMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -676,9 +768,15 @@ class BarChartMetric(Metric['BarChartMetric']):
                  y_axis_name: Optional[str] = None,
                  stack_bars: Optional[bool] = None
                  ):
-        super().__init__(name=name, description=description, status=status,
-                        importance=importance, blocking=blocking, should_display=should_display,
-                        parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
 
         if values_data is None:
             self.values_data = []
@@ -699,24 +797,34 @@ class BarChartMetric(Metric['BarChartMetric']):
         self.y_axis_name = y_axis_name
         self.stack_bars = stack_bars
 
-    def append_values_data(self: BarChartMetric, values_data_element: MetricsData, legend_series_name: Optional[str] = None) -> BarChartMetric:
+    def append_values_data(
+            self: BarChartMetric,
+            values_data_element: MetricsData,
+            legend_series_name: Optional[str] = None) -> BarChartMetric:
         self.values_data.append(values_data_element)
         self.legend_series_names.append(legend_series_name)
         return self
 
-    def append_statuses_data(self: BarChartMetric, statuses_data_element: MetricsData) -> BarChartMetric:
+    def append_statuses_data(
+            self: BarChartMetric,
+            statuses_data_element: MetricsData) -> BarChartMetric:
         self.statuses_data.append(statuses_data_element)
         return self
 
-    def with_x_axis_name(self: BarChartMetric, x_axis_name: str) -> BarChartMetric:
+    def with_x_axis_name(
+            self: BarChartMetric,
+            x_axis_name: str) -> BarChartMetric:
         self.x_axis_name = x_axis_name
         return self
 
-    def with_y_axis_name(self: BarChartMetric, y_axis_name: str) -> BarChartMetric:
+    def with_y_axis_name(
+            self: BarChartMetric,
+            y_axis_name: str) -> BarChartMetric:
         self.y_axis_name = y_axis_name
         return self
 
-    def with_legend_series_names(self: BarChartMetric, legend_series_names: List[Optional[str]]) -> BarChartMetric:
+    def with_legend_series_names(
+            self: BarChartMetric, legend_series_names: List[Optional[str]]) -> BarChartMetric:
         self.legend_series_names = legend_series_names
         return self
 
@@ -758,7 +866,9 @@ class BarChartMetric(Metric['BarChartMetric']):
 
         return msg
 
-    def recursively_pack_into(self: BarChartMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: BarChartMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -797,9 +907,15 @@ class HistogramMetric(Metric['HistogramMetric']):
                  upper_bound: Optional[float] = None,
                  x_axis_name: Optional[str] = None
                  ):
-        super().__init__(name=name, description=description, status=status,
-                        importance=importance, blocking=blocking, should_display=should_display,
-                        parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
 
         self.values_data = values_data
         self.statuses_data = statuses_data
@@ -808,27 +924,37 @@ class HistogramMetric(Metric['HistogramMetric']):
         self.upper_bound = upper_bound
         self.x_axis_name = x_axis_name
 
-    def with_values_data(self: HistogramMetric, values_data: MetricsData) -> HistogramMetric:
+    def with_values_data(self: HistogramMetric,
+                         values_data: MetricsData) -> HistogramMetric:
         self.values_data = values_data
         return self
 
-    def with_statuses_data(self: HistogramMetric, statuses_data: MetricsData) -> HistogramMetric:
+    def with_statuses_data(self: HistogramMetric,
+                           statuses_data: MetricsData) -> HistogramMetric:
         self.statuses_data = statuses_data
         return self
 
-    def with_buckets(self: HistogramMetric, buckets: List[HistogramBucket]) -> HistogramMetric:
+    def with_buckets(
+            self: HistogramMetric,
+            buckets: List[HistogramBucket]) -> HistogramMetric:
         self.buckets = buckets
         return self
 
-    def with_lower_bound(self: HistogramMetric, lower_bound: float) -> HistogramMetric:
+    def with_lower_bound(
+            self: HistogramMetric,
+            lower_bound: float) -> HistogramMetric:
         self.lower_bound = lower_bound
         return self
 
-    def with_upper_bound(self: HistogramMetric, upper_bound: float) -> HistogramMetric:
+    def with_upper_bound(
+            self: HistogramMetric,
+            upper_bound: float) -> HistogramMetric:
         self.upper_bound = upper_bound
         return self
 
-    def with_x_axis_name(self: HistogramMetric, x_axis_name: str) -> HistogramMetric:
+    def with_x_axis_name(
+            self: HistogramMetric,
+            x_axis_name: str) -> HistogramMetric:
         self.x_axis_name = x_axis_name
         return self
 
@@ -860,7 +986,9 @@ class HistogramMetric(Metric['HistogramMetric']):
 
         return msg
 
-    def recursively_pack_into(self: HistogramMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: HistogramMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -899,28 +1027,39 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
                  index: Optional[IndexType] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  ):
-        super().__init__(name=name, description=description, status=status,
-                        importance=importance, blocking=blocking, should_display=should_display,
-                        parent_job_id=parent_job_id, order=order)
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
 
         self.value_data = value_data
         self.status_data = status_data
         self.index = index
         self.failure_definition = failure_definition
 
-    def with_value_data(self: DoubleSummaryMetric, value_data: MetricsData) -> DoubleSummaryMetric:
+    def with_value_data(self: DoubleSummaryMetric,
+                        value_data: MetricsData) -> DoubleSummaryMetric:
         self.value_data = value_data
         return self
 
-    def with_status_data(self: DoubleSummaryMetric, status_data: MetricsData) -> DoubleSummaryMetric:
+    def with_status_data(self: DoubleSummaryMetric,
+                         status_data: MetricsData) -> DoubleSummaryMetric:
         self.status_data = status_data
         return self
 
-    def with_index(self: DoubleSummaryMetric, index: IndexType) -> DoubleSummaryMetric:
+    def with_index(self: DoubleSummaryMetric,
+                   index: IndexType) -> DoubleSummaryMetric:
         self.index = index
         return self
 
-    def with_failure_definition(self: DoubleSummaryMetric, failure_definition: DoubleFailureDefinition) -> DoubleSummaryMetric:
+    def with_failure_definition(
+            self: DoubleSummaryMetric,
+            failure_definition: DoubleFailureDefinition) -> DoubleSummaryMetric:
         self.failure_definition = failure_definition
         return self
 
@@ -959,7 +1098,9 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
 
         return msg
 
-    def recursively_pack_into(self: DoubleSummaryMetric, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: DoubleSummaryMetric,
+            metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -988,7 +1129,6 @@ class MetricsData(ABC, Generic[MetricsDataT]):
     unit: Optional[str]
     index_data: Optional[MetricsDataT]
 
-
     @abstractmethod
     def __init__(self: MetricsDataT,
                  name: str,
@@ -1004,7 +1144,8 @@ class MetricsData(ABC, Generic[MetricsDataT]):
         if not isinstance(__value, type(self)):
             return False
 
-        assert self.id is not None and __value.id is not None, "Cannot compare values without valid ids"
+        assert (self.id is not None and
+                __value.id is not None), "Cannot compare values without valid ids"
 
         return self.id == __value.id
 
@@ -1012,7 +1153,9 @@ class MetricsData(ABC, Generic[MetricsDataT]):
         self.unit = unit
         return self
 
-    def with_index_data(self: MetricsDataT, index_data: MetricsDataT) -> MetricsDataT:
+    def with_index_data(
+            self: MetricsDataT,
+            index_data: MetricsDataT) -> MetricsDataT:
         self.index_data = index_data
         return self
 
@@ -1024,20 +1167,21 @@ class MetricsData(ABC, Generic[MetricsDataT]):
         raise NotImplementedError()
 
     @abstractmethod
-    def group_by(self: MetricsDataT,
-                 grouping_series: MetricsDataT,
-                 grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None,
-                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
+    def group_by(
+            self: MetricsDataT,
+            grouping_series: MetricsDataT,
+            grouped_data_name: Optional[str] = None,
+            grouped_index_name: Optional[str] = None,
+            override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         raise NotImplementedError()
-
 
     @abstractmethod
     def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
         ...
 
     @abstractmethod
-    def recursively_pack_into(self: MetricsDataT, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(self: MetricsDataT,
+                              metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
@@ -1062,7 +1206,8 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         super().__init__(name=name, unit=unit, index_data=index_data)
         self.series = series
 
-    def with_series(self: SeriesMetricsData, series: np.ndarray) -> SeriesMetricsData:
+    def with_series(self: SeriesMetricsData,
+                    series: np.ndarray) -> SeriesMetricsData:
         self.series = series
         return self
 
@@ -1082,11 +1227,12 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
             index_data=self.index_data
         )
 
-    def group_by(self: SeriesMetricsData,
-                 grouping_series: SeriesMetricsData,
-                 grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None,
-                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
+    def group_by(
+            self: SeriesMetricsData,
+            grouping_series: SeriesMetricsData,
+            grouped_data_name: Optional[str] = None,
+            grouped_index_name: Optional[str] = None,
+            override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         assert self.series is not None
 
         assert grouping_series.series is not None
@@ -1159,7 +1305,8 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         if self.index_data is not None:
             msg.index_data_id.id.CopyFrom(
                 pack_uuid_to_proto(self.index_data.id))
-            msg.index_data_type, _ = pack_series_to_proto(self.index_data.series, self.index_data.index_data is not None)
+            msg.index_data_type, _ = pack_series_to_proto(
+                self.index_data.series, self.index_data.index_data is not None)
 
         assert len(self.series) > 0, "Cannot pack an empty series."
 
@@ -1171,7 +1318,9 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
 
         return msg
 
-    def recursively_pack_into(self: SeriesMetricsData, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: SeriesMetricsData,
+            metrics_output: ResimMetricsOutput) -> None:
         super().recursively_pack_into(metrics_output)
 
 
@@ -1207,20 +1356,23 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
             unit=applied_unit,
             index_data=self.index_data
         )
-    
-    def group_by(self: GroupedMetricsData,
-                 grouping_series: GroupedMetricsData,
-                 grouped_data_name: Optional[str] = None,
-                 grouped_index_name: Optional[str] = None,
-                 override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
+
+    def group_by(
+            self: GroupedMetricsData,
+            grouping_series: GroupedMetricsData,
+            grouped_data_name: Optional[str] = None,
+            grouped_index_name: Optional[str] = None,
+            override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
         raise NotImplementedError('Cannot group pre-grouped data')
 
     def with_category_to_series(self: GroupedMetricsData,
-                                category_to_series: Dict[str, np.ndarray]) -> GroupedMetricsData:
+                                category_to_series: Dict[str,
+                                                         np.ndarray]) -> GroupedMetricsData:
         self.category_to_series = category_to_series
         return self
 
-    def add_category(self: GroupedMetricsData, category: str, series: np.ndarray) -> GroupedMetricsData:
+    def add_category(self: GroupedMetricsData, category: str,
+                     series: np.ndarray) -> GroupedMetricsData:
         self.category_to_series[category] = series
         return self
 
@@ -1247,10 +1399,11 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
             for cat in categories:
                 series = self.index_data.category_to_series[cat]
                 assert len(series) > 0, "Cannot pack an empty series."
-                index_data_type, _ = pack_series_to_proto(series, self.index_data.index_data is not None)
+                index_data_type, _ = pack_series_to_proto(
+                    series, self.index_data.index_data is not None)
                 index_data_types.add(index_data_type)
-            assert len(
-                index_data_types) == 1, f"Invalid number of index data types: {len(index_data_types)}"
+            err_str = f"Invalid number of index data types: {len(index_data_types)}"
+            assert len(index_data_types) == 1, err_str
             msg.index_data_type = index_data_types.pop()
 
         data_types = set()
@@ -1271,5 +1424,7 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
 
         return msg
 
-    def recursively_pack_into(self: GroupedMetricsData, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(
+            self: GroupedMetricsData,
+            metrics_output: ResimMetricsOutput) -> None:
         super().recursively_pack_into(metrics_output)

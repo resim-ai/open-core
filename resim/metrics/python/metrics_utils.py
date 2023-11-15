@@ -16,21 +16,22 @@ from resim.utils.proto import uuid_pb2
 
 
 class MetricStatus(Enum):
-    NO_METRIC_STATUS             = 0
-    PASSED_METRIC_STATUS         = 1
-    FAILED_METRIC_STATUS         = 2
+    NO_METRIC_STATUS = 0
+    PASSED_METRIC_STATUS = 1
+    FAILED_METRIC_STATUS = 2
     NOT_APPLICABLE_METRIC_STATUS = 3
-    RAW_METRIC_STATUS            = 4
+    RAW_METRIC_STATUS = 4
+
 
 class MetricImportance(Enum):
     NO_SPECIFIED_IMPORTANCE = 0
-    ZERO_IMPORTANCE         = 1
-    LOW_IMPORTANCE          = 2
-    MEDIUM_IMPORTANCE       = 3
-    HIGH_IMPORTANCE         = 4
-    CRITICAL_IMPORTANCE     = 5
+    ZERO_IMPORTANCE = 1
+    LOW_IMPORTANCE = 2
+    MEDIUM_IMPORTANCE = 3
+    HIGH_IMPORTANCE = 4
+    CRITICAL_IMPORTANCE = 5
 
-    
+
 @dataclass(init=False, repr=True)
 class ResimMetricsOutput:
     metrics_msg: metrics_pb2.JobMetrics
@@ -87,7 +88,9 @@ def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_pb2.UUID:
     return uuid_msg
 
 
-def pack_series_to_proto(series: np.ndarray, indexed: bool) -> Tuple[metrics_pb2.MetricsDataType, metrics_pb2.Series]:
+def pack_series_to_proto(series: np.ndarray,
+                         indexed: bool) -> Tuple[metrics_pb2.MetricsDataType,
+                                                 metrics_pb2.Series]:
     data_type, series_msg = metrics_pb2.MetricsDataType.Value(
         'NO_DATA_TYPE'), metrics_pb2.Series()
 
