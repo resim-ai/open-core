@@ -34,9 +34,9 @@ def fetch_job_metrics(*,
                       token: str,
                       base_url: str,
                       jobs: list[JobInfo]) -> tuple[dict[uuid.UUID,
-                                                         mp.Metric],
+                                                         list[mp.Metric]],
                                                     dict[uuid.UUID,
-                                                         mp.MetricsData]]:
+                                                         list[mp.MetricsData]]]:
     """
     This function fetches all job metrics from job_ids whose batch ids are in batch_ids.
     """
@@ -122,11 +122,11 @@ def _fetch_all_protos(*,
     """
     threads = []
 
-    metrics_protos: collections.defaultdict[uuid.UUID, mp.Metric] = (
+    metrics_protos: collections.defaultdict[uuid.UUID, list[mp.Metric]] = (
         collections.defaultdict(lambda: []))
     metrics_protos_lock = threading.Lock()
 
-    metrics_data_protos: collections.defaultdict[uuid.UUID, mp.MetricsData] = (
+    metrics_data_protos: collections.defaultdict[uuid.UUID, list[mp.MetricsData]] = (
         collections.defaultdict(lambda: []))
     metrics_data_protos_lock = threading.Lock()
 
