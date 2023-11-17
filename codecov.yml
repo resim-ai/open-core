@@ -6,3 +6,11 @@ comment: # this is a top-level key
   require_head: yes # [if yes :: must have a head report to post]
 coverage:
   range: 80...100
+  status:
+    project:
+      default:
+        target: 50%
+        threshold: 5%
+
+ignore:
+  - "resim/metrics/python"
