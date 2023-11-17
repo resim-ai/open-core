@@ -1,0 +1,41 @@
+diff --git a/toolchain/cc_toolchain_config.bzl b/toolchain/cc_toolchain_config.bzl
+index b2aa92a..3b9740d 100644
+--- a/toolchain/cc_toolchain_config.bzl
++++ b/toolchain/cc_toolchain_config.bzl
+@@ -41,6 +41,7 @@ def cc_toolchain_config(
+         wrapper_bin_prefix,
+         compiler_configuration,
+         llvm_version,
++        use_absolute_paths_llvm,
+         host_tools_info = {}):
+     host_os_arch_key = _os_arch_pair(host_os, host_arch)
+     target_os_arch_key = _os_arch_pair(target_os, target_arch)
+@@ -304,7 +305,7 @@ def cc_toolchain_config(
+         "ar": tools_path_prefix + "llvm-ar",
+         "cpp": tools_path_prefix + "clang-cpp",
+         "dwp": tools_path_prefix + "llvm-dwp",
+-        "gcc": wrapper_bin_prefix + "cc_wrapper.sh",
++        "gcc": tools_path_prefix + "clang" if use_absolute_paths_llvm else wrapper_bin_prefix + "cc_wrapper.sh",
+         "gcov": tools_path_prefix + "llvm-profdata",
+         "ld": tools_path_prefix + "ld.lld" if use_lld else _host_tools.get_and_assert(host_tools_info, "ld"),
+         "llvm-cov": tools_path_prefix + "llvm-cov",
+diff --git a/toolchain/internal/configure.bzl b/toolchain/internal/configure.bzl
+index 12f141f..d723aba 100644
+--- a/toolchain/internal/configure.bzl
++++ b/toolchain/internal/configure.bzl
+@@ -329,6 +329,7 @@ cc_toolchain_config(
+     }},
+     llvm_version = "{llvm_version}",
+     host_tools_info = {host_tools_info},
++    use_absolute_paths_llvm = {use_absolute_paths_llvm},
+ )
+ 
+ toolchain(
+@@ -470,6 +471,7 @@ cc_toolchain(
+         llvm_version = toolchain_info.llvm_version,
+         extra_files_str = extra_files_str,
+         host_tools_info = host_tools_info,
++        use_absolute_paths_llvm = use_absolute_paths_llvm,
+     )
+ 
+ def _convenience_targets_str(rctx, use_absolute_paths, llvm_dist_rel_path, llvm_dist_label_prefix, host_dl_ext):

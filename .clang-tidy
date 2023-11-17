@@ -16,6 +16,7 @@ Checks: >
   readability-*,
   -readability-identifier-length,
   -readability-function-cognitive-complexity,
+  -clang-diagnostic-builtin-macro-redefined, #https://github.com/llvm/llvm-project/issues/56709
 WarningsAsErrors: "*"
 HeaderFilterRegex: "resim/.*\\.hh"
 AnalyzeTemporaryDtors: false

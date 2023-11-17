@@ -56,12 +56,9 @@ Wireframe::Wireframe(std::vector<Point> points, std::vector<Edge> edges)
       edges_{std::move(edges)} {}
 
 bool Wireframe::is_valid() const {
-  return std::ranges::all_of(
-      edges_.cbegin(),
-      edges_.cend(),
-      [this](const auto &edge) {
-        return index_array_in_parent_and_unique(edge, points_);
-      });
+  return std::all_of(edges_.cbegin(), edges_.cend(), [this](const auto &edge) {
+    return index_array_in_parent_and_unique(edge, points_);
+  });
 }
 
 void Wireframe::add_point(const Point &point) { points_.push_back(point); }
