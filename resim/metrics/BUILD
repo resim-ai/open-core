@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
@@ -100,6 +101,78 @@ py_test(
     srcs = ["dice_coefficient_test.py"],
     deps = [
         ":dice_coefficient",
+    ],
+)
+
+py_library(
+    name = "fetch_all_pages",
+    srcs = ["fetch_all_pages.py"],
+    deps = [
+    ],
+)
+
+py_test(
+    name = "fetch_all_pages_test",
+    srcs = ["fetch_all_pages_test.py"],
+    deps = [
+        ":fetch_all_pages",
+    ],
+)
+
+py_library(
+    name = "fetch_metrics_urls",
+    srcs = ["fetch_metrics_urls.py"],
+    deps = [
+        ":fetch_all_pages",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_test(
+    name = "fetch_metrics_urls_test",
+    srcs = ["fetch_metrics_urls_test.py"],
+    deps = [
+        ":fetch_all_pages",
+        ":fetch_metrics_urls",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_library(
+    name = "get_metrics_proto",
+    srcs = ["get_metrics_proto.py"],
+    deps = [
+        "@com_google_protobuf//:protobuf_python",
+        requirement("requests"),
+    ],
+)
+
+py_test(
+    name = "get_metrics_proto_test",
+    srcs = ["get_metrics_proto_test.py"],
+    deps = [
+        ":get_metrics_proto",
+        "@com_google_protobuf//:protobuf_python",
+    ],
+)
+
+py_library(
+    name = "fetch_job_metrics",
+    srcs = ["fetch_job_metrics.py"],
+    deps = [
+        ":fetch_all_pages",
+        ":fetch_metrics_urls",
+        ":get_metrics_proto",
+        "//resim/metrics/proto:metrics_proto_py",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_test(
+    name = "fetch_job_metrics_test",
+    srcs = ["fetch_job_metrics_test.py"],
+    deps = [
+        ":fetch_job_metrics",
     ],
 )
 
