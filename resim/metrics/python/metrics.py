@@ -1,8 +1,21 @@
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+"""This module contains data classes used to represent metrics and metrics data
+in a way that is significantly nicer to use than the raw protobuf API. In
+particular, users don't have to think about IDs and certain other variants are
+guaranteed when using this interface. This interface uses a Fluent API to easily
+create metrics of different types.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from dataclasses import dataclass
+import dataclasses
 import uuid
 from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeAlias, TypeVar, Union
 
@@ -27,8 +40,16 @@ from resim.metrics.python.metrics_utils import (
 
 MetricT = TypeVar('MetricT', bound='Metric')
 
+def metric_dataclass(*args):
+    return dataclasses.dataclass(
+        *args,
+        init=False,
+        kw_only=True,
+        repr=True,
+        eq=False
+    )
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class Metric(ABC, Generic[MetricT]):
     id: uuid.UUID
     name: str
@@ -180,7 +201,7 @@ class Metric(ABC, Generic[MetricT]):
         ...
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class ScalarMetric(Metric['ScalarMetric']):
     value: Optional[float]
     failure_definition: Optional[DoubleFailureDefinition]
@@ -252,7 +273,7 @@ class ScalarMetric(Metric['ScalarMetric']):
                                                                     self.pack()])
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
     doubles_over_time_data: List[MetricsData]
     statuses_over_time_data: List[MetricsData]
@@ -421,7 +442,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
             data.recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
     states_over_time_data: List[MetricsData]
     statuses_over_time_data: List[MetricsData]
@@ -596,7 +617,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
             data.recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class LinePlotMetric(Metric['LinePlotMetric']):
     x_doubles_data: List[MetricsData]
     y_doubles_data: List[MetricsData]
@@ -743,7 +764,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
             data.recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class BarChartMetric(Metric['BarChartMetric']):
     values_data: List[MetricsData]
     statuses_data: List[MetricsData]
@@ -883,7 +904,7 @@ class BarChartMetric(Metric['BarChartMetric']):
             data.recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class HistogramMetric(Metric['HistogramMetric']):
     values_data: Optional[MetricsData]
     statuses_data: Optional[MetricsData]
@@ -1006,7 +1027,7 @@ class HistogramMetric(Metric['HistogramMetric']):
 IndexType: TypeAlias = Union[int, str, Timestamp, uuid.UUID]
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
     value_data: Optional[MetricsData]
     status_data: Optional[MetricsData]
@@ -1122,7 +1143,7 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
 MetricsDataT = TypeVar('MetricsDataT', bound='MetricsData')
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class MetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
@@ -1194,7 +1215,7 @@ class MetricsData(ABC, Generic[MetricsDataT]):
             self.index_data.recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class SeriesMetricsData(MetricsData['SeriesMetricsData']):
     series: np.ndarray  # normally, dtype = 'object'
 
@@ -1324,7 +1345,7 @@ class SeriesMetricsData(MetricsData['SeriesMetricsData']):
         super().recursively_pack_into(metrics_output)
 
 
-@dataclass(init=False, kw_only=True, repr=True)
+@metric_dataclass
 class GroupedMetricsData(MetricsData['GroupedMetricsData']):
     category_to_series: Dict[str, np.ndarray]  # normally, dtype='object'
 
