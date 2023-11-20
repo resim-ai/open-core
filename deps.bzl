@@ -330,7 +330,7 @@ def resim_core_dependencies():
     maybe(
         http_archive,
         name = "resim-python-client",
-        sha256 = "002bf30a7c4830fcf7071f14e5407f167cf57690c94671e259f6020e848fd7d0",
-        strip_prefix = "resim-python-client-d9d32be25cefbee192687d4bd6eecba32dac7f85",
-        url = "https://github.com/resim-ai/resim-python-client/archive/d9d32be25cefbee192687d4bd6eecba32dac7f85.zip",
+        sha256 = "b81fc964c79d670c7670e67ccba9337ff268e1c8a84f9ed0bfd0719619ee6a82",
+        strip_prefix = "resim-python-client-8b9e79b3c845bda6c040b773d7443e7f3d612f88",
+        url = "https://github.com/resim-ai/resim-python-client/archive/8b9e79b3c845bda6c040b773d7443e7f3d612f88.zip",
     )

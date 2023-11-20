@@ -159,6 +159,7 @@ py_test(
 py_library(
     name = "fetch_job_metrics",
     srcs = ["fetch_job_metrics.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
         ":fetch_metrics_urls",
