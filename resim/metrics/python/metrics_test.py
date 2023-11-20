@@ -13,6 +13,7 @@ import uuid
 import unittest
 import resim.metrics.python.metrics as metrics
 from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
+import resim.metrics.proto.metrics_pb2 as mp
 
 
 class MetricsTest(unittest.TestCase):
@@ -33,7 +34,7 @@ class MetricsTest(unittest.TestCase):
             unit="")
 
         # Test equality
-        self.assertEqual(metric, metric)        
+        self.assertEqual(metric, metric)
 
         # Different type
         self.assertNotEqual(metric, 3)
@@ -52,7 +53,7 @@ class MetricsTest(unittest.TestCase):
         self.assertNotEqual(metric_with_diff_id, metric)
         self.assertNotEqual(metric, metric_with_diff_id)
 
-   def test_metric_pack(self):
+    def test_metric_pack(self):
         # SETUP
         job_id = uuid.uuid4()
         metric = metrics.ScalarMetric(
@@ -63,7 +64,7 @@ class MetricsTest(unittest.TestCase):
             should_display=True,
             blocking=False,
             parent_job_id=job_id,
-            order=None,
+            order=1.5,
             value=24.0,
             failure_definition=None,
             unit="")
@@ -71,7 +72,34 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
         self.assertEqual(uuid.UUID(msg.metric_id.id.data), metric.id)
         self.assertEqual(msg.name, metric.name)
-         
+        self.assertEqual(msg.description, metric.description)
+        self.assertEqual(msg.status, metric.status.value)
+        self.assertEqual(msg.importance, metric.importance.value)
+        self.assertEqual(msg.should_display, metric.should_display)
+        self.assertEqual(msg.blocking, metric.blocking)
+        self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
+        self.assertEqual(msg.order, metric.order)
+
+        optional_attr_list = [
+            ("description", "description"),
+            ("status", "status"),
+            ("importance", "importance"),
+            ("should_display", "should_display"),
+            ("blocking", "blocking"),
+            ("parent_job_id", "job_id"),
+            ("order", "order")]
+
+        default_values = mp.Metric()
+
+        for unpacked_attr, packed_attr in optional_attr_list:
+            modified_metric = copy.copy(metric)
+            setattr(modified_metric, unpacked_attr, None)
+            msg = modified_metric.pack()
+            self.assertEqual(
+                getattr(
+                    msg, packed_attr), getattr(
+                    default_values, packed_attr))
+
 
 if __name__ == "__main__":
     unittest.main()
