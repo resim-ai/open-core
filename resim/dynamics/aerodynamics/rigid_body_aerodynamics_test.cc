@@ -75,10 +75,10 @@ const auto windmill_blade = [](const FramedVector &cop_local_wind,
 };
 
 struct WindmillElementState : public AerodynamicElementState {
-  const double &blade_area = BLADE_AREA;
+  double blade_area = BLADE_AREA;
 
   WindmillElementState() = default;
-  explicit WindmillElementState(const double &area) : blade_area(area){};
+  explicit WindmillElementState(const double area) : blade_area(area){};
 };
 
 class WindmillAerodynamicElement : public AerodynamicElementImpl<

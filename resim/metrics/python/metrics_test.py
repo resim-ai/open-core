@@ -11,7 +11,9 @@ Unit tests for metrics.py.
 import copy
 import uuid
 import unittest
-import resim.metrics.python.metrics as metrics
+from typing import cast
+
+from resim.metrics.python import metrics
 from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
 import resim.metrics.proto.metrics_pb2 as mp
 
@@ -41,11 +43,11 @@ class MetricsTest(unittest.TestCase):
 
         # Non-existent id
         metric_with_none_id = copy.copy(metric)
-        metric_with_none_id.id = None
+        metric_with_none_id.id = cast(uuid.UUID, None)
         with self.assertRaises(AssertionError):
-            metric_with_none_id == metric
+            _ = metric_with_none_id == metric
         with self.assertRaises(AssertionError):
-            metric == metric_with_none_id
+            _ = metric == metric_with_none_id
 
         # Different id
         metric_with_diff_id = copy.copy(metric)
@@ -53,7 +55,7 @@ class MetricsTest(unittest.TestCase):
         self.assertNotEqual(metric_with_diff_id, metric)
         self.assertNotEqual(metric, metric_with_diff_id)
 
-    def test_metric_pack(self):
+    def test_metric_pack(self) -> None:
         # SETUP
         job_id = uuid.uuid4()
         metric = metrics.ScalarMetric(
@@ -73,8 +75,8 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(uuid.UUID(msg.metric_id.id.data), metric.id)
         self.assertEqual(msg.name, metric.name)
         self.assertEqual(msg.description, metric.description)
-        self.assertEqual(msg.status, metric.status.value)
-        self.assertEqual(msg.importance, metric.importance.value)
+        self.assertEqual(msg.status, getattr(metric.status, "value"))
+        self.assertEqual(msg.importance, getattr(metric.importance, "value"))
         self.assertEqual(msg.should_display, metric.should_display)
         self.assertEqual(msg.blocking, metric.blocking)
         self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
@@ -99,7 +101,6 @@ class MetricsTest(unittest.TestCase):
                 getattr(
                     msg, packed_attr), getattr(
                     default_values, packed_attr))
-
 
 if __name__ == "__main__":
     unittest.main()

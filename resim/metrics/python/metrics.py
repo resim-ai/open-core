@@ -40,7 +40,7 @@ from resim.metrics.python.metrics_utils import (
 
 MetricT = TypeVar('MetricT', bound='Metric')
 
-def metric_dataclass(*args):
+def metric_dataclass(*args: Callable) -> Callable:
     return dataclasses.dataclass(
         *args,
         init=False,
