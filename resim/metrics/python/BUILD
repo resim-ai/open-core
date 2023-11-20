@@ -44,3 +44,25 @@ py_test(
         "//resim/utils/proto:uuid_proto_py",
     ],
 )
+
+py_library(
+    name = "unpack_metrics",
+    srcs = ["unpack_metrics.py"],
+    deps = [
+        ":metrics",
+        "//resim/metrics/proto:metrics_proto_py",
+    ],
+)
+
+py_test(
+    name = "unpack_metrics_test",
+    srcs = ["unpack_metrics_test.py"],
+    deps = [
+        ":metrics",
+        ":metrics_writer",
+        ":unpack_metrics",
+        "//resim/metrics/proto:generate_test_metrics",
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
+    ],
+)
