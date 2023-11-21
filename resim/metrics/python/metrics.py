@@ -1190,7 +1190,7 @@ class MetricsData(ABC, Generic[MetricsDataT]):
 
     @abstractmethod
     def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
-        ...
+        raise NotImplementedError()
 
     @abstractmethod
     def recursively_pack_into(self: MetricsDataT,
