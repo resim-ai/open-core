@@ -11,6 +11,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "metrics_test",
+    srcs = ["metrics_test.py"],
+    deps = [
+        ":metrics",
+        ":metrics_utils",
+        "//resim/metrics/proto:metrics_proto_py",
+    ],
+)
+
 py_library(
     name = "metrics_writer",
     srcs = ["metrics_writer.py"],

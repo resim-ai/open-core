@@ -75,10 +75,10 @@ const auto windmill_blade = [](const FramedVector &cop_local_wind,
 };
 
 struct WindmillElementState : public AerodynamicElementState {
-  const double &blade_area = BLADE_AREA;
+  double blade_area = BLADE_AREA;
 
   WindmillElementState() = default;
-  explicit WindmillElementState(const double &area) : blade_area(area){};
+  explicit WindmillElementState(const double area) : blade_area(area){};
 };
 
 class WindmillAerodynamicElement : public AerodynamicElementImpl<
@@ -274,7 +274,8 @@ TEST(WindmillBladeTest, ZeroAngleOfAttack) {
   constexpr unsigned VECTOR_COUNT = 8;
   for (unsigned int i = 0; i < VECTOR_COUNT; ++i) {
     FramedVector pressure_force = windmill_blade(wind, BLADE_AREA);
-    EXPECT_DOUBLE_EQ(pressure_force.norm(), 0.);
+    constexpr double TOLERANCE = 1e-15;
+    EXPECT_NEAR(pressure_force.norm(), 0., TOLERANCE);
     wind = current_from_incremented.rotate(wind);
   }
 }

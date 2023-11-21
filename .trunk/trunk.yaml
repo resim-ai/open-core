@@ -4,7 +4,7 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v0.0.16
+      ref: v1.2.6
       uri: https://github.com/trunk-io/plugins
 lint:
   definitions:
@@ -38,21 +38,21 @@ lint:
         - types-requests
         - types-protobuf
   enabled:
-    - buildifier@6.1.0
-    - clang-tidy@15.0.6
-    - clang-format@14.0.0
-    - pylint@2.17.5
-    - mypy@1.5.1
+    - buildifier@6.4.0
+    - clang-tidy@16.0.3
+    - clang-format@16.0.3
+    - pylint@3.0.2
+    - mypy@1.7.0
 runtimes:
 # These runtimes do not influence anything running in our development
 # docker container, or our bazel environment. These runtimes set the 
 # version of a language which will be used by trunk while they execute
 # their tools. The defaults recommended by Trunk are used for this reason.
   enabled:
-    - go@1.19.5
+    - go@1.21.0
     - node@18.12.1
     - python@3.10.8
-    - ruby@3.1.0
+    - ruby@3.1.4
 actions:
   enabled:
     - trunk-announce
