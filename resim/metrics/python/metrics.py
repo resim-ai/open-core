@@ -198,7 +198,7 @@ class Metric(ABC, Generic[MetricT]):
     def recursively_pack_into(
             self,
             metrics_output: ResimMetricsOutput) -> None:
-        ...
+        raise NotImplementedError()
 
 
 @metric_dataclass
@@ -473,14 +473,6 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
             importance=importance,
             blocking=blocking,
             should_display=should_display,
-            parent_job_id=parent_job_id)
-        super().__init__(
-            name=name,
-            description=description,
-            status=status,
-            importance=importance,
-            blocking=blocking,
-            should_display=should_display,
             parent_job_id=parent_job_id,
             order=order)
         if states_over_time_data is None:
@@ -596,7 +588,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                 metric_values.legend_series_names.extend([name])
             else:
                 metric_values.legend_series_names.extend(
-                    [self.statuses_over_time_data[i].name])
+                    [self.states_over_time_data[i].name])
 
         return msg
 
