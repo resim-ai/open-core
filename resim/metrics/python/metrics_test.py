@@ -330,7 +330,7 @@ class MetricsTest(unittest.TestCase):
         )
         series_name = "test data"
 
-        # Use the contructor to initialize the data this time, in constrast with
+        # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.DoubleOverTimeMetric(
             name='test metric',
@@ -493,7 +493,7 @@ class MetricsTest(unittest.TestCase):
         failure_states = {"bad state"}
         series_name = "test data"
 
-        # Use the contructor to initialize the data this time, in constrast with
+        # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.StatesOverTimeMetric(
             name='test metric',
@@ -684,7 +684,7 @@ class MetricsTest(unittest.TestCase):
 
         series_name = "test data"
 
-        # Use the contructor to initialize the data this time, in constrast with
+        # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.LinePlotMetric(
             name='test metric',
@@ -818,7 +818,7 @@ class MetricsTest(unittest.TestCase):
             unit='')
         series_name = "test data"
 
-        # Use the contructor to initialize the data this time, in constrast with
+        # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.BarChartMetric(
             name='test metric',

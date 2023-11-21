@@ -16,6 +16,8 @@ py_test(
     srcs = ["metrics_test.py"],
     deps = [
         ":metrics",
+        ":metrics_utils",
+        "//resim/metrics/proto:metrics_proto_py",
     ],
 )
 
