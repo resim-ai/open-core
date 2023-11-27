@@ -59,6 +59,25 @@ class MetricsTest(unittest.TestCase):
         self.assertNotEqual(metric_with_diff_id, metric)
         self.assertNotEqual(metric, metric_with_diff_id)
 
+    def test_metric_setters(self) -> None:
+        metric = metrics.ScalarMetric(name="test_metric")
+        DESCRIPTION = "my metric"
+        self.assertEqual(metric, metric.with_description(DESCRIPTION))
+        self.assertEqual(metric.description, DESCRIPTION)
+
+        self.assertEqual(metric, metric.with_status(MetricStatus.PASSED_METRIC_STATUS))
+        self.assertEqual(metric.status, MetricStatus.PASSED_METRIC_STATUS)
+
+        self.assertEqual(metric, metric.with_importance(MetricImportance.ZERO_IMPORTANCE))
+        self.assertEqual(metric.importance, MetricImportance.ZERO_IMPORTANCE)
+
+        self.assertEqual(metric, metric.with_should_display(True))
+        self.assertTrue(metric.should_display)
+
+        self.assertEqual(metric, metric.with_blocking(True))
+        self.assertTrue(metric.blocking)
+
+
     def assert_common_fields_match(self, *,
                                    msg: mp.Metric,
                                    metric: metrics.Metric) -> None:

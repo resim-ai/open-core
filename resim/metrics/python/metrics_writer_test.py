@@ -14,7 +14,7 @@ from resim.metrics.python.metrics_utils import (
     MetricStatus,
     MetricImportance
 )
-from resim.metrics.python.metrics import SeriesMetricsData
+from resim.metrics.python.metrics import SeriesMetricsData, GroupedMetricsData
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
 rd = random.Random()
@@ -506,14 +506,16 @@ class TestMetricsWriter(unittest.TestCase):
         doubles_data = SeriesMetricsData(
             "Doubles", EXAMPLE_FLOATS, "Double unit", None
         )
+        ORDERS = [1.0, 10.0]
 
-        for name, index in zip(METRIC_NAMES, METRIC_INDICES):
-            (
+        for name, index, order in zip(METRIC_NAMES, METRIC_INDICES, ORDERS):
+            metric = (
                 self.writer
                 .add_double_summary_metric(name)
                 .with_value_data(doubles_data)
                 .with_index(index)
             )
+            metric.order = order
 
         output = self.writer.write()
 
@@ -541,10 +543,21 @@ class TestMetricsWriter(unittest.TestCase):
 
             self.assertEqual(
                 output.metrics_msg.job_level_metrics.metrics[i].order,
-                float(i))
+                ORDERS[i])
 
         self.assertEqual(len(
             output.metrics_msg.metrics_data[0].series.doubles.series), len(EXAMPLE_FLOATS))
+
+    def test_grouped_metrics_data(self) -> None:
+        """Test that we can add a grouped metrics data."""
+        NAME = "test_metrics_data"
+        metrics_data = self.writer.add_grouped_metrics_data(name=NAME)
+        self.assertEqual(type(metrics_data), GroupedMetricsData)
+        self.assertEqual(metrics_data.name, NAME)
+        self.assertIn(NAME, self.writer.names)
+        self.assertIn(metrics_data.id, self.writer.metrics_data)
+        self.assertEqual(
+            self.writer.metrics_data[metrics_data.id], metrics_data)
 
     def tearDown(self) -> None:
         pass

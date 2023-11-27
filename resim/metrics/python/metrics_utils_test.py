@@ -82,8 +82,6 @@ class MetricsUtilsTest(unittest.TestCase):
             modified_packed = modified_failure_definition.pack()
             self.assertFalse(modified_packed.HasField(attr))
 
-            
-
     def test_pack_uuid_to_proto(self) -> None:
         # SETUP
         test_uuid = uuid.uuid4()

@@ -40,6 +40,18 @@ py_library(
     ],
 )
 
+py_test(
+    name = "metrics_writer_test",
+    srcs = ["metrics_writer_test.py"],
+    deps = [
+        requirement("numpy"),
+        ":metrics",
+        ":metrics_writer",
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/utils/proto:uuid_proto_py",
+    ],
+)
+
 py_library(
     name = "metrics_utils",
     srcs = ["metrics_utils.py"],
@@ -55,19 +67,9 @@ py_test(
     name = "metrics_utils_test",
     srcs = ["metrics_utils_test.py"],
     deps = [
-        ":metrics_utils",
-    ],
-)
-
-py_test(
-    name = "metrics_writer_test",
-    srcs = ["metrics_writer_test.py"],
-    deps = [
         requirement("numpy"),
-        ":metrics",
-        ":metrics_writer",
+        ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
-        "//resim/utils/proto:uuid_proto_py",
     ],
 )
 
