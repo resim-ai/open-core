@@ -48,7 +48,7 @@ class ResimMetricsOutput:
         self.packed_ids = set()
 
 
-@dataclass(repr=True)
+@dataclass(repr=True, order=True)
 class Timestamp:
     secs: int
     nanos: int
@@ -59,6 +59,12 @@ class Timestamp:
         msg.nanos = self.nanos
         return msg
 
+    @classmethod
+    def unpack(cls, msg: timestamp_pb2.Timestamp) -> Timestamp:
+        return Timestamp(
+            secs=msg.seconds,
+            nanos=msg.nanos,
+        )
 
 @dataclass(repr=True)
 class HistogramBucket:
