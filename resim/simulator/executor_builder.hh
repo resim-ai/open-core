@@ -7,15 +7,32 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "resim/assert/assert.hh"
 #include "resim/simulator/channel_registry.hh"
 #include "resim/simulator/step_executor.hh"
+#include "resim/utils/tuple_utils.hh"
+#include "resim/utils/uuid.hh"
 
 namespace resim::simulator {
+
+template <typename T>
+struct TypedDependency {
+  using Type = T;
+  std::string_view dependency;
+};
+
+template <typename T>
+struct TypedProvision {
+  using Type = T;
+  std::string_view provision;
+};
 
 // This class's job is to create a vector of tasks that can be handled by a
 // `StepExecutor` and it acts as a factory for an abstract `StepExecutor` via
@@ -89,6 +106,13 @@ class ExecutorBuilder final {
       const std::string_view &dependency,
       const std::string_view &provision,
       std::function<Ret(const std::vector<Arg> &arg)> &&task);
+
+  template <typename... Args, typename Ret, typename Callable>
+  ExecutorBuilder &add_task2(
+      const std::string_view &name,
+      const std::tuple<TypedDependency<Args>...> &dependencies,
+      const TypedProvision<Ret> &provision,
+      Callable &&task);
 
   // Overload of the above no-output case in which the task acepts only a single
   // value. This task will throw if there are multiple providers providing data
@@ -298,6 +322,54 @@ ExecutorBuilder &ExecutorBuilder::add_task(
       .work =
           [publisher = std::move(publisher), task = std::move(task)]() {
             publisher->publish(task());
+            return true;
+          },
+  });
+  return *this;
+}
+
+template <typename... Args, typename Ret, typename Callable>
+ExecutorBuilder &ExecutorBuilder::add_task2(
+    const std::string_view &name,
+    const std::tuple<TypedDependency<Args>...> &dependencies,
+    const TypedProvision<Ret> &provision,
+    Callable &&task) {
+  auto publisher = channel_registry_.make_publisher<Ret>(provision.provision);
+
+  // Should probably just use strings instead. attaching this to the task is
+  // really janky. Or could use a custom TopicKey type that we swich later?
+  // Similar situation with names? Union with UUID?
+  auto fan_in_provision =
+      std::make_shared<std::string>(UUID::new_uuid().to_string());
+
+  auto channels = for_each_in_tuple(
+      [this, &fan_in_provision](const auto &dependency) {
+        tasks_.push_back(Task{
+            .name = "",
+            .dependency = dependency.dependency,
+            .provision = fan_in_provision->c_str(),
+            .work = []() { return true; },
+        });
+
+        using Arg = typename std::decay_t<decltype(dependency)>::Type;
+        return channel_registry_.channel<Arg>(dependency.dependency);
+      },
+      dependencies);
+
+  tasks_.push_back(Task{
+      .name = name,
+      .dependency = fan_in_provision->c_str(),
+      .provision = provision.provision,
+      .work =
+          [input = std::move(channels),
+           publisher = std::move(publisher),
+           task = std::forward<decltype(task)>(task),
+           _ = std::move(fan_in_provision)]() {
+            publisher->publish(std::apply(
+                [&](const auto &...channels) {
+                  return task(channels->data()...);
+                },
+                input));
             return true;
           },
   });

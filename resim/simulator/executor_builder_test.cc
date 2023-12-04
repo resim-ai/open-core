@@ -390,4 +390,42 @@ TEST(ExecutorBuilderTest, TestAddConditionalTaskFalse) {
   EXPECT_FALSE(task_ran);
 }
 
+TEST(ExecutorBuilderTest, TestFoo) {
+  // SETUP
+  ExecutorBuilder executor_builder;
+
+  // ACTION
+
+  executor_builder.add_task2(
+      "test_task",
+      std::make_tuple(
+          TypedDependency<bool>{.dependency = "bool_topic"},
+          TypedDependency<std::string>{.dependency = "str_topic"}),
+      TypedProvision<int>{.provision = "int_topic"},
+      [](const std::vector<bool> &in,
+         const std::vector<std::string> &bin) -> int {
+        std::cout << "Baz " << bin[0] << std::endl;
+        return 0;
+      });
+  executor_builder.add_independent_task<std::string>(
+      "bar",
+      "str_topic",
+      []() -> std::string {
+        std::cout << "Bar" << std::endl;
+        return "asdf";
+      });
+  executor_builder.add_independent_task<bool>(
+      "foo",
+      "bool_topic",
+      []() -> bool {
+        std::cout << "Foo" << std::endl;
+        return true;
+      });
+
+  const std::unique_ptr<StepExecutor> executor{executor_builder.build()};
+
+  // VERIFICATION
+  executor->run_step();
+}
+
 }  // namespace resim::simulator
