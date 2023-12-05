@@ -399,9 +399,9 @@ TEST(ExecutorBuilderTest, TestFoo) {
   executor_builder.add_task2(
       "test_task",
       std::make_tuple(
-          TypedDependency<bool>{.dependency = "bool_topic"},
-          TypedDependency<std::string>{.dependency = "str_topic"}),
-      TypedProvision<int>{.provision = "int_topic"},
+          TypedDependency<bool>{"bool_topic"},
+          TypedDependency<std::string>{"str_topic"}),
+      TypedProvision<int>{"int_topic"},
       [](const std::vector<bool> &in,
          const std::vector<std::string> &bin) -> int {
         std::cout << "Baz " << bin[0] << std::endl;

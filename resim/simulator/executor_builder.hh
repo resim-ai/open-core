@@ -7,7 +7,6 @@
 #pragma once
 
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -336,18 +335,15 @@ ExecutorBuilder &ExecutorBuilder::add_task2(
     Callable &&task) {
   auto publisher = channel_registry_.make_publisher<Ret>(provision.provision);
 
-  // Should probably just use strings instead. attaching this to the task is
-  // really janky. Or could use a custom TopicKey type that we swich later?
-  // Similar situation with names? Union with UUID?
-  auto fan_in_provision =
-      std::make_shared<std::string>(UUID::new_uuid().to_string());
+  const ExecutorKey fan_in_provision{UUID::new_uuid()};
 
   auto channels = for_each_in_tuple(
       [this, &fan_in_provision](const auto &dependency) {
+        const ExecutorKey fan_in_name{UUID::new_uuid()};
         tasks_.push_back(Task{
-            .name = "",
+            .name = fan_in_name,
             .dependency = dependency.dependency,
-            .provision = fan_in_provision->c_str(),
+            .provision = fan_in_provision,
             .work = []() { return true; },
         });
 
@@ -358,13 +354,12 @@ ExecutorBuilder &ExecutorBuilder::add_task2(
 
   tasks_.push_back(Task{
       .name = name,
-      .dependency = fan_in_provision->c_str(),
+      .dependency = fan_in_provision,
       .provision = provision.provision,
       .work =
           [input = std::move(channels),
            publisher = std::move(publisher),
-           task = std::forward<decltype(task)>(task),
-           _ = std::move(fan_in_provision)]() {
+           task = std::forward<decltype(task)>(task)]() {
             publisher->publish(std::apply(
                 [&](const auto &...channels) {
                   return task(channels->data()...);

@@ -11,6 +11,7 @@ cc_library(
     hdrs = ["step_executor.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim/utils:uuid",
     ],
 )
 
