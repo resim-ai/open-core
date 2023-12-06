@@ -38,6 +38,7 @@ class MetricsUtilsTest(unittest.TestCase):
         # VERIFICATION
         self.assertEqual(test_ts.secs, packed.seconds)
         self.assertEqual(test_ts.nanos, packed.nanos)
+        self.assertEqual(test_ts, mu.Timestamp.unpack(packed))
 
     def test_histogram_bucket_pack(self) -> None:
         # SETUP
@@ -140,6 +141,16 @@ class MetricsUtilsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             mu.pack_series_to_proto(inputs["class"], indexed=False)
 
+    def test_timestamp_ordering(self) -> None:
+        t1 = mu.Timestamp(
+            secs=self._random.randrange(0, 1000000000),
+            nanos=self._random.randrange(0, 1000000000),
+        )
+        t2 = mu.Timestamp(
+            secs=t1.secs + 1,
+            nanos=self._random.randrange(0, 1000000000),
+        )
+        self.assertLess(t1, t2)
 
 if __name__ == '__main__':
     unittest.main()
