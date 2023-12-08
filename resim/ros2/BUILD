@@ -216,7 +216,7 @@ cc_library(
     name = "converter_plugin",
     srcs = ["converter_plugin.cc"],
     hdrs = ["converter_plugin.hh"],
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin_types",
         "//resim/assert",
