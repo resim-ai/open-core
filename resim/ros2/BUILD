@@ -242,7 +242,7 @@ cc_binary(
     name = "default_converter_plugin.so",
     srcs = ["default_converter_plugin.cc"],
     linkshared = True,
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin_types",
         ":detection_from_ros2",
