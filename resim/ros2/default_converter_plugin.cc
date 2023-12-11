@@ -5,14 +5,11 @@
 // https://opensource.org/licenses/MIT.
 
 #include <cstdint>
-#include <cstring>
 #include <functional>
-#include <rclcpp/serialization.hpp>
-#include <rclcpp/serialized_message.hpp>
 #include <string>
 #include <unordered_map>
 
-#include "resim/assert/assert.hh"
+#include "resim/ros2/converter_plugin_helpers.hh"
 #include "resim/ros2/converter_plugin_types.h"
 #include "resim/ros2/detection_from_ros2.hh"
 #include "resim/ros2/header_from_ros2.hh"
@@ -22,11 +19,33 @@
 #include "resim/ros2/pose_from_ros2.hh"
 #include "resim/ros2/time_from_ros2.hh"
 #include "resim/ros2/transform_from_ros2.hh"
-#include "resim/utils/proto/dependency_file_descriptor_set.hh"
 
 namespace resim::ros2 {
 
 namespace {
+
+class ConverterFunctor {
+ public:
+  template <typename Ros2Type>
+  auto operator()(const Ros2Type &ros2_msg) {
+    return convert_from_ros2(ros2_msg);
+  }
+};
+
+template <typename Ros2Type>
+auto convert_message(
+    const rcutils_uint8_array_t *const ros2_message,
+    rcutils_uint8_array_t *const resim_message) {
+  return resim::ros2::convert_message<Ros2Type, ConverterFunctor>(
+      ros2_message,
+      resim_message);
+}
+
+template <typename Ros2Type>
+auto generate_type_schema(ReSimConverterSchemaInfo *schema_info) {
+  return resim::ros2::generate_type_schema<Ros2Type, ConverterFunctor>(
+      schema_info);
+}
 
 // A helper struct for holding a Converter and SchemaGetter together in our map
 // of ROS2 types to converters (see below)
@@ -38,64 +57,6 @@ struct ConverterFunctions {
   Converter converter;
   SchemaGetter schema_getter;
 };
-
-// This is the primary function used to convert a given serialized Ros2Type to
-// a serialized ReSimType.
-template <typename Ros2Type>
-void convert_message(
-    const rcutils_uint8_array_t *const ros2_message,
-    rcutils_uint8_array_t *const resim_message) {
-  REASSERT(ros2_message != nullptr);
-  REASSERT(ros2_message->buffer != nullptr);
-  REASSERT(resim_message != nullptr);
-
-  rclcpp::Serialization<Ros2Type> serialization;
-
-  Ros2Type deserialized;
-  rclcpp::SerializedMessage message{*ros2_message};
-  serialization.deserialize_message(&message, &deserialized);
-  const auto converted_message = convert_from_ros2(deserialized);
-
-  const std::size_t converted_size = converted_message.ByteSizeLong();
-
-  rcl_serialized_message_t &result = *resim_message;
-  result.allocator = ros2_message->allocator;
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  result.buffer = reinterpret_cast<uint8_t *>(
-      result.allocator.allocate(converted_size, result.allocator.state));
-  result.buffer_length = converted_size;
-  result.buffer_capacity = converted_size;
-  converted_message.SerializeToArray(result.buffer, converted_size);
-}
-
-// This is the primary function used to get the output schema info for a given
-// Ros2Type.
-template <typename Ros2Type>
-void generate_type_schema(ReSimConverterSchemaInfo *schema_info) {
-  using ReSimType = decltype(convert_from_ros2(std::declval<Ros2Type>()));
-  REASSERT(schema_info != nullptr);
-  const auto allocator = rcl_get_default_allocator();
-
-  const auto &descriptor = *ReSimType::GetDescriptor();
-  const std::string name = descriptor.full_name();
-  const std::string data = dependency_file_descriptor_set(descriptor);
-
-  const auto copy_string_to_uint8_array =
-      [&allocator](const std::string &string, rcutils_uint8_array_t &array) {
-        array.allocator = allocator;
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        array.buffer = reinterpret_cast<uint8_t *>(
-            allocator.allocate(string.size(), allocator.state));
-        REASSERT(array.buffer != nullptr);
-        array.buffer_length = string.size();
-        array.buffer_capacity = string.size();
-        std::memcpy(array.buffer, string.data(), string.size());
-      };
-
-  copy_string_to_uint8_array(name, schema_info->name);
-  schema_info->encoding = "protobuf";
-  copy_string_to_uint8_array(data, schema_info->data);
-}
 
 // This map holds onto all of the functions we need to get the schema and
 // convert for each given ROS2 message.
