@@ -261,6 +261,7 @@ cc_binary(
 cc_library(
     name = "converter_plugin_helpers",
     hdrs = ["converter_plugin_helpers.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin_types",
         "//resim/assert",
