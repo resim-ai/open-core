@@ -9,8 +9,13 @@
 #include <functional>
 #include <optional>
 #include <string_view>
+#include <variant>
+
+#include "resim/utils/uuid.hh"
 
 namespace resim::simulator {
+
+using ExecutorKey = std::variant<std::string_view, UUID>;
 
 // This library represents the interface for a class responsible for running a
 // set of given tasks while respecting order dependence on each step. In
@@ -34,9 +39,9 @@ class StepExecutor {
  public:
   // A struct representing a task as described above.
   struct Task {
-    std::string_view name;
-    std::optional<std::string_view> dependency;
-    std::string_view provision;
+    ExecutorKey name;
+    std::optional<ExecutorKey> dependency;
+    ExecutorKey provision;
 
     using Work = std::function<bool()>;
     Work work;
