@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional, cast
 
 import numpy as np
-from google.protobuf import timestamp_pb2
 
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
@@ -98,10 +97,6 @@ def unpack_metrics(*,
         names=names)
 
 
-def _unpack_timestamp(timestamp: timestamp_pb2.Timestamp) -> Timestamp:
-    return Timestamp(secs=timestamp.seconds, nanos=timestamp.nanos)
-
-
 def _unpack_uuid(uuid_msg: uuid_proto.UUID) -> uuid.UUID:
     return uuid.UUID(uuid_msg.data)
 
@@ -113,7 +108,7 @@ def _unpack_series(series_proto: mp.Series) -> np.ndarray:
             series_proto.doubles.series,
             dtype=np.float64)
     if data_case == "timestamps":
-        return np.array([_unpack_timestamp(
+        return np.array([Timestamp.unpack(
             ts) for ts in series_proto.timestamps.series], dtype=Timestamp)
     if data_case == "uuids":
         return np.array(
@@ -209,7 +204,7 @@ def _unpack_double_summary_metric(metric: mp.Metric,
     if index_case == "series_index":
         unpacked.with_index(values.series_index)
     elif index_case == "timestamp_index":
-        unpacked.with_index(_unpack_timestamp(values.timestamp_index))
+        unpacked.with_index(Timestamp.unpack(values.timestamp_index))
     elif index_case == "uuid_index":
         unpacked.with_index(_unpack_uuid(values.uuid_index))
     elif index_case == "string_index":
@@ -240,9 +235,9 @@ def _unpack_double_over_time_metric(metric: mp.Metric,
             _unpack_double_failure_definition(failure_definition))
 
     unpacked.with_start_time(
-        _unpack_timestamp(
+        Timestamp.unpack(
             values.start_time)).with_end_time(
-        _unpack_timestamp(
+        Timestamp.unpack(
             values.end_time)).with_y_axis_name(
         values.y_axis_name).with_failure_definitions(failure_definitions)
 
