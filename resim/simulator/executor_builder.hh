@@ -112,6 +112,16 @@ class ExecutorBuilder final {
       const std::string_view &provision,
       std::function<Ret(const std::vector<Arg> &arg)> &&task);
 
+  // Add a task which can depend on multiple dependencies simultaneously. Adds a
+  // synthetic fan-in tasks which ensure that all dependencies run before the
+  // newly added task does.
+  // @param[in] name - A name for this task.
+  // @param[in] dependency - A tuple of typed tags. All tasks which list any of
+  //                         these as provisions must complete before this task
+  //                         can run.
+  // @param[in] provision - A tag that other tasks which must run after this
+  //                        task can list as their dependency.
+  // @param[in] task - The task to run.
   template <typename... Args, typename Ret, typename Callable>
   ExecutorBuilder &add_task(
       const std::string_view &name,
