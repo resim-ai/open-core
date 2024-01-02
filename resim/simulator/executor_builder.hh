@@ -21,12 +21,18 @@
 
 namespace resim::simulator {
 
+// A simple struct to contain the name of a dependency along with the
+// appropriate type for it. Used to support TAD for step executor member
+// function overloads.
 template <typename T>
 struct TypedDependency {
   using Type = T;
   std::string_view dependency;
 };
 
+// A simple struct to contain the name of a provision along with the
+// appropriate type for it. Used to support TAD for step executor member
+// function overloads.
 template <typename T>
 struct TypedProvision {
   using Type = T;
