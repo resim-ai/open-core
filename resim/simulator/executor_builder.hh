@@ -107,7 +107,7 @@ class ExecutorBuilder final {
       std::function<Ret(const std::vector<Arg> &arg)> &&task);
 
   template <typename... Args, typename Ret, typename Callable>
-  ExecutorBuilder &add_task2(
+  ExecutorBuilder &add_task(
       const std::string_view &name,
       const std::tuple<TypedDependency<Args>...> &dependencies,
       const TypedProvision<Ret> &provision,
@@ -328,7 +328,7 @@ ExecutorBuilder &ExecutorBuilder::add_task(
 }
 
 template <typename... Args, typename Ret, typename Callable>
-ExecutorBuilder &ExecutorBuilder::add_task2(
+ExecutorBuilder &ExecutorBuilder::add_task(
     const std::string_view &name,
     const std::tuple<TypedDependency<Args>...> &dependencies,
     const TypedProvision<Ret> &provision,
@@ -340,7 +340,7 @@ ExecutorBuilder &ExecutorBuilder::add_task2(
   auto channels = for_each_in_tuple(
       [this, &fan_in_provision](const auto &dependency) {
         const ExecutorKey fan_in_name{UUID::new_uuid()};
-        tasks_.push_back(Task{
+        tasks_.emplace_back(Task{
             .name = fan_in_name,
             .dependency = dependency.dependency,
             .provision = fan_in_provision,
@@ -352,7 +352,7 @@ ExecutorBuilder &ExecutorBuilder::add_task2(
       },
       dependencies);
 
-  tasks_.push_back(Task{
+  tasks_.emplace_back(Task{
       .name = name,
       .dependency = fan_in_provision,
       .provision = provision.provision,
