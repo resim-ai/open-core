@@ -590,8 +590,9 @@ def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
             expected_status = (
                 mp.FAIL_WARN_METRIC_STATUS
                 if (expected_status != mp.FAIL_BLOCK_METRIC_STATUS)
-                else mp.FAIL_WARN_METRIC_STATUS
+                else mp.FAIL_BLOCK_METRIC_STATUS
             )
+
     _metrics_assert(expected_status == job_metrics.metrics_status)
     _metrics_assert(job_metrics.job_level_metrics.metrics_status ==
                     job_metrics.metrics_status)
