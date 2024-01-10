@@ -569,11 +569,7 @@ def _validate_metrics_data(
         _metrics_assert(metrics_data.index_data_type == index_data.data_type)
 
 
-# TODO(tknowles): I don't think this function is doing the thing it says it's doing.
-#                 I think what we want to do is check the basic status in the Metric
-#                 message. This instead uses the more complex statuses series.
-def _validate_statuses(job_metrics: mp.JobMetrics,
-                       metrics_data_map: dict[str, mp.MetricsData]) -> None:
+def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
     """
     Check that the statuses in this JobMetrics are consistent
 
@@ -591,11 +587,10 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
         status = metric.status
         if status == mp.FAIL_BLOCK_METRIC_STATUS:
             expected_status = mp.FAIL_BLOCK_METRIC_STATUS
-            break
         elif status == mp.FAIL_WARN_METRIC_STATUS:
             expected_status = (
-                mp.FAIL_WARN_METRIC_STATUS 
-                if (expected_status != mp.FAIL_BLOCK_METRIC_STATUS) 
+                mp.FAIL_WARN_METRIC_STATUS
+                if (expected_status != mp.FAIL_BLOCK_METRIC_STATUS)
                 else mp.FAIL_WARN_METRIC_STATUS
             )
     _metrics_assert(expected_status == job_metrics.metrics_status)
@@ -654,4 +649,4 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
-    _validate_statuses(job_metrics, metrics_data_map)
+    _validate_statuses(job_metrics)
