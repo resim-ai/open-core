@@ -100,7 +100,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     status_data.series_per_category.category_to_series["Engage"].statuses.series.append(
         mp.PASSED_METRIC_STATUS)
     status_data.series_per_category.category_to_series["Disengage"].statuses.series.append(
-        mp.FAILED_METRIC_STATUS)
+        mp.FAIL_BLOCK_METRIC_STATUS)
 
     double_summary_values = metric.metric_values.double_metric_values
     double_summary_values.value_data_id.CopyFrom(data.metrics_data_id)
@@ -255,8 +255,8 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
         ttc_statuses = ttc_status.series.statuses
         for val in ttc_doubles.series:
             if val < fails_below:
-                ttc_statuses.series.append(mp.FAILED_METRIC_STATUS)
-                metric.status = mp.FAILED_METRIC_STATUS
+                ttc_statuses.series.append(mp.FAIL_BLOCK_METRIC_STATUS)
+                metric.status = mp.FAIL_BLOCK_METRIC_STATUS
             else:
                 ttc_statuses.series.append(mp.PASSED_METRIC_STATUS)
 
@@ -356,7 +356,7 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     metric.name = "Detection latency"
     metric.type = mp.BAR_CHART_METRIC_TYPE
     metric.description = "Average latency on computing detections from images"
-    metric.status = mp.FAILED_METRIC_STATUS
+    metric.status = mp.FAIL_BLOCK_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
@@ -374,13 +374,13 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
     data_series: list[dict[str, Any]] = [{
         "name": "Camera timings",
         "data": [1.5, 2.6, 1.8],
-        "statuses": [mp.PASSED_METRIC_STATUS, mp.FAILED_METRIC_STATUS,
+        "statuses": [mp.PASSED_METRIC_STATUS, mp.FAIL_BLOCK_METRIC_STATUS,
                      mp.PASSED_METRIC_STATUS],
     },
         {
         "name": "Pytorch timings",
         "data": [10.1, 9.2, 12.3],
-        "statuses": [mp.FAILED_METRIC_STATUS, mp.FAILED_METRIC_STATUS,
+        "statuses": [mp.FAIL_BLOCK_METRIC_STATUS, mp.FAIL_BLOCK_METRIC_STATUS,
                      mp.PASSED_METRIC_STATUS],
     }
     ]
@@ -686,8 +686,8 @@ def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
 
     job_metrics_status = mp.PASSED_METRIC_STATUS
     for metric in collection.metrics:
-        if metric.status == mp.FAILED_METRIC_STATUS and metric.blocking:
-            job_metrics_status = mp.FAILED_METRIC_STATUS
+        if metric.status == mp.FAIL_BLOCK_METRIC_STATUS and metric.blocking:
+            job_metrics_status = mp.FAIL_BLOCK_METRIC_STATUS
 
     job_metrics.metrics_status = job_metrics_status
     job_metrics.job_level_metrics.metrics_status = job_metrics_status

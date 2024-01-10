@@ -607,6 +607,9 @@ def _get_relevant_status_ids(job_metrics: mp.JobMetrics) -> set[str]:
     return relevant_status_ids
 
 
+# TODO(tknowles): I don't think this function is doing the thing it says it's doing.
+#                 I think what we want to do is check the basic status in the Metric
+#                 message. This instead uses the more complex statuses series.
 def _validate_statuses(job_metrics: mp.JobMetrics,
                        metrics_data_map: dict[str, mp.MetricsData]) -> None:
     """
@@ -628,14 +631,18 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
         if status_data.HasField('series'):
             _metrics_assert(status_data.series.HasField('statuses'))
             for status in status_data.series.statuses.series:
-                if status == mp.FAILED_METRIC_STATUS:
-                    expected_status = mp.FAILED_METRIC_STATUS
+                if status == mp.FAIL_BLOCK_METRIC_STATUS:
+                    expected_status = mp.FAIL_BLOCK_METRIC_STATUS
+                elif status == mp.FAIL_WARN_METRIC_STATUS and expected_status != mp.FAIL_BLOCK_METRIC_STATUS:
+                    expected_status = mp.FAIL_WARN_METRIC_STATUS
         else:
             for _, series in status_data.series_per_category.category_to_series.items():
                 _metrics_assert(series.HasField('statuses'))
                 for status in series.statuses.series:
-                    if status == mp.FAILED_METRIC_STATUS:
-                        expected_status = mp.FAILED_METRIC_STATUS
+                    if status == mp.FAIL_BLOCK_METRIC_STATUS:
+                        expected_status = mp.FAIL_BLOCK_METRIC_STATUS
+                    elif status == mp.FAIL_WARN_METRIC_STATUS and expected_status != mp.FAIL_BLOCK_METRIC_STATUS:
+                        expected_status = mp.FAIL_WARN_METRIC_STATUS
     _metrics_assert(expected_status == job_metrics.metrics_status)
     _metrics_assert(job_metrics.job_level_metrics.metrics_status ==
                     job_metrics.metrics_status)
