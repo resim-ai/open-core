@@ -191,7 +191,8 @@ message Metric {
 
     MetricValues metric_values = 7;
 
-    optional bool blocking = 8;
+    optional bool blocking =
+        8;  // DEPRECATED - use FAIL_BLOCK_METRIC_STATUS instead
 
     MetricImportance importance = 9;
 
