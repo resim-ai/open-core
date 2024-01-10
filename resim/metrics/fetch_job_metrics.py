@@ -11,11 +11,16 @@ This module contains functions for fetching a set of job metrics from resim's AP
 import uuid
 import collections
 import threading
-from typing import Any
+from typing import Any, Dict
 from dataclasses import dataclass
 
 import requests
 from resim_python_client.client import AuthenticatedClient
+from resim_python_client.api.batches import list_jobs
+from resim.metrics.python.unpack_metrics import (
+    unpack_metrics,
+    UnpackedMetrics
+)
 
 import resim.metrics.proto.metrics_pb2 as mp
 
@@ -29,6 +34,38 @@ class JobInfo:
     job_id: uuid.UUID
     batch_id: uuid.UUID
 
+def fetch_job_metrics_by_batch(*,
+                        token: str,
+                        api_url: str,
+                        batch_id: uuid.UUID) -> Dict[uuid.UUID, UnpackedMetrics]:
+    """Run the batch metrics and save them to the given metrics_path."""
+
+    # Fetch the jobs for this batch
+    client = AuthenticatedClient(
+        base_url=api_url,
+        token=token)
+    jobs_response = list_jobs.sync(str(batch_id), client=client)
+    assert jobs_response is not None
+    jobs = [
+        JobInfo(
+            job_id=uuid.UUID(job.job_id),
+            batch_id=batch_id
+        ) for job in jobs_response.jobs]
+
+    # Fetch the metrics for these jobs:
+    metrics_protos, metrics_data_protos = fetch_job_metrics(
+        token=token, base_url=api_url, jobs=jobs)
+
+    # Unpack the fetched metrics
+    unpacked_metrics_per_job = {}
+    for job in jobs:
+        metrics = metrics_protos[job.job_id]
+        metrics_data = metrics_data_protos[job.job_id]
+        unpacked_metrics_per_job[job.job_id] = unpack_metrics(
+            metrics=metrics,
+            metrics_data=metrics_data)
+
+    return unpacked_metrics_per_job
 
 def fetch_job_metrics(*,
                       token: str,
