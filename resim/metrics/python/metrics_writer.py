@@ -115,7 +115,7 @@ class ResimMetricsWriter:
 
         fail_block = any(metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
                       for metric in output.metrics_msg.job_level_metrics.metrics)
-        
+
         fail_warn = any(metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
                       for metric in output.metrics_msg.job_level_metrics.metrics)
 

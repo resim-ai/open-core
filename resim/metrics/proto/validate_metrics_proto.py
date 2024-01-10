@@ -633,7 +633,8 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
             for status in status_data.series.statuses.series:
                 if status == mp.FAIL_BLOCK_METRIC_STATUS:
                     expected_status = mp.FAIL_BLOCK_METRIC_STATUS
-                elif status == mp.FAIL_WARN_METRIC_STATUS and expected_status != mp.FAIL_BLOCK_METRIC_STATUS:
+                elif (status == mp.FAIL_WARN_METRIC_STATUS
+                      and expected_status != mp.FAIL_BLOCK_METRIC_STATUS):
                     expected_status = mp.FAIL_WARN_METRIC_STATUS
         else:
             for _, series in status_data.series_per_category.category_to_series.items():
@@ -641,7 +642,8 @@ def _validate_statuses(job_metrics: mp.JobMetrics,
                 for status in series.statuses.series:
                     if status == mp.FAIL_BLOCK_METRIC_STATUS:
                         expected_status = mp.FAIL_BLOCK_METRIC_STATUS
-                    elif status == mp.FAIL_WARN_METRIC_STATUS and expected_status != mp.FAIL_BLOCK_METRIC_STATUS:
+                    elif (status == mp.FAIL_WARN_METRIC_STATUS
+                          and expected_status != mp.FAIL_BLOCK_METRIC_STATUS):
                         expected_status = mp.FAIL_WARN_METRIC_STATUS
     _metrics_assert(expected_status == job_metrics.metrics_status)
     _metrics_assert(job_metrics.job_level_metrics.metrics_status ==
