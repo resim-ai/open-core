@@ -23,28 +23,31 @@ import resim.metrics.fetch_job_metrics as fjm
 _TOKEN = "wowwhatacoincidentaltoken"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MockMetric:
     """A mock for a resim.metric.proto.Metric protobuf message."""
+    name: str
     data: str
 
-@dataclass
+@dataclass(frozen=True)
 class MockMetricsData:
     """A mock for a resim.metric.proto.MetricsData protobuf message."""
+    name: str
     data: str
 
-@dataclass
+@dataclass(frozen=True)
 class MockJob:
     job_id: str
 
-@dataclass
+@dataclass(frozen=True)
 class MockListJobsResponse200:
     jobs: list[MockJob]
 
 @dataclass
 class MockUnpackedMetrics:
-    metrics: list[str]
-    metrics_data: list[str]
+    metrics: list[MockMetric]
+    metrics_data: list[MockMetricsData]
+    names: set[str]
 
 _JOB_ID_METRICS_URL_MAP = {
     uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"):
@@ -78,11 +81,11 @@ _BATCH_IDS_TO_JOB_IDS_MAP = {
 }
 
 _METRICS_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_{i}.binproto": MockMetric(data=f"metric_{i}") for i in range(10)
+    f"https://example.com/metrics_{i}.binproto": MockMetric(name = f"metric_{i} name", data=f"metric_{i}") for i in range(10)
 }
 
 _METRICS_DATA_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_data_{i}.binproto": MockMetricsData(data=f"data_{i}") for i in range(10)
+    f"https://example.com/metrics_data_{i}.binproto": MockMetricsData(name = f"data_{i} name", data=f"data_{i}") for i in range(10)
 }
 
 def _mock_fetch_metrics_urls(*,
@@ -120,8 +123,9 @@ def _mock_unpack_metrics(
     metrics: list[MockMetric],
     metrics_data: list[MockMetricsData]) -> MockUnpackedMetrics:
     return MockUnpackedMetrics(
-        metrics = [m.data for m in metrics],
-        metrics_data=[md.data for md in metrics_data]
+        metrics=metrics[:],
+        metrics_data=metrics_data[:],
+        names=set(m.name for m in metrics).union(set(md.name for md in metrics_data))
     )
 
 T = typing.TypeVar("T")
@@ -229,7 +233,26 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
                 batch_id=batch_id
             )
 
+            self.assertEqual(len(job_to_metrics), len(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
             self.assertEqual(set(job_to_metrics.keys()), set(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
+
+            names = list(job_to_metrics.values())[0].names
+            print(names)
+
+            for job_id, metrics in job_to_metrics.items():
+                self.assertEqual(
+                    set(metrics.metrics), 
+                    set(_METRICS_URL_TO_MESSAGE_MAP[url] for url in _JOB_ID_METRICS_URL_MAP[job_id]))
+                self.assertEqual(
+                    set(metrics.metrics_data), 
+                    set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url] for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
+                
+                expected_names = (
+                    set(_METRICS_URL_TO_MESSAGE_MAP[url].name for url in _JOB_ID_METRICS_URL_MAP[job_id])
+                    .union(set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url].name for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
+                )
+                self.assertEqual(metrics.names, expected_names)
+                                
 
 if __name__ == '__main__':
     unittest.main()
