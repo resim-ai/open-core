@@ -574,12 +574,11 @@ def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
     Check that the statuses in this JobMetrics are consistent
 
     This ensures that the status stored in the JobMetrics and the
-    MetricCollection match and are PASSED only if none of the metrics
-    FAILED.
+    MetricCollection match - e.g. they are PASSED if and only if 
+    none of the metrics FAILED.
 
     Args:
         job_metrics: The job metrics to validate.
-        metrics_data_map: A map to find the metrics data in.
     """
 
     expected_status = mp.PASSED_METRIC_STATUS
