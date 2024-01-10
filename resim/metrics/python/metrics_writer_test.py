@@ -426,7 +426,7 @@ class TestMetricsWriter(unittest.TestCase):
             'Labels', 'Detections']
         METRIC_BLOCKING = True
         METRIC_SHOULD_DISPLAY = True
-        METRIC_STATUS = MetricStatus.NOT_APPLICABLE_METRIC_STATUS
+        METRIC_STATUS = MetricStatus.FAIL_BLOCK_METRIC_STATUS
 
         timestamp_data = (SeriesMetricsData('Timestamps')
                           .with_series(EXAMPLE_TIMESTAMPS)

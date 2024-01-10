@@ -63,13 +63,13 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
     double_summary_values.failure_definition.fails_above = 29.0576
 
 
-def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
+def _add_event_counts(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
-    metric.name = "Event counts"
+    metric.name = "Event counts " + ("blocking" if block_fail else "warning")
     metric.type = mp.DOUBLE_SUMMARY_METRIC_TYPE
     metric.description = "Counts for various events"
-    metric.status = mp.PASSED_METRIC_STATUS
+    metric.status = mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
@@ -79,7 +79,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
     data.data_type = mp.DOUBLE_SERIES_DATA_TYPE
-    data.name = "Event counts data"
+    data.name = "Event counts data " + ("blocking" if block_fail else "warning")
     data.unit = ""
     data.is_per_category = True
     data.category_names.append("Engage")
@@ -92,7 +92,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
     status_data.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
-    status_data.name = "Event counts status"
+    status_data.name = "Event counts status " + ("blocking" if block_fail else "warning")
     status_data.unit = ""
     status_data.is_per_category = True
     status_data.category_names.append("Engage")
@@ -100,7 +100,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics) -> None:
     status_data.series_per_category.category_to_series["Engage"].statuses.series.append(
         mp.PASSED_METRIC_STATUS)
     status_data.series_per_category.category_to_series["Disengage"].statuses.series.append(
-        mp.FAIL_WARN_METRIC_STATUS)
+        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS)
 
     double_summary_values = metric.metric_values.double_metric_values
     double_summary_values.value_data_id.CopyFrom(data.metrics_data_id)
@@ -350,13 +350,13 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     line_plot_values.x_axis_name = "Predicted minimum distance"
 
 
-def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
+def _add_bar_chart_metric(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Detection latency"
     metric.type = mp.BAR_CHART_METRIC_TYPE
     metric.description = "Average latency on computing detections from images"
-    metric.status = mp.FAIL_WARN_METRIC_STATUS
+    metric.status = mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
@@ -375,13 +375,13 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics) -> None:
         "name": "Camera timings",
         "data": [1.5, 2.6, 1.8],
         "statuses": [mp.PASSED_METRIC_STATUS, mp.FAIL_WARN_METRIC_STATUS,
-                     mp.PASSED_METRIC_STATUS],
+                     mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS],
     },
         {
         "name": "Pytorch timings",
         "data": [10.1, 9.2, 12.3],
         "statuses": [mp.FAIL_WARN_METRIC_STATUS, mp.FAIL_WARN_METRIC_STATUS,
-                     mp.PASSED_METRIC_STATUS],
+                     mp.FAIL_BLOCK_METRIC_STATUS],
     }
     ]
 
@@ -696,7 +696,7 @@ def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     job_metrics.job_level_metrics.metrics_status = job_metrics_status
 
 
-def generate_test_metrics() -> mp.JobMetrics:
+def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     """
     Generate a set of test metrics containing representative examples for each
     of our metric types.
@@ -704,11 +704,11 @@ def generate_test_metrics() -> mp.JobMetrics:
     job_metrics = mp.JobMetrics()
     job_metrics.job_id.id.data = _get_uuid_str()
 
+    _add_event_counts(job_metrics, block_fail)
+    _add_bar_chart_metric(job_metrics, block_fail)
     _add_double_summary_metric(job_metrics)
-    _add_event_counts(job_metrics)
     _add_double_over_time_metric(job_metrics)
     _add_line_plot_metric(job_metrics)
-    _add_bar_chart_metric(job_metrics)
     _add_states_over_time_metric(job_metrics)
     _add_histogram_metric(job_metrics)
     _add_scalar_metric(job_metrics)
