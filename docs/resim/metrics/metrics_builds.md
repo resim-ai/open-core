@@ -21,7 +21,7 @@ Whether we are in `job mode` or `batch mode` is determined by the files in `/tmp
 
 Regardless of the mode, the job should finish by writing to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto), and which validates with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide. This is in fact the only requirement for a job! 
 
-> [!WARNING]
+> WARNING:
 > It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metric Types](./metrics_data.md), and [Metric Types](./metric_types.md).
  
 ## Job Mode computation
@@ -35,7 +35,7 @@ As always, we output any metrics we want to `/tmp/resim/outputs/metrics.binproto
 
 ## Batch Mode computation
 
-> [!WARNING]
+> WARNING:
 > The information here represents the current status of the batch metrics worker which is not final. We hope to make this system somewhat more generic and less manual in the near future.
 
 If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in `batch mode`! This file should look something like this:
