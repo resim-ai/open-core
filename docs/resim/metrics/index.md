@@ -5,7 +5,7 @@ One of ReSim's core features is a comprehensive and growing metrics system. The 
 1. Job Metrics: Metrics that are computed per-simulation-job, based off outputs from the simulation (such as log data and artifacts) - an example would be a *precision-recall* curve.
 2. Batch Metrics: Metrics that are computed by aggregating Job Metrics data across multiple jobs - for example, an average accuracy across all the jobs.
 
-These metrics are written using the same system, which is the [ResimMetricsWriter](https://github.com/resim-ai/open-core/blob/main/resim/metrics/python/metrics_writer.py), although the ``input data'' is of course different between the two. 
+These metrics are written using the same system, which is the [ResimMetricsWriter](https://github.com/resim-ai/open-core/blob/main/resim/metrics/python/metrics_writer.py), although the "input data" is of course different between the two. 
 
 Both are computed by the same underlying system.
 
