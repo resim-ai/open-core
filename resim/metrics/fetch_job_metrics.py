@@ -38,7 +38,11 @@ def fetch_job_metrics_by_batch(*,
                         token: str,
                         api_url: str,
                         batch_id: uuid.UUID) -> Dict[uuid.UUID, UnpackedMetrics]:
-    """Run the batch metrics and save them to the given metrics_path."""
+    """
+    This downloads all metrics associated with a certain batch, and stores them in a
+    dictionary mapping each job ID to the metrics and metrics data associated with 
+    those job IDs.
+    """
 
     # Fetch the jobs for this batch
     client = AuthenticatedClient(
@@ -75,7 +79,7 @@ def fetch_job_metrics(*,
                                                     dict[uuid.UUID,
                                                          list[mp.MetricsData]]]:
     """
-    This function fetches all job metrics from job_ids whose batch ids are in batch_ids.
+    This function fetches all job metrics from all specified jobs.
     """
 
     # Step 1: Fetch all the presigned urls per job
