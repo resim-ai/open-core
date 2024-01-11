@@ -49,6 +49,7 @@ python_configure(
     python_interpreter_target = interpreter,
 )
 
+
 # Golang protobuf dependencies
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -66,3 +67,20 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 go_rules_dependencies()
 
 go_register_toolchains(version = "1.20.7")
+
+load("@resim-python-client//:deps_0.bzl", "resim_python_client_dependencies_0")
+
+resim_python_client_dependencies_0()
+
+load("@resim-python-client//:deps_1.bzl", "resim_python_client_dependencies_1")
+
+resim_python_client_dependencies_1()
+
+load("@resim-python-client//:deps_2.bzl", "resim_python_client_dependencies_2")
+
+resim_python_client_dependencies_2()
+
+load("@resim-python-client//:deps_3.bzl", "resim_python_client_dependencies_3")
+
+resim_python_client_dependencies_3()
+

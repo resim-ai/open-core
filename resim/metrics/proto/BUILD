@@ -108,6 +108,7 @@ py_library(
     name = "generate_test_metrics",
     testonly = True,
     srcs = ["generate_test_metrics.py"],
+    visibility = ["//resim/metrics:__subpackages__"],
     deps = [
         ":metrics_proto_py",
     ],

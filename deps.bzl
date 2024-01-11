@@ -326,3 +326,11 @@ def resim_core_dependencies():
         strip_prefix = "pybind11-2.11.1",
         url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.zip",
     )
+
+    maybe(
+        http_archive,
+        name = "resim-python-client",
+        sha256 = "b81fc964c79d670c7670e67ccba9337ff268e1c8a84f9ed0bfd0719619ee6a82",
+        strip_prefix = "resim-python-client-8b9e79b3c845bda6c040b773d7443e7f3d612f88",
+        url = "https://github.com/resim-ai/resim-python-client/archive/8b9e79b3c845bda6c040b773d7443e7f3d612f88.zip",
+    )

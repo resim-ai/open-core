@@ -70,5 +70,5 @@ def resim_core_transitive_dependencies():
     # requirements_lock.txt.
     pip_parse(
         name = "resim_python_deps",
-        requirements_lock = "//:requirements_lock.txt",
+        requirements_lock = "@resim_open_core//:requirements_lock.txt",
     )
