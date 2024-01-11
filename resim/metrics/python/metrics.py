@@ -21,7 +21,6 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeAlias,
 
 import numpy as np
 
-# trunk-ignore(mypy/attr-defined)
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import (
     ResimMetricsOutput,
