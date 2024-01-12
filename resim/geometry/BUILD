@@ -172,3 +172,45 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "polygon_utils",
+    srcs = ["polygon_utils.cc"],
+    hdrs = ["polygon_utils.hh"],
+    deps = [
+        "//resim/assert",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "polygon_utils_test",
+    srcs = ["polygon_utils_test.cc"],
+    deps = [
+        ":polygon_utils",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "polygon_distance",
+    srcs = ["polygon_distance.cc"],
+    hdrs = ["polygon_distance.hh"],
+    deps = [
+        ":gjk_algorithm",
+        ":polygon_utils",
+        "//resim/assert",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "polygon_distance_test",
+    srcs = ["polygon_distance_test.cc"],
+    deps = [
+        ":polygon_distance",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
