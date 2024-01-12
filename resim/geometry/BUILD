@@ -197,6 +197,7 @@ cc_library(
     name = "polygon_distance",
     srcs = ["polygon_distance.cc"],
     hdrs = ["polygon_distance.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":gjk_algorithm",
         ":polygon_utils",

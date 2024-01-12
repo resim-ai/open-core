@@ -110,4 +110,18 @@ TEST(PolygonDistanceTest, TestOverlappingRectangles) {
   EXPECT_EQ(0., polygon_distance(polygon_a, polygon_b));
 }
 
+TEST(PolygonDistanceTest, TestSinglePoint) {
+  // SETUP
+  const std::vector<Eigen::Vector2d> polygon_a{
+      {0.0, 1.0},
+  };
+  const std::vector<Eigen::Vector2d> polygon_b{
+      {0.0, 1.5},
+      {1.0, 2.5},
+  };
+
+  // ACTION / VERIFICATION
+  EXPECT_EQ(polygon_distance(polygon_a, polygon_b), 0.5);
+}
+
 }  // namespace resim::geometry
