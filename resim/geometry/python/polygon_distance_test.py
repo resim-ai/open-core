@@ -30,10 +30,10 @@ class PolygonDistanceTest(unittest.TestCase):
                   np.array([1., 2.5]),
                   np.array([-1., 2.5])]
 
-        self.assertEqual(polydist.polygon_distance(poly_a, poly_b), 0.);
-        self.assertEqual(polydist.polygon_distance(poly_a, poly_c), 0.5);
-        self.assertEqual(polydist.polygon_distance(poly_b, poly_c), 1.0);                
-        
+        self.assertEqual(polydist.polygon_distance(poly_a, poly_b), 0.)
+        self.assertEqual(polydist.polygon_distance(poly_a, poly_c), 0.5)
+        self.assertEqual(polydist.polygon_distance(poly_b, poly_c), 1.0)
+
 
 
 if __name__ == '__main__':
