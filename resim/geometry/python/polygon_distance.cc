@@ -4,13 +4,13 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#include "resim/geometry/polygon_distance.hh"
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include <Eigen/Dense>
-
-#include "resim/geometry/polygon_distance.hh"
 
 namespace resim::geometry {
 namespace py = pybind11;

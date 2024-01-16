@@ -66,6 +66,7 @@ py_package(
         "resim.utils",
     ],
     deps = [
+        "//resim/geometry/python:polygon_distance.so",
         "//resim/metrics:dice_coefficient",
         "//resim/metrics:fetch_job_metrics",
         "//resim/metrics/python:metrics",

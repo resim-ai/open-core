@@ -9,8 +9,8 @@ load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
 
 pybind_extension(
-    name = "polygon_distance_python",
-    srcs = ["polygon_distance_python.cc"],
+    name = "polygon_distance",
+    srcs = ["polygon_distance.cc"],
     visibility = ["//visibility:public"],
     deps = [
         "//resim/geometry:polygon_distance",
@@ -21,7 +21,7 @@ py_test(
     name = "polygon_distance_test",
     srcs = ["polygon_distance_test.py"],
     data = [
-        ":polygon_distance_python.so",
+        ":polygon_distance.so",
     ],
     deps = [
         requirement("numpy"),
