@@ -245,7 +245,7 @@ TEST(PolygonUtilsTest, TestPointSegmentDistanceOnDegenerate) {
   constexpr size_t SEED = 4324U;
   std::mt19937 rng{SEED};
   const Vec2 segment_start{testing::random_vector<Vec2>(rng)};
-  const Vec2 segment_end{segment_start};
+  const Vec2& segment_end{segment_start};
 
   constexpr int NUM_POINTS = 10;
   for (int ii = 0; ii < NUM_POINTS; ++ii) {

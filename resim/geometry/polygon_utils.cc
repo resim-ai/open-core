@@ -9,19 +9,16 @@
 #include "resim/assert/assert.hh"
 #include "resim/math/clamp.hh"
 
-// TODO
-#include <iostream>
-
 namespace resim::geometry {
 
 namespace {
 
 using Vec2 = Eigen::Vector2d;
-using Mat2 = Eigen::Matrix2d;
-constexpr int DIM = 2;
 
+// Helper for 2d cross product.
 double cross(const Vec2 &a, const Vec2 &b) { return a(0) * b(1) - a(1) * b(0); }
 
+// Detect whether the given ray intersects the given line segment.
 bool ray_segment_intersection(
     const Eigen::Vector2d &ray_start,
     const Eigen::Vector2d &ray_dir,
@@ -118,7 +115,8 @@ bool point_in_polygon(
       ++intersection_count;
     }
   }
-  return bool(intersection_count % 2);  // Odd counts mean we're inside
+  return static_cast<bool>(
+      intersection_count % 2);  // Odd counts mean we're inside
 }
 
 }  // namespace resim::geometry
