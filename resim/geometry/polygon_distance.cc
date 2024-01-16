@@ -44,11 +44,15 @@ double polygon_distance(
     const std::vector<Eigen::Vector2d> &polygon_a,
     const std::vector<Eigen::Vector2d> &polygon_b) {
   if (polygon_a.size() > 2U) {
-    REASSERT(not self_intersecting(polygon_a), "Self intersection detected!");
+    REASSERT(
+        not is_self_intersecting(polygon_a),
+        "Self intersection detected!");
     assert_convex(polygon_a);
   }
   if (polygon_b.size() > 2U) {
-    REASSERT(not self_intersecting(polygon_b), "Self intersection detected!");
+    REASSERT(
+        not is_self_intersecting(polygon_b),
+        "Self intersection detected!");
     assert_convex(polygon_b);
   }
 

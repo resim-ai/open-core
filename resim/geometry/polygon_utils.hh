@@ -9,12 +9,32 @@
 
 namespace resim::geometry {
 
-bool edge_intersection(
+// Checks whether two line segments intersect.
+//
+// Intersection occurs if the intersection point of the two lines is
+// in the open interval of each segment. For example, segments with
+// coincident endpoints do not satisfy this function.
+bool segment_intersection(
     const Eigen::Vector2d &a0,
     const Eigen::Vector2d &a1,
     const Eigen::Vector2d &b0,
     const Eigen::Vector2d &b1);
 
-bool self_intersecting(const std::vector<Eigen::Vector2d> &polygon);
+// Get the shortest distance between a point and any point along a
+// given line segment.
+double point_line_segment_distance(
+    const Eigen::Vector2d &point,
+    const Eigen::Vector2d &segment_start,
+    const Eigen::Vector2d &segment_end);
+
+// Determine whether a polygon is self intersecting.
+bool is_self_intersecting(const std::vector<Eigen::Vector2d> &polygon);
+
+// Determine whether a given point is inside the given
+// polygon. Behavior is undefined for points on the edge of the
+// polygon.
+bool point_in_polygon(
+    const Eigen::Vector2d &point,
+    const std::vector<Eigen::Vector2d> &polygon);
 
 }  // namespace resim::geometry

@@ -122,3 +122,9 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "clamp",
+    hdrs = ["clamp.hh"],
+    visibility = ["//visibility:public"],
+)

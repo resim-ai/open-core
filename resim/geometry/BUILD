@@ -179,6 +179,8 @@ cc_library(
     hdrs = ["polygon_utils.hh"],
     deps = [
         "//resim/assert",
+        "//resim/math:clamp",
+        "//resim/testing:random_matrix",
         "@libeigen//:eigen",
     ],
 )
