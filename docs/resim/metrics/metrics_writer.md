@@ -1,6 +1,6 @@
 # The Metrics Writer
 
-When authoring metrics, we provide a writer that lets you simply output all your metrics into our protobuf format, without dealing with protobuf or details of the file format. We call this the `ResimMetricsWriter`.
+When authoring metrics, we provide a writer that lets you more easily output all your metrics into our protobuf format, without dealing with protobuf or any details of the file format. We call this the `ResimMetricsWriter`.
 
 ## Overall usage
 
@@ -45,7 +45,7 @@ metrics_writer
       .add_double_over_time_metric("Localization error") # Type and name specified here
       .with_description("Accumulated error in localization over time")
       .append_doubles_over_time_data(ERROR_INDEXED_BY_TIMESTAMPS) # Append a single data series, as we only want to plot one
-      .append_statuses_over_time_data(STATUSES_INDEXED_BY_TIMESTAMPS) # Append associated timestamps
+      .append_statuses_over_time_data(STATUSES_INDEXED_BY_TIMESTAMPS) # Append associated statuses
       .with_failure_definitions([DoubleFailureDefinition(fails_below=0.0, fails_above=1.0)])
       .with_start_time(Timestamp(secs=0))
       .with_end_time(Timestamp(secs=10))
@@ -57,11 +57,12 @@ metrics_writer
       .with_blocking(False)
 ```
 
-This will write a double over time metric to our output, with all the desired data and properties. As a rule of thumb, most of the parameters described in [the Metrics Types docs](./metric_types.md) can be set using the fluent API by appending `with_` to it.
+This will write a double over time metric to our output, with all the desired data and properties. As a rule of thumb, most of the parameters described in [the Metrics Types docs](./metric_types.md) can be set using the fluent API by prepending `with_` (or `append_`, for lists.)
 
-> NB: Notice that the `MetricsData` we used does *not* necessarily have to be written to the metrics writer. Provided the top-level metric referencing that data is written to the metrics writer, any associated data will also be written. For example, even the `TIMESTAMPS` data will (transitively) be written by the above code.
+> NB: Notice that the `MetricsData` we used does *not* necessarily have to be written to the metrics writer. Provided the top-level metric referencing that data is written to the metrics writer, any associated data will also be written. For example, even the `TIMESTAMPS` data will (transitively) be written to our output file by the above code.
 
 ### Writing metrics data
+
 You can also manually write `MetricsData` to the metrics_writer using 
 
 ```python

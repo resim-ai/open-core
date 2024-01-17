@@ -1,8 +1,8 @@
 # Metrics Data
 
-Metrics data is series-like data extracted from logs, in a way that can be represented. 
+Metrics data is series-like data extracted from logs, in a way that can be referenced by metrics, and represented in the app. 
 
-Within the metrics SDK, the basic object is a `SeriesMetricsData`, which is fundamentally a `np.array` of arbitrary length, with a unique associated `name`. This `np.array` can contain arbitrary types, but as of right now, only four types of data can actually be written to the metrics output:
+Within the metrics SDK, the basic object is a `SeriesMetricsData`, which is fundamentally a `np.array` of arbitrary length, with a unique `name` associated to it. This `np.array` can contain arbitrary types, but as of right now, only four types of data can actually be written to the metrics output:
 
 1. `float`
 2. `string`
@@ -11,7 +11,7 @@ Within the metrics SDK, the basic object is a `SeriesMetricsData`, which is fund
 
 Attempts to write any other types will fail. 
 
-(To store `int`, it is currently recommended to convert to `float`. To store `enum`, it is recommended to convert to `string`.)
+> (To store `int` types, it is currently recommended to convert to `float`. To store `enum`, it is recommended to convert to `string`.)
 
 Here is an example of code making a `SeriesMetricsData`
 
@@ -32,7 +32,7 @@ timestamps_data = SeriesMetricsData(
 )
 ```
 
-We also generally support a "fluent API" style for declaring `MetricsData`, which becomes more useful when trying to make new metrics and data and write them at the same time. But the above would be equivalent to:
+We also generally support a "fluent API" style for declaring `MetricsData`, which becomes more useful when trying to make new metrics and data and write them at the same time. The above would be equivalent to:
 
 ```
 timestamps_data = (
@@ -70,7 +70,7 @@ This is now an array "indexed" by the timestamps we made earlier, so can be thou
 }
 ```
 
-By indexing multiple series with the same index, tables can easily be converted into our format.
+By indexing multiple series with the same single index, tables can easily be converted into our format.
 
 > NB: There are a few key details here:
 > 1. The index array and data array must have the **same length**.
@@ -114,7 +114,7 @@ grouped_floats_data = {
 
 > NB: GroupedMetricsData can be indexed, and should be indexed by other GroupedMetricsData, with the same groups and lengths!
 
-> Tip: Generally, if you put GroupedMetricsData into a chart, it will make a "list" of charts - one for each group present. You can pick which chart you want using a dropdown menu. Some of these are not yet fully implemented in the UI yet.
+> Tip: Generally, if you put GroupedMetricsData into a chart, it will make a "list" of charts - one for each group present. You can pick which chart you want using a dropdown menu. Some of these are not yet fully implemented in the UI yet. See the [Metrics types docs](./metric_types.md) for more on this.
 
 ## Using metrics data
 
