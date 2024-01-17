@@ -37,7 +37,7 @@ FramedVector_3 random_element(
   FramedVector_3 result;
 
   const transforms::FramedVector<THREE> vec{
-      testing::random_vector<Eigen::Vector3d>(rng),
+      testing::random_vector<Eigen::Vector3d>(*rng),
       Frame<THREE>::new_frame()};
 
   pack(vec, &result);
