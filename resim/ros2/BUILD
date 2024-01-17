@@ -112,6 +112,32 @@ cc_test(
 )
 
 cc_library(
+    name = "point_from_ros2",
+    srcs = ["point_from_ros2.cc"],
+    hdrs = ["point_from_ros2.hh"],
+    deps = [
+        "//resim/transforms:framed_vector",
+        "//resim/transforms/proto:framed_vector_3_proto_cc",
+        "//resim/transforms/proto:framed_vector_3_to_proto",
+        "@libeigen//:eigen",
+        "@ros2_common_interfaces//:cpp_geometry_msgs",
+    ],
+)
+
+cc_test(
+    name = "point_from_ros2_test",
+    srcs = ["point_from_ros2_test.cc"],
+    deps = [
+        ":point_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "//resim/transforms:frame",
+        "//resim/transforms/proto:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "odometry_from_ros2",
     srcs = ["odometry_from_ros2.cc"],
     hdrs = ["odometry_from_ros2.hh"],
