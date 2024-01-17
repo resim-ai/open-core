@@ -9,11 +9,11 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 ### Shared Parameters
 
 - `name: str` - A required, immutable name. The same name cannot be used twice, so they are uniquely identifying.
-- `description: str` - A string description of the metric
+- `description: str` - A string description of the metric.
 - `status: MetricStatus` - An overall status (e.g. PASSED, FAILED). Note that by default this is *not* computed using any metrics failure definitions provided, it should be computed by the user.
-- `importance: MetricImportance` - An overall importance (e.g. CRITICAL, HIGH, LOW, ZERO)
-- `should_display: bool` - A bool representing whether this should be displayed in the UI
-- `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing
+- `importance: MetricImportance` - An overall importance (e.g. CRITICAL, HIGH, LOW, ZERO).
+- `should_display: bool` - A bool representing whether this should be displayed in the UI.
+- `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing. NB: This will likely be deprecated shortly.
 
 ## Scalar Metric
 
@@ -25,13 +25,13 @@ This is a maximally simple metric, with a single double. This is the only metric
 
 ### Parameters
 
-- `value: float` - the metric's numerical value
-- `failure_definition: DoubleFailureDefinition` - the thresholds (on `value`) for whether the metric fails
-- `unit: str` - a unit associated with `value`
+- `value: float` - the metric's numerical value.
+- `failure_definition: DoubleFailureDefinition` - the thresholds (on `value`) for whether the metric fails.
+- `unit: str` - a unit associated with `value`.
 
 ## Bar Chart
 
-Bar chart will provide a stacked or side-by-side bar chart of numerical data. An example would be the precision and recall being plotted, grouped by several different detection categories.
+Bar chart provides a stacked or side-by-side bar chart of numerical data. An example would be the precision and recall being plotted as bars, over several different detection categories.
 
 ![An example bar chart](./bar_chart.png)
 
@@ -57,11 +57,11 @@ This is a plot of doubles, across timestamps in the simulation/experience. An ex
 ### Parameters
 
 - `doubles_over_time_data: List[MetricsData]` - A list of $k$ MetricsData containing series of doubles, indexed by series of timestamps. Each such series will be plotted as a separate line on the same chart.
-- `statuses_over_time_data: List[MetricsData]` - A list of $k$ MetricsData containing series of statuses, indexed by the same timestmaps
+- `statuses_over_time_data: List[MetricsData]` - A list of $k$ MetricsData containing series of statuses, indexed by the same timestamps.
 - `failure_definitions: List[DoubleFailureDefinition]` - An optional list of $k$ failure thresholds, corresponding to the $k$ series of doubles.
 - `start_time: Timestamp` - An optional start time, if it differs from the minimum element in the $k$ series.
 - `end_time: Timestamp` - An optional end time, if it differs from the maximum element in the $k$ series.
-- `y_axis_name: str`: Optional
+- `y_axis_name: str`
 - `legend_series_names: List[str]`: An optional list of $k$ names for the data series - if not provided, the MetricsData names will be used.
 
 ### Grouped Data Support
@@ -70,7 +70,7 @@ Grouped data should not currently be supplied to double over time metrics.
 
 ## Double Summary 
 
-This is a single double summarizing an series of data. Currently it only supports indexing an element from a series - in the future, we will likely add simple operations such as max, min, mean, and median.
+This is a single double summarizing a larger series of data. Currently, it only supports indexing an element from a series - in the future, we will likely add simple operations such as max, min, mean, and median.
 
 ![An example double summary metric](./double_summary.png)
 
@@ -79,7 +79,7 @@ This is a single double summarizing an series of data. Currently it only support
 - `value_data: MetricsData` - A series of doubles, optionally indexed.
 - `status_data: MetricStatus` - A series of statuses, corresponding to `value_data`.
 - `index_data: Union[int, str, Timestamp, uuid.UUID]` - An optional index $i$, with type corresponding to the index type of `value_data` (or `int` if there is no index). If not provided, then 0 will be used. This "selects" the element with corresponding index from value_data.
-- `failure_definition`: A failure definition for the selected value
+- `failure_definition`: A failure definition for the selected value.
 
 ### Grouped data
 
@@ -116,8 +116,8 @@ Line charts are classical line charts, plotting a dependent variable against an 
 
 ### Parameters
 
-- `x_doubles_data: List[MetricsData]` - A list of $k$ series of x-axis values to plot, which are doubles. Each series will be plotted on the same chart
-- `y_doubles_data: List[MetricsData]` - A list of $k$ series of y-axis values, each corresponding to the corresponding series in `x_doubles_data`
+- `x_doubles_data: List[MetricsData]` - A list of $k$ series of x-axis values to plot, which are doubles. Each series will be plotted on the same chart.
+- `y_doubles_data: List[MetricsData]` - A list of $k$ series of y-axis values, where the $i$^{th} series corresponds to the $i$^{th} series in `x_doubles_data`.
 - `statuses_data: List[MetricsData]` - A list of $k$ series of statuses, each corresponding to the corresponding (pair of) values in `x_doubles_data` and `y_doubles_data`
 - `x_axis_name: str`
 - `y_axis_name: str`
@@ -135,11 +135,11 @@ Histograms plot the frequencies with which doubles appear in an array, by bucket
 
 ### Parameters
 
-- `values_data: MetricsData`: A series of doubles, the frequencies of which will be plotted
-- `statuses_data: MetricsData`: The associated statuses to `values_data`
+- `values_data: MetricsData`: A series of doubles, the frequencies of which will be plotted.
+- `statuses_data: MetricsData`: The associated statuses to `values_data`.
 - `buckets: List[HistogramBucket]`: A list of the buckets to use for the histogram plot - e.g `[[0, 1), [1, 2), [2, 3)]` would plot of how many of the doubles appear in each integer interval between 0 and 3.
-- `lower_bound`: An optional lower bound on how small values can be
-- `upper_bound`: An optional upper bound on how big values can be
+- `lower_bound`: An optional lower bound on how small values can be.
+- `upper_bound`: An optional upper bound on how big values can be.
 
 ### Grouped data support
 
