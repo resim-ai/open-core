@@ -233,7 +233,7 @@ cc_test(
 cc_library(
     name = "converter_plugin_types",
     hdrs = ["converter_plugin_types.h"],
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
