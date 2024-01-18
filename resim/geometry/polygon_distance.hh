@@ -12,7 +12,7 @@ namespace resim::geometry {
 // Compute the minimum distance between two polygons.
 //
 // If either polygon has less than 3 elements, it's treated as a line
-// segement or a point. The polygons are expressed as sequences of
+// segment or a point. The polygons are expressed as sequences of
 // points representing their outer boundaries. Currently, polygon_a
 // and polygon_b must be simple and convex if they have more than
 // three elements and this is enforced. Orientation is not enforced.
