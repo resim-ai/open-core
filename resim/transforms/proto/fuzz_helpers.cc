@@ -12,4 +12,8 @@ bool verify_equality(const SE3 &a, const SE3 &b) {
   return unpack(a).is_approx(unpack(b));
 }
 
+bool verify_equality(const FramedVector_3 &a, const FramedVector_3 &b) {
+  return unpack(a).isApprox(unpack(b));
+}
+
 }  // namespace resim::transforms::proto

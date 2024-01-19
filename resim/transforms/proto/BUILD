@@ -180,10 +180,13 @@ cc_library(
     hdrs = ["fuzz_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":framed_vector_3_proto_cc",
+        ":framed_vector_3_to_proto",
         ":se3_proto_cc",
         ":se3_to_proto",
         "//resim/testing:fuzz_helpers",
         "//resim/testing:random_matrix",
+        "//resim/transforms:framed_vector",
         "//resim/transforms:se3",
         "//resim/utils:inout",
     ],
