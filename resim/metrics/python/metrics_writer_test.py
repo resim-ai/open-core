@@ -42,7 +42,7 @@ EXAMPLE_FAILURE_STATES = ['UNKNOWN']
 EXAMPLE_LEGEND_SERIES_NAMES = ['Labels', 'Detections']
 EXAMPLE_STATUSES = [
     MetricStatus.PASSED_METRIC_STATUS,
-    MetricStatus.FAIL_WARN_METRIC_STATUS]
+    MetricStatus.FAILED_METRIC_STATUS]
 
 EXAMPLE_IDS = np.array([EXAMPLE_ID_SET[i] for i in range(
     NUM_ACTORS) for _ in range(EXAMPLE_COUNTS[i])])
@@ -426,7 +426,7 @@ class TestMetricsWriter(unittest.TestCase):
             'Labels', 'Detections']
         METRIC_BLOCKING = True
         METRIC_SHOULD_DISPLAY = True
-        METRIC_STATUS = MetricStatus.FAIL_BLOCK_METRIC_STATUS
+        METRIC_STATUS = MetricStatus.NOT_APPLICABLE_METRIC_STATUS
 
         timestamp_data = (SeriesMetricsData('Timestamps')
                           .with_series(EXAMPLE_TIMESTAMPS)

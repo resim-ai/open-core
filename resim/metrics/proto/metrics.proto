@@ -117,10 +117,9 @@ message MetricsData {
 enum MetricStatus {
     NO_METRIC_STATUS             = 0;
     PASSED_METRIC_STATUS         = 1;
-    FAIL_WARN_METRIC_STATUS      = 2;
+    FAILED_METRIC_STATUS         = 2;
     NOT_APPLICABLE_METRIC_STATUS = 3;
     RAW_METRIC_STATUS            = 4;
-    FAIL_BLOCK_METRIC_STATUS     = 5;
 }
 
 enum MetricImportance {
@@ -191,8 +190,7 @@ message Metric {
 
     MetricValues metric_values = 7;
 
-    optional bool blocking =
-        8;  // DEPRECATED - use FAIL_BLOCK_METRIC_STATUS instead
+    optional bool blocking = 8;
 
     MetricImportance importance = 9;
 
