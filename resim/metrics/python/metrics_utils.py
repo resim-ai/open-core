@@ -22,10 +22,9 @@ from resim.utils.proto import uuid_pb2
 class MetricStatus(Enum):
     NO_METRIC_STATUS = 0
     PASSED_METRIC_STATUS = 1
-    FAIL_WARN_METRIC_STATUS = 2
+    FAILED_METRIC_STATUS = 2
     NOT_APPLICABLE_METRIC_STATUS = 3
     RAW_METRIC_STATUS = 4
-    FAIL_BLOCK_METRIC_STATUS = 5
 
 
 class MetricImportance(Enum):
