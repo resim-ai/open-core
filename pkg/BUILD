@@ -99,7 +99,10 @@ py_wheel(
 
 py_package(
     name = "msg_package",
-    packages = ["resim.msg"],
+    packages = [
+        "resim.msg",
+        "resim.transforms.proto",
+    ],
     deps = [
         "//resim/msg:detection_proto_py",
         "//resim/msg:header_proto_py",
@@ -107,6 +110,7 @@ py_package(
         "//resim/msg:odometry_proto_py",
         "//resim/msg:pose_proto_py",
         "//resim/msg:transform_proto_py",
+        "//resim/transforms/proto:framed_vector_3_proto_py",
     ],
 )
 
