@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 cc_library(
     name = "liegroup_to_proto",
@@ -92,6 +93,12 @@ proto_library(
 
 cc_proto_library(
     name = "framed_vector_3_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":framed_vector_3_proto"],
+)
+
+py_proto_library(
+    name = "framed_vector_3_proto_py",
     visibility = ["//visibility:public"],
     deps = [":framed_vector_3_proto"],
 )
