@@ -24,8 +24,8 @@ template <typename T>
 T make_clean_serialized_message() {
   return T{
       .buffer = nullptr,
-      .buffer_length = 0u,
-      .buffer_capacity = 0u,
+      .buffer_length = 0U,
+      .buffer_capacity = 0U,
       .allocator =
           rcutils_allocator_t{
               .allocate = nullptr,
@@ -41,7 +41,12 @@ T make_clean_serialized_message() {
 template <typename T>
 class ReSimMessageRAII {
  public:
-  ReSimMessageRAII(T &message) : message_{message} {}
+  explicit ReSimMessageRAII(T &message) : message_{message} {}
+  ReSimMessageRAII(const ReSimMessageRAII &) = delete;
+  ReSimMessageRAII(ReSimMessageRAII &&) = delete;
+  ReSimMessageRAII &operator=(const ReSimMessageRAII &) = delete;
+  ReSimMessageRAII &operator=(ReSimMessageRAII &&) = delete;
+
   ~ReSimMessageRAII() {
     if (message_.buffer != nullptr) {
       message_.allocator.deallocate(message_.buffer, message_.allocator.state);
