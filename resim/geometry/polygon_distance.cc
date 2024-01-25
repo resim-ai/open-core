@@ -6,6 +6,8 @@
 
 #include "resim/geometry/polygon_distance.hh"
 
+#include <glog/logging.h>
+
 #include "resim/assert/assert.hh"
 #include "resim/geometry/gjk_algorithm.hh"
 #include "resim/geometry/polygon_utils.hh"
@@ -33,7 +35,11 @@ void assert_convex(const std::vector<Eigen::Vector2d> &polygon) {
     if (sign == 0.) {
       sign = cross_sign;
     } else {
-      REASSERT(sign == cross_sign, "Polygon is non-convex!");
+      if (sign != cross_sign) {
+        LOG(WARNING)
+            << "Polygon is non-convex! Distance result will be underestimated!";
+        return;
+      }
     }
   }
 }

@@ -58,6 +58,7 @@ cc_library(
     name = "transform_from_ros2",
     srcs = ["transform_from_ros2.cc"],
     hdrs = ["transform_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         "//resim/msg:transform_proto_cc",
@@ -141,6 +142,7 @@ cc_library(
     name = "odometry_from_ros2",
     srcs = ["odometry_from_ros2.cc"],
     hdrs = ["odometry_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         ":pose_from_ros2",
@@ -361,7 +363,7 @@ ros2_cpp_test(
     name = "resim_log_from_ros2_test",
     testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
     srcs = ["resim_log_from_ros2_test.cc"],
-    data = [":default_converter_plugin.so"],
+    data = ["//resim/ros2/testing:resim_log_from_ros2_test_converter_plugin.so"],
     set_up_ament = True,
     deps = [
         ":resim_log_from_ros2",
