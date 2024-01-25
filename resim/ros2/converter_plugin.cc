@@ -19,7 +19,7 @@ namespace resim::ros2 {
 namespace {
 
 // Simple helper to make sure we initialize the buffer with nullptr. T
-// can be rmw_serialized_message_t or rcutils_uint8_array_t.
+// can be rcl_serialized_message_t or rcutils_uint8_array_t.
 template <typename T>
 T make_clean_serialized_message() {
   return T{
