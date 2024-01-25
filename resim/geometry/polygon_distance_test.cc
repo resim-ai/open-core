@@ -78,17 +78,17 @@ TEST(PolygonDistanceTest, TestNonConvex) {
   const std::vector<Eigen::Vector2d> polygon_a{
       {-1.0, 1.0},
       {-1.0, -1.0},
-      {0.5, 0.5},
       {1.0, -1.0},
+      {-0.5, -0.5},
   };
   const std::vector<Eigen::Vector2d> triangle_b{
-      {0.0, 1.5},
+      {-0.25, -0.25},
       {1.0, 2.5},
-      {-1.0, 2.5},
+      {2.5, 1.0},
   };
 
   // ACTION / VERIFICATION
-  EXPECT_THROW(polygon_distance(polygon_a, triangle_b), AssertException);
+  EXPECT_EQ(polygon_distance(polygon_a, triangle_b), 0.0);
 }
 
 TEST(PolygonDistanceTest, TestOverlappingRectangles) {
