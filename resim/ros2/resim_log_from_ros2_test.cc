@@ -23,7 +23,8 @@ TEST(ResimLogFromRos2Test, TestConversion) {
   const std::filesystem::path input_path{test_directory.test_file_path()};
   const std::filesystem::path output_path{
       test_directory.test_file_path("mcap")};
-  constexpr auto PLUGIN_PATH = "resim/ros2/default_converter_plugin.so";
+  constexpr auto PLUGIN_PATH =
+      "resim/ros2/testing/resim_log_from_ros2_test_converter_plugin.so";
 
   populate_log(input_path);
 

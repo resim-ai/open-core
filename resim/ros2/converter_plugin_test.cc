@@ -84,16 +84,17 @@ TEST(ConverterPluginTest, TestConvert) {
   invalid_ros2_message.get_rcl_serialized_message().buffer = nullptr;
 
   // ACTION
-  const auto converted =
+  const auto maybe_converted =
       plugin.convert("convertible_message_type", ros2_message);
+  ASSERT_TRUE(maybe_converted.has_value());
+  const auto &converted = maybe_converted.value();
 
   EXPECT_THROW(
       plugin.convert("unconvertible_message_type", ros2_message),
       AssertException);
 
-  EXPECT_THROW(
-      plugin.convert("convertible_message_type", invalid_ros2_message),
-      AssertException);
+  EXPECT_FALSE(plugin.convert("convertible_message_type", invalid_ros2_message)
+                   .has_value());
 
   // VERIFICATION
   const std::string expected_response =
