@@ -4,6 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+// This file defines a simple test converter plugin which correctly
+// converts Odometry and TFMessages, and claims to convert
+// std_msgs/msg/UInt8MultiArray, but actually fails when one tries
+// this.
+
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -66,7 +71,6 @@ const std::unordered_map<std::string, ConverterFunctions> converters_map = {
 }  // namespace
 
 // Implement the actual functions for this plugin:
-
 extern "C" bool resim_convert_supports_ros2_type(
     const char *ros2_message_type) {
   if (std::string(ros2_message_type) == "std_msgs/msg/UInt8MultiArray") {
