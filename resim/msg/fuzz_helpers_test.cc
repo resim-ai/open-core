@@ -491,4 +491,39 @@ TEST(FuzzHelpersTest, TestNavSatFixEqual) {
       verify_equality(nav_sat_fix_different_covariance_type, nav_sat_fix));
 }
 
+template <typename T>
+class PrimitiveFuzzHelpersTest : public ::testing::Test {};
+
+using PrimitiveTypes = ::testing::Types<
+    Bool,
+    Byte,
+    Char,
+    Float32,
+    Float64,
+    Int16,
+    Int32,
+    Int64,
+    Int8,
+    String,
+    UInt16,
+    UInt32,
+    UInt64,
+    UInt8>;
+
+TYPED_TEST_SUITE(PrimitiveFuzzHelpersTest, PrimitiveTypes);
+
+TYPED_TEST(PrimitiveFuzzHelpersTest, TestEquality) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const auto test_value{random_element<TypeParam>(InOut{rng})};
+  const auto different_value{random_element<TypeParam>(InOut{rng})};
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(test_value, test_value));
+  EXPECT_FALSE(verify_equality(test_value, different_value));
+  EXPECT_FALSE(verify_equality(different_value, test_value));
+}
+
 }  // namespace resim::msg
