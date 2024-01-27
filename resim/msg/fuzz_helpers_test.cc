@@ -526,4 +526,18 @@ TYPED_TEST(PrimitiveFuzzHelpersTest, TestEquality) {
   EXPECT_FALSE(verify_equality(different_value, test_value));
 }
 
+TEST(FuzzHelpersTest, TestEmpty) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const auto test_value{random_element<Empty>(InOut{rng})};
+  const auto different_value{random_element<Empty>(InOut{rng})};
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(test_value, test_value));
+  EXPECT_TRUE(verify_equality(test_value, different_value));
+  EXPECT_TRUE(verify_equality(different_value, test_value));
+}
+
 }  // namespace resim::msg
