@@ -236,6 +236,10 @@ cc_library(
     name = "byte_swap_helpers",
     srcs = ["byte_swap_helpers.cc"],
     hdrs = ["byte_swap_helpers.hh"],
+    visibility = [
+        "//resim/msg:__subpackages__",
+        "//resim/ros2:__subpackages__",
+    ],
     deps = [
         ":primitives_proto_cc",
         "//resim/utils:inout",
