@@ -15,6 +15,10 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 - `should_display: bool` - A bool representing whether this should be displayed in the UI.
 - `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing. NB: This will likely be deprecated shortly.
 
+### Grouped data support
+
+> Some metrics support "grouped data" [as described in the metrics data docs](./metrics_data.md#grouping-metrics-data), and some do not yet support this. Please check below to see whether it is supported, before attaching grouped data to a metric!
+
 ## Scalar Metric
 
 This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be distance traveled by a robot.
