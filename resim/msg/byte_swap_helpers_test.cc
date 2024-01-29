@@ -31,13 +31,13 @@ TEST(ByteSwapHelpersTest, TestSetBytes) {
   set_data(TEST_UINT, InOut{uint16_msg});
 
   // VERIFICATION
-  constexpr size_t NUM_BYTES = 2u;
+  constexpr size_t NUM_BYTES = 2U;
   EXPECT_EQ(
       std::memcmp(int16_msg.data().data(), expected_bytes.data(), NUM_BYTES),
-      0u);
+      0U);
   EXPECT_EQ(
       std::memcmp(uint16_msg.data().data(), expected_bytes.data(), NUM_BYTES),
-      0u);
+      0U);
 }
 
 TEST(ByteSwapHelpersTest, TestSetBytesBigEndian) {
@@ -55,13 +55,13 @@ TEST(ByteSwapHelpersTest, TestSetBytesBigEndian) {
   set_data<std::endian::big>(TEST_UINT, InOut{uint16_msg});
 
   // VERIFICATION
-  constexpr size_t NUM_BYTES = 2u;
+  constexpr size_t NUM_BYTES = 2U;
   EXPECT_EQ(
       std::memcmp(int16_msg.data().data(), expected_bytes.data(), NUM_BYTES),
-      0u);
+      0U);
   EXPECT_EQ(
       std::memcmp(uint16_msg.data().data(), expected_bytes.data(), NUM_BYTES),
-      0u);
+      0U);
 }
 
 TEST(ByteSwapHelpersTest, TestGetBytes) {

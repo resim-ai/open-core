@@ -47,7 +47,7 @@ void set_data(const uint16_t data, InOut<UInt16> msg) {
 template <std::endian target_order>
 int16_t data(const Int16 &msg) {
   constexpr size_t NUM_BYTES = 2;
-  std::array<std::byte, NUM_BYTES> data_bits;
+  std::array<std::byte, NUM_BYTES> data_bits{};
   std::memcpy(data_bits.data(), msg.data().data(), NUM_BYTES);
 
   static_assert(
@@ -62,7 +62,7 @@ int16_t data(const Int16 &msg) {
 template <std::endian target_order>
 uint16_t data(const UInt16 &msg) {
   constexpr size_t NUM_BYTES = 2;
-  std::array<std::byte, NUM_BYTES> data_bits;
+  std::array<std::byte, NUM_BYTES> data_bits{};
   std::memcpy(data_bits.data(), msg.data().data(), NUM_BYTES);
 
   static_assert(
