@@ -73,4 +73,4 @@ This is useful, because we may want to write data that is not immediately refere
 
 ## Validating the metrics writer output
 
-It's important to validate your output, to check it's a valid protobuf message that our system can plot. We currently provide this through the `validate_job_metrics` function in `resim.metrics.proto.validate_metrics_proto`. Note that this is called on the **output metrics message** of the metrics writer (i.e. `output.metrics_msg`), not the metrics writer itself.
+It's important to validate your output, to check it's a valid protobuf message that our system can plot.  We currently provide this through the `validate_job_metrics` function in `resim.metrics.proto.validate_metrics_proto`. Note that this is called on the **output metrics message** of the metrics writer (i.e. `output.metrics_msg`), not the metrics writer itself.

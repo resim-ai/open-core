@@ -17,7 +17,7 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 
 ## Scalar Metric
 
-This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be overall accuracy.
+This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be distance traveled by a robot.
 
 > Our roadmap includes support for scalar metrics being visualized over time on the same experience, and easily averaged and compared across multiple runs and batches, so use ScalarMetric for top-line metrics you want to see improve over time!
 
@@ -110,7 +110,7 @@ Grouped data is supported for StatesOverTime metrics, and will give a dropdown, 
 
 Line charts are classical line charts, plotting a dependent variable against an independent variable, joined by a line. Multiple lines can be placed on one chart.
 
-> Our roadmap includes adding scatter plots under this also.
+> Our roadmap includes adding scatter plots under this plot type also.
 
 ![An example line chart](./line_chart.png)
 
