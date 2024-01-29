@@ -19,6 +19,7 @@ namespace resim::msg {
 TEST(ByteSwapHelpersTest, TestSetBytes) {
   // SETUP
   // Little endian
+  // NOLINTNEXTLINE(readability-magic-numbers)
   std::vector<uint8_t> expected_bytes{0x5a, 0xb7};
   constexpr int16_t TEST_INT = -18598;
   constexpr uint16_t TEST_UINT = 46938;
@@ -43,6 +44,7 @@ TEST(ByteSwapHelpersTest, TestSetBytes) {
 TEST(ByteSwapHelpersTest, TestSetBytesBigEndian) {
   // SETUP
   // Little endian
+  // NOLINTNEXTLINE(readability-magic-numbers)
   std::vector<uint8_t> expected_bytes{0xb7, 0x5a};
   constexpr int16_t TEST_INT = -18598;
   constexpr uint16_t TEST_UINT = 46938;
