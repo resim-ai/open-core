@@ -122,3 +122,22 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "clamp",
+    hdrs = ["clamp.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/assert",
+    ],
+)
+
+cc_test(
+    name = "clamp_test",
+    srcs = ["clamp_test.cc"],
+    deps = [
+        ":clamp",
+        "//resim/assert",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

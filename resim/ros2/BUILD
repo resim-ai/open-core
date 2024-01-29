@@ -58,6 +58,7 @@ cc_library(
     name = "transform_from_ros2",
     srcs = ["transform_from_ros2.cc"],
     hdrs = ["transform_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         "//resim/msg:transform_proto_cc",
@@ -112,9 +113,36 @@ cc_test(
 )
 
 cc_library(
+    name = "point_from_ros2",
+    srcs = ["point_from_ros2.cc"],
+    hdrs = ["point_from_ros2.hh"],
+    deps = [
+        "//resim/transforms:framed_vector",
+        "//resim/transforms/proto:framed_vector_3_proto_cc",
+        "//resim/transforms/proto:framed_vector_3_to_proto",
+        "@libeigen//:eigen",
+        "@ros2_common_interfaces//:cpp_geometry_msgs",
+    ],
+)
+
+cc_test(
+    name = "point_from_ros2_test",
+    srcs = ["point_from_ros2_test.cc"],
+    deps = [
+        ":point_from_ros2",
+        "//resim/testing:fuzz_helpers",
+        "//resim/transforms:frame",
+        "//resim/transforms/proto:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "odometry_from_ros2",
     srcs = ["odometry_from_ros2.cc"],
     hdrs = ["odometry_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         ":pose_from_ros2",
@@ -207,7 +235,7 @@ cc_test(
 cc_library(
     name = "converter_plugin_types",
     hdrs = ["converter_plugin_types.h"],
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
@@ -335,7 +363,7 @@ ros2_cpp_test(
     name = "resim_log_from_ros2_test",
     testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
     srcs = ["resim_log_from_ros2_test.cc"],
-    data = [":default_converter_plugin.so"],
+    data = ["//resim/ros2/testing:resim_log_from_ros2_test_converter_plugin.so"],
     set_up_ament = True,
     deps = [
         ":resim_log_from_ros2",

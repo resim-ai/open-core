@@ -15,6 +15,7 @@
 #include <rclcpp/serialized_message.hpp>
 #include <rosbag2_cpp/writer.hpp>
 #include <std_msgs/msg/byte.hpp>
+#include <std_msgs/msg/u_int8_multi_array.hpp>
 #include <string>
 #include <tuple>
 
@@ -112,6 +113,9 @@ void populate_log(const std::filesystem::path &log_path) {
   // Write a message type we don't support converting
   std_msgs::msg::Byte byte;
   writer.write(byte, "/should_not_be_converted", rclcpp::Time());
+
+  std_msgs::msg::UInt8MultiArray arr;
+  writer.write(arr, "/should_fail_when_converted", rclcpp::Time());
 }
 
 // Helper function to confirm that the ReSim log at the given path contains the

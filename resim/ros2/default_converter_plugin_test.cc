@@ -190,7 +190,10 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
   serialization.serialize_message(&ros2_message, &serialized_message);
 
   // ACTION
-  auto converted = plugin.convert(ros2_type_name, serialized_message);
+  const auto maybe_converted =
+      plugin.convert(ros2_type_name, serialized_message);
+  ASSERT_TRUE(maybe_converted.has_value());
+  const auto &converted = maybe_converted.value();
 
   // VERIFICATION
   ReSimType deserialized;
@@ -209,9 +212,7 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvertBadMessage) {
   rclcpp::SerializedMessage serialized_message;
 
   // ACTION / VERIFICATION
-  EXPECT_THROW(
-      plugin.convert(ros2_type_name, serialized_message),
-      AssertException);
+  EXPECT_EQ(plugin.convert(ros2_type_name, serialized_message), std::nullopt);
 }
 
 }  // namespace resim::ros2
