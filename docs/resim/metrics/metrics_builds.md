@@ -19,10 +19,10 @@ Whether we are in `job mode` or `batch mode` is determined by the files in `/tmp
 
 # Output
 
-Regardless of the mode, the job should finish by writing to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto), and which validates with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide. This is in fact the only requirement for a metrics build. 
+Regardless of the mode, your metrics build is required to write to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto). This protobuf should validate with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide.
 
 > WARNING:
-> It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metric Types](./metrics_data.md), and [Metric Types](./metric_types.md). We reserve the right to modify this proto at any point, and do not guarantee substantial backwards compatibiliity support (such as field names remaining the same.)
+> It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metric Types](./metrics_data.md), and [Metric Types](./metric_types.md). We reserve the right to modify this proto at any point, and do not guarantee substantial backwards compatibiliity support (such as field names remaining the same).
  
 ## Job Mode computation
 
