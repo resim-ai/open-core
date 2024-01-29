@@ -18,6 +18,7 @@
 namespace resim::ros2 {
 
 using Types = ::testing::Types<
+    msg::Bool,
     msg::Byte,
     msg::Char,
     msg::Empty,

@@ -8,9 +8,9 @@ syntax = "proto3";
 
 package resim.msg;
 
-// This message holds a boolean in a protobuf message so it can be
-// represented as an independent message (rather than a field in
-// another message).
+// These messages hold various primitive types wrapped in messages in
+// case we want to serialize and store them.
+
 message Bool {
     bool data = 1;
 }
