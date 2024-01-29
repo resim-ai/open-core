@@ -175,7 +175,7 @@ cc_library(
     testonly = True,
     srcs = ["fuzz_helpers.cc"],
     hdrs = ["fuzz_helpers.hh"],
-    visibility = ["//resim:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":detection_proto_cc",
         ":header_proto_cc",
