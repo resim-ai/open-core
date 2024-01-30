@@ -2,7 +2,7 @@
 
 Metrics data is series-like data extracted from logs, in a way that can be referenced by metrics, and represented in the app. 
 
-Within the metrics SDK, the basic object is a `SeriesMetricsData`, which is fundamentally a `np.array` of arbitrary length, with a unique `name` associated to it. This `np.array` can contain arbitrary types, but as of right now, only four types of data can actually be written to the metrics output:
+Within the metrics SDK, the basic object is a `SeriesMetricsData`, which is fundamentally a  numpy `array` of arbitrary length, with a unique `name` associated to it. This numpy `array` can contain arbitrary types, but as of right now, only four types of data can actually be written to the metrics output:
 
 1. `float`
 2. `string`
@@ -32,7 +32,7 @@ timestamps_data = SeriesMetricsData(
 )
 ```
 
-We also generally support a "fluent API" style for declaring `MetricsData`, which becomes more useful when trying to make new metrics and data and write them at the same time. The above would be equivalent to:
+We also support a "fluent API" style for declaring `MetricsData`, which becomes more useful when trying to make new metrics and data and write them at the same time. The above would be equivalent to:
 
 ```
 timestamps_data = (
@@ -72,7 +72,7 @@ This is now an array "indexed" by the timestamps we made earlier, so can be thou
 
 By indexing multiple series with the same single index, tables can easily be converted into our format.
 
-> NB: There are a few key details here:
+> Note: There are a few key details here:
 > 1. The index array and data array must have the **same length**.
 > 2. Index arrays should **not** themselves be indexed.
 > 3. If the index array contains repeats, then the first matching index is considered the relevant one when trying to retrieve variables by index.

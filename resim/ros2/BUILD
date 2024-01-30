@@ -12,6 +12,32 @@ load("@rules_python//python:defs.bzl", "py_test")
 load(":ros2_py_package.bzl", "ros2_py_package")
 
 cc_library(
+    name = "primitives_from_ros2",
+    srcs = ["primitives_from_ros2.cc"],
+    hdrs = ["primitives_from_ros2.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/assert",
+        "//resim/msg:byte_swap_helpers",
+        "//resim/msg:primitives_proto_cc",
+        "@ros2_common_interfaces//:cpp_std_msgs",
+    ],
+)
+
+cc_test(
+    name = "primitives_from_ros2_test",
+    srcs = ["primitives_from_ros2_test.cc"],
+    deps = [
+        ":primitives_from_ros2",
+        "//resim/msg:fuzz_helpers",
+        "//resim/msg:primitives_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "time_from_ros2",
     srcs = ["time_from_ros2.cc"],
     hdrs = ["time_from_ros2.hh"],

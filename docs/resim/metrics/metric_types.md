@@ -15,9 +15,13 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 - `should_display: bool` - A bool representing whether this should be displayed in the UI.
 - `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing. NB: This will likely be deprecated shortly.
 
+### Grouped data support
+
+> Some metrics support "grouped data" [as described in the metrics data docs](./metrics_data.md#grouping-metrics-data), and some do not yet support this. Please check below to see whether it is supported, before attaching grouped data to a metric!
+
 ## Scalar Metric
 
-This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be overall accuracy.
+This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be distance traveled by a robot.
 
 > Our roadmap includes support for scalar metrics being visualized over time on the same experience, and easily averaged and compared across multiple runs and batches, so use ScalarMetric for top-line metrics you want to see improve over time!
 
@@ -102,7 +106,7 @@ States-over-time charts visualize a categorical enum which changes over time. An
 - `legend_series_names: List[str]` - A list of $k$ strings, storing the legend names of the series in `states_over_time_data`.
 
 
-## Grouped data support
+### Grouped data support
 
 Grouped data is supported for StatesOverTime metrics, and will give a dropdown, with one chart per category.
 
@@ -110,7 +114,7 @@ Grouped data is supported for StatesOverTime metrics, and will give a dropdown, 
 
 Line charts are classical line charts, plotting a dependent variable against an independent variable, joined by a line. Multiple lines can be placed on one chart.
 
-> Our roadmap includes adding scatter plots under this also.
+> Our roadmap includes adding scatter plots under this plot type also.
 
 ![An example line chart](./line_chart.png)
 
