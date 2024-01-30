@@ -1,0 +1,70 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+package resim.msg;
+
+// These messages hold various primitive types wrapped in messages in
+// case we want to serialize and store them.
+
+message Bool {
+    bool data = 1;
+}
+
+message Byte {
+    bytes data = 1;
+}
+
+message Char {
+    bytes data = 1;
+}
+
+message Float32 {
+    float data = 1;
+}
+
+message Float64 {
+    double data = 1;
+}
+
+message Int16 {
+    bytes data = 1;
+}
+
+message Int32 {
+    int32 data = 1;
+}
+
+message Int64 {
+    int64 data = 1;
+}
+
+message Int8 {
+    bytes data = 1;
+}
+
+message String {
+    string data = 1;
+}
+
+message UInt16 {
+    bytes data = 1;
+}
+
+message UInt32 {
+    uint32 data = 1;
+}
+
+message UInt64 {
+    uint64 data = 1;
+}
+
+message UInt8 {
+    bytes data = 1;
+}
+
+message Empty {}
