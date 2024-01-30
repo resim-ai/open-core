@@ -15,7 +15,10 @@ Metrics Builds have two modes, both of which are implemented within the same sin
 1. [job mode](#job-mode-computation) - in this mode, we compute metrics associated with a single job, based off output data from the job.
 2. [batch mode](#batch-mode-computation) - in this mode, we compute metrics associated with a batch of jobs, based off output metrics data from `job mode`. 
 
-Whether we are in `job mode` or `batch mode` is determined by the files in `/tmp/resim/inputs/`. In particular, we are in `batch mode` if and only if the file `/tmp/resim/inputs/batch_metrics_config.json` is present. (If not, then the folder will contain the experience and log data associated with a single job.) 
+Whether we are in `job mode` or `batch mode` is determined by the files present in `/tmp/resim/inputs/` when the metrics build container runs.
+
+- If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in batch mode, and our build should compute batch metrics using this config.
+- If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in job mode, and our build should compute job metrics. In this case, `/tmp/resim/inputs/` will instead contain an `experience` and `logs` directory respectively containing the input and output of the test job, based off of which we can compute our job metrics.
 
 # Output
 
