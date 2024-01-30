@@ -236,8 +236,6 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
             self.assertEqual(len(job_to_metrics), len(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
             self.assertEqual(set(job_to_metrics.keys()), set(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
 
-            names = list(job_to_metrics.values())[0].names
-
             for job_id, metrics in job_to_metrics.items():
                 self.assertEqual(
                     set(metrics.metrics), 
