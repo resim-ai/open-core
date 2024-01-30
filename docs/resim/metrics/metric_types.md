@@ -106,7 +106,7 @@ States-over-time charts visualize a categorical enum which changes over time. An
 - `legend_series_names: List[str]` - A list of $k$ strings, storing the legend names of the series in `states_over_time_data`.
 
 
-## Grouped data support
+### Grouped data support
 
 Grouped data is supported for StatesOverTime metrics, and will give a dropdown, with one chart per category.
 

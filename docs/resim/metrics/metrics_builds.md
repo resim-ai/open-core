@@ -25,7 +25,7 @@ Whether we are in `job mode` or `batch mode` is determined by the files present 
 Regardless of the mode, your metrics build is required to write to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto). This protobuf should validate with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide.
 
 > WARNING:
-> It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metric Types](./metrics_data.md), and [Metric Types](./metric_types.md). We reserve the right to modify this proto at any point, and do not guarantee substantial backwards compatibiliity support (such as field names remaining the same).
+> It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metrics Writer](./metrics_writer.md), and [Metric Types](./metric_types.md). We reserve the right to modify this proto at any point, and do not guarantee substantial backwards compatibiliity support (such as field names remaining the same).
  
 ## Job Mode computation
 
@@ -34,7 +34,7 @@ Assuming the file `/tmp/resim/inputs/batch_metrics_config.json` is not present, 
 1. `/tmp/resim/inputs/logs/` - this contains any log data output by the simulation job.
 2. `/tmp/resim/inputs/experience/` - this contains all the experience data associated with the simulation job.
 
-We would read these in, and as always, we'd output any metrics we want to `/tmp/resim/outputs/metrics.binproto`. For more on how to actually write these metrics see [Metrics Data](./metrics_data.md), [Metric Types](./metrics_data.md), and [Metric Types](./metric_types.md).
+We would read these in, and as always, we'd output any metrics we want to `/tmp/resim/outputs/metrics.binproto`. For more on how to actually write these metrics see [Metrics Data](./metrics_data.md), [Metrics Writer](./metrics_writer.md), and [Metric Types](./metric_types.md).
 
 ## Batch Mode computation
 
