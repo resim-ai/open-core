@@ -165,6 +165,7 @@ py_library(
         ":fetch_metrics_urls",
         ":get_metrics_proto",
         "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/python:unpack_metrics",
         "@resim-python-client//:resim_python_client",
     ],
 )
