@@ -10,7 +10,7 @@ Batch metrics can also be used to gate whether batches pass or fail, though this
 
 ## Batch metrics mode
 
-As mentioned in [the Metrics builds docs](./metrics_builds.md), batch metrics use the same single Docker image as job metrics. 
+As mentioned in [the Metrics Builds docs](./metrics_builds.md), batch metrics use the same single Docker image as job metrics. 
 
 This image can differentiate whether it's computing in `job mode` or `batch mode`, based off whether the file `/tmp/resim/inputs/batch_metrics_config.json` is present. If it is present, it should be computing batch metrics.
 
