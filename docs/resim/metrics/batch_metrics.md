@@ -51,9 +51,9 @@ job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batc
 
 The result maps job IDs to `UnpackedMetrics` - this is a simple `dataclass` with three fields:
 
-- metrics: List[Metric] - a list of all the metrics in that job
-- metrics_data: List[MetricsData] - a list of all the metrics data in that job
-- names: Set[str] - a set of all the names of Metrics and MetricsData present
+- `metrics: List[Metric]` - a list of all the metrics in that job
+- `metrics_data: List[MetricsData]` - a list of all the metrics data in that job
+- `names: Set[str]` - a set of all the names of Metrics and MetricsData present
 
 In other words, it very simply gives you all the metrics and metrics data associated with each job. You then use these metrics and data in order to compute and write your batch metrics - (just as you did for job metrics!) - by following the instructions in the [Metrics writer docs](./metrics_writer.md). You write the output to the exact same place as before: `/tmp/resim/outputs/metrics.binproto`.
 
