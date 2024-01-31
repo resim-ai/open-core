@@ -73,19 +73,21 @@ _BATCH_IDS = {
 }
 
 _BATCH_IDS_TO_JOB_IDS_MAP = {
-    uuid.UUID("b6ff9ce1-a481-4793-a9ea-d607f6efe628"): 
-        [uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"), 
+    uuid.UUID("b6ff9ce1-a481-4793-a9ea-d607f6efe628"):
+        [uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"),
          uuid.UUID("f1b4fa78-7ede-46c8-bd8e-deb5681e8010")],
     uuid.UUID("0a74e080-7782-4a6c-ac26-248caa575405"):
         [uuid.UUID("b0425a97-e773-49b0-b331-6378d0f101a5")],
 }
 
 _METRICS_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_{i}.binproto": MockMetric(name = f"metric_{i} name", data=f"metric_{i}") for i in range(10)
+    f"https://example.com/metrics_{i}.binproto": MockMetric(name = f"metric_{i} name", data=f"metric_{i}")
+    for i in range(10)
 }
 
 _METRICS_DATA_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_data_{i}.binproto": MockMetricsData(name = f"data_{i} name", data=f"data_{i}") for i in range(10)
+    f"https://example.com/metrics_data_{i}.binproto": MockMetricsData(name = f"data_{i} name", data=f"data_{i}")
+    for i in range(10)
 }
 
 def _mock_fetch_metrics_urls(*,
@@ -238,18 +240,21 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
 
             for job_id, metrics in job_to_metrics.items():
                 self.assertEqual(
-                    set(metrics.metrics), 
-                    set(_METRICS_URL_TO_MESSAGE_MAP[url] for url in _JOB_ID_METRICS_URL_MAP[job_id]))
+                    set(metrics.metrics),
+                    set(_METRICS_URL_TO_MESSAGE_MAP[url] 
+                        for url in _JOB_ID_METRICS_URL_MAP[job_id]))
                 self.assertEqual(
-                    set(metrics.metrics_data), 
-                    set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url] for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
-                
+                    set(metrics.metrics_data),
+                    set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url] 
+                        for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
+
                 expected_names = (
-                    set(_METRICS_URL_TO_MESSAGE_MAP[url].name for url in _JOB_ID_METRICS_URL_MAP[job_id])
-                    .union(set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url].name for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
+                    set(_METRICS_URL_TO_MESSAGE_MAP[url].name 
+                        for url in _JOB_ID_METRICS_URL_MAP[job_id])
+                    .union(set(_METRICS_DATA_URL_TO_MESSAGE_MAP[url].name 
+                               for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
                 )
                 self.assertEqual(metrics.names, expected_names)
-                                
 
 if __name__ == '__main__':
     unittest.main()
