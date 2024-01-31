@@ -1,4 +1,4 @@
-# Batch metrics
+# Batch Metrics
 
 Batch metrics are very similar to job metrics, but are computed after all the job metrics are computed, using the job-level metrics and metrics data as the "input."
 
