@@ -113,12 +113,19 @@ class ResimMetricsWriter:
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        failed = any(metric.status == MetricStatus.Value("FAILED_METRIC_STATUS")
+        fail_block = any(metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
                       for metric in output.metrics_msg.job_level_metrics.metrics)
-        metrics_status = (
-            MetricStatus.Value("FAILED_METRIC_STATUS")
-            if failed
-            else MetricStatus.Value("PASSED_METRIC_STATUS"))
+
+        fail_warn = any(metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+                      for metric in output.metrics_msg.job_level_metrics.metrics)
+
+        if fail_block:
+            metrics_status = MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
+        elif fail_warn:
+            metrics_status = MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+        else:
+            metrics_status = MetricStatus.Value("PASSED_METRIC_STATUS")
+
         output.metrics_msg.metrics_status = metrics_status
         output.metrics_msg.job_level_metrics.metrics_status = metrics_status
         return output

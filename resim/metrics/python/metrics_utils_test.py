@@ -102,7 +102,7 @@ class MetricsUtilsTest(unittest.TestCase):
             "uuid": np.array([uuid.uuid4() for _ in range(3)]),
             "string": np.array([str(i) for i in range(3)]),
             "status": np.array([mu.MetricStatus.PASSED_METRIC_STATUS,
-                                mu.MetricStatus.FAILED_METRIC_STATUS,
+                                mu.MetricStatus.FAIL_WARN_METRIC_STATUS,
                                 mu.MetricStatus.PASSED_METRIC_STATUS]),
             "class": np.array([mp.JobMetrics()]),
         }
