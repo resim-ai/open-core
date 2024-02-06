@@ -569,73 +569,30 @@ def _validate_metrics_data(
         _metrics_assert(metrics_data.index_data_type == index_data.data_type)
 
 
-def _get_relevant_status_ids(job_metrics: mp.JobMetrics) -> set[str]:
-    """
-    Get the data ids for status metrics data which are blocking.
-
-    Args:
-        job_metrics: The job metrics to validate.
-    """
-    relevant_status_ids = set()
-    for metric in job_metrics.job_level_metrics.metrics:
-        if not metric.blocking:
-            continue
-        metric_values = metric.metric_values
-        _metrics_assert(metric_values.WhichOneof('metric_values') is not None)
-        if metric_values.HasField('double_metric_values'):
-            relevant_status_ids.add(
-                metric_values.double_metric_values.status_data_id.id.data)
-        elif metric_values.HasField('double_over_time_metric_values'):
-            status_ids = metric_values.double_over_time_metric_values.statuses_over_time_data_id
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in status_ids])
-        elif metric_values.HasField('line_plot_metric_values'):
-            status_ids = metric_values.line_plot_metric_values.statuses_data_id
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in status_ids])
-        elif metric_values.HasField('bar_chart_metric_values'):
-            status_ids = metric_values.bar_chart_metric_values.statuses_data_id
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in status_ids])
-        elif metric_values.HasField('states_over_time_metric_values'):
-            status_ids = metric_values.states_over_time_metric_values.statuses_over_time_data_id
-            relevant_status_ids.update(
-                [data_id.id.data for data_id in status_ids])
-        elif metric_values.HasField('histogram_metric_values'):
-            relevant_status_ids.add(
-                metric_values.histogram_metric_values.statuses_data_id.id.data)
-    return relevant_status_ids
-
-
-def _validate_statuses(job_metrics: mp.JobMetrics,
-                       metrics_data_map: dict[str, mp.MetricsData]) -> None:
+def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
     """
     Check that the statuses in this JobMetrics are consistent
 
     This ensures that the status stored in the JobMetrics and the
-    MetricCollection match and are PASSED only if none of the blocking metrics
-    FAILED.
+    MetricCollection match - e.g. they are PASSED if and only if 
+    none of the metrics FAILED.
 
     Args:
         job_metrics: The job metrics to validate.
-        metrics_data_map: A map to find the metrics data in.
     """
-    relevant_status_ids = _get_relevant_status_ids(job_metrics)
 
     expected_status = mp.PASSED_METRIC_STATUS
-    for status_id in relevant_status_ids:
-        status_data = metrics_data_map[status_id]
-        if status_data.HasField('series'):
-            _metrics_assert(status_data.series.HasField('statuses'))
-            for status in status_data.series.statuses.series:
-                if status == mp.FAILED_METRIC_STATUS:
-                    expected_status = mp.FAILED_METRIC_STATUS
-        else:
-            for _, series in status_data.series_per_category.category_to_series.items():
-                _metrics_assert(series.HasField('statuses'))
-                for status in series.statuses.series:
-                    if status == mp.FAILED_METRIC_STATUS:
-                        expected_status = mp.FAILED_METRIC_STATUS
+    for metric in job_metrics.job_level_metrics.metrics:
+        status = metric.status
+        if status == mp.FAIL_BLOCK_METRIC_STATUS:
+            expected_status = mp.FAIL_BLOCK_METRIC_STATUS
+        elif status == mp.FAIL_WARN_METRIC_STATUS:
+            expected_status = (
+                mp.FAIL_WARN_METRIC_STATUS
+                if (expected_status != mp.FAIL_BLOCK_METRIC_STATUS)
+                else mp.FAIL_BLOCK_METRIC_STATUS
+            )
+
     _metrics_assert(expected_status == job_metrics.metrics_status)
     _metrics_assert(job_metrics.job_level_metrics.metrics_status ==
                     job_metrics.metrics_status)
@@ -692,4 +649,4 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
-    _validate_statuses(job_metrics, metrics_data_map)
+    _validate_statuses(job_metrics)
