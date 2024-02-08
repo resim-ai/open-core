@@ -234,3 +234,26 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "ecef",
+    srcs = ["ecef.cc"],
+    hdrs = ["ecef.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":se3",
+        "//resim/utils:nullable_reference",
+        "@au//au",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "ecef_test",
+    srcs = ["ecef_test.cc"],
+    deps = [
+        ":ecef",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
