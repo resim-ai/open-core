@@ -2,9 +2,10 @@
 #include "resim/transforms/ecef.hh"
 
 #include <cmath>
-#include <iostream>  // TODO
 
 #include "au/math.hh"
+#include "resim/math/newton_solver.hh"
+#include "resim/transforms/so3.hh"
 #include "resim/utils/nullable_reference.hh"
 
 namespace resim::transforms {
@@ -14,21 +15,41 @@ using Mat3 = Eigen::Matrix3d;
 using Vec2 = Eigen::Vector2d;
 using Mat2 = Eigen::Matrix2d;
 
+namespace {
+
 // WGS 84 from https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84
 constexpr au::QuantityD<au::Meters> SEMI_MAJOR_AXIS{au::meters(6378137.0)};
-// constexpr double INVERSE_FLATTENING{298.257223563 };
-constexpr double INVERSE_FLATTENING{298.257222100882711243};
+constexpr double INVERSE_FLATTENING{298.257223563};
 constexpr double ECCENTRICITY_SQ{
     (2 - 1 / INVERSE_FLATTENING) / INVERSE_FLATTENING};
-constexpr double ONE_MINUS_FLATTENING_SQUARED =
-    (1 - 1. / INVERSE_FLATTENING) * (1 - 1. / INVERSE_FLATTENING);
 
-Eigen::Vector3d ecef_position_from_lat_lon_alt(
-    const Eigen::Vector3d &lat_lon_alt,
+SO3 get_geographic_cartesian_rotation(
+    const Eigen::Vector3d &ecef_position,
+    const au::QuantityD<au::Degrees> latitude,
+    const au::QuantityD<au::Degrees> longitude) {
+  const double clat = cos(latitude);
+  const double slat = sin(latitude);
+  const double s2lat = slat * slat;
+
+  const double clong = cos(longitude);
+  const double slong = sin(longitude);
+
+  const Vec3 x_axis{Vec3{-ecef_position.y(), ecef_position.x(), 0.0}
+                        .normalized()};  // Faces East
+  const Vec3 z_axis{Vec3{clat * clong, clat * slong, slat}.normalized()};
+  const Vec3 y_axis{z_axis.cross(x_axis)};
+  const Mat3 rot_mat{(Mat3() << x_axis, y_axis, z_axis).finished()};
+  return SO3{rot_mat};
+}
+
+}  // namespace
+
+Eigen::Vector3d ecef_position_from_geodetic(
+    const Eigen::Vector3d &geodetic,
     NullableReference<Eigen::Matrix3d> jacobian) {
-  const double latitude = lat_lon_alt(0);
-  const double longitude = lat_lon_alt(1);
-  const double altitude = lat_lon_alt(2);
+  const double latitude = geodetic(0);
+  const double longitude = geodetic(1);
+  const double altitude = geodetic(2);
 
   const double clat = cos(latitude);
   const double slat = sin(latitude);
@@ -74,74 +95,70 @@ Eigen::Vector3d ecef_position_from_lat_lon_alt(
   };
 }
 
-Eigen::Vector3d ecef_position_from_lat_lon_alt(const LatLonAlt &lat_lon_alt) {
-  return ecef_position_from_lat_lon_alt(
+Eigen::Vector3d ecef_position_from_geodetic(const Geodetic &geodetic) {
+  return ecef_position_from_geodetic(
       Vec3{
-          lat_lon_alt.latitude.in(au::radians),
-          lat_lon_alt.longitude.in(au::radians),
-          lat_lon_alt.altitude.in(au::meters),
+          geodetic.latitude.in(au::radians),
+          geodetic.longitude.in(au::radians),
+          geodetic.altitude.in(au::meters),
       },
       null_reference<Mat3>);
 }
 
-LatLonAlt lat_lon_alt_from_ecef_position(const Eigen::Vector3d &ecef_position) {
+Geodetic geodetic_from_ecef_position(const Eigen::Vector3d &ecef_position) {
   // Guess:
   const double p = ecef_position.head<2>().norm();
-  Vec3 lat_lon_alt{
+  const Vec3 geodetic_guess{
       std::atan2(ecef_position.z(), p),
       std::atan2(ecef_position.y(), ecef_position.x()),
       ecef_position.norm() - SEMI_MAJOR_AXIS.in(au::meters)};
 
-  // Technically, iterating is 3d is unnecessary (can just use p = sqrt(x^2 +
-  // y^2)), but using the 3d model makes the code more reusable.
-  bool converged = false;
-  Mat3 jacobian;
-  while (not converged) {
-    const Vec3 error{
-        ecef_position_from_lat_lon_alt(
-            lat_lon_alt,
-            NullableReference{jacobian}) -
-        ecef_position};
-    if (error.norm() < 1e-6) {
-      converged = true;
-    }
-    lat_lon_alt = lat_lon_alt - jacobian.inverse() * error;
-  }
-  return LatLonAlt{
-      .latitude = au::radians(lat_lon_alt(0)),
-      .longitude = au::radians(lat_lon_alt(1)),
-      .altitude = au::meters(lat_lon_alt(2)),
+  // Technically, iterating is 3d is unnecessary (can just use p = sqrt(x^2
+  // + y^2)), but using the 3d model makes the code more reusable.
+  constexpr int MAX_ITERATIONS = 20;
+  constexpr double TOLERANCE = 1e-6;  // Microns
+  const auto geodetic_sv{math::newton_solve(
+      [&](const Vec3 &geodetic, NullableReference<Mat3> jacobian) -> Vec3 {
+        return ecef_position_from_geodetic(geodetic, jacobian) - ecef_position;
+      },
+      geodetic_guess,
+      MAX_ITERATIONS,
+      TOLERANCE)};
+
+  REASSERT(geodetic_sv.ok(), geodetic_sv.status().what());
+  const Vec3 &geodetic{geodetic_sv.value()};
+
+  return Geodetic{
+      .latitude = au::radians(geodetic(0)),
+      .longitude = au::radians(geodetic(1)),
+      .altitude = au::meters(geodetic(2)),
   };
 }
 
-SE3 ecef_from_body(const LatLonAltWithRotation &lat_lon_alt_with_rotation) {
+SE3 ecef_from_body(const GeodeticWithRotation &geodetic_with_rotation) {
   const Vec3 translation{
-      ecef_position_from_lat_lon_alt(lat_lon_alt_with_rotation.lat_lon_alt)};
-
-  // Build axes for our geographic Cartesian coordinates
-  const double latitude =
-      lat_lon_alt_with_rotation.lat_lon_alt.latitude.in(au::radians);
-  const double longitude =
-      lat_lon_alt_with_rotation.lat_lon_alt.longitude.in(au::radians);
-  const double altitude =
-      lat_lon_alt_with_rotation.lat_lon_alt.altitude.in(au::meters);
-
-  const double clat = cos(latitude);
-  const double slat = sin(latitude);
-  const double s2lat = slat * slat;
-
-  const double clong = cos(longitude);
-  const double slong = sin(longitude);
-
-  const Vec3 x_axis{
-      Vec3{-translation.y(), translation.x(), 0.0}.normalized()};  // Faces East
-  const Vec3 z_axis{Vec3{clat * clong, clat * slong, slat}.normalized()};
-  const Vec3 y_axis{z_axis.cross(x_axis)};
-  const Mat3 rot_mat{(Mat3() << x_axis, y_axis, z_axis).finished()};
-  return SE3{SO3{rot_mat} * lat_lon_alt_with_rotation.rotation, translation};
+      ecef_position_from_geodetic(geodetic_with_rotation.geodetic)};
+  const auto latitude = geodetic_with_rotation.geodetic.latitude;
+  const auto longitude = geodetic_with_rotation.geodetic.longitude;
+  return SE3{
+      get_geographic_cartesian_rotation(translation, latitude, longitude) *
+          geodetic_with_rotation.rotation,
+      translation};
 }
 
-LatLonAltWithRotation lat_lon_alt_with_rotation_from_ecef_from_body(
-    const LatLonAltWithRotation &lat_lon_alt_with_rotation) {}
+GeodeticWithRotation geodetic_with_rotation_from_ecef_from_body(
+    const SE3 &ecef_from_body) {
+  const Geodetic geodetic{
+      geodetic_from_ecef_position(ecef_from_body.translation())};
+  return GeodeticWithRotation{
+      .geodetic = geodetic,
+      .rotation = get_geographic_cartesian_rotation(
+                      ecef_from_body.translation(),
+                      geodetic.latitude,
+                      geodetic.longitude)
+                      .inverse() *
+                  ecef_from_body.rotation(),
+  };
+}
 
 }  // namespace resim::transforms

@@ -242,6 +242,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":se3",
+        "//resim/math:newton_solver",
         "//resim/utils:nullable_reference",
         "@au//au",
         "@libeigen//:eigen",
@@ -253,6 +254,7 @@ cc_test(
     srcs = ["ecef_test.cc"],
     deps = [
         ":ecef",
+        "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",
     ],
