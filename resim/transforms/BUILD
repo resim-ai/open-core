@@ -236,9 +236,9 @@ cc_test(
 )
 
 cc_library(
-    name = "ecef",
-    srcs = ["ecef.cc"],
-    hdrs = ["ecef.hh"],
+    name = "geodetic",
+    srcs = ["geodetic.cc"],
+    hdrs = ["geodetic.hh"],
     visibility = ["//visibility:public"],
     deps = [
         ":se3",
@@ -250,10 +250,10 @@ cc_library(
 )
 
 cc_test(
-    name = "ecef_test",
-    srcs = ["ecef_test.cc"],
+    name = "geodetic_test",
+    srcs = ["geodetic_test.cc"],
     deps = [
-        ":ecef",
+        ":geodetic",
         "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
         "@libeigen//:eigen",

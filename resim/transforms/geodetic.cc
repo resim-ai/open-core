@@ -1,19 +1,21 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
-#include "resim/transforms/ecef.hh"
+#include "resim/transforms/geodetic.hh"
 
 #include <cmath>
 
 #include "au/math.hh"
 #include "resim/math/newton_solver.hh"
-#include "resim/transforms/so3.hh"
 #include "resim/utils/nullable_reference.hh"
 
 namespace resim::transforms {
 
 using Vec3 = Eigen::Vector3d;
 using Mat3 = Eigen::Matrix3d;
-using Vec2 = Eigen::Vector2d;
-using Mat2 = Eigen::Matrix2d;
 
 namespace {
 
@@ -29,7 +31,7 @@ constexpr double ECCENTRICITY_SQ{
 //  * The x axis points east.
 //  * The y axis points north.
 SO3 get_geographic_cartesian_rotation(
-    const Eigen::Vector3d &ecef_position,
+    const Vec3 &ecef_position,
     const au::QuantityD<au::Degrees> latitude,
     const au::QuantityD<au::Degrees> longitude) {
   const double clat = cos(latitude);
@@ -48,8 +50,8 @@ SO3 get_geographic_cartesian_rotation(
 
 }  // namespace
 
-Eigen::Vector3d ecef_position_from_geodetic(
-    const Eigen::Vector3d &geodetic,
+Vec3 ecef_position_from_geodetic(
+    const Vec3 &geodetic,
     NullableReference<Eigen::Matrix3d> jacobian) {
   const double latitude = geodetic(0);
   const double longitude = geodetic(1);
@@ -95,14 +97,14 @@ Eigen::Vector3d ecef_position_from_geodetic(
     (*jacobian)(2, 2) = slat;
   }
 
-  return Eigen::Vector3d{
+  return Vec3{
       x,
       y,
       z,
   };
 }
 
-Eigen::Vector3d ecef_position_from_geodetic(const Geodetic &geodetic) {
+Vec3 ecef_position_from_geodetic(const Geodetic &geodetic) {
   return ecef_position_from_geodetic(
       Vec3{
           geodetic.latitude.in(au::radians),
@@ -112,7 +114,7 @@ Eigen::Vector3d ecef_position_from_geodetic(const Geodetic &geodetic) {
       null_reference<Mat3>);
 }
 
-Geodetic geodetic_from_ecef_position(const Eigen::Vector3d &ecef_position) {
+Geodetic geodetic_from_ecef_position(const Vec3 &ecef_position) {
   // Guess:
   const double p = ecef_position.head<2>().norm();
   const Vec3 geodetic_guess{

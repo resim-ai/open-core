@@ -1,6 +1,10 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
-
-#include "resim/transforms/ecef.hh"
+#include "resim/transforms/geodetic.hh"
 
 #include <gtest/gtest.h>
 
@@ -16,6 +20,7 @@
 #include "resim/transforms/so3.hh"
 
 namespace resim::transforms {
+// NOLINTBEGIN(readability-magic-numbers)
 
 namespace {
 
@@ -114,22 +119,24 @@ TEST(EcefTest, TestRoundTrip) {
 
   std::vector<Vec3> test_ecef_positions;
   constexpr int NUM_RANDOM_POINTS = 10;
+  test_ecef_positions.reserve(NUM_RANDOM_POINTS);
   for (int ii = 0; ii < NUM_RANDOM_POINTS; ++ii) {
     test_ecef_positions.push_back(
         testing::random_vector<Eigen::Vector3d>(rng, dist));
   }
 
   // Edge cases
-  test_ecef_positions.push_back(Vec3::Zero());  // Center of the earth
-  test_ecef_positions.push_back(
+  test_ecef_positions.emplace_back(Vec3::Zero());  // Center of the earth
+  test_ecef_positions.emplace_back(
       Vec3::UnitZ() * SEMI_MAJOR_AXIS.in(au::meters));  // Above the North Pole
-  test_ecef_positions.push_back(
+  test_ecef_positions.emplace_back(
       -Vec3::UnitX() *
       SEMI_MAJOR_AXIS.in(
           au::meters));  // Pacific Ocean on the international date line
 
   constexpr double DISTANCE_TO_MOON_M = 384467000.0;
-  test_ecef_positions.push_back(Vec3::Ones().normalized() * DISTANCE_TO_MOON_M);
+  test_ecef_positions.emplace_back(
+      Vec3::Ones().normalized() * DISTANCE_TO_MOON_M);
 
   for (const auto &test_ecef_position : test_ecef_positions) {
     // ACTION
@@ -156,16 +163,19 @@ TEST(EcefTest, TestEcefFromGeodeticJacobian) {
 
   constexpr int NUM_RANDOM_POINTS = 10;
   std::vector<Eigen::Vector3d> test_points;
+  test_points.reserve(NUM_RANDOM_POINTS);
   for (int ii = 0; ii < NUM_RANDOM_POINTS; ++ii) {
-    test_points.push_back(Vec3{lat_dist(rng), long_dist(rng), alt_dist(rng)});
+    test_points.emplace_back(lat_dist(rng), long_dist(rng), alt_dist(rng));
   };
 
   // Edge cases
-  test_points.push_back(Vec3{M_PI_2, M_PI, 10.0});
-  test_points.push_back(Vec3{-M_PI_2, M_PI_2, 20.0});
-  test_points.push_back(Vec3{0.0, -M_PI, 30.0});
-  test_points.push_back(
-      Vec3{0.0, 0.0, -SEMI_MAJOR_AXIS.in(au::meters)});  // Center of the Earth
+  test_points.emplace_back(M_PI_2, M_PI, 10.0);
+  test_points.emplace_back(-M_PI_2, M_PI_2, 20.0);
+  test_points.emplace_back(0.0, -M_PI, 30.0);
+  test_points.emplace_back(
+      0.0,
+      0.0,
+      -SEMI_MAJOR_AXIS.in(au::meters));  // Center of the Earth
 
   for (const auto &geodetic : test_points) {
     // ACTION
@@ -256,4 +266,5 @@ TEST(EcefTest, TestPoseRoundTrip) {
   }
 }
 
+// NOLINTEND(readability-magic-numbers)
 }  // namespace resim::transforms

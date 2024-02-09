@@ -32,7 +32,6 @@ StatusValue<Eigen::Matrix<double, DIM, 1>> newton_solve(
     const Vec error{fun(result, NullableReference{jacobian})};
     if (error.norm() < tolerance) {
       return result;
-      break;
     }
     Eigen::JacobiSVD<Mat> svd{
         jacobian,
