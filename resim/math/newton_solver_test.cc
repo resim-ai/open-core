@@ -111,21 +111,5 @@ TEST(NewtonSolver, TestSolveNonLinear) {
   }
 }
 
-TEST(NewtonSolver, TestDiverge) {
-  constexpr size_t SEED = 493U;
-  std::mt19937 rng{SEED};
-  constexpr int NUM_TESTS = 20;
-  for (int ii = 0; ii < NUM_TESTS; ++ii) {
-    test_nonlinear_solve<1>(rng);
-    test_nonlinear_solve<2>(rng);
-    test_nonlinear_solve<3>(rng);
-    test_nonlinear_solve<4>(rng);
-    test_nonlinear_solve<5>(rng);
-    test_nonlinear_solve<6>(rng);
-    test_nonlinear_solve<7>(rng);
-    test_nonlinear_solve<8>(rng);
-  }
-}
-
 // NOLINTEND(readability-magic-numbers)
 }  // namespace resim::math
