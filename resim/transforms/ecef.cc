@@ -23,13 +23,17 @@ constexpr double INVERSE_FLATTENING{298.257223563};
 constexpr double ECCENTRICITY_SQ{
     (2 - 1 / INVERSE_FLATTENING) / INVERSE_FLATTENING};
 
+// Helper to get the rotation at a particular ecef position which has the
+// properties:
+//  * The z axis is normal to the ellipsoid surface
+//  * The x axis points east.
+//  * The y axis points north.
 SO3 get_geographic_cartesian_rotation(
     const Eigen::Vector3d &ecef_position,
     const au::QuantityD<au::Degrees> latitude,
     const au::QuantityD<au::Degrees> longitude) {
   const double clat = cos(latitude);
   const double slat = sin(latitude);
-  const double s2lat = slat * slat;
 
   const double clong = cos(longitude);
   const double slong = sin(longitude);
@@ -58,6 +62,9 @@ Eigen::Vector3d ecef_position_from_geodetic(
   const double clong = cos(longitude);
   const double slong = sin(longitude);
 
+  // See https://en.wikipedia.org/wiki/Geodetic_coordinates for the conversion
+  // math. We've done some manipulations (including trig identities) to this
+  // expression to simplify and depend on the ECCENTRITY_SQ.
   const double prime_vertical_radius{
       (SEMI_MAJOR_AXIS.in(au::meters) / sqrt(1 - ECCENTRICITY_SQ * s2lat))};
 
@@ -135,7 +142,8 @@ Geodetic geodetic_from_ecef_position(const Eigen::Vector3d &ecef_position) {
   };
 }
 
-SE3 ecef_from_body(const GeodeticWithRotation &geodetic_with_rotation) {
+SE3 ecef_from_body_from_geodetic_with_rotation(
+    const GeodeticWithRotation &geodetic_with_rotation) {
   const Vec3 translation{
       ecef_position_from_geodetic(geodetic_with_rotation.geodetic)};
   const auto latitude = geodetic_with_rotation.geodetic.latitude;

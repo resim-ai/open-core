@@ -213,7 +213,8 @@ TEST(EcefTest, TestPoseRoundTrip) {
     };
 
     // ACTION
-    const SE3 ecef_from_frame{ecef_from_body(random_pose)};
+    const SE3 ecef_from_frame{
+        ecef_from_body_from_geodetic_with_rotation(random_pose)};
 
     // VERIFICATION
     // Verify the properties of the local geographic Cartesian Frame

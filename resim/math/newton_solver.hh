@@ -1,8 +1,12 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #pragma once
 
 #include <Eigen/Dense>
-#include <limits>
 
 #include "resim/utils/nullable_reference.hh"
 #include "resim/utils/status_value.hh"

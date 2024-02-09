@@ -1,3 +1,8 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/math/newton_solver.hh"
 
@@ -10,9 +15,6 @@
 #include "resim/utils/nullable_reference.hh"
 
 namespace resim::math {
-
-using Vec1 = Eigen::Matrix<double, 1, 1>;
-using Mat1 = Eigen::Matrix<double, 1, 1>;
 
 template <int DIM, typename Rng>
 void test_linear_solve(Rng &&rng) {
