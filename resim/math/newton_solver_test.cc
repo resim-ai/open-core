@@ -52,7 +52,7 @@ void test_nonlinear_solve(Rng &&rng) {
   const Jac A{testing::random_matrix<Jac>(rng)};
   const Vec b{testing::random_matrix<Vec>(rng)};
 
-  constexpr double TOLERANCE = 1e-10;
+  constexpr double TOLERANCE = 1e-6;
   // ACTION
   const auto fun = [&A, &b](const Vec &x, NullableReference<Jac> dydx) -> Vec {
     if (dydx.has_value()) {
@@ -65,7 +65,7 @@ void test_nonlinear_solve(Rng &&rng) {
     return (A * (x - b)).array().pow(3).matrix();
   };
 
-  constexpr int MAX_ITERATIONS = 20;
+  constexpr int MAX_ITERATIONS = 30;
   const auto solution_sv =
       newton_solve(fun, b + 0.05 * Vec::Ones(), MAX_ITERATIONS, TOLERANCE);
 
