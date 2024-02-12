@@ -28,6 +28,8 @@ void test_linear_solve(Rng &&rng) {
   constexpr int MAX_ITERATIONS = 1;
   constexpr double TOLERANCE = 1e-10;
   // ACTION
+
+  const Vec guess{Vec::Ones()};
   const auto solution_sv = newton_solve(
       [&A, &b](const Vec &x, NullableReference<Jac> dydx) -> Vec {
         if (dydx.has_value()) {
@@ -35,7 +37,7 @@ void test_linear_solve(Rng &&rng) {
         }
         return Vec{A * x + b};
       },
-      Vec::Ones(),
+      guess,
       MAX_ITERATIONS,
       TOLERANCE);
 
@@ -66,16 +68,17 @@ void test_nonlinear_solve(Rng &&rng) {
   };
 
   constexpr int MAX_ITERATIONS = 30;
-  const auto solution_sv =
-      newton_solve(fun, b + 0.05 * Vec::Ones(), MAX_ITERATIONS, TOLERANCE);
+  Vec guess{b + 0.05 * Vec::Ones()};
+  const auto solution_sv = newton_solve(fun, guess, MAX_ITERATIONS, TOLERANCE);
 
   // VERIFICATION
   ASSERT_TRUE(solution_sv.ok());
   EXPECT_LT(fun(solution_sv.value(), null_reference<Jac>).norm(), TOLERANCE);
 
   constexpr int TOO_FEW_ITERATIONS = 3;
+  guess = 100.0 * Vec::Ones();
   const auto unconverged_sv =
-      newton_solve(fun, 100.0 * Vec::Ones(), TOO_FEW_ITERATIONS, TOLERANCE);
+      newton_solve(fun, guess, TOO_FEW_ITERATIONS, TOLERANCE);
   EXPECT_FALSE(unconverged_sv.ok());
 }
 
