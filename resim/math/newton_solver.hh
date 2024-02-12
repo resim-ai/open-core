@@ -22,7 +22,7 @@ namespace resim::math {
 // Vec3 my_three_d_function(const Vec3 &x,
 //                          NullableReference<Mat3> jacobian);
 //
-// In this case, the first argument `x` is the intput to the function, and the
+// In this case, the first argument `x` is the input to the function, and the
 // second argument `jacobian` is a mutable matrix which we can populate with the
 // Jacobian matrix (df_i(x)/dx_j) of the function. This is a nullable reference
 // because not all algorithms which use differentiable functions require their
