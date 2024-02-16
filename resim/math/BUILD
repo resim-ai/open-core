@@ -141,3 +141,26 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "newton_solver",
+    hdrs = ["newton_solver.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/utils:nullable_reference",
+        "//resim/utils:status_value",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "newton_solver_test",
+    srcs = ["newton_solver_test.cc"],
+    deps = [
+        ":newton_solver",
+        "//resim/math:is_approx",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
