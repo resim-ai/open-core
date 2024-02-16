@@ -19,6 +19,7 @@ cc_library(
     name = "actor",
     srcs = ["actor.cc"],
     hdrs = ["actor.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":actor_id",
         "//resim/actor/state:observable_state",
