@@ -207,9 +207,9 @@ def resim_core_dependencies():
     maybe(
         http_archive,
         name = "au",
-        sha256 = "4709343cbdae957c3f00d04d7523c62ee6be94305baa3007750c23fb5050fc29",
-        strip_prefix = "au-0.3.0",
-        urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.0.zip"],
+        sha256 = "79dd19083149dd344078ed6a98bb77a837c789f2bb23601b1fd62f8e3ecc6e74",
+        strip_prefix = "au-0.3.4",
+        urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.4.zip"],
     )
 
     maybe(
