@@ -122,4 +122,32 @@ bool verify_equality(
     const google::protobuf::Timestamp &a,
     const google::protobuf::Timestamp &b);
 
+template <typename T, typename Rng>
+std::vector<T> random_element(
+    TypeTag<std::vector<T>> /*unused*/,
+    InOut<Rng> rng) {
+  constexpr size_t MIN_SIZE = 3;
+  constexpr size_t MAX_SIZE = 7;
+  std::uniform_int_distribution<size_t> size_dist{MIN_SIZE, MAX_SIZE};
+  const size_t size = size_dist(*rng);
+  std::vector<T> result;
+  result.reserve(size);
+  for (size_t ii = 0; ii < size; ++ii) {
+    result.emplace_back(random_element(TypeTag<T>(), rng));
+  }
+  return result;
+}
+
+template <typename T>
+bool verify_equality(const std::vector<T> &a, const std::vector<T> &b) {
+  // Requires C++14 to not be undefined behavior
+  return std::mismatch(
+             a.cbegin(),
+             a.cend(),
+             b.cbegin(),
+             b.cend(),
+             [](const T &a, const T &b) { return verify_equality(a, b); }) ==
+         std::pair(a.cend(), b.cend());
+}
+
 }  // namespace resim
