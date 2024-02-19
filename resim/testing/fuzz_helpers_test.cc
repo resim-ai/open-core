@@ -28,21 +28,27 @@ bool verify_equality(const TestStruct &a, const TestStruct &b) {
 
 }  // namespace some_namespace
 
-TEST(FuzzHelpersTest, TestRandomVector) {
+template <typename T>
+struct ContainerFuzzHelpersTest : public ::testing::Test {};
+
+using PayloadTypes = ::testing::Types<double, some_namespace::TestStruct>;
+
+TYPED_TEST_SUITE(ContainerFuzzHelpersTest, PayloadTypes);
+
+TYPED_TEST(ContainerFuzzHelpersTest, TestRandomVector) {
   // SETUP
   std::mt19937 rng;
 
-  const auto test_vec = random_element(
-      TypeTag<std::vector<some_namespace::TestStruct>>(),
-      InOut{rng});
+  const auto test_vec =
+      random_element(TypeTag<std::vector<TypeParam>>(), InOut{rng});
 
   auto test_vec_different_size{test_vec};
   test_vec_different_size.emplace_back(
-      resim::random_element<some_namespace::TestStruct>(InOut{rng}));
+      resim::random_element<TypeParam>(InOut{rng}));
 
   auto test_vec_different_value{test_vec};
   test_vec_different_value.front() =
-      resim::random_element<some_namespace::TestStruct>(InOut{rng});
+      resim::random_element<TypeParam>(InOut{rng});
 
   // ACTION / VERIFICATION
   EXPECT_TRUE(verify_equality(test_vec, test_vec));
