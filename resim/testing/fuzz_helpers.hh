@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <concepts>
 #include <random>
-#include <type_traits>
 
 #include "resim/utils/inout.hh"
 
@@ -124,8 +123,8 @@ bool verify_equality(
     const google::protobuf::Timestamp &b);
 
 // Generate a random vector of T between size 3 and 7 assuming that
-// random_element(TypeTag<T>, InOut<Rng>) has been defined either in
-// the resim namespace or the same namespace as T.
+// random_element(TypeTag<T>, InOut<Rng>) has been defined either in the resim
+// namespace or the same namespace as T.
 template <typename T, typename Rng>
 std::vector<T> random_element(
     TypeTag<std::vector<T>> /*unused*/,
@@ -143,11 +142,12 @@ std::vector<T> random_element(
 }
 
 // Verify that two vectors of type T are equal assuming that
-// verify_equality(const T &a, const T &b) is defined either in the
-// resim namespace or the same namespace as T.
+// verify_equality(const T &a, const T &b) is defined either in the resim
+// namespace or the same namespace as T.
 template <typename T>
 bool verify_equality(const std::vector<T> &a, const std::vector<T> &b) {
-  // Requires C++14 to not be undefined behavior
+  // Requires C++14 to not be undefined behavior. Thanksfully, the CTAD on the
+  // righthand-side of the equality requires C++17.
   return std::mismatch(
              a.cbegin(),
              a.cend(),

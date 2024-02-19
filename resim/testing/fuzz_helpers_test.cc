@@ -1,3 +1,8 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/testing/fuzz_helpers.hh"
 
@@ -59,4 +64,5 @@ TYPED_TEST(ContainerFuzzHelpersTest, TestRandomVector) {
   EXPECT_FALSE(verify_equality(test_vec, test_vec_different_size));
   EXPECT_FALSE(verify_equality(test_vec, test_vec_different_value));
 }
-};  // namespace resim::testing
+
+}  // namespace resim::testing
