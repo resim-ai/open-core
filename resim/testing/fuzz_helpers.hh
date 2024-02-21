@@ -124,7 +124,9 @@ bool verify_equality(
 
 // Generate a random vector of T between size 3 and 7 assuming that
 // random_element(TypeTag<T>, InOut<Rng>) has been defined either in the resim
-// namespace or the same namespace as T.
+// namespace or the same namespace as T. The size bounds were selected as
+// between 3 and 7 so we could have a range of sizes represented without slowing
+// tests down with very large vectors of elements to generate and check.
 template <typename T, typename Rng>
 std::vector<T> random_element(
     TypeTag<std::vector<T>> /*unused*/,
