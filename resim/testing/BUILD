@@ -92,3 +92,12 @@ cc_library(
         "@com_google_protobuf//:protobuf",
     ],
 )
+
+cc_test(
+    name = "fuzz_helpers_test",
+    srcs = ["fuzz_helpers_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
