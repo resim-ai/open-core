@@ -334,3 +334,12 @@ def resim_core_dependencies():
         strip_prefix = "resim-python-client-8b9e79b3c845bda6c040b773d7443e7f3d612f88",
         url = "https://github.com/resim-ai/resim-python-client/archive/8b9e79b3c845bda6c040b773d7443e7f3d612f88.zip",
     )
+
+    # Protobuf schemas for communications with foxglove
+    http_archive(
+        name = "foxglove_schemas",
+        build_file = "@resim_open_core//resim/third_party/foxglove_schemas:schemas.BUILD",
+        sha256 = "817d60451b7f09314b9ccf6eafdb5a0c2f354dc219b8d5518d1f4fc5c6f52da8",
+        strip_prefix = "schemas-releases-typescript-v0.7.1/schemas/proto",
+        urls = ["https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v0.7.1.zip"],
+    )
