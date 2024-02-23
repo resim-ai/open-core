@@ -18,4 +18,7 @@ constexpr std::string_view SCHEDULE_TIMELORD_TOPIC = "schedule";
 // tasks that no other tasks should depend on.
 constexpr std::string_view NULL_TOPIC = "null";
 
+// Easter egg topic - only fun easter eggs should be published to this topic.
+constexpr std::string_view EASTER_EGG_TOPIC = "easteregg";
+
 }  // namespace resim::simulator
