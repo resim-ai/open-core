@@ -19,4 +19,9 @@ inline const transforms::Frame<3> SCENE_FRAME{
 
 constexpr std::string_view SCENE_FRAME_NAME = "scene";
 
+inline const transforms::Frame<3> ECEF_FRAME{
+    UUID{"ecefecef-ecef-ecef-ecef-ecefecefecef"}};
+
+constexpr std::string_view ECEF_FRAME_NAME = "ecef";
+
 }  // namespace resim::simulator
