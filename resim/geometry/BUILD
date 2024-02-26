@@ -204,6 +204,7 @@ cc_library(
         ":gjk_algorithm",
         ":polygon_utils",
         "//resim/assert",
+        "@com_github_google_glog//:glog",
         "@libeigen//:eigen",
     ],
 )

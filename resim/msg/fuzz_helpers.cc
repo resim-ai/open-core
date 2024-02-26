@@ -180,4 +180,62 @@ bool verify_equality(const NavSatFix &a, const NavSatFix &b) {
          a.position_covariance_type() == b.position_covariance_type();
 }
 
+bool verify_equality(const Bool &a, const Bool &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Byte &a, const Byte &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Char &a, const Char &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Empty &a, const Empty &b) { return true; }
+
+bool verify_equality(const Float32 &a, const Float32 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Float64 &a, const Float64 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Int16 &a, const Int16 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Int32 &a, const Int32 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Int64 &a, const Int64 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const Int8 &a, const Int8 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const String &a, const String &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const UInt16 &a, const UInt16 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const UInt32 &a, const UInt32 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const UInt64 &a, const UInt64 &b) {
+  return a.data() == b.data();
+}
+
+bool verify_equality(const UInt8 &a, const UInt8 &b) {
+  return a.data() == b.data();
+}
+
 }  // namespace resim::msg

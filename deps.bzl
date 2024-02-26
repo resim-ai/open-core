@@ -207,9 +207,9 @@ def resim_core_dependencies():
     maybe(
         http_archive,
         name = "au",
-        sha256 = "4709343cbdae957c3f00d04d7523c62ee6be94305baa3007750c23fb5050fc29",
-        strip_prefix = "au-0.3.0",
-        urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.0.zip"],
+        sha256 = "79dd19083149dd344078ed6a98bb77a837c789f2bb23601b1fd62f8e3ecc6e74",
+        strip_prefix = "au-0.3.4",
+        urls = ["https://github.com/aurora-opensource/au/archive/refs/tags/0.3.4.zip"],
     )
 
     maybe(
@@ -333,4 +333,13 @@ def resim_core_dependencies():
         sha256 = "b81fc964c79d670c7670e67ccba9337ff268e1c8a84f9ed0bfd0719619ee6a82",
         strip_prefix = "resim-python-client-8b9e79b3c845bda6c040b773d7443e7f3d612f88",
         url = "https://github.com/resim-ai/resim-python-client/archive/8b9e79b3c845bda6c040b773d7443e7f3d612f88.zip",
+    )
+
+    # Protobuf schemas for communications with foxglove
+    http_archive(
+        name = "foxglove_schemas",
+        build_file = "@resim_open_core//resim/third_party/foxglove_schemas:schemas.BUILD",
+        sha256 = "295a6ecccc3de6238859d02860d61016fe37a4ea14130dd7301e7c48ac080eb5",
+        strip_prefix = "schemas-releases-typescript-v1.6.2/schemas/proto",
+        urls = ["https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v1.6.2.zip"],
     )

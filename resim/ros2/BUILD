@@ -12,6 +12,32 @@ load("@rules_python//python:defs.bzl", "py_test")
 load(":ros2_py_package.bzl", "ros2_py_package")
 
 cc_library(
+    name = "primitives_from_ros2",
+    srcs = ["primitives_from_ros2.cc"],
+    hdrs = ["primitives_from_ros2.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/assert",
+        "//resim/msg:byte_swap_helpers",
+        "//resim/msg:primitives_proto_cc",
+        "@ros2_common_interfaces//:cpp_std_msgs",
+    ],
+)
+
+cc_test(
+    name = "primitives_from_ros2_test",
+    srcs = ["primitives_from_ros2_test.cc"],
+    deps = [
+        ":primitives_from_ros2",
+        "//resim/msg:fuzz_helpers",
+        "//resim/msg:primitives_proto_cc",
+        "//resim/testing:fuzz_helpers",
+        "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "time_from_ros2",
     srcs = ["time_from_ros2.cc"],
     hdrs = ["time_from_ros2.hh"],
@@ -58,6 +84,7 @@ cc_library(
     name = "transform_from_ros2",
     srcs = ["transform_from_ros2.cc"],
     hdrs = ["transform_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         "//resim/msg:transform_proto_cc",
@@ -141,6 +168,7 @@ cc_library(
     name = "odometry_from_ros2",
     srcs = ["odometry_from_ros2.cc"],
     hdrs = ["odometry_from_ros2.hh"],
+    visibility = ["//resim/ros2:__subpackages__"],
     deps = [
         ":header_from_ros2",
         ":pose_from_ros2",
@@ -361,7 +389,7 @@ ros2_cpp_test(
     name = "resim_log_from_ros2_test",
     testonly = True,  # Needed because ros2_cpp_test generates a non-test rule
     srcs = ["resim_log_from_ros2_test.cc"],
-    data = [":default_converter_plugin.so"],
+    data = ["//resim/ros2/testing:resim_log_from_ros2_test_converter_plugin.so"],
     set_up_ament = True,
     deps = [
         ":resim_log_from_ros2",

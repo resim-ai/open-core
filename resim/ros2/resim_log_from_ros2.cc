@@ -89,7 +89,12 @@ void resim_log_from_ros2(
 
     const rclcpp::SerializedMessage extracted_serialized_message(
         *bag_message->serialized_data);
-    auto converted = plugin.convert(type, extracted_serialized_message);
+    const auto maybe_converted =
+        plugin.convert(type, extracted_serialized_message);
+    if (not maybe_converted.has_value()) {
+      continue;
+    }
+    const auto &converted = maybe_converted.value();
     mcap::Message message;
     message.channelId = topic_to_channels_map.at(topic_name);
     message.logTime = bag_message->time_stamp;

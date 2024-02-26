@@ -18,3 +18,17 @@ cc_binary(
         "@ros2_rclcpp//:rclcpp",
     ],
 )
+
+cc_binary(
+    name = "resim_log_from_ros2_test_converter_plugin.so",
+    srcs = ["resim_log_from_ros2_test_converter_plugin.cc"],
+    linkshared = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/assert",
+        "//resim/ros2:converter_plugin_helpers",
+        "//resim/ros2:converter_plugin_types",
+        "//resim/ros2:odometry_from_ros2",
+        "//resim/ros2:transform_from_ros2",
+    ],
+)
