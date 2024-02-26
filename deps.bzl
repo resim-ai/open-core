@@ -339,7 +339,7 @@ def resim_core_dependencies():
     http_archive(
         name = "foxglove_schemas",
         build_file = "@resim_open_core//resim/third_party/foxglove_schemas:schemas.BUILD",
-        sha256 = "817d60451b7f09314b9ccf6eafdb5a0c2f354dc219b8d5518d1f4fc5c6f52da8",
-        strip_prefix = "schemas-releases-typescript-v0.7.1/schemas/proto",
-        urls = ["https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v0.7.1.zip"],
+        sha256 = "295a6ecccc3de6238859d02860d61016fe37a4ea14130dd7301e7c48ac080eb5",
+        strip_prefix = "schemas-releases-typescript-v1.6.2/schemas/proto",
+        urls = ["https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v1.6.2.zip"],
     )
