@@ -38,18 +38,19 @@ from resim.ros2 import RESIM_DIR
 rlr2.resim_log_from_ros2(
     str(RESIM_DIR / "ros2" / "default_converter_plugin.so"), # See plugin info below
     input_log_path,
-    converted_log_path,
+    converted_log_path)
 ```
+
 ## Custom Message Types & Converter Plugins
 
 Occasionally, it is necessary or just convenient to convert a custom message
 type to a serialized ReSim protobuf type so that its contents can be used with
-ReSim's open source metrics and analysis tools. To facilitate this the
+ReSim's open source metrics and analysis tools. To facilitate this, the
 aforementioned converter tools are designed with a plugin architecture to allow
 custom converters to be written. The core of the plugin interface is the
 following function:
 
-```
+```c
 extern "C" ReSimConverterPluginStatus resim_convert_ros2_to_resim(
     const char *const ros2_message_type,
     const rcutils_uint8_array_t *const ros2_message,
