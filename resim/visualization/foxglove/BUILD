@@ -177,3 +177,12 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "line_primitive_options",
+    hdrs = ["line_primitive_options.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/visualization:color",
+    ],
+)
