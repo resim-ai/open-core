@@ -4,9 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#pragma once
+
 #include "resim/visualization/color.hh"
 
-namespace resim::visualization {
+namespace resim::visualization::foxglove {
 
 struct LinePrimitiveOptions {
   // See https://foxglove.dev/docs/studio/messages/line-primitive for
@@ -17,4 +19,4 @@ struct LinePrimitiveOptions {
   Color color{colors::JAVA};
 };
 
-}  // namespace resim::visualization
+}  // namespace resim::visualization::foxglove
