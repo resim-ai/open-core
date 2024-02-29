@@ -112,7 +112,7 @@ class ExecutorBuilder final {
       const std::string_view &provision,
       std::function<Ret(const std::vector<Arg> &arg)> &&task);
 
-  // Add a task which can depend on multiple dependencies simultaneously. Adds a
+  // Add a task which can depend on multiple dependencies simultaneously. Adds
   // synthetic fan-in tasks which ensure that all dependencies run before the
   // newly added task does.
   // @param[in] name - A name for this task.
