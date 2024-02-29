@@ -29,4 +29,19 @@ TEST(FuzzHelpersTest, TestSE3Equal) {
   EXPECT_FALSE(verify_equality(different_se3, se3));
 }
 
+TEST(FuzzHelpersTest, TestFramedVector3Equal) {
+  // SETUP
+  constexpr std::size_t SEED = 372736U;
+  std::mt19937 rng{SEED};
+
+  const FramedVector_3 fv3{random_element<FramedVector_3>(InOut{rng})};
+  const FramedVector_3 different_fv3{
+      random_element<FramedVector_3>(InOut{rng})};
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(verify_equality(fv3, fv3));
+  EXPECT_FALSE(verify_equality(fv3, different_fv3));
+  EXPECT_FALSE(verify_equality(different_fv3, fv3));
+}
+
 }  // namespace resim::transforms::proto

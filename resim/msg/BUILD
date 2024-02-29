@@ -166,6 +166,28 @@ py_proto_library(
     ],
 )
 
+proto_library(
+    name = "primitives_proto",
+    srcs = ["primitives.proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "primitives_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":primitives_proto",
+    ],
+)
+
+py_proto_library(
+    name = "primitives_proto_py",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":primitives_proto",
+    ],
+)
+
 ################################################################################
 # Helpers
 ################################################################################
@@ -175,13 +197,15 @@ cc_library(
     testonly = True,
     srcs = ["fuzz_helpers.cc"],
     hdrs = ["fuzz_helpers.hh"],
-    visibility = ["//resim:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
+        ":byte_swap_helpers",
         ":detection_proto_cc",
         ":header_proto_cc",
         ":navsat_proto_cc",
         ":odometry_proto_cc",
         ":pose_proto_cc",
+        ":primitives_proto_cc",
         ":transform_proto_cc",
         "//resim/geometry/proto:fuzz_helpers",
         "//resim/testing:fuzz_helpers",
@@ -204,6 +228,31 @@ cc_test(
         ":pose_proto_cc",
         ":transform_proto_cc",
         "//resim/geometry/proto:fuzz_helpers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "byte_swap_helpers",
+    srcs = ["byte_swap_helpers.cc"],
+    hdrs = ["byte_swap_helpers.hh"],
+    visibility = [
+        "//resim/msg:__subpackages__",
+        "//resim/ros2:__subpackages__",
+    ],
+    deps = [
+        ":primitives_proto_cc",
+        "//resim/utils:inout",
+    ],
+)
+
+cc_test(
+    name = "byte_swap_helpers_test",
+    srcs = ["byte_swap_helpers_test.cc"],
+    deps = [
+        ":byte_swap_helpers",
+        ":primitives_proto_cc",
+        "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],
 )

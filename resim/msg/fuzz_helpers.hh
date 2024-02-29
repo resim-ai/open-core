@@ -9,14 +9,17 @@
 #include <Eigen/Dense>
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <random>
 
 #include "resim/geometry/proto/fuzz_helpers.hh"
+#include "resim/msg/byte_swap_helpers.hh"
 #include "resim/msg/detection.pb.h"
 #include "resim/msg/header.pb.h"
 #include "resim/msg/navsat.pb.h"
 #include "resim/msg/odometry.pb.h"
 #include "resim/msg/pose.pb.h"
+#include "resim/msg/primitives.pb.h"
 #include "resim/msg/transform.pb.h"
 #include "resim/testing/fuzz_helpers.hh"
 #include "resim/testing/random_matrix.hh"
@@ -273,6 +276,111 @@ NavSatFix random_element(TypeTag<NavSatFix> /*unused*/, InOut<Rng> rng) {
   return result;
 }
 
+template <typename Rng>
+Bool random_element(TypeTag<Bool> /*unused*/, InOut<Rng> rng) {
+  std::uniform_int_distribution dist{0, 1};
+  Bool result;
+  result.set_data((dist(*rng) % 2) == 0);
+  return result;
+}
+
+template <typename Rng>
+Byte random_element(TypeTag<Byte> /*unused*/, InOut<Rng> rng) {
+  Byte result;
+  result.set_data(std::string{random_element<char>(rng)});
+  return result;
+}
+
+template <typename Rng>
+Char random_element(TypeTag<Char> /*unused*/, InOut<Rng> rng) {
+  Char result;
+  result.set_data(std::string{random_element<char>(rng)});
+  return result;
+}
+
+template <typename Rng>
+Empty random_element(TypeTag<Empty> /*unused*/, InOut<Rng> rng) {
+  Empty result;
+  return result;
+}
+
+template <typename Rng>
+Float32 random_element(TypeTag<Float32> /*unused*/, InOut<Rng> rng) {
+  Float32 result;
+  result.set_data(random_element<float>(rng));
+  return result;
+}
+
+template <typename Rng>
+Float64 random_element(TypeTag<Float64> /*unused*/, InOut<Rng> rng) {
+  Float64 result;
+  result.set_data(random_element<double>(rng));
+  return result;
+}
+
+template <typename Rng>
+Int16 random_element(TypeTag<Int16> /*unused*/, InOut<Rng> rng) {
+  Int16 result;
+  set_data(random_element<int16_t>(rng), InOut{result});
+  return result;
+}
+
+template <typename Rng>
+Int32 random_element(TypeTag<Int32> /*unused*/, InOut<Rng> rng) {
+  Int32 result;
+  result.set_data(random_element<int32_t>(rng));
+  return result;
+}
+
+template <typename Rng>
+Int64 random_element(TypeTag<Int64> /*unused*/, InOut<Rng> rng) {
+  Int64 result;
+  result.set_data(random_element<int64_t>(rng));
+  return result;
+}
+
+template <typename Rng>
+Int8 random_element(TypeTag<Int8> /*unused*/, InOut<Rng> rng) {
+  Int8 result;
+  result.set_data(std::string{random_element<int8_t>(rng)});
+  return result;
+}
+
+template <typename Rng>
+String random_element(TypeTag<String> /*unused*/, InOut<Rng> rng) {
+  String result;
+  result.set_data(UUID::new_uuid().to_string());
+  return result;
+}
+
+template <typename Rng>
+UInt16 random_element(TypeTag<UInt16> /*unused*/, InOut<Rng> rng) {
+  UInt16 result;
+  set_data(random_element<int16_t>(rng), InOut{result});
+  return result;
+}
+
+template <typename Rng>
+UInt32 random_element(TypeTag<UInt32> /*unused*/, InOut<Rng> rng) {
+  UInt32 result;
+  result.set_data(random_element<uint32_t>(rng));
+  return result;
+}
+
+template <typename Rng>
+UInt64 random_element(TypeTag<UInt64> /*unused*/, InOut<Rng> rng) {
+  UInt64 result;
+  result.set_data(random_element<uint64_t>(rng));
+  return result;
+}
+
+template <typename Rng>
+UInt8 random_element(TypeTag<UInt8> /*unused*/, InOut<Rng> rng) {
+  UInt8 result;
+  result.set_data(std::string{random_element<int8_t>(rng)});
+  return result;
+}
+
 bool verify_equality(const Header &a, const Header &b);
 
 bool verify_equality(const TransformStamped &a, const TransformStamped &b);
@@ -306,5 +414,35 @@ bool verify_equality(const Detection3DArray &a, const Detection3DArray &b);
 bool verify_equality(const Detection2DArray &a, const Detection2DArray &b);
 
 bool verify_equality(const NavSatFix &a, const NavSatFix &b);
+
+bool verify_equality(const Bool &a, const Bool &b);
+
+bool verify_equality(const Byte &a, const Byte &b);
+
+bool verify_equality(const Char &a, const Char &b);
+
+bool verify_equality(const Empty &a, const Empty &b);
+
+bool verify_equality(const Float32 &a, const Float32 &b);
+
+bool verify_equality(const Float64 &a, const Float64 &b);
+
+bool verify_equality(const Int16 &a, const Int16 &b);
+
+bool verify_equality(const Int32 &a, const Int32 &b);
+
+bool verify_equality(const Int64 &a, const Int64 &b);
+
+bool verify_equality(const Int8 &a, const Int8 &b);
+
+bool verify_equality(const String &a, const String &b);
+
+bool verify_equality(const UInt16 &a, const UInt16 &b);
+
+bool verify_equality(const UInt32 &a, const UInt32 &b);
+
+bool verify_equality(const UInt64 &a, const UInt64 &b);
+
+bool verify_equality(const UInt8 &a, const UInt8 &b);
 
 }  // namespace resim::msg

@@ -8,8 +8,8 @@
 
 #include <google/protobuf/timestamp.pb.h>
 
+#include <algorithm>
 #include <concepts>
-#include <iostream>
 #include <random>
 
 #include "resim/utils/inout.hh"
@@ -121,5 +121,42 @@ google::protobuf::Timestamp random_element(
 bool verify_equality(
     const google::protobuf::Timestamp &a,
     const google::protobuf::Timestamp &b);
+
+// Generate a random vector of T between size 3 and 7 assuming that
+// random_element(TypeTag<T>, InOut<Rng>) has been defined either in the resim
+// namespace or the same namespace as T. The size bounds were selected as
+// between 3 and 7 so we could have a range of sizes represented without slowing
+// tests down with very large vectors of elements to generate and check.
+template <typename T, typename Rng>
+std::vector<T> random_element(
+    TypeTag<std::vector<T>> /*unused*/,
+    InOut<Rng> rng) {
+  constexpr size_t MIN_SIZE = 3;
+  constexpr size_t MAX_SIZE = 7;
+  std::uniform_int_distribution<size_t> size_dist{MIN_SIZE, MAX_SIZE};
+  const size_t size = size_dist(*rng);
+  std::vector<T> result;
+  result.reserve(size);
+  for (size_t ii = 0; ii < size; ++ii) {
+    result.emplace_back(random_element(TypeTag<T>(), rng));
+  }
+  return result;
+}
+
+// Verify that two vectors of type T are equal assuming that
+// verify_equality(const T &a, const T &b) is defined either in the resim
+// namespace or the same namespace as T.
+template <typename T>
+bool verify_equality(const std::vector<T> &a, const std::vector<T> &b) {
+  // Requires C++14 to not be undefined behavior. Thanksfully, the CTAD on the
+  // righthand-side of the equality requires C++17.
+  return std::mismatch(
+             a.cbegin(),
+             a.cend(),
+             b.cbegin(),
+             b.cend(),
+             [](const T &a, const T &b) { return verify_equality(a, b); }) ==
+         std::pair(a.cend(), b.cend());
+}
 
 }  // namespace resim
