@@ -17,6 +17,7 @@
 #include "resim/ros2/odometry_from_ros2.hh"
 #include "resim/ros2/oriented_box_from_ros2.hh"
 #include "resim/ros2/pose_from_ros2.hh"
+#include "resim/ros2/primitives_from_ros2.hh"
 #include "resim/ros2/time_from_ros2.hh"
 #include "resim/ros2/transform_from_ros2.hh"
 
@@ -112,6 +113,52 @@ const std::unordered_map<std::string, ConverterFunctions> converters_map = {
     {"vision_msgs/msg/Detection2DArray",
      {convert_message<vision_msgs::msg::Detection2DArray>,
       generate_type_schema<vision_msgs::msg::Detection2DArray>}},
+    {"std_msgs/msg/Bool",
+     {convert_message<std_msgs::msg::Bool>,
+      generate_type_schema<std_msgs::msg::Bool>}},
+    {"std_msgs/msg/Byte",
+     {convert_message<std_msgs::msg::Byte>,
+      generate_type_schema<std_msgs::msg::Byte>}},
+    {"std_msgs/msg/Char",
+     {convert_message<std_msgs::msg::Char>,
+      generate_type_schema<std_msgs::msg::Char>}},
+    {"std_msgs/msg/Empty",
+     {convert_message<std_msgs::msg::Empty>,
+      generate_type_schema<std_msgs::msg::Empty>}},
+    {"std_msgs/msg/Float32",
+     {convert_message<std_msgs::msg::Float32>,
+      generate_type_schema<std_msgs::msg::Float32>}},
+    {"std_msgs/msg/Float64",
+     {convert_message<std_msgs::msg::Float64>,
+      generate_type_schema<std_msgs::msg::Float64>}},
+    {"std_msgs/msg/Int16",
+     {convert_message<std_msgs::msg::Int16>,
+      generate_type_schema<std_msgs::msg::Int16>}},
+    {"std_msgs/msg/Int32",
+     {convert_message<std_msgs::msg::Int32>,
+      generate_type_schema<std_msgs::msg::Int32>}},
+    {"std_msgs/msg/Int64",
+     {convert_message<std_msgs::msg::Int64>,
+      generate_type_schema<std_msgs::msg::Int64>}},
+    {"std_msgs/msg/Int8",
+     {convert_message<std_msgs::msg::Int8>,
+      generate_type_schema<std_msgs::msg::Int8>}},
+    {"std_msgs/msg/String",
+     {convert_message<std_msgs::msg::String>,
+      generate_type_schema<std_msgs::msg::String>}},
+    {"std_msgs/msg/UInt16",
+     {convert_message<std_msgs::msg::UInt16>,
+      generate_type_schema<std_msgs::msg::UInt16>}},
+    {"std_msgs/msg/UInt32",
+     {convert_message<std_msgs::msg::UInt32>,
+      generate_type_schema<std_msgs::msg::UInt32>}},
+    {"std_msgs/msg/UInt64",
+     {convert_message<std_msgs::msg::UInt64>,
+      generate_type_schema<std_msgs::msg::UInt64>}},
+    {"std_msgs/msg/UInt8",
+     {convert_message<std_msgs::msg::UInt8>,
+      generate_type_schema<std_msgs::msg::UInt8>}},
+
 };
 
 }  // namespace

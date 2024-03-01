@@ -22,6 +22,7 @@
 #include "resim/ros2/odometry_from_ros2.hh"
 #include "resim/ros2/oriented_box_from_ros2.hh"
 #include "resim/ros2/pose_from_ros2.hh"
+#include "resim/ros2/primitives_from_ros2.hh"
 #include "resim/ros2/time_from_ros2.hh"
 #include "resim/ros2/transform_from_ros2.hh"
 #include "resim/transforms/proto/fuzz_helpers.hh"
@@ -51,7 +52,22 @@ using Ros2Types = ::testing::Types<
     vision_msgs::msg::Detection3DArray,
     vision_msgs::msg::BoundingBox2D,
     vision_msgs::msg::Detection2D,
-    vision_msgs::msg::Detection2DArray>;
+    vision_msgs::msg::Detection2DArray,
+    std_msgs::msg::Bool,
+    std_msgs::msg::Byte,
+    std_msgs::msg::Char,
+    std_msgs::msg::Empty,
+    std_msgs::msg::Float32,
+    std_msgs::msg::Float64,
+    std_msgs::msg::Int16,
+    std_msgs::msg::Int32,
+    std_msgs::msg::Int64,
+    std_msgs::msg::Int8,
+    std_msgs::msg::String,
+    std_msgs::msg::UInt16,
+    std_msgs::msg::UInt32,
+    std_msgs::msg::UInt64,
+    std_msgs::msg::UInt8>;
 
 template <typename T>
 struct DefaultConverterPluginTest : public ::testing::Test {
