@@ -451,10 +451,10 @@ py_test(
     name = "resim_log_from_ros2_python_test",
     srcs = ["resim_log_from_ros2_python_test.py"],
     data = [
-        ":default_converter_plugin.so",
         ":resim_log_from_ros2_python.so",
         ":resim_log_from_ros2_python_test_ament",
         ":resim_log_from_ros2_test_helpers_python.so",
+        "//resim/ros2/testing:resim_log_from_ros2_test_converter_plugin.so",
     ],
 )
 
