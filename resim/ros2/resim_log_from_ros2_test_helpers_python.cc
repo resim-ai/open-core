@@ -7,8 +7,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <iostream>
-
 #include "resim/ros2/resim_log_from_ros2_test_helpers.hh"
 
 namespace resim::ros2 {
