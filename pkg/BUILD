@@ -104,6 +104,7 @@ py_package(
         "resim.transforms.proto",
     ],
     deps = [
+        "//resim/actor/state/proto:observable_state_proto_py",
         "//resim/msg:detection_proto_py",
         "//resim/msg:header_proto_py",
         "//resim/msg:navsat_proto_py",
