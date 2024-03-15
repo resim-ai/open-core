@@ -79,6 +79,7 @@ pybind_extension(
     srcs = ["geodetic_python.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        ":se3_python.so",
         ":so3_python.so",
         "//resim/transforms:geodetic",
         "@au//au",

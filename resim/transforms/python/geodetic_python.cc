@@ -13,15 +13,32 @@
 #include "au/units/degrees.hh"
 #include "au/units/feet.hh"
 #include "resim/transforms/geodetic.hh"
+#include "resim/transforms/so3.hh"
 
 namespace resim::transforms {
 namespace py = pybind11;
 
-// A simple pybinding of SE3
+// A simple pybinding of Geodetics
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(geodetic_python, m) {
+  py::module_::import("resim.transforms.python.se3_python");
+
   py::class_<Geodetic>(m, "Geodetic")
       .def(py::init<>())
+      .def(
+          py::init([](const double latitude_deg,
+                      const double longitude_deg,
+                      const double altitude_m) {
+            return Geodetic{
+                .latitude = au::degrees(latitude_deg),
+                .longitude = au::degrees(longitude_deg),
+                .altitude = au::meters(altitude_m),
+            };
+          }),
+          py::kw_only(),
+          py::arg("latitude_deg"),
+          py::arg("longitude_deg"),
+          py::arg("altitude_m"))
       .def(
           "latitude_deg",
           [](const Geodetic &g) { return g.latitude.in(au::degrees); })
@@ -48,6 +65,17 @@ PYBIND11_MODULE(geodetic_python, m) {
       });
 
   py::class_<GeodeticWithRotation>(m, "GeodeticWithRotation")
+      .def(py::init<>())
+      .def(
+          py::init([](const Geodetic &geodetic, const SO3 &rotation) {
+            return GeodeticWithRotation{
+                .geodetic = geodetic,
+                .rotation = rotation,
+            };
+          }),
+          py::kw_only(),
+          py::arg("geodetic"),
+          py::arg("rotation"))
       .def_readwrite("geodetic", &GeodeticWithRotation::geodetic)
       .def_readwrite("rotation", &GeodeticWithRotation::rotation);
 
