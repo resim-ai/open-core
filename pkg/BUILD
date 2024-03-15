@@ -101,6 +101,8 @@ py_wheel(
 py_package(
     name = "msg_package",
     packages = [
+        "resim.actor.state.proto",
+        "resim.curves.proto",
         "resim.msg",
         "resim.transforms.proto",
     ],
