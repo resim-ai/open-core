@@ -73,3 +73,25 @@ py_test(
         requirement("numpy"),
     ],
 )
+
+pybind_extension(
+    name = "geodetic_python",
+    srcs = ["geodetic_python.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":so3_python.so",
+        "//resim/transforms:geodetic",
+        "@au//au",
+    ],
+)
+
+py_test(
+    name = "geodetic_python_test",
+    srcs = ["geodetic_python_test.py"],
+    data = [
+        ":geodetic_python.so",
+    ],
+    deps = [
+        requirement("numpy"),
+    ],
+)
