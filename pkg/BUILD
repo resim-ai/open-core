@@ -72,6 +72,7 @@ py_package(
         "//resim/metrics/python:metrics",
         "//resim/metrics/python:metrics_writer",
         "//resim/metrics/python:unpack_metrics",
+        "//resim/transforms/python:geodetic_python.so",
         "//resim/transforms/python:quaternion.so",
         "//resim/transforms/python:se3_python.so",
         "//resim/transforms/python:so3_python.so",
@@ -100,6 +101,8 @@ py_wheel(
 py_package(
     name = "msg_package",
     packages = [
+        "resim.actor.state.proto",
+        "resim.curves.proto",
         "resim.msg",
         "resim.transforms.proto",
     ],
