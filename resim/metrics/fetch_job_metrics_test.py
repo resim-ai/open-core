@@ -120,6 +120,7 @@ def _mock_fetch_metrics_data_urls(*,
                                   job_id: uuid.UUID,
                                   client: AuthenticatedClient) -> list[str]:
     assert batch_id in _BATCH_IDS
+    assert project_id in _PROJECT_IDS
     assert client.token == _TOKEN
     return list(_JOB_ID_METRICS_DATA_URL_MAP[job_id])
 
@@ -189,8 +190,6 @@ class FetchJobMetricsTest(unittest.TestCase):
         Test that we can fetch job metrics while mocking the metrics url and
         proto getters.
         """
-        return None
-
         _FETCHED_JOB_IDS = [
             uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"),
             uuid.UUID("f1b4fa78-7ede-46c8-bd8e-deb5681e8010"),
