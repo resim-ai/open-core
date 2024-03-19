@@ -30,13 +30,15 @@ from resim.metrics.get_metrics_proto import get_metrics_proto
 
 @dataclass
 class JobInfo:
-    """A simple class representing the job_id and batch_id for a job."""
+    """A simple class representing the job_id, batch_id, and project_id for a job."""
     job_id: uuid.UUID
     batch_id: uuid.UUID
+    project_id: uuid.UUID
 
 def fetch_job_metrics_by_batch(*,
                         token: str,
                         api_url: str,
+                        project_id: uuid.UUID,
                         batch_id: uuid.UUID) -> Dict[uuid.UUID, UnpackedMetrics]:
     """
     This downloads all metrics associated with a certain batch, and stores them in a
@@ -48,12 +50,13 @@ def fetch_job_metrics_by_batch(*,
     client = AuthenticatedClient(
         base_url=api_url,
         token=token)
-    jobs_response = list_jobs.sync(str(batch_id), client=client)
+    jobs_response = list_jobs.sync(str(project_id), str(batch_id), client=client)
     assert jobs_response is not None
     jobs = [
         JobInfo(
             job_id=uuid.UUID(job.job_id),
             batch_id=batch_id
+            project_id=project_id
         ) for job in jobs_response.jobs]
 
     # Fetch the metrics for these jobs:
@@ -123,6 +126,7 @@ def _fetch_all_urls(*,
             threading.Thread(
                 target=_get_metrics_urls,
                 kwargs={
+                    "project_id": job.project_id,
                     "batch_id": job.batch_id,
                     "job_id": job.job_id,
                     "client": client,
@@ -132,6 +136,7 @@ def _fetch_all_urls(*,
             threading.Thread(
                 target=_get_metrics_data_urls,
                 kwargs={
+                    "project_id": job.project_id,
                     "batch_id": job.batch_id,
                     "job_id": job.job_id,
                     "client": client,
@@ -209,6 +214,7 @@ def _fetch_all_protos(*,
 
 
 def _get_metrics_urls(*,
+                      project_id: uuid.UUID,
                       batch_id: uuid.UUID,
                       job_id: uuid.UUID,
                       client: AuthenticatedClient,
@@ -220,11 +226,12 @@ def _get_metrics_urls(*,
     """
     metrics_urls_lock.acquire()
     metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(
-        batch_id=batch_id, job_id=job_id, client=client)
+        project_id=project_id,batch_id=batch_id, job_id=job_id, client=client)
     metrics_urls_lock.release()
 
 
 def _get_metrics_data_urls(*,
+                           project_id: uuid.UUID,
                            batch_id: uuid.UUID,
                            job_id: uuid.UUID,
                            client: AuthenticatedClient,
@@ -236,7 +243,7 @@ def _get_metrics_data_urls(*,
     """
     metrics_data_urls_lock.acquire()
     metrics_data_urls[job_id] = fetch_metrics_urls.fetch_metrics_data_urls(
-        batch_id=batch_id, job_id=job_id, client=client)
+        project_id=project_id, batch_id=batch_id, job_id=job_id, client=client)
     metrics_data_urls_lock.release()
 
 
