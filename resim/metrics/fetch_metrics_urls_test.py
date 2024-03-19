@@ -60,18 +60,21 @@ class FetchMetricsUrlsTest(unittest.TestCase):
         Test that fetch_metrics_urls() works with a mocked version of
         fetch_all_pages().
         """
+        test_project_id = uuid.uuid4()
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
         test_client = authenticated_client_mock()
 
         def mock_fetch_all_pages(
                 endpoint: typing.Callable,
+                project_id: str,
                 batch_id: str,
                 job_id: str,
                 *,
                 client: AuthenticatedClient) -> list[MockMetricsResponse]:
             """A mock for the fetch_all_pages() function that we use to return mock metrics"""
             self.assertEqual(endpoint, list_metrics_for_job.sync)
+            self.assertEqual(uuid.UUID(project_id), test_project_id)
             self.assertEqual(uuid.UUID(batch_id), test_batch_id)
             self.assertEqual(uuid.UUID(job_id), test_job_id)
             self.assertEqual(client, test_client)
@@ -85,6 +88,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
         with patch("resim.metrics.fetch_metrics_urls.fetch_all_pages",
                    new=mock_fetch_all_pages) as _:
             metrics_urls = fetch_metrics_urls.fetch_metrics_urls(
+                project_id=test_project_id,
                 batch_id=test_batch_id,
                 job_id=test_job_id,
                 client=test_client)
@@ -99,18 +103,21 @@ class FetchMetricsUrlsTest(unittest.TestCase):
         Test that fetch_metrics_data_urls() works with a mocked version of
         fetch_all_pages().
         """
+        test_project_id = uuid.uuid4()
         test_batch_id = uuid.uuid4()
         test_job_id = uuid.uuid4()
         test_client = authenticated_client_mock()
 
         def mock_fetch_all_pages(
                 endpoint: typing.Callable,
+                project_id: str,
                 batch_id: str,
                 job_id: str,
                 *,
                 client: AuthenticatedClient) -> list[MockMetricsDataResponse]:
             """A mock for the fetch_all_pages() function that we use to return mock metrics data"""
             self.assertEqual(endpoint, list_metrics_data_for_job.sync)
+            self.assertEqual(uuid.UUID(project_id), test_project_id)
             self.assertEqual(uuid.UUID(batch_id), test_batch_id)
             self.assertEqual(uuid.UUID(job_id), test_job_id)
             self.assertEqual(client, test_client)
@@ -124,6 +131,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
         with patch("resim.metrics.fetch_metrics_urls.fetch_all_pages",
                    new=mock_fetch_all_pages) as _:
             metrics_data_urls = fetch_metrics_urls.fetch_metrics_data_urls(
+                project_id=test_project_id,
                 batch_id=test_batch_id,
                 job_id=test_job_id,
                 client=test_client)

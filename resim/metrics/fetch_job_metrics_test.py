@@ -29,25 +29,30 @@ class MockMetric:
     name: str
     data: str
 
+
 @dataclass(frozen=True)
 class MockMetricsData:
     """A mock for a resim.metric.proto.MetricsData protobuf message."""
     name: str
     data: str
 
+
 @dataclass(frozen=True)
 class MockJob:
     job_id: str
 
+
 @dataclass(frozen=True)
 class MockListJobsResponse200:
     jobs: list[MockJob]
+
 
 @dataclass
 class MockUnpackedMetrics:
     metrics: list[MockMetric]
     metrics_data: list[MockMetricsData]
     names: set[str]
+
 
 _JOB_ID_METRICS_URL_MAP = {
     uuid.UUID("1f2441f6-cee2-4078-9729-048810c1da96"):
@@ -86,19 +91,20 @@ _BATCH_IDS_TO_JOB_IDS_MAP = {
 }
 
 _METRICS_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_{i}.binproto": 
-    MockMetric(name = f"metric_{i} name", data=f"metric_{i}")
+    f"https://example.com/metrics_{i}.binproto":
+    MockMetric(name=f"metric_{i} name", data=f"metric_{i}")
     for i in range(10)
 }
 
 _METRICS_DATA_URL_TO_MESSAGE_MAP = {
-    f"https://example.com/metrics_data_{i}.binproto": 
-    MockMetricsData(name = f"data_{i} name", data=f"data_{i}")
+    f"https://example.com/metrics_data_{i}.binproto":
+    MockMetricsData(name=f"data_{i} name", data=f"data_{i}")
     for i in range(10)
 }
 
+
 def _mock_fetch_metrics_urls(*,
-                             project_id: uuid.UUID,                             
+                             project_id: uuid.UUID,
                              batch_id: uuid.UUID,
                              job_id: uuid.UUID,
                              client: AuthenticatedClient) -> list[str]:
@@ -117,34 +123,41 @@ def _mock_fetch_metrics_data_urls(*,
     assert client.token == _TOKEN
     return list(_JOB_ID_METRICS_DATA_URL_MAP[job_id])
 
-def _mock_list_job_ids_by_batch(project_id: str,
-                                batch_id: str,
-                                *,
-                                client: AuthenticatedClient) -> MockListJobsResponse200:
+
+def _mock_list_job_ids_by_batch(
+        project_id: str,
+        batch_id: str,
+        *,
+        client: AuthenticatedClient) -> MockListJobsResponse200:
     batch_id_uuid = uuid.UUID(batch_id)
     project_id_uuid = uuid.UUID(project_id)
 
     assert batch_id_uuid in _BATCH_IDS
     assert project_id_uuid in _PROJECT_IDS
-    
+
     assert client.token == _TOKEN
     return MockListJobsResponse200(
-        jobs= [MockJob(job_id=str(job_id)) for job_id in _BATCH_IDS_TO_JOB_IDS_MAP[batch_id_uuid]]
-    )
+        jobs=[
+            MockJob(
+                job_id=str(job_id)) for job_id in _BATCH_IDS_TO_JOB_IDS_MAP[batch_id_uuid]])
 
 # TODO(tknowles): In an ideal world, this would not be mocked out, but this will require us
 #                 to use valid messages within our Mock protobuf messages.
+
+
 def _mock_unpack_metrics(
     *,
     metrics: list[MockMetric],
-    metrics_data: list[MockMetricsData]) -> MockUnpackedMetrics:
+        metrics_data: list[MockMetricsData]) -> MockUnpackedMetrics:
     return MockUnpackedMetrics(
         metrics=metrics[:],
         metrics_data=metrics_data[:],
         names=set(m.name for m in metrics).union(set(md.name for md in metrics_data))
     )
 
+
 T = typing.TypeVar("T")
+
 
 def _mock_get_metrics_proto(*,
                             message_type: type[T],
@@ -201,7 +214,7 @@ class FetchJobMetricsTest(unittest.TestCase):
         self.assertEqual(len(_FETCHED_JOB_IDS), len(metrics_protos))
         self.assertEqual(len(_FETCHED_JOB_IDS), len(metrics_data_protos))
         for job_id in _FETCHED_JOB_IDS:
-            metric_urls =_JOB_ID_METRICS_URL_MAP[job_id]
+            metric_urls = _JOB_ID_METRICS_URL_MAP[job_id]
             metrics_data_urls = _JOB_ID_METRICS_DATA_URL_MAP[job_id]
             self.assertIn(job_id, metrics_protos)
             self.assertIn(job_id, metrics_data_protos)
@@ -218,6 +231,7 @@ class FetchJobMetricsTest(unittest.TestCase):
                 self.assertIn(
                     _METRICS_DATA_URL_TO_MESSAGE_MAP[url],
                     metrics_data_protos[job_id])
+
 
 @patch("resim.metrics.fetch_job_metrics.fetch_metrics_urls.fetch_metrics_urls",
        new=_mock_fetch_metrics_urls)
@@ -253,8 +267,11 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
                 batch_id=batch_id,
             )
 
-            self.assertEqual(len(job_to_metrics), len(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
-            self.assertEqual(set(job_to_metrics.keys()), set(_BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
+            self.assertEqual(
+                len(job_to_metrics), len(
+                    _BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
+            self.assertEqual(set(job_to_metrics.keys()), set(
+                _BATCH_IDS_TO_JOB_IDS_MAP[batch_id]))
 
             for job_id, metrics in job_to_metrics.items():
                 self.assertEqual(
@@ -273,6 +290,7 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
                                for url in _JOB_ID_METRICS_DATA_URL_MAP[job_id]))
                 )
                 self.assertEqual(metrics.names, expected_names)
+
 
 if __name__ == '__main__':
     unittest.main()
