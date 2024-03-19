@@ -7,7 +7,7 @@
 load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -197,4 +197,12 @@ pkg_tar(
     extension = "tar.gz",
     include_runfiles = True,
     strip_prefix = "/",
+)
+
+py_binary(
+    name = "test",
+    srcs = ["test.py"],
+    deps = [
+        ":fetch_job_metrics",
+    ],
 )
