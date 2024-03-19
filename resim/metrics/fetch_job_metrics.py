@@ -55,7 +55,7 @@ def fetch_job_metrics_by_batch(*,
     jobs = [
         JobInfo(
             job_id=uuid.UUID(job.job_id),
-            batch_id=batch_id
+            batch_id=batch_id,
             project_id=project_id
         ) for job in jobs_response.jobs]
 
