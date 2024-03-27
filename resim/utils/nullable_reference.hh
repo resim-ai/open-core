@@ -19,6 +19,9 @@ class NullableReference {
   // Constructor from a reference to T
   explicit NullableReference(T &x);
 
+  // This needs to allow implicit conversion since NullReferenceType
+  // is interchangable with any null NullableReference<T>.
+  // NOLINTNEXTLINE(google-explicit-constructor)
   NullableReference(NullReferenceType /* unused */);
 
   NullableReference() = default;
