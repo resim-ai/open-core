@@ -164,6 +164,8 @@ TEST(RigidBodyDynamicsTest, TestRigidBodyDynamics) {
   }
 }
 
+// Test the Jacobian by testing that small perturbations to the inputs behave
+// the way the Jacobian predicts.
 TEST(RigidBodyDynamicsTest, TestJacobian) {
   // SETUP
   constexpr double MASS = 2.0;
@@ -178,30 +180,33 @@ TEST(RigidBodyDynamicsTest, TestJacobian) {
   std::mt19937 rng;
   for (int ii = 0; ii < NUM_TESTS; ++ii) {
     const State state{State() + testing::random_vector<State::Delta>(rng)};
+    using Control = TangentVector;
+    const Control force{testing::random_vector<Control>(rng)};
     Dynamics::Diffs diffs;
 
     constexpr double EPSILON = 1e-7;
-    State::Delta perturbation{
+    const State::Delta perturbation{
         EPSILON * testing::random_vector<State::Delta>(rng)};
     const State state_perturbed{state + perturbation};
 
+    const Control force_perturbation{
+        EPSILON * testing::random_vector<Control>(rng)};
+    const Control force_perturbed{force + force_perturbation};
+
     // ACTION
-    const State::Delta output{dynamics(
-        state,
-        TangentVector::Zero(),
-        START_TIME,
-        NullableReference{diffs})};
+    const State::Delta output{
+        dynamics(state, force, START_TIME, NullableReference{diffs})};
 
     // VERIFICATION
     const State::Delta output_perturbed{dynamics(
         state_perturbed,
-        TangentVector::Zero(),
+        force_perturbed,
         START_TIME,
         null_reference<Dynamics::Diffs>)};
 
     // Using Taylor series
     const State::Delta expected_output_perturbed{
-        output + diffs.f_x * perturbation};
+        output + diffs.f_x * perturbation + diffs.f_u * force_perturbation};
 
     constexpr double TOLERANCE = 1e-8;
     EXPECT_TRUE(((expected_output_perturbed - output_perturbed).array() /

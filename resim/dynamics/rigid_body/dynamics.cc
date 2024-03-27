@@ -64,7 +64,6 @@ Dynamics::Delta Dynamics::operator()(
   // TODO(michael) Add the Jacobian to this
 
   if (diffs.has_value()) {
-    // TODO might be a more efficient way to do this
     [&f_x = diffs->f_x,
      &f_u = diffs->f_u,
      &I = inertia_,
