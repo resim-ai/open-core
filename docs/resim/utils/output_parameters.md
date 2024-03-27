@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
   int val;
   maybe_set_to_three(resim::NullableReference{val});
   std::cout << val << std::endl;
-  maybe_set_to_three(resim::null_reference<int>);
+  maybe_set_to_three(resim::null_reference);
   return 0;
 }
 ```
