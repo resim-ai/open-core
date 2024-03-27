@@ -12,6 +12,46 @@
 
 namespace resim::dynamics::rigid_body {
 
+using transforms::SE3;
+using TangentVector = SE3::TangentVector;
+
+namespace {
+
+// Helper function which returns the result of the tensor contraction (d ad_V /
+// dV) * x.
+Eigen::Matrix<double, SE3::DOF, SE3::DOF> d_adVT_dV(const TangentVector &x) {
+  Eigen::Matrix<double, SE3::DOF, SE3::DOF> result{
+      Eigen::Matrix<double, SE3::DOF, SE3::DOF>::Zero()};
+  struct TensorEntry {
+    int i, j, k;
+    double val;
+  };
+
+  constexpr std::array d_cross = {
+      TensorEntry{.i = 1, .j = 2, .k = 0, .val = 1.0},
+      TensorEntry{.i = 2, .j = 1, .k = 0, .val = -1.0},
+      TensorEntry{.i = 0, .j = 2, .k = 1, .val = -1.0},
+      TensorEntry{.i = 2, .j = 0, .k = 1, .val = 1.0},
+      TensorEntry{.i = 0, .j = 1, .k = 2, .val = 1.0},
+      TensorEntry{.i = 1, .j = 0, .k = 2, .val = -1.0},
+  };
+
+  for (const auto &entry : d_cross) {
+    // Upper left submatrix
+    result(entry.i, entry.k) += entry.val * x(entry.j);
+
+    // Upper right submatrix
+    result(entry.i, entry.k + 3) += entry.val * x(entry.j + 3);
+
+    // Lower right submatrix
+    result(entry.i + 3, entry.k) += entry.val * x(entry.j + 3);
+  }
+
+  return result;
+}
+
+}  // namespace
+
 Dynamics::Dynamics(Inertia inertia)
     : inertia_{std::move(inertia)},
       inertia_inv_{inertia_.inverse()} {}
@@ -21,11 +61,25 @@ Dynamics::Delta Dynamics::operator()(
     const Control &control,
     time::Timestamp time,
     NullableReference<Diffs> diffs) const {
-  using transforms::SE3;
-  using TangentVector = SE3::TangentVector;
-
   // TODO(michael) Add the Jacobian to this
-  REASSERT(not diffs.has_value(), "Jacobian not (yet) supported!");
+
+  if (diffs.has_value()) {
+    // TODO might be a more efficient way to do this
+    [&f_x = diffs->f_x,
+     &f_u = diffs->f_u,
+     &I = inertia_,
+     &Iinv = inertia_inv_,
+     &V = state.d_reference_from_body]() {
+      f_x = MatXX::Zero();
+      f_x.block<SE3::DOF, SE3::DOF>(SE3::DOF, SE3::DOF) =
+          Iinv * (SE3::adjoint(V).transpose() * I + d_adVT_dV(I * V));
+      f_x.block<SE3::DOF, SE3::DOF>(0, SE3::DOF) =
+          SE3::TangentMapping::Identity();
+
+      f_u = MatXU::Zero();
+      f_u.block<SE3::DOF, SE3::DOF>(SE3::DOF, 0) = Iinv;
+    }();
+  }
 
   const TangentVector &force = control;
   const TangentVector acceleration = [&I = inertia_,

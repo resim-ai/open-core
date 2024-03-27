@@ -17,6 +17,7 @@
 #include "resim/dynamics/forward_euler.hh"
 #include "resim/dynamics/rigid_body/inertia.hh"
 #include "resim/dynamics/rigid_body/state.hh"
+#include "resim/testing/random_matrix.hh"
 #include "resim/time/sample_interval.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/liegroup_test_helpers.hh"
@@ -163,8 +164,7 @@ TEST(RigidBodyDynamicsTest, TestRigidBodyDynamics) {
   }
 }
 
-// Jacobian is not yet supported so we double check this
-TEST(RigidBodyDynamicsTest, TestThrowsOnJacobianRequested) {
+TEST(RigidBodyDynamicsTest, TestJacobian) {
   // SETUP
   constexpr double MASS = 2.0;
   const Eigen::Vector3d moments_of_inertia{1.1, 1.2, 1.3};
@@ -173,17 +173,42 @@ TEST(RigidBodyDynamicsTest, TestThrowsOnJacobianRequested) {
   Dynamics dynamics{inertia};
   constexpr time::Timestamp START_TIME;
 
-  State state;
-  Dynamics::Diffs diffs;
+  constexpr int NUM_TESTS = 100;
+  constexpr size_t SEED = 87U;
+  std::mt19937 rng;
+  for (int ii = 0; ii < NUM_TESTS; ++ii) {
+    const State state{State() + testing::random_vector<State::Delta>(rng)};
+    Dynamics::Diffs diffs;
 
-  // ACTION / VERIFICATION
-  EXPECT_THROW(
-      dynamics(
-          state,
-          TangentVector::Zero(),
-          START_TIME,
-          NullableReference{diffs}),
-      AssertException);
+    constexpr double EPSILON = 1e-7;
+    State::Delta perturbation{
+        EPSILON * testing::random_vector<State::Delta>(rng)};
+    const State state_perturbed{state + perturbation};
+
+    // ACTION
+    const State::Delta output{dynamics(
+        state,
+        TangentVector::Zero(),
+        START_TIME,
+        NullableReference{diffs})};
+
+    // VERIFICATION
+    const State::Delta output_perturbed{dynamics(
+        state_perturbed,
+        TangentVector::Zero(),
+        START_TIME,
+        null_reference<Dynamics::Diffs>)};
+
+    // Using Taylor series
+    const State::Delta expected_output_perturbed{
+        output + diffs.f_x * perturbation};
+
+    constexpr double TOLERANCE = 1e-8;
+    EXPECT_TRUE(((expected_output_perturbed - output_perturbed).array() /
+                 output.array())
+                    .matrix()
+                    .isZero(TOLERANCE));
+  }
 }
 
 // Test to make sure we cover the instantations of NullableReference for the
