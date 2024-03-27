@@ -177,7 +177,7 @@ TEST(RigidBodyDynamicsTest, TestJacobian) {
 
   constexpr int NUM_TESTS = 100;
   constexpr size_t SEED = 87U;
-  std::mt19937 rng;
+  std::mt19937 rng{SEED};
   for (int ii = 0; ii < NUM_TESTS; ++ii) {
     const State state{State() + testing::random_vector<State::Delta>(rng)};
     using Control = TangentVector;
