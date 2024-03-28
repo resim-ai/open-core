@@ -73,7 +73,7 @@ void test_nonlinear_solve(Rng &&rng) {
 
   // VERIFICATION
   ASSERT_TRUE(solution_sv.ok());
-  EXPECT_LT(fun(solution_sv.value(), null_reference<Jac>).norm(), TOLERANCE);
+  EXPECT_LT(fun(solution_sv.value(), null_reference).norm(), TOLERANCE);
 
   constexpr int TOO_FEW_ITERATIONS = 3;
   guess = 100.0 * Vec::Ones();

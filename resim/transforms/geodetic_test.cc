@@ -190,11 +190,10 @@ TEST(EcefTest, TestEcefFromGeodeticJacobian) {
       const double local_eps = EPSILON * std::max(1.0, std::fabs(geodetic(ii)));
       const Vec3 perturbed_geodetic{geodetic + local_eps * Vec3::Unit(ii)};
 
-      finite_differenced_jacobian.col(ii) = (ecef_position_from_geodetic(
-                                                 perturbed_geodetic,
-                                                 null_reference<Mat3>) -
-                                             ecef_position) /
-                                            local_eps;
+      finite_differenced_jacobian.col(ii) =
+          (ecef_position_from_geodetic(perturbed_geodetic, null_reference) -
+           ecef_position) /
+          local_eps;
     }
     constexpr double TOLERANCE = 1e-6;
     EXPECT_TRUE(

@@ -45,8 +45,7 @@ TEST(GravityTest, TestGravity) {
         .d_reference_from_body = testing::random_vector<TangentVector>(rng),
     };
     constexpr time::Timestamp TIME;
-    const TangentVector force{
-        (*gravity_force)(state, TIME, null_reference<GravityForce::Jacobian>)};
+    const TangentVector force{(*gravity_force)(state, TIME, null_reference)};
 
     // VERIFICATION
     EXPECT_TRUE(SE3::tangent_vector_rotation_part(force).isZero());
