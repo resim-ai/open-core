@@ -111,7 +111,7 @@ Vec3 ecef_position_from_geodetic(const Geodetic &geodetic) {
           geodetic.longitude.in(au::radians),
           geodetic.altitude.in(au::meters),
       },
-      null_reference<Mat3>);
+      null_reference);
 }
 
 Geodetic geodetic_from_ecef_position(const Vec3 &ecef_position) {

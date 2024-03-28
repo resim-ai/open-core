@@ -122,12 +122,9 @@ State Integrator<State>::operator()(
 
         return dynamics(
             state,
-            controller(
-                state,
-                time,
-                null_reference<typename ControllerType::Jacobian>),
+            controller(state, time, null_reference),
             time,
-            null_reference<typename DynamicsType::Diffs>);
+            null_reference);
       });
 }
 

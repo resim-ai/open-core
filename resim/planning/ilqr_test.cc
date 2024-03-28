@@ -228,7 +228,7 @@ void expect_states_controls_consistent(
   ASSERT_EQ(result.states.size(), num_steps + 1U);
   for (std::size_t state_index = 0U; state_index < num_steps; ++state_index) {
     auto states = result.states;
-    const auto no_diffs = null_reference<DynamicsDiffs<State, Control>>;
+    const auto no_diffs = null_reference;
     states.at(state_index + 1U) = dynamics(
         states.at(state_index),
         result.controls.at(state_index),
@@ -261,14 +261,14 @@ void expect_controls_optimal(
       for (std::size_t state_index = 0U; state_index < num_steps;
            ++state_index) {
         {
-          const auto no_diffs = null_reference<DynamicsDiffs<State, Control>>;
+          const auto no_diffs = null_reference;
           perturbed_states.at(state_index + 1U) = dynamics(
               perturbed_states.at(state_index),
               perturbed_controls.at(state_index),
               no_diffs);
         }
         {
-          const auto no_diffs = null_reference<CostDiffs<State, Control>>;
+          const auto no_diffs = null_reference;
           cost += cost_fn(
               perturbed_states.at(state_index),
               NullableReference<const Control>{
@@ -276,8 +276,8 @@ void expect_controls_optimal(
               no_diffs);
         }
       }
-      const auto no_diffs = null_reference<CostDiffs<State, Control>>;
-      const auto no_controls = null_reference<const Control>;
+      const auto no_diffs = null_reference;
+      const auto no_controls = null_reference;
       cost += cost_fn(perturbed_states.at(num_steps), no_controls, no_diffs);
       EXPECT_GT(cost, result.cost);
     }

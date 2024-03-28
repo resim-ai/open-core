@@ -26,7 +26,7 @@ namespace resim::math {
 // second argument `jacobian` is a mutable matrix which we can populate with the
 // Jacobian matrix (df_i(x)/dx_j) of the function. This is a nullable reference
 // because not all algorithms which use differentiable functions require their
-// derivatives. Such algorithms can simply pass a null_reference<...> object
+// derivatives. Such algorithms can simply pass a null_reference object
 // whenever they don't require this function to compute them.
 template <int DIM>
 using DifferentiableFunction = std::function<Eigen::Matrix<double, DIM, 1>(
