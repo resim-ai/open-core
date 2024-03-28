@@ -29,7 +29,7 @@ TEST(NullableReferenceTest, TestNullableReference) {
   };
 
   // ACTION / VERFICIATION
-  EXPECT_EQ(test_function(null_reference<int>), DidSet::NO_SET_VALUE);
+  EXPECT_EQ(test_function(null_reference), DidSet::NO_SET_VALUE);
 
   int value_to_set = 0;
   EXPECT_EQ(test_function(NullableReference{value_to_set}), DidSet::SET_VALUE);
@@ -64,7 +64,7 @@ TEST(NullableReferenceDeathTest, TestBadDereference) {
   };
 
   // ACTION / VERFICIATION
-  EXPECT_THROW({ test_function(null_reference<int>); }, AssertException);
+  EXPECT_THROW({ test_function(null_reference); }, AssertException);
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
