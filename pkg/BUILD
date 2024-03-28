@@ -113,6 +113,7 @@ py_package(
         "//resim/msg:navsat_proto_py",
         "//resim/msg:odometry_proto_py",
         "//resim/msg:pose_proto_py",
+        "//resim/msg:primitives_proto_py",
         "//resim/msg:transform_proto_py",
         "//resim/transforms/proto:framed_vector_3_proto_py",
     ],
