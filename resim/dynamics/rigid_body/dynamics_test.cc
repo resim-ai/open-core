@@ -198,11 +198,8 @@ TEST(RigidBodyDynamicsTest, TestJacobian) {
         dynamics(state, force, START_TIME, NullableReference{diffs})};
 
     // VERIFICATION
-    const State::Delta output_perturbed{dynamics(
-        state_perturbed,
-        force_perturbed,
-        START_TIME,
-        null_reference<Dynamics::Diffs>)};
+    const State::Delta output_perturbed{
+        dynamics(state_perturbed, force_perturbed, START_TIME, null_reference)};
 
     // Using Taylor series
     const State::Delta expected_output_perturbed{
