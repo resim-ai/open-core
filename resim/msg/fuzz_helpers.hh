@@ -65,11 +65,11 @@ DEFINE_GET_PARSER(
 
 DEFINE_GET_PARSER(
     BoundingBox2D,
-    PROTO_GETTER(center_x),
-    PROTO_GETTER(center_y),
-    PROTO_GETTER(theta_rad),
-    PROTO_GETTER(size_x),
-    PROTO_GETTER(size_y));
+    PROTO_PRIMITIVE_GETTER(center_x),
+    PROTO_PRIMITIVE_GETTER(center_y),
+    PROTO_PRIMITIVE_GETTER(theta_rad),
+    PROTO_PRIMITIVE_GETTER(size_x),
+    PROTO_PRIMITIVE_GETTER(size_y));
 
 DEFINE_GET_PARSER(
     Detection2D,
@@ -98,35 +98,35 @@ DEFINE_GET_PARSER(
     PROTO_GETTER(position_covariance_m2),
     PROTO_GETTER(position_covariance_type));
 
-DEFINE_GET_PARSER(Bool, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Bool, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Byte, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Byte, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Char, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Char, PROTO_PRIMITIVE_GETTER(data));
 
 DEFINE_GET_PARSER(Empty);
 
-DEFINE_GET_PARSER(Float32, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Float32, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Float64, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Float64, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Int16, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Int16, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Int32, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Int32, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Int64, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Int64, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(Int8, PROTO_GETTER(data));
+DEFINE_GET_PARSER(Int8, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(String, PROTO_GETTER(data));
+DEFINE_GET_PARSER(String, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(UInt16, PROTO_GETTER(data));
+DEFINE_GET_PARSER(UInt16, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(UInt32, PROTO_GETTER(data));
+DEFINE_GET_PARSER(UInt32, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(UInt64, PROTO_GETTER(data));
+DEFINE_GET_PARSER(UInt64, PROTO_PRIMITIVE_GETTER(data));
 
-DEFINE_GET_PARSER(UInt8, PROTO_GETTER(data));
+DEFINE_GET_PARSER(UInt8, PROTO_PRIMITIVE_GETTER(data));
 
 template <typename Rng>
 TransformStamped random_element(
@@ -228,78 +228,6 @@ Detection3D random_element(
 }
 
 template <typename Rng>
-BoundingBox2D random_element(
-    converter::TypeTag<BoundingBox2D> /*unused*/,
-    InOut<Rng> rng) {
-  BoundingBox2D result;
-  result.set_center_x(converter::random_element<double>(rng));
-  result.set_center_y(converter::random_element<double>(rng));
-  result.set_theta_rad(converter::random_element<double>(rng));
-  result.set_size_x(converter::random_element<double>(rng));
-  result.set_size_y(converter::random_element<double>(rng));
-  return result;
-}
-
-template <typename Rng>
-Detection2D random_element(
-    converter::TypeTag<Detection2D> /*unused*/,
-    InOut<Rng> rng) {
-  Detection2D result;
-  result.mutable_header()->CopyFrom(converter::random_element<Header>(rng));
-  constexpr int MIN_ELEMENTS = 1;
-  constexpr int MAX_ELEMENTS = 10;
-  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
-  const int num_elements = dist(*rng);
-  for (int ii = 0; ii < num_elements; ++ii) {
-    result.add_results()->CopyFrom(
-        converter::random_element<ObjectHypothesisWithPose>(rng));
-  }
-
-  result.mutable_bbox()->CopyFrom(
-      converter::random_element<BoundingBox2D>(rng));
-  result.set_id(UUID::new_uuid().to_string());
-  return result;
-}
-
-template <typename Rng>
-Detection3DArray random_element(
-    converter::TypeTag<Detection3DArray> /*unused*/,
-    InOut<Rng> rng) {
-  Detection3DArray result;
-  result.mutable_header()->CopyFrom(converter::random_element<Header>(rng));
-
-  constexpr int MIN_ELEMENTS = 5;
-  constexpr int MAX_ELEMENTS = 10;
-  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
-  const int num_elements = dist(*rng);
-  for (int ii = 0; ii < num_elements; ++ii) {
-    result.add_detections()->CopyFrom(
-        converter::random_element<Detection3D>(rng));
-  }
-
-  return result;
-}
-
-template <typename Rng>
-Detection2DArray random_element(
-    converter::TypeTag<Detection2DArray> /*unused*/,
-    InOut<Rng> rng) {
-  Detection2DArray result;
-  result.mutable_header()->CopyFrom(converter::random_element<Header>(rng));
-
-  constexpr int MIN_ELEMENTS = 5;
-  constexpr int MAX_ELEMENTS = 10;
-  std::uniform_int_distribution<int> dist{MIN_ELEMENTS, MAX_ELEMENTS};
-  const int num_elements = dist(*rng);
-  for (int ii = 0; ii < num_elements; ++ii) {
-    result.add_detections()->CopyFrom(
-        converter::random_element<Detection2D>(rng));
-  }
-
-  return result;
-}
-
-template <typename Rng>
 NavSatFix random_element(
     converter::TypeTag<NavSatFix> /*unused*/,
     InOut<Rng> rng) {
@@ -339,8 +267,23 @@ NavSatFix random_element(
 }
 
 template <typename Rng>
+Bool random_element(converter::TypeTag<Bool> /*unused*/, InOut<Rng> rng) {
+  std::uniform_int_distribution dist{0, 1};
+  Bool result;
+  result.set_data((dist(*rng) % 2) == 0);
+  return result;
+}
+
+template <typename Rng>
 Byte random_element(converter::TypeTag<Byte> /*unused*/, InOut<Rng> rng) {
   Byte result;
+  result.set_data(std::string{converter::random_element<char>(rng)});
+  return result;
+}
+
+template <typename Rng>
+Int8 random_element(converter::TypeTag<Int8> /*unused*/, InOut<Rng> rng) {
+  Int8 result;
   result.set_data(std::string{converter::random_element<char>(rng)});
   return result;
 }
@@ -360,28 +303,6 @@ Char random_element(converter::TypeTag<Char> /*unused*/, InOut<Rng> rng) {
 }
 
 template <typename Rng>
-Bool random_element(converter::TypeTag<Bool> /*unused*/, InOut<Rng> rng) {
-  std::uniform_int_distribution dist{0, 1};
-  Bool result;
-  result.set_data((dist(*rng) % 2) == 0);
-  return result;
-}
-
-template <typename Rng>
-Float32 random_element(converter::TypeTag<Float32> /*unused*/, InOut<Rng> rng) {
-  Float32 result;
-  result.set_data(converter::random_element<float>(rng));
-  return result;
-}
-
-template <typename Rng>
-Float64 random_element(converter::TypeTag<Float64> /*unused*/, InOut<Rng> rng) {
-  Float64 result;
-  result.set_data(converter::random_element<double>(rng));
-  return result;
-}
-
-template <typename Rng>
 Int16 random_element(converter::TypeTag<Int16> /*unused*/, InOut<Rng> rng) {
   Int16 result;
   set_data(converter::random_element<int16_t>(rng), InOut{result});
@@ -389,51 +310,9 @@ Int16 random_element(converter::TypeTag<Int16> /*unused*/, InOut<Rng> rng) {
 }
 
 template <typename Rng>
-Int32 random_element(converter::TypeTag<Int32> /*unused*/, InOut<Rng> rng) {
-  Int32 result;
-  result.set_data(converter::random_element<int32_t>(rng));
-  return result;
-}
-
-template <typename Rng>
-Int64 random_element(converter::TypeTag<Int64> /*unused*/, InOut<Rng> rng) {
-  Int64 result;
-  result.set_data(converter::random_element<int64_t>(rng));
-  return result;
-}
-
-template <typename Rng>
-Int8 random_element(converter::TypeTag<Int8> /*unused*/, InOut<Rng> rng) {
-  Int8 result;
-  result.set_data(std::string{converter::random_element<int8_t>(rng)});
-  return result;
-}
-
-template <typename Rng>
-String random_element(converter::TypeTag<String> /*unused*/, InOut<Rng> rng) {
-  String result;
-  result.set_data(UUID::new_uuid().to_string());
-  return result;
-}
-
-template <typename Rng>
 UInt16 random_element(converter::TypeTag<UInt16> /*unused*/, InOut<Rng> rng) {
   UInt16 result;
-  set_data(converter::random_element<int16_t>(rng), InOut{result});
-  return result;
-}
-
-template <typename Rng>
-UInt32 random_element(converter::TypeTag<UInt32> /*unused*/, InOut<Rng> rng) {
-  UInt32 result;
-  result.set_data(converter::random_element<uint32_t>(rng));
-  return result;
-}
-
-template <typename Rng>
-UInt64 random_element(converter::TypeTag<UInt64> /*unused*/, InOut<Rng> rng) {
-  UInt64 result;
-  result.set_data(converter::random_element<uint64_t>(rng));
+  set_data(converter::random_element<uint16_t>(rng), InOut{result});
   return result;
 }
 

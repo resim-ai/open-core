@@ -3,23 +3,29 @@
 
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "resim/converter/tags.hh"
 
 namespace resim::converter {
 
+// This class template describes the getters available for a type T and thereby
+// allows for automatic manipulations of that type (e.g. fuzz helper
+// generation). Typically, we define a function called get_parser() for a type
+// (using the macros below) in order to get this object.
 template <typename T, typename Getters>
 class Parser {
  public:
-  constexpr explicit Parser(const Getters &getters) : getters_{getters} {}
+  constexpr explicit Parser(Getters getters) : getters_{std::move(getters)} {}
 
   static constexpr std::size_t NUM_FIELDS = std::tuple_size_v<Getters>;
 
   template <std::size_t Idx>
   using FieldType =
-      std::remove_reference_t<std::remove_cv_t<decltype(std::get<Idx>(
-          std::declval<Getters>())(std::declval<T &>()))>>;
+      std::remove_cv_t<std::remove_reference_t<decltype(std::get<Idx>(
+          std::declval<Getters>())(std::declval<const T &>()))>>;
 
+  // The actualy getter
   template <std::size_t Idx>
   auto get(auto &s) const -> decltype(auto) {
     return std::get<Idx>(getters_)(s);
@@ -29,6 +35,7 @@ class Parser {
   Getters getters_;
 };
 
+// Define a concept to tell whether a type T has get_parser() defined for it.
 namespace detail {
 template <typename T>
 struct IsParser : std::false_type {};
@@ -51,8 +58,13 @@ auto make_parser(const Getters &getters) {
   return Parser<T, Getters>(getters);
 }
 
+// Defines a getter for a field in a POD data structure
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define POD_GETTER(field) [](auto &s) -> decltype(auto) { return s.field; }
 
+// Defines a getter for a non-primitive field in a generated protobuf C++
+// object.
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PROTO_GETTER(field)                                                \
   [](auto &s) -> decltype(auto) {                                          \
     if constexpr (std::is_const_v<std::remove_reference_t<decltype(s)>>) { \
@@ -62,6 +74,44 @@ auto make_parser(const Getters &getters) {
     }                                                                      \
   }
 
+// A callable that is called by operator=() instead of operator()().
+template <typename Callable, typename Callable2>
+struct AssignmentCallable {
+  Callable callable;
+  Callable2 callable2;
+
+  template <typename... Args>
+  auto operator=(Args &&...args) {
+    return callable(std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  operator decltype(std::declval<Callable2>()())() const {
+    return callable2();
+  }
+};
+
+template <typename T, typename U>
+AssignmentCallable<T, U> make_assignment_callable(T callable, U callable2) {
+  return AssignmentCallable<T, U>{
+      .callable = std::move(callable),
+      .callable2 = std::move(callable2),
+  };
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define PROTO_PRIMITIVE_GETTER(field)                                      \
+  [](auto &s) -> decltype(auto) {                                          \
+    if constexpr (std::is_const_v<std::remove_reference_t<decltype(s)>>) { \
+      return s.field();                                                    \
+    } else {                                                               \
+      return resim::converter::make_assignment_callable(                   \
+          [&s](const auto &val) { return s.set_##field(val); },            \
+          [&s]() -> decltype(auto) { return s.field(); });                 \
+    }                                                                      \
+  }
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define DEFINE_GET_PARSER(struct_name, ...)                                \
   constexpr auto get_parser(::resim::converter::TypeTag<struct_name> tt) { \
     return ::resim::converter::make_parser<struct_name>(                   \

@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "fuzz_helpers",
@@ -24,11 +24,19 @@ cc_library(
     name = "fuzz_helpers_test_template",
     testonly = True,
     hdrs = ["fuzz_helpers_test_template.hh"],
-    visibility = ["//visibility:public"],
     deps = [
         ":fuzz_helpers",
-        "//resim/utils:inout",
-        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "fuzz_helpers_test",
+    srcs = ["fuzz_helpers_test.cc"],
+    deps = [
+        ":fuzz_helpers",
+        ":fuzz_helpers_test_template",
+        "//resim/converter/testing:test_message_proto_cc",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -45,5 +53,14 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tags",
+    ],
+)
+
+cc_test(
+    name = "parser_test",
+    srcs = ["parser_test.cc"],
+    deps = [
+        ":parser",
+        "@com_google_googletest//:gtest_main",
     ],
 )
