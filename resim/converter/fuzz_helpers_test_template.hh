@@ -12,7 +12,7 @@ namespace resim::converter {
 
 template <typename T>
 class FuzzHelpersTestTemplate : public ::testing::Test {
-  static constexpr size_t SEED = 93u;
+  static constexpr size_t SEED = 93U;
 
  public:
   FuzzHelpersTestTemplate() : rng_{SEED} {}

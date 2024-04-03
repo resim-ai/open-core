@@ -41,7 +41,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
     Types);
 
 class FuzzHelpersEdgeCasesTest : public ::testing::Test {
-  static constexpr size_t SEED = 93u;
+  static constexpr size_t SEED = 93U;
 
  public:
   FuzzHelpersEdgeCasesTest() : rng_{SEED} {}

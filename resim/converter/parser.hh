@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "resim/converter/tags.hh"
+#include "resim/utils/setter_reference.hh"
 
 namespace resim::converter {
 
@@ -74,38 +75,13 @@ auto make_parser(const Getters &getters) {
     }                                                                      \
   }
 
-// A callable that is called by operator=() instead of operator()().
-template <typename Callable, typename Callable2>
-struct AssignmentCallable {
-  Callable callable;
-  Callable2 callable2;
-
-  template <typename... Args>
-  auto operator=(Args &&...args) {
-    return callable(std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  operator decltype(std::declval<Callable2>()())() const {
-    return callable2();
-  }
-};
-
-template <typename T, typename U>
-AssignmentCallable<T, U> make_assignment_callable(T callable, U callable2) {
-  return AssignmentCallable<T, U>{
-      .callable = std::move(callable),
-      .callable2 = std::move(callable2),
-  };
-}
-
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PROTO_PRIMITIVE_GETTER(field)                                      \
   [](auto &s) -> decltype(auto) {                                          \
     if constexpr (std::is_const_v<std::remove_reference_t<decltype(s)>>) { \
       return s.field();                                                    \
     } else {                                                               \
-      return resim::converter::make_assignment_callable(                   \
+      return resim::SetterReference(                                       \
           [&s](const auto &val) { return s.set_##field(val); },            \
           [&s]() -> decltype(auto) { return s.field(); });                 \
     }                                                                      \

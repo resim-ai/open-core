@@ -53,6 +53,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tags",
+        "//resim/utils:setter_reference",
     ],
 )
 

@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <utility>
+
 #include "resim/converter/tags.hh"
 
 namespace resim::converter {
@@ -17,7 +19,7 @@ struct CppStruct {
 
 class MockProto {
  public:
-  MockProto(int x, std::string y) : x_{x}, y_{y} {}
+  MockProto(int x, std::string y) : x_{x}, y_{std::move(y)} {}
 
   int x() const { return x_; }
   const std::string &y() const { return y_; }

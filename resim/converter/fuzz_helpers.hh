@@ -160,7 +160,7 @@ template <typename T, size_t N, typename Rng>
 std::array<T, N> random_element(
     TypeTag<std::array<T, N>> /*unused*/,
     InOut<Rng> rng) {
-  std::array<T, N> result;
+  std::array<T, N> result{};
   for (size_t ii = 0; ii < N; ++ii) {
     result.at(ii) = random_element(TypeTag<T>(), rng);
   }
