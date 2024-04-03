@@ -43,9 +43,12 @@ DEFINE_GET_PARSER(MockProto, PROTO_PRIMITIVE_GETTER(x), PROTO_GETTER(y));
 
 TEST(ParserTest, TestParserPOD) {
   // SETUP
+  constexpr int X_VAL = 5;
+  constexpr int Y_VAL = 6;
+
   test_namespace::CppStruct my_struct{
-      .x = 5,
-      .y = 6,
+      .x = X_VAL,
+      .y = Y_VAL,
   };
 
   // ACTION

@@ -23,8 +23,9 @@ class SetterReference {
 
   // Operator= which calls the given setter
   template <typename... Args>
-  void operator=(Args &&...args) {
+  SetterReference<Setter, Getter> &operator=(Args &&...args) {
     setter_(std::forward<Args>(args)...);
+    return *this;
   }
 
   // Implicit conversion to the type returned by the getter.

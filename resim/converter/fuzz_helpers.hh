@@ -329,17 +329,14 @@ bool verify_equality(
     ADLTag /*unused*/,
     const std::unordered_map<K, V> &a,
     const std::unordered_map<K, V> &b) {
-  // Requires C++14 to not be undefined behavior. Thanksfully, the CTAD on the
-  // righthand-side of the equality requires C++17.
   if (a.size() != b.size()) {
     return false;
   }
-  for (const auto &[k, v] : a) {
-    if (not b.contains(k) or not converter::verify_equality(v, b.at(k))) {
-      return false;
-    }
-  }
-  return true;
+  return std::all_of(a.cbegin(), a.cend(), [&](const auto &key_and_value) {
+    return b.contains(key_and_value.first) and converter::verify_equality(
+                                                   key_and_value.second,
+                                                   b.at(key_and_value.first));
+  });
 }
 
 template <typename ScalarT, int RowDim, int ColDim>

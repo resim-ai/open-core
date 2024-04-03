@@ -23,6 +23,7 @@ DEFINE_GET_PARSER(TestSubMessage, PROTO_PRIMITIVE_GETTER(x))
 
 }  // namespace testing
 
+constexpr size_t TEST_ARRAY_LENGTH = 5;
 using Types = ::testing::Types<
     int,
     double,
@@ -30,7 +31,7 @@ using Types = ::testing::Types<
     google::protobuf::Timestamp,
     time::Duration,
     time::Timestamp,
-    std::array<double, 5>,
+    std::array<double, TEST_ARRAY_LENGTH>,
     std::unordered_map<std::string, int>,
     std::string,
     testing::TestMessage>;
