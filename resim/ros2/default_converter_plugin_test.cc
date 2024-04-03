@@ -128,14 +128,15 @@ namespace {
 // By default, we use random_element() to get test elements.
 template <typename ReSimType>
 ReSimType get_test_element(InOut<std::mt19937> rng) {
-  return random_element<ReSimType>(rng);
+  return converter::random_element<ReSimType>(rng);
 }
 
 // For OrientedBox, we don't want the frame IDs
 template <>
 geometry::proto::OrientedBoxSE3
 get_test_element<geometry::proto::OrientedBoxSE3>(InOut<std::mt19937> rng) {
-  auto random_box = random_element<geometry::proto::OrientedBoxSE3>(rng);
+  auto random_box =
+      converter::random_element<geometry::proto::OrientedBoxSE3>(rng);
   // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   random_box.mutable_reference_from_box()
@@ -153,7 +154,7 @@ get_test_element<geometry::proto::OrientedBoxSE3>(InOut<std::mt19937> rng) {
 template <>
 transforms::proto::SE3 get_test_element<transforms::proto::SE3>(
     InOut<std::mt19937> rng) {
-  auto pose = random_element<transforms::proto::SE3>(rng);
+  auto pose = converter::random_element<transforms::proto::SE3>(rng);
   // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   pose.mutable_into()->mutable_id()->set_data(
@@ -178,14 +179,6 @@ template <>
 geometry_msgs::msg::Transform convert<geometry_msgs::msg::Transform>(
     const transforms::proto::SE3 &x) {
   return convert_to_ros2_transform(x);
-}
-
-// Bring this into this namespace since it will get shadowed by the other
-// verify_equality overloads that are in this namespace.
-bool verify_equality(
-    const google::protobuf::Timestamp &a,
-    const google::protobuf::Timestamp &b) {
-  return resim::verify_equality(a, b);
 }
 
 }  // namespace
@@ -214,7 +207,7 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
   // VERIFICATION
   ReSimType deserialized;
   ASSERT_TRUE(deserialized.ParseFromArray(converted.data(), converted.size()));
-  EXPECT_TRUE(verify_equality(test_message, deserialized));
+  EXPECT_TRUE(converter::verify_equality(test_message, deserialized));
 }
 
 TYPED_TEST(DefaultConverterPluginTest, TestConvertBadMessage) {

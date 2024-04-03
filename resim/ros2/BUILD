@@ -29,9 +29,9 @@ cc_test(
     srcs = ["primitives_from_ros2_test.cc"],
     deps = [
         ":primitives_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
         "//resim/msg:primitives_proto_cc",
-        "//resim/testing:fuzz_helpers",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],
@@ -103,9 +103,9 @@ cc_test(
     srcs = ["transform_from_ros2_test.cc"],
     deps = [
         ":transform_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
         "//resim/msg:transform_proto_cc",
-        "//resim/testing:fuzz_helpers",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],
@@ -132,8 +132,8 @@ cc_test(
     srcs = ["pose_from_ros2_test.cc"],
     deps = [
         ":pose_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -156,7 +156,7 @@ cc_test(
     srcs = ["point_from_ros2_test.cc"],
     deps = [
         ":point_from_ros2",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/transforms:frame",
         "//resim/transforms/proto:fuzz_helpers",
         "//resim/utils:inout",
@@ -182,8 +182,8 @@ cc_test(
     srcs = ["odometry_from_ros2_test.cc"],
     deps = [
         ":odometry_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -205,8 +205,8 @@ cc_test(
     srcs = ["oriented_box_from_ros2_test.cc"],
     deps = [
         ":oriented_box_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/geometry/proto:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "//resim/transforms:frame",
         "@com_google_googletest//:gtest_main",
     ],
@@ -229,8 +229,8 @@ cc_test(
     srcs = ["detection_from_ros2_test.cc"],
     deps = [
         ":detection_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -252,8 +252,8 @@ cc_test(
     srcs = ["navsat_from_ros2_test.cc"],
     deps = [
         ":navsat_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -372,8 +372,8 @@ cc_library(
     deps = [
         ":odometry_from_ros2",
         ":transform_from_ros2",
+        "//resim/converter:fuzz_helpers",
         "//resim/msg:fuzz_helpers",
-        "//resim/testing:fuzz_helpers",
         "//resim/third_party/mcap:mcap_impl",
         "//resim/time:timestamp",
         "//resim/utils:inout",
