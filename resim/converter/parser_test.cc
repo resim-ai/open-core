@@ -1,4 +1,8 @@
-
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/converter/parser.hh"
 
@@ -24,10 +28,6 @@ class MockProto {
   int x() const { return x_; }
   const std::string &y() const { return y_; }
 
-  // Proto doesn't actually add these for numeric types like int, but
-  // we're just mocking this for other data types here. In practice,
-  // you can't create parsers in such case since proto requires you to
-  // call a setter.
   void set_x(const int val) { x_ = val; }
   std::string *mutable_y() { return &y_; }
 
@@ -46,7 +46,7 @@ TEST(ParserTest, TestParserPOD) {
   constexpr int X_VAL = 5;
   constexpr int Y_VAL = 6;
 
-  test_namespace::CppStruct my_struct{
+  const test_namespace::CppStruct my_struct{
       .x = X_VAL,
       .y = Y_VAL,
   };
