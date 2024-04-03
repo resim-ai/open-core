@@ -21,7 +21,6 @@
 #include "resim/testing/random_matrix.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/inout.hh"
-#include "resim/utils/match.hh"
 
 namespace resim::converter {
 

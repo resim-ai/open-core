@@ -21,7 +21,6 @@ cc_library(
         "//resim/testing:random_matrix",
         "//resim/time:timestamp",
         "//resim/utils:inout",
-        "//resim/utils:match",
         "@com_google_protobuf//:protobuf",
     ],
 )
