@@ -31,7 +31,7 @@ class Parser {
       std::remove_cv_t<std::remove_reference_t<decltype(std::get<Idx>(
           std::declval<Getters>())(std::declval<const T &>()))>>;
 
-  // The actualy getter
+  // The actual getter
   template <std::size_t Idx>
   auto get(auto &s) const -> decltype(auto) {
     return std::get<Idx>(getters_)(s);
