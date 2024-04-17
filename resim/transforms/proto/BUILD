@@ -191,7 +191,7 @@ cc_library(
         ":framed_vector_3_to_proto",
         ":se3_proto_cc",
         ":se3_to_proto",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/testing:random_matrix",
         "//resim/transforms:framed_vector",
         "//resim/transforms:se3",
@@ -205,7 +205,7 @@ cc_test(
     deps = [
         ":fuzz_helpers",
         ":se3_proto_cc",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],

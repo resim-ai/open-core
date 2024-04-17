@@ -68,7 +68,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":oriented_box_proto_cc",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/transforms:se3",
         "//resim/transforms/proto:fuzz_helpers",
         "//resim/utils:inout",
@@ -81,7 +81,7 @@ cc_test(
     deps = [
         ":fuzz_helpers",
         ":oriented_box_proto_cc",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/transforms/proto:fuzz_helpers",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",

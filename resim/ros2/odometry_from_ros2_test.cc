@@ -8,9 +8,9 @@
 
 #include <gtest/gtest.h>
 
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/msg/fuzz_helpers.hh"
 #include "resim/msg/odometry.pb.h"
-#include "resim/testing/fuzz_helpers.hh"
 #include "resim/utils/inout.hh"
 
 namespace resim::ros2 {
@@ -19,14 +19,15 @@ TEST(OdometryFromRos2Test, TestRoundTrip) {
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
-  const msg::Odometry test_odometry{random_element<msg::Odometry>(InOut{rng})};
+  const msg::Odometry test_odometry{
+      converter::random_element<msg::Odometry>(InOut{rng})};
 
   // ACTION
   const msg::Odometry round_tripped{
       convert_from_ros2(convert_to_ros2(test_odometry))};
 
   // VERIFICATION
-  EXPECT_TRUE(verify_equality(test_odometry, round_tripped));
+  EXPECT_TRUE(converter::verify_equality(test_odometry, round_tripped));
 }
 
 }  // namespace resim::ros2

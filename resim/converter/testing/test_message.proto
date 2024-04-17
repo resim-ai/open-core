@@ -1,0 +1,18 @@
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+package resim.converter.testing;
+
+message TestSubMessage {
+    int32 x = 1;
+}
+
+message TestMessage {
+    repeated TestSubMessage repeated_message_field = 1;
+    repeated double         repeated_field         = 2;
+}

@@ -8,9 +8,9 @@
 
 #include <gtest/gtest.h>
 
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/msg/fuzz_helpers.hh"
 #include "resim/msg/navsat.pb.h"
-#include "resim/testing/fuzz_helpers.hh"
 #include "resim/utils/inout.hh"
 
 namespace resim::ros2 {
@@ -24,14 +24,14 @@ TEST(NavSatFixFromRos2Test, TestRoundTrip) {
   constexpr int NUM_TESTS = 500;
   for (int ii = 0; ii < NUM_TESTS; ++ii) {
     const msg::NavSatFix test_nav_sat_fix{
-        random_element<msg::NavSatFix>(InOut{rng})};
+        converter::random_element<msg::NavSatFix>(InOut{rng})};
 
     // ACTION
     const msg::NavSatFix round_tripped{
         convert_from_ros2(convert_to_ros2(test_nav_sat_fix))};
 
     // VERIFICATION
-    EXPECT_TRUE(verify_equality(test_nav_sat_fix, round_tripped));
+    EXPECT_TRUE(converter::verify_equality(test_nav_sat_fix, round_tripped));
   }
 }
 
@@ -40,7 +40,8 @@ TEST(NavSatFixFromRos2Test, TestBadStatuses) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  msg::NavSatFix nav_sat_fix{random_element<msg::NavSatFix>(InOut{rng})};
+  msg::NavSatFix nav_sat_fix{
+      converter::random_element<msg::NavSatFix>(InOut{rng})};
   auto nav_sat_fix_ros2{convert_to_ros2(nav_sat_fix)};
 
   constexpr int BAD_VALUE = 100;
@@ -57,7 +58,8 @@ TEST(NavSatFixFromRos2Test, TestBadCovarianceTypes) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  msg::NavSatFix nav_sat_fix{random_element<msg::NavSatFix>(InOut{rng})};
+  msg::NavSatFix nav_sat_fix{
+      converter::random_element<msg::NavSatFix>(InOut{rng})};
   auto nav_sat_fix_ros2{convert_to_ros2(nav_sat_fix)};
 
   constexpr int BAD_VALUE = 100;

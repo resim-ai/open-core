@@ -4,7 +4,7 @@
 
 #include <random>
 
-#include "resim/testing/fuzz_helpers.hh"
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/proto/framed_vector_3.pb.h"
 #include "resim/transforms/proto/fuzz_helpers.hh"
@@ -17,7 +17,7 @@ TEST(PointFromRos2Test, TestRoundTrip) {
   constexpr std::size_t SEED = 85830U;
   std::mt19937 rng{SEED};
   transforms::proto::FramedVector_3 test_vector{
-      random_element<transforms::proto::FramedVector_3>(InOut{rng})};
+      converter::random_element<transforms::proto::FramedVector_3>(InOut{rng})};
   // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   test_vector.mutable_frame()->mutable_id()->set_data(
@@ -28,7 +28,7 @@ TEST(PointFromRos2Test, TestRoundTrip) {
       convert_from_ros2(convert_to_ros2(test_vector))};
 
   // VERIFICATION
-  EXPECT_TRUE(verify_equality(test_vector, round_trip));
+  EXPECT_TRUE(converter::verify_equality(test_vector, round_trip));
 }
 
 }  // namespace resim::ros2

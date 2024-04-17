@@ -79,25 +79,3 @@ cc_library(
         "@httplib",
     ],
 )
-
-cc_library(
-    name = "fuzz_helpers",
-    testonly = True,
-    srcs = ["fuzz_helpers.cc"],
-    hdrs = ["fuzz_helpers.hh"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//resim/math:is_approx",
-        "//resim/utils:inout",
-        "@com_google_protobuf//:protobuf",
-    ],
-)
-
-cc_test(
-    name = "fuzz_helpers_test",
-    srcs = ["fuzz_helpers_test.cc"],
-    deps = [
-        ":fuzz_helpers",
-        "@com_google_googletest//:gtest_main",
-    ],
-)

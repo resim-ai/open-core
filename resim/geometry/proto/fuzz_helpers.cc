@@ -8,13 +8,15 @@
 
 namespace resim::geometry::proto {
 
-bool verify_equality(const OrientedBoxSE3 &a, const OrientedBoxSE3 &b) {
-  if (not verify_equality(a.reference_from_box(), b.reference_from_box())) {
+bool custom_verify_equality(const OrientedBoxSE3 &a, const OrientedBoxSE3 &b) {
+  if (not converter::verify_equality(
+          a.reference_from_box(),
+          b.reference_from_box())) {
     return false;
   }
 
   for (int ii = 0; ii < transforms::SE3::DIMS; ++ii) {
-    if (not resim::verify_equality(a.extents(ii), b.extents(ii))) {
+    if (not converter::verify_equality(a.extents(ii), b.extents(ii))) {
       return false;
     }
   }

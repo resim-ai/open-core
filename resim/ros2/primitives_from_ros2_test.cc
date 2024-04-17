@@ -10,9 +10,9 @@
 
 #include <random>
 
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/msg/fuzz_helpers.hh"
 #include "resim/msg/primitives.pb.h"
-#include "resim/testing/fuzz_helpers.hh"
 #include "resim/utils/inout.hh"
 
 namespace resim::ros2 {
@@ -43,14 +43,15 @@ TYPED_TEST(PrimitivesFromRos2Test, TestRoundTrip) {
   // SETUP
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
-  const TypeParam test_element{random_element<TypeParam>(InOut{rng})};
+  const TypeParam test_element{
+      converter::random_element<TypeParam>(InOut{rng})};
 
   // ACTION
   const TypeParam round_tripped{
       convert_from_ros2(convert_to_ros2(test_element))};
 
   // VERIFICATION
-  EXPECT_TRUE(verify_equality(test_element, round_tripped));
+  EXPECT_TRUE(converter::verify_equality(test_element, round_tripped));
 }
 
 }  // namespace resim::ros2
