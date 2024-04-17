@@ -36,14 +36,16 @@ class JobInfo:
     batch_id: uuid.UUID
     project_id: uuid.UUID
 
+
 def fetch_job_metrics_by_batch(*,
-                        token: str,
-                        api_url: str,
-                        project_id: uuid.UUID,
-                        batch_id: uuid.UUID) -> Dict[uuid.UUID, UnpackedMetrics]:
+                               token: str,
+                               api_url: str,
+                               project_id: uuid.UUID,
+                               batch_id: uuid.UUID) -> Dict[uuid.UUID,
+                                                            UnpackedMetrics]:
     """
     This downloads all metrics associated with a certain batch, and stores them in a
-    dictionary mapping each job ID to the metrics and metrics data associated with 
+    dictionary mapping each job ID to the metrics and metrics data associated with
     those job IDs.
     """
 
@@ -51,7 +53,11 @@ def fetch_job_metrics_by_batch(*,
     client = AuthenticatedClient(
         base_url=api_url,
         token=token)
-    jobs_responses = fetch_all_pages(list_jobs.sync, str(project_id), str(batch_id), client=client)
+    jobs_responses = fetch_all_pages(
+        list_jobs.sync,
+        str(project_id),
+        str(batch_id),
+        client=client)
     jobs = [
         JobInfo(
             job_id=uuid.UUID(job.job_id),
@@ -73,6 +79,7 @@ def fetch_job_metrics_by_batch(*,
             metrics_data=metrics_data)
 
     return unpacked_metrics_per_job
+
 
 def fetch_job_metrics(*,
                       token: str,
@@ -226,7 +233,7 @@ def _get_metrics_urls(*,
     """
     metrics_urls_lock.acquire()
     metrics_urls[job_id] = fetch_metrics_urls.fetch_metrics_urls(
-        project_id=project_id,batch_id=batch_id, job_id=job_id, client=client)
+        project_id=project_id, batch_id=batch_id, job_id=job_id, client=client)
     metrics_urls_lock.release()
 
 

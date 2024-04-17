@@ -142,7 +142,7 @@ def _mock_list_job_ids_by_batch(
         jobs=[
             MockJob(
                 job_id=str(job_id)) for job_id in _BATCH_IDS_TO_JOB_IDS_MAP[batch_id_uuid]],
-         next_page_token="")
+        next_page_token="")
 
 # TODO(tknowles): In an ideal world, this would not be mocked out, but this will require us
 #                 to use valid messages within our Mock protobuf messages.
