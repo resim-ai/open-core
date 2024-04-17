@@ -21,6 +21,7 @@ from resim.metrics.python.unpack_metrics import (
     unpack_metrics,
     UnpackedMetrics
 )
+from resim.metrics.fetch_all_pages import fetch_all_pages
 
 import resim.metrics.proto.metrics_pb2 as mp
 
@@ -50,14 +51,13 @@ def fetch_job_metrics_by_batch(*,
     client = AuthenticatedClient(
         base_url=api_url,
         token=token)
-    jobs_response = list_jobs.sync(str(project_id), str(batch_id), client=client)
-    assert jobs_response is not None
+    jobs_responses = fetch_all_pages(list_jobs.sync, str(project_id), str(batch_id), client=client)
     jobs = [
         JobInfo(
             job_id=uuid.UUID(job.job_id),
             batch_id=batch_id,
             project_id=project_id
-        ) for job in jobs_response.jobs]
+        ) for jobs_response in jobs_responses for job in jobs_response.jobs]
 
     # Fetch the metrics for these jobs:
     metrics_protos, metrics_data_protos = fetch_job_metrics(
