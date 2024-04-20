@@ -45,6 +45,7 @@ class MockJob:
 @dataclass(frozen=True)
 class MockListJobsResponse200:
     jobs: list[MockJob]
+    next_page_token: str
 
 
 @dataclass
@@ -140,7 +141,8 @@ def _mock_list_job_ids_by_batch(
     return MockListJobsResponse200(
         jobs=[
             MockJob(
-                job_id=str(job_id)) for job_id in _BATCH_IDS_TO_JOB_IDS_MAP[batch_id_uuid]])
+                job_id=str(job_id)) for job_id in _BATCH_IDS_TO_JOB_IDS_MAP[batch_id_uuid]],
+        next_page_token="")
 
 # TODO(tknowles): In an ideal world, this would not be mocked out, but this will require us
 #                 to use valid messages within our Mock protobuf messages.
