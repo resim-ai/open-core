@@ -99,6 +99,36 @@ py_wheel(
 )
 
 py_package(
+    name = "auth_package",
+    packages = [
+        "resim.auth",
+    ],
+    deps = [
+        "//resim/auth/python:device_code_client",
+    ],
+)
+
+py_wheel(
+    name = "auth_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_auth",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    platform = "manylinux2014_x86_64",
+    python_tag = "py3",
+    requires = [
+        "polling2==0.5.0",
+        "requests==2.31.0",
+    ],
+    summary = "ReSim Auth Libraries.",
+    version = version,
+    deps = [":auth_package"],
+)
+
+py_package(
     name = "msg_package",
     packages = [
         "resim.actor.state.proto",
