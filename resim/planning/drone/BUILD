@@ -50,3 +50,15 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "dynamics",
+    srcs = ["dynamics.cc"],
+    hdrs = ["dynamics.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":control",
+        ":state",
+        "//resim/planning:dynamics",
+    ],
+)
