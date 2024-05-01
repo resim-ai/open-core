@@ -8,18 +8,18 @@
 
 namespace resim::planning::drone {
 
-enum StateBlockIndices : std::size_t {
-  ROTATION = 0,
-  POSITION,
-  ANGULAR_VELOCITY,
-  VELOCITY,
-  NUM_BLOCKS,
-};
-
-using StatePartition = resim::math::VectorPartition<3, 3, 3, 3>;
-
 struct State {
-  static constexpr int DIM = math::OffsetAt<StatePartition, NUM_BLOCKS>::value;
+  enum BlockIndices : std::size_t {
+    ROTATION = 0,
+    POSITION,
+    ANGULAR_VELOCITY,
+    VELOCITY,
+    NUM_BLOCKS,
+  };
+
+  using Partition = resim::math::VectorPartition<3, 3, 3, 3>;
+
+  static constexpr int DIM = math::OffsetAt<Partition, NUM_BLOCKS>::value;
   using Vec = Eigen::Matrix<double, DIM, 1>;
 
   // We don't use SE3 directly for this because the cost functions get
