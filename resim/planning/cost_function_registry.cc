@@ -6,6 +6,8 @@
 
 #include "resim/planning/cost_function_registry.hh"
 
+#include <iostream>
+
 #include "resim/planning/cost_function.hh"
 
 namespace resim::planning {
@@ -22,7 +24,7 @@ double CostFunctionRegistry<State, Control>::operator()(
     NullableReference<const Control> u,
     NullableReference<CostDiffs<State, Control>> diffs) const {
   double cost_sum = 0.0;
-  for (const auto &[_, cost_fn] : functions_) {
+  for (const auto &[key, cost_fn] : functions_) {
     cost_sum += cost_fn(x, u, diffs);
   }
   return cost_sum;
