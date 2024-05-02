@@ -28,6 +28,14 @@ struct CostDiffs {
   MatXX cost_xx{MatXX::Zero()};
   MatUX cost_ux{MatUX::Zero()};
   MatUU cost_uu{MatUU::Zero()};
+
+  void set_zero() {
+    cost_x.setZero();
+    cost_u.setZero();
+    cost_xx.setZero();
+    cost_ux.setZero();
+    cost_uu.setZero();
+  }
 };
 
 // The signature for a cost function. The control is passed as a nullable

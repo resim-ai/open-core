@@ -21,6 +21,11 @@ struct DynamicsDiffs {
   using MatXU = Eigen::Matrix<double, State::DIM, Control::DIM>;
   MatXX f_x{MatXX::Zero()};
   MatXU f_u{MatXU::Zero()};
+
+  void set_zero() {
+    f_x.setZero();
+    f_u.setZero();
+  }
 };
 
 // The signature for a discrete dynamics function. The diffs are passed by a
