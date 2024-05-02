@@ -62,3 +62,17 @@ cc_library(
         "//resim/planning:dynamics",
     ],
 )
+
+cc_test(
+    name = "dynamics_test",
+    srcs = ["dynamics_test.cc"],
+    deps = [
+        ":control",
+        ":dynamics",
+        ":state",
+        "//resim/math:is_approx",
+        "//resim/planning:dynamics",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
