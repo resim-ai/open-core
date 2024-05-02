@@ -1,4 +1,8 @@
-
+// Copyright 2024 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #include "resim/actor/ilqr_drone.hh"
 
@@ -11,6 +15,7 @@
 #include "resim/math/vector_partition.hh"
 #include "resim/planning/cost_building_blocks.hh"
 #include "resim/planning/cost_function_registry.hh"
+#include "resim/planning/drone/dynamics.hh"
 #include "resim/simulator/standard_frames.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/transforms/frame.hh"
@@ -23,7 +28,7 @@ namespace resim::actor {
 namespace {
 constexpr double GRAVITATIONAL_ACCELERATION_MPSS = 9.81;
 constexpr double PLANNING_DT_S = 0.1;
-constexpr size_t PLANNING_STEPS = 20u;
+constexpr size_t PLANNING_STEPS = 40u;
 constexpr double REPLANNING_CADENCE_S = 1.0;
 
 using CostFunctionRegistry = planning::
@@ -161,10 +166,11 @@ ILQRDrone::ILQRDrone(
     double velocity_cost)
     : Actor{id},
       state_{make_initial_state(std::move(initial_position))},
-      dynamics_{PLANNING_DT_S, GRAVITATIONAL_ACCELERATION_MPSS},
       ilqr_{
           PLANNING_STEPS,
-          dynamics_,
+          planning::drone::Dynamics{
+              PLANNING_DT_S,
+              GRAVITATIONAL_ACCELERATION_MPSS},
           make_cost(std::move(goal_position), velocity_cost)},
       control_trajectory_{
           default_control_trajectory(),
@@ -173,26 +179,25 @@ ILQRDrone::ILQRDrone(
 void ILQRDrone::replan(const time::Timestamp time) {
   // If we have planned previously, copy the part of the control trajectory
   // which is still relevant
-  // if (last_plan_time_.has_value()) {
-  //  size_t idx = static_cast<size_t>(
-  //      std::floor(time::as_seconds(time - *last_plan_time_) /
-  //      PLANNING_DT_S));
-  //  auto new_start_it = std::next(control_trajectory_.current().cbegin(),
-  //  idx); auto start_of_remaining = std::copy(
-  //      new_start_it,
-  //      control_trajectory_.current().cend(),
-  //      control_trajectory_.mutable_next().begin());
-  //
-  //  // Fill the remainder with default values
-  //  for (auto it = start_of_remaining;
-  //       it != control_trajectory_.mutable_next().end();
-  //       ++it) {
-  //    *it = planning::drone::Control{
-  //        .angular_acceleration = Eigen::Vector3d::Zero(),
-  //        .thrust = GRAVITATIONAL_ACCELERATION_MPSS};
-  //  }
-  //  control_trajectory_.swap();
-  //}
+  if (last_plan_time_.has_value()) {
+    size_t idx = static_cast<size_t>(
+        std::floor(time::as_seconds(time - *last_plan_time_) / PLANNING_DT_S));
+    auto new_start_it = std::next(control_trajectory_.current().cbegin(), idx);
+    auto start_of_remaining = std::copy(
+        new_start_it,
+        control_trajectory_.current().cend(),
+        control_trajectory_.mutable_next().begin());
+
+    // Fill the remainder with default values
+    for (auto it = start_of_remaining;
+         it != control_trajectory_.mutable_next().end();
+         ++it) {
+      *it = planning::drone::Control{
+          .angular_acceleration = Eigen::Vector3d::Zero(),
+          .thrust = GRAVITATIONAL_ACCELERATION_MPSS};
+    }
+    control_trajectory_.swap();
+  }
   last_plan_time_ = time;
   constexpr int MAX_ITERATIONS = 100;
   auto result = ilqr_.optimize_controls(
@@ -200,7 +205,6 @@ void ILQRDrone::replan(const time::Timestamp time) {
       control_trajectory_.current(),
       MAX_ITERATIONS,
       MAX_ITERATIONS);
-  std::cout << result.converged << std::endl;
   LOG_IF(WARNING, not result.converged)
       << "Failed planner convergence in iLQR drone actor!";
   control_trajectory_.mutable_next() = std::move(result.controls);
@@ -222,13 +226,17 @@ void ILQRDrone::simulate_forward(time::Timestamp time) {
 
   size_t idx = static_cast<size_t>(std::floor(
       time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
+  REASSERT(idx < PLANNING_STEPS);
   const double dt_s = time::as_seconds(time - current_time_);
   current_time_ = time;
+  const planning::drone::Dynamics dynamics{
+      dt_s,
+      GRAVITATIONAL_ACCELERATION_MPSS};
   state_ =
-      dynamics_(state_, control_trajectory_.current().at(idx), null_reference);
+      dynamics(state_, control_trajectory_.current().at(idx), null_reference);
 }
 
-bool ILQRDrone::is_spawned() const { return true; }
+bool ILQRDrone::is_spawned() const { return is_spawned_; }
 
 state::ObservableState ILQRDrone::observable_state() const {
   state::ObservableState state{

@@ -11,7 +11,6 @@
 #include "resim/actor/actor.hh"
 #include "resim/actor/actor_id.hh"
 #include "resim/planning/drone/control.hh"
-#include "resim/planning/drone/dynamics.hh"
 #include "resim/planning/drone/state.hh"
 #include "resim/planning/ilqr.hh"
 #include "resim/time/timestamp.hh"
@@ -44,7 +43,6 @@ class ILQRDrone : public Actor {
   time::Timestamp current_time_;
 
   State state_;
-  planning::drone::Dynamics dynamics_;
   planning::ILQR<State, Control> ilqr_;
   DoubleBuffer<std::vector<Control>> control_trajectory_;
   std::optional<time::Timestamp> last_plan_time_;

@@ -232,3 +232,14 @@ cc_library(
         "@com_github_google_glog//:glog",
     ],
 )
+
+cc_test(
+    name = "ilqr_drone_test",
+    srcs = ["ilqr_drone_test.cc"],
+    deps = [
+        ":actor_id",
+        ":ilqr_drone",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
