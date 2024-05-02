@@ -120,7 +120,13 @@ bool test_completion_criteria_equality(
              actual_completion_criteria.time_limit;
 }
 
-ILQRDrone make_test_ilqr_drone() { return ILQRDrone{}; }
+ILQRDrone make_test_ilqr_drone() {
+  return ILQRDrone{
+      .velocity_cost = 82.0,
+      .initial_position = Eigen::Vector3d{4.0, 5.0, 6.0},
+      .goal_position = Eigen::Vector3d{1.0, 2.0, 3.0},
+  };
+}
 
 bool test_ilqr_drone_equality(
     const ILQRDrone& expected_ilqr_drone,
