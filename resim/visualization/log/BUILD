@@ -168,8 +168,13 @@ cc_library(
     srcs = ["visualize_world_glb.cc"],
     hdrs = ["visualize_world_glb.hh"],
     deps = [
+        "//resim/simulator:standard_frames",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/utils:inout",
         "//resim/utils:mcap_logger",
+        "//resim/visualization/foxglove:pose_to_foxglove",
+        "//resim/visualization/foxglove:vector_to_foxglove",
+        "@foxglove_schemas",
     ],
 )
