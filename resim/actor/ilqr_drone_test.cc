@@ -27,7 +27,7 @@ TEST(ILQRDroneTest, TestInitialization) {
   std::mt19937 rng{SEED};
   const ActorId id{ActorId::new_uuid()};
   const Vec3 initial_position{5.0 * testing::random_vector<Vec3>(rng)};
-  const Vec3 goal_position{
+  const Vec3& goal_position{
       initial_position};  // For this case just station keep
   const double velocity_cost = 3.0;
 

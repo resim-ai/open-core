@@ -26,7 +26,7 @@ namespace resim::actor {
 namespace {
 constexpr double GRAVITATIONAL_ACCELERATION_MPSS = 9.81;
 constexpr double PLANNING_DT_S = 0.1;
-constexpr size_t PLANNING_STEPS = 40u;
+constexpr size_t PLANNING_STEPS = 40U;
 constexpr double REPLANNING_CADENCE_S = 1.0;
 
 using Vec3 = Eigen::Vector3d;
@@ -212,9 +212,11 @@ void ILQRDrone::replan() {
   // If we have planned previously, copy the part of the control trajectory
   // which is still relevant
   if (last_plan_time_.has_value()) {
-    size_t idx = static_cast<size_t>(std::floor(
+    auto idx = static_cast<size_t>(std::floor(
         time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
-    auto new_start_it = std::next(control_trajectory_.current().cbegin(), idx);
+    auto new_start_it = std::next(
+        control_trajectory_.current().cbegin(),
+        static_cast<int>(idx));
     auto start_of_remaining = std::copy(
         new_start_it,
         control_trajectory_.current().cend(),
@@ -248,7 +250,7 @@ planning::drone::Control ILQRDrone::get_current_control() const {
         .thrust = GRAVITATIONAL_ACCELERATION_MPSS,
     };
   }
-  size_t idx = static_cast<size_t>(std::floor(
+  auto idx = static_cast<size_t>(std::floor(
       time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
   REASSERT(idx < PLANNING_STEPS);
   return control_trajectory_.current().at(idx);

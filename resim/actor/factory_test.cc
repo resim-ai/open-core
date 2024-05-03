@@ -112,7 +112,6 @@ TEST(FactoryTest, TestMakeILQRDrone) {
   // SETUP
   experiences::DynamicBehavior dynamic_behavior;
   const ActorId id{ActorId::new_uuid()};
-  const transforms::Frame<3> frame{transforms::Frame<3>::new_frame()};
   dynamic_behavior.actors.push_back(experiences::Actor{
       .id = id,
       .actor_type = experiences::ActorType::SIMULATION_ACTOR,
