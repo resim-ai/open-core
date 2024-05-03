@@ -4,13 +4,16 @@
 #include <filesystem>
 #include <iostream>
 #include <mcap/reader.hpp>
+#include <optional>
 
 #include "resim/assert/assert.hh"
 #include "resim/experiences/experience.hh"
+#include "resim/time/timestamp.hh"
 #include "resim/utils/inout.hh"
 #include "resim/utils/mcap_logger.hh"
 #include "resim/visualization/log/extract_experience.hh"
 #include "resim/visualization/log/visualize_actor_states.hh"
+#include "resim/visualization/log/visualize_world_glb.hh"
 
 namespace resim::visualization::log {
 
@@ -23,7 +26,8 @@ namespace resim::visualization::log {
 // the mcap reader.
 void generate_visualization_log(
     const std::filesystem::path &sim_log,
-    const std::filesystem::path &vis_log) {
+    const std::filesystem::path &vis_log,
+    const std::optional<std::filesystem::path> &maybe_world_glb) {
   REASSERT(std::filesystem::exists(sim_log), "Input log does not exist!");
 
   mcap::McapReader reader;
@@ -34,6 +38,18 @@ void generate_visualization_log(
 
   const experiences::Experience experience{extract_experience(InOut{reader})};
   visualize_actor_states(experience, InOut{reader}, InOut{logger});
+
+  if (maybe_world_glb) {
+    auto message_view = reader.readMessages();
+    REASSERT(message_view.begin() != message_view.end());
+    const auto time =
+        time::Timestamp{time::Duration{message_view.begin()->message.logTime}};
+    visualize_world_glb(
+        *maybe_world_glb,
+        time,
+        "/world_geometry",
+        InOut{static_cast<LoggerInterface &>(logger)});
+  }
 }
 
 void make_visualization_log(int argc, char **argv) {
@@ -47,6 +63,7 @@ void make_visualization_log(int argc, char **argv) {
   options.add_options()
     ("l,log", "Input log location (required)", cxxopts::value<std::string>())
     ("o,output", "Output log location (required)", cxxopts::value<std::string>())
+    ("world_glb", "GLB to use for scene geometry (optional)", cxxopts::value<std::string>())    
     ("h,help", "Print usage")
   ;
   // clang-format on
@@ -64,7 +81,14 @@ void make_visualization_log(int argc, char **argv) {
   const std::filesystem::path vis_mcap_path{
       options_result["output"].as<std::string>()};
 
-  generate_visualization_log(sim_mcap_path, vis_mcap_path);
+  std::optional<std::filesystem::path> maybe_world_glb_path;
+  if (options_result.count("world_glb")) {
+    maybe_world_glb_path = options_result["world_glb"].as<std::string>();
+  }
+  generate_visualization_log(
+      sim_mcap_path,
+      vis_mcap_path,
+      maybe_world_glb_path);
 }
 
 }  // namespace resim::visualization::log
