@@ -121,11 +121,13 @@ bool test_completion_criteria_equality(
 }
 
 ILQRDrone make_test_ilqr_drone() {
+  // NOLINTBEGIN(readability-magic-numbers)
   return ILQRDrone{
       .velocity_cost = 82.0,
       .initial_position = Eigen::Vector3d{4.0, 5.0, 6.0},
       .goal_position = Eigen::Vector3d{1.0, 2.0, 3.0},
   };
+  // NOLINTEND(readability-magic-numbers)
 }
 
 bool test_ilqr_drone_equality(

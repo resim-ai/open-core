@@ -64,7 +64,7 @@ TEST(CostFunctionRegistryTest, TestRegistry) {
   using Control = TestControl<DIM>;
   using Diffs = CostDiffs<State, Control>;
   using Registry = CostFunctionRegistry<State, Control>;
-  constexpr size_t SEED = 32u;
+  constexpr size_t SEED = 32U;
   std::mt19937 rng{SEED};
 
   auto get_cost = [&rng](bool has_control_cost) {
