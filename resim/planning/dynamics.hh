@@ -31,7 +31,9 @@ struct DynamicsDiffs {
 // The signature for a discrete dynamics function. The diffs are passed by a
 // nullable reference since we don't always need to compute diffs, so
 // NULL_REFERENCE should be passed when we don't care. Accordingly, the caller
-// retains ownership of the differentials.
+// retains ownership of the differentials. This function should populate the
+// differentials by adding to them and should not overwrite them or count on
+// them being zero when passed in.
 template <typename State, typename Control>
 using DiscreteDynamics = std::function<State(
     const State &,
