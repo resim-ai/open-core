@@ -205,8 +205,6 @@ void ILQRDrone::replan(const time::Timestamp time) {
       control_trajectory_.current(),
       MAX_ITERATIONS,
       MAX_ITERATIONS);
-  LOG_IF(WARNING, not result.converged)
-      << "Failed planner convergence in iLQR drone actor!";
   control_trajectory_.mutable_next() = std::move(result.controls);
   control_trajectory_.swap();
 }
