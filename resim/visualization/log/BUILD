@@ -162,3 +162,14 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "visualize_world_glb",
+    srcs = ["visualize_world_glb.cc"],
+    hdrs = ["visualize_world_glb.hh"],
+    deps = [
+        "//resim/time:timestamp",
+        "//resim/utils:inout",
+        "//resim/utils:mcap_logger",
+    ],
+)
