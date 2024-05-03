@@ -122,9 +122,11 @@ cc_binary(
     deps = [
         ":extract_experience",
         ":visualize_actor_states",
+        ":visualize_world_glb",
         "//resim/assert",
         "//resim/experiences:experience",
         "//resim/third_party/mcap:mcap_impl",
+        "//resim/time:timestamp",
         "//resim/utils:inout",
         "//resim/utils:mcap_logger",
         "@cxxopts",
