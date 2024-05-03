@@ -87,7 +87,8 @@ TEST(CostFunctionRegistryTest, TestRegistry) {
       Eigen::Block<const BigMat, State::DIM, State::DIM> Kuu{
           curvature.block<Control::DIM, Control::DIM>(State::DIM, State::DIM)};
 
-      double cost = 0.5 * x.x.transpose() * Kxx * x.x;
+      constexpr double HALF = 0.5;
+      double cost = HALF * x.x.transpose() * Kxx * x.x;
 
       if (diffs.has_value()) {
         diffs->cost_x += Kxx * x.x;
