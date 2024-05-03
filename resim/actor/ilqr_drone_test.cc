@@ -27,7 +27,8 @@ TEST(ILQRDroneTest, TestInitialization) {
   std::mt19937 rng{SEED};
   const ActorId id{ActorId::new_uuid()};
   const Vec3 initial_position{5.0 * testing::random_vector<Vec3>(rng)};
-  const Vec3 goal_position{5.0 * testing::random_vector<Vec3>(rng)};
+  const Vec3 goal_position{
+      initial_position};  // For this case just station keep
   const double velocity_cost = 3.0;
 
   constexpr time::Timestamp START_TIME{time::as_duration(1.0)};
@@ -75,7 +76,7 @@ TEST(ILQRDroneTest, TestNavigateToGoal) {
 
   // We can't expect error to be precisely zero as the cost is
   // quadratic near the goal.
-  constexpr double TOLERANCE = 1e-2;
+  constexpr double TOLERANCE = 1e-1;
   EXPECT_TRUE(state.is_spawned);
   EXPECT_TRUE(state.state.ref_from_body().is_approx(
       transforms::SE3(

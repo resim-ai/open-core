@@ -6,8 +6,6 @@
 
 #include "resim/actor/ilqr_drone.hh"
 
-#include <glog/logging.h>
-
 #include <algorithm>
 #include <iostream>
 
@@ -31,14 +29,20 @@ constexpr double PLANNING_DT_S = 0.1;
 constexpr size_t PLANNING_STEPS = 40u;
 constexpr double REPLANNING_CADENCE_S = 1.0;
 
+using Vec3 = Eigen::Vector3d;
+using transforms::SE3;
+
 using CostFunctionRegistry = planning::
     CostFunctionRegistry<planning::drone::State, planning::drone::Control>;
 
 using math::get_block;
 
-CostFunctionRegistry make_cost(
-    Eigen::Vector3d goal_position,
-    const double velocity_cost) {
+// Helper function which sets up the correct cost function registry
+// containing the desired control regularization, goal attainment, and
+// velocity regularization cost functions.
+// @param[in] goal_position - The goal we're navigating to.
+// @param[in] velocity_cost - The penalty weight to apply to non-zero velocity.
+CostFunctionRegistry make_cost(Vec3 goal_position, const double velocity_cost) {
   CostFunctionRegistry registry;
   using State = planning::drone::State;
   using Control = planning::drone::Control;
@@ -140,29 +144,57 @@ CostFunctionRegistry make_cost(
   return registry;
 }
 
-planning::drone::State make_initial_state(Eigen::Vector3d position) {
+// Helper to create a stationary initial drone state at the given position.
+planning::drone::State make_initial_state(Vec3 position) {
   planning::drone::State result;
   result.scene_from_body_rotation = transforms::SO3::identity();
   result.position = std::move(position);
-  result.velocity = Eigen::Vector3d::Zero();
-  result.angular_velocity = Eigen::Vector3d::Zero();
+  result.velocity = Vec3::Zero();
+  result.angular_velocity = Vec3::Zero();
   return result;
 }
 
+// Helper to create a default drone control trajectory (zero torque and thrust
+// to counteract gravity).
 std::vector<planning::drone::Control> default_control_trajectory() {
   return std::vector<planning::drone::Control>(
       PLANNING_STEPS,
       planning::drone::Control{
-          .angular_acceleration = Eigen::Vector3d::Zero(),
+          .angular_acceleration = Vec3::Zero(),
           .thrust = GRAVITATIONAL_ACCELERATION_MPSS});
 };
 
+// Helper to create a rigid body state based on drone state and control.
+state::RigidBodyState<SE3> rigid_body_state_from_drone_state(
+    const planning::drone::State &drone_state,
+    const planning::drone::Control &control,
+    const ActorId &id) {
+  state::RigidBodyState<SE3> state;
+
+  // Pose
+  SE3 pose{drone_state.scene_from_body_rotation, drone_state.position};
+  pose.set_frames(simulator::SCENE_FRAME, transforms::Frame<3>{id});
+  state.set_ref_from_body(pose);
+
+  // First derivative
+  state.set_body_angular_velocity_radps(drone_state.angular_velocity);
+  state.set_body_linear_velocity_mps(
+      drone_state.scene_from_body_rotation.inverse() * drone_state.velocity);
+
+  // Second derivative
+  state.set_body_angular_acceleration_radpss(control.angular_acceleration);
+  state.set_body_linear_acceleration_mpss(
+      Vec3::UnitZ() * control.thrust -
+      drone_state.scene_from_body_rotation.inverse() * Vec3::UnitZ() *
+          GRAVITATIONAL_ACCELERATION_MPSS);
+  return state;
+}
 }  // namespace
 
 ILQRDrone::ILQRDrone(
     ActorId id,
-    Eigen::Vector3d initial_position,
-    Eigen::Vector3d goal_position,
+    Vec3 initial_position,
+    Vec3 goal_position,
     double velocity_cost)
     : Actor{id},
       state_{make_initial_state(std::move(initial_position))},
@@ -176,12 +208,12 @@ ILQRDrone::ILQRDrone(
           default_control_trajectory(),
           default_control_trajectory()} {}
 
-void ILQRDrone::replan(const time::Timestamp time) {
+void ILQRDrone::replan() {
   // If we have planned previously, copy the part of the control trajectory
   // which is still relevant
   if (last_plan_time_.has_value()) {
-    size_t idx = static_cast<size_t>(
-        std::floor(time::as_seconds(time - *last_plan_time_) / PLANNING_DT_S));
+    size_t idx = static_cast<size_t>(std::floor(
+        time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
     auto new_start_it = std::next(control_trajectory_.current().cbegin(), idx);
     auto start_of_remaining = std::copy(
         new_start_it,
@@ -193,12 +225,12 @@ void ILQRDrone::replan(const time::Timestamp time) {
          it != control_trajectory_.mutable_next().end();
          ++it) {
       *it = planning::drone::Control{
-          .angular_acceleration = Eigen::Vector3d::Zero(),
+          .angular_acceleration = Vec3::Zero(),
           .thrust = GRAVITATIONAL_ACCELERATION_MPSS};
     }
     control_trajectory_.swap();
   }
-  last_plan_time_ = time;
+  last_plan_time_ = current_time_;
   constexpr int MAX_ITERATIONS = 100;
   auto result = ilqr_.optimize_controls(
       state_,
@@ -207,6 +239,19 @@ void ILQRDrone::replan(const time::Timestamp time) {
       MAX_ITERATIONS);
   control_trajectory_.mutable_next() = std::move(result.controls);
   control_trajectory_.swap();
+}
+
+planning::drone::Control ILQRDrone::get_current_control() const {
+  if (not last_plan_time_.has_value()) {
+    return Control{
+        .angular_acceleration = Vec3::Zero(),
+        .thrust = GRAVITATIONAL_ACCELERATION_MPSS,
+    };
+  }
+  size_t idx = static_cast<size_t>(std::floor(
+      time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
+  REASSERT(idx < PLANNING_STEPS);
+  return control_trajectory_.current().at(idx);
 }
 
 void ILQRDrone::simulate_forward(time::Timestamp time) {
@@ -219,19 +264,15 @@ void ILQRDrone::simulate_forward(time::Timestamp time) {
   if (not last_plan_time_.has_value() or
       (current_time_ - *last_plan_time_) >
           time::as_duration(REPLANNING_CADENCE_S)) {
-    replan(current_time_);
+    replan();
   }
 
-  size_t idx = static_cast<size_t>(std::floor(
-      time::as_seconds(current_time_ - *last_plan_time_) / PLANNING_DT_S));
-  REASSERT(idx < PLANNING_STEPS);
   const double dt_s = time::as_seconds(time - current_time_);
-  current_time_ = time;
   const planning::drone::Dynamics dynamics{
       dt_s,
       GRAVITATIONAL_ACCELERATION_MPSS};
-  state_ =
-      dynamics(state_, control_trajectory_.current().at(idx), null_reference);
+  state_ = dynamics(state_, get_current_control(), null_reference);
+  current_time_ = time;
 }
 
 bool ILQRDrone::is_spawned() const { return is_spawned_; }
@@ -242,13 +283,13 @@ state::ObservableState ILQRDrone::observable_state() const {
       .is_spawned = is_spawned(),
       .time_of_validity = current_time(),
   };
-
-  transforms::SE3 pose{state_.scene_from_body_rotation, state_.position};
-  pose.set_frames(simulator::SCENE_FRAME, transforms::Frame<3>{id()});
   if (state.is_spawned) {
-    state.state = state::RigidBodyState<transforms::SE3>{pose};
+    state.state =
+        rigid_body_state_from_drone_state(state_, get_current_control(), id());
   }
   return state;
 };
+
+time::Timestamp ILQRDrone::current_time() const { return current_time_; }
 
 }  // namespace resim::actor

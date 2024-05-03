@@ -229,7 +229,6 @@ cc_library(
         "//resim/transforms:se3",
         "//resim/transforms:so3",
         "//resim/utils:double_buffer",
-        "@com_github_google_glog//:glog",
     ],
 )
 
