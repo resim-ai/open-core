@@ -305,9 +305,10 @@ void ILQRDrone::simulate_forward(time::Timestamp time) {
   auto prev_idx =
       static_cast<size_t>(std::floor(time_since_last_plan_s / PLANNING_DT_S));
 
-  double time_since_prev_s = time_since_last_plan_s - PLANNING_DT_S * prev_idx;
+  double time_since_prev_s =
+      time_since_last_plan_s - PLANNING_DT_S * static_cast<double>(prev_idx);
 
-  size_t next_idx = prev_idx + 1u;
+  size_t next_idx = prev_idx + 1U;
   REASSERT(next_idx < PLANNING_STEPS);
 
   const State &prev{state_trajectory_.at(prev_idx)};
