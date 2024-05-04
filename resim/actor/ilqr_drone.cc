@@ -25,7 +25,7 @@ namespace resim::actor {
 
 namespace {
 constexpr double GRAVITATIONAL_ACCELERATION_MPSS = 9.81;
-constexpr double PLANNING_DT_S = 0.1;
+constexpr double PLANNING_DT_S = 0.05;
 constexpr size_t PLANNING_STEPS = 40U;
 constexpr double REPLANNING_CADENCE_S = 1.0;
 

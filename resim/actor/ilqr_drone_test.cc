@@ -63,7 +63,7 @@ TEST(ILQRDroneTest, TestNavigateToGoal) {
   const double velocity_cost = 3.0;
 
   constexpr time::Timestamp START_TIME{time::as_duration(1.0)};
-  constexpr time::Timestamp END_TIME{time::as_duration(10.0)};
+  constexpr time::Timestamp END_TIME{time::as_duration(20.0)};
 
   // ACTION
   ILQRDrone drone{id, initial_position, goal_position, velocity_cost};
