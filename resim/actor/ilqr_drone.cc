@@ -266,6 +266,7 @@ void ILQRDrone::replan() {
       MAX_ITERATIONS,
       MAX_ITERATIONS);
   control_trajectory_.mutable_next() = std::move(result.controls);
+  state_trajectory_ = std::move(result.states);
   control_trajectory_.swap();
 }
 
@@ -295,11 +296,23 @@ void ILQRDrone::simulate_forward(time::Timestamp time) {
     replan();
   }
 
-  const double dt_s = time::as_seconds(time - current_time_);
-  const planning::drone::Dynamics dynamics{
-      dt_s,
-      GRAVITATIONAL_ACCELERATION_MPSS};
-  state_ = dynamics(state_, get_current_control(), null_reference);
+  double time_since_last_plan_s =
+      time::as_seconds(current_time_ - *last_plan_time_);
+
+  auto prev_idx =
+      static_cast<size_t>(std::floor(time_since_last_plan_s / PLANNING_DT_S));
+
+  double time_since_prev_s = time_since_last_plan_s - PLANNING_DT_S * prev_idx;
+
+  size_t next_idx = prev_idx + 1u;
+  REASSERT(next_idx < PLANNING_STEPS);
+
+  const State &prev{state_trajectory_.at(prev_idx)};
+  const State &next{state_trajectory_.at(next_idx)};
+
+  const double frac = time_since_prev_s / PLANNING_DT_S;
+
+  state_ = prev + frac * (next - prev);
   current_time_ = time;
 }
 

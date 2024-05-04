@@ -65,6 +65,7 @@ class ILQRDrone : public Actor {
 
   State state_;
   planning::ILQR<State, Control> ilqr_;
+  std::vector<State> state_trajectory_;
   DoubleBuffer<std::vector<Control>> control_trajectory_;
   std::optional<time::Timestamp> last_plan_time_;
 };
