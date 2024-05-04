@@ -60,10 +60,10 @@ TEST(ILQRDroneTest, TestNavigateToGoal) {
   const ActorId id{ActorId::new_uuid()};
   const Vec3 initial_position{5.0 * testing::random_vector<Vec3>(rng)};
   const Vec3 goal_position{5.0 * testing::random_vector<Vec3>(rng)};
-  const double velocity_cost = 3.0;
+  const double velocity_cost = 0.1;
 
   constexpr time::Timestamp START_TIME{time::as_duration(1.0)};
-  constexpr time::Timestamp END_TIME{time::as_duration(10.0)};
+  constexpr time::Timestamp END_TIME{time::as_duration(20.0)};
 
   // ACTION
   ILQRDrone drone{id, initial_position, goal_position, velocity_cost};
