@@ -99,8 +99,11 @@ CostFunctionRegistry make_cost(Vec3 goal_position, const double velocity_cost) {
           const State &x,
           NullableReference<const Control> u,
           NullableReference<planning::CostDiffs<State, Control>> diffs) {
-        constexpr double VERTICAL_WEIGHT = 50.0;
-        constexpr double HORIZONTAL_WEIGHT = 10.0;
+        if (u.has_value()) {
+          return 0.0;
+        }
+        constexpr double VERTICAL_WEIGHT = 2000.0;
+        constexpr double HORIZONTAL_WEIGHT = 400.0;
         constexpr double THRESHOLD = 2.0;
         auto cost_result = soft_abs_cost<3>(
             x.position - goal,
