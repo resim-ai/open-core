@@ -143,6 +143,30 @@ CostFunctionRegistry make_cost(Vec3 goal_position, const double velocity_cost) {
         }
         return cost_result.cost;
       };
+
+  registry["angular_velocity_cost"] =
+      [](const State &x,
+         NullableReference<const Control> u,
+         NullableReference<planning::CostDiffs<State, Control>> diffs) {
+        constexpr double WEIGHT = 1.0;
+        auto cost_result = quadratic_cost<3>(
+            x.angular_velocity,
+            WEIGHT * Eigen::Matrix3d::Identity(),
+            diffs.has_value() ? ComputeDiffs::YES : ComputeDiffs::NO);
+
+        if (diffs.has_value()) {
+          get_block<State::Partition, State::ANGULAR_VELOCITY>(diffs->cost_x) +=
+              *cost_result.dcost_dx;
+          get_block<
+              State::Partition,
+              State::ANGULAR_VELOCITY,
+              State::Partition,
+              State::ANGULAR_VELOCITY>(diffs->cost_xx) +=
+              *cost_result.d2cost_dx2;
+        }
+        return cost_result.cost;
+      };
+
   return registry;
 }
 
