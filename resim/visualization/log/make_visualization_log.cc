@@ -82,7 +82,7 @@ void make_visualization_log(int argc, char **argv) {
       options_result["output"].as<std::string>()};
 
   std::optional<std::filesystem::path> maybe_world_glb_path;
-  if (options_result.count("world_glb")) {
+  if (options_result.count("world_glb") != 0u) {
     maybe_world_glb_path = options_result["world_glb"].as<std::string>();
   }
   generate_visualization_log(
