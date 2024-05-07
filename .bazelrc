@@ -1,6 +1,3 @@
-build --host_crosstool_top=//resim/toolchain:clang_suite
-build --crosstool_top=//resim/toolchain:clang_suite
-build --cpu=k8
 build:debug -c dbg
 build:debug --copt="-g"
 build:debug --strip="never"

@@ -20,6 +20,7 @@ bazel_dep(name = "au", version = "0.3.4")
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "cxxopts", version = "3.2.1")
+bazel_dep(name = "resim-python-client", version = "a28eca31985d175d976b868d38c7f3adc315155b")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 
@@ -38,3 +39,7 @@ pip.parse(
 )
 
 use_repo(pip, "resim_python_deps")
+
+register_toolchains(
+    "@resim-open-core//resim/toolchain:cc_toolchain_for_k8",
+)
