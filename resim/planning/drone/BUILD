@@ -28,3 +28,25 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "control",
+    srcs = ["control.cc"],
+    hdrs = ["control.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/math:vector_partition",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "control_test",
+    srcs = ["control_test.cc"],
+    deps = [
+        ":control",
+        "//resim/math:is_approx",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
