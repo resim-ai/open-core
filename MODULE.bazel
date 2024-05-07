@@ -3,16 +3,17 @@ module(
     version = "0.0.10",
 )
 
-bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "rules_python", version = "0.31.0")
-bazel_dep(name = "googletest", repo_name = "com_google_googletest", version = "1.14.0")
-bazel_dep(name = "rules_proto", version = "6.0.0")
-bazel_dep(name = "eigen", repo_name = "libeigen", version = "3.4.0")
-bazel_dep(name = "protobuf", repo_name = "com_google_protobuf", version = "26.0")
-bazel_dep(name = "glog", repo_name = "com_github_google_glog", version = "0.7.0")
-bazel_dep(name = "fmt", version = "10.2.1")
 bazel_dep(name = "cpr", version = "1.10.5")
+bazel_dep(name = "eigen", repo_name = "libeigen", version = "3.4.0")
+bazel_dep(name = "fmt", version = "10.2.1")
+bazel_dep(name = "glog", repo_name = "com_github_google_glog", version = "0.7.0")
+bazel_dep(name = "googletest", repo_name = "com_google_googletest", version = "1.14.0")
 bazel_dep(name = "httplib", version = "0.15.3")
+bazel_dep(name = "mcap", version = "1.2.1")
+bazel_dep(name = "protobuf", repo_name = "com_google_protobuf", version = "26.0")
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_proto", version = "6.0.0")
+bazel_dep(name = "rules_python", version = "0.31.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 
