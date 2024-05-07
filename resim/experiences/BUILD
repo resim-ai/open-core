@@ -29,6 +29,9 @@ cc_library(
     name = "ilqr_drone",
     hdrs = ["ilqr_drone.hh"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@libeigen//:eigen",
+    ],
 )
 
 cc_library(
