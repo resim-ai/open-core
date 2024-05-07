@@ -231,6 +231,8 @@ cc_library(
         ":ilqr_drone_proto_cc",
         "//resim/assert",
         "//resim/experiences:ilqr_drone",
+        "//resim/math/proto:matrix_to_proto",
+        "//resim/utils:inout",
     ],
 )
 

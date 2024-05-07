@@ -6,9 +6,15 @@
 
 #pragma once
 
+#include <Eigen/Dense>
+
 namespace resim::experiences {
 
 // Empty for now: to be populated with the iLQR drone model.
-struct ILQRDrone {};
+struct ILQRDrone {
+  double velocity_cost = 0.0;
+  Eigen::Vector3d initial_position;
+  Eigen::Vector3d goal_position;
+};
 
 }  // namespace resim::experiences
