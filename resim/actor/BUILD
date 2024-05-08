@@ -139,6 +139,7 @@ cc_library(
     deps = [
         ":actor_id",
         ":actor_unit",
+        ":ilqr_drone",
         ":trajectory_actor",
         "//resim/actor/state:trajectory",
         "//resim/assert",
@@ -202,6 +203,42 @@ cc_test(
         "//resim/simulator:time_lord",
         "//resim/testing:random_matrix",
         "//resim/utils:inout",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ilqr_drone",
+    srcs = ["ilqr_drone.cc"],
+    hdrs = ["ilqr_drone.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":actor",
+        ":actor_id",
+        "//resim/actor/state:observable_state",
+        "//resim/actor/state:rigid_body_state",
+        "//resim/planning:cost_building_blocks",
+        "//resim/planning:cost_function_registry",
+        "//resim/planning:ilqr",
+        "//resim/planning/drone:control",
+        "//resim/planning/drone:dynamics",
+        "//resim/planning/drone:state",
+        "//resim/simulator:standard_frames",
+        "//resim/time:timestamp",
+        "//resim/transforms:frame",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "//resim/utils:double_buffer",
+    ],
+)
+
+cc_test(
+    name = "ilqr_drone_test",
+    srcs = ["ilqr_drone_test.cc"],
+    deps = [
+        ":actor_id",
+        ":ilqr_drone",
+        "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],
 )
