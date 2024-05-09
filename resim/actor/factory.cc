@@ -7,6 +7,7 @@
 #include "resim/actor/factory.hh"
 
 #include "resim/actor/actor_id.hh"
+#include "resim/actor/ilqr_drone.hh"
 #include "resim/actor/state/trajectory.hh"
 #include "resim/actor/trajectory_actor.hh"
 #include "resim/assert/assert.hh"
@@ -53,6 +54,13 @@ std::vector<std::unique_ptr<Actor>> factory(
           actors.push_back(std::make_unique<resim::actor::TrajectoryActor>(
               actor.id,
               trajectory));
+        },
+        [&](const experiences::ILQRDrone &drone) {
+          actors.push_back(std::make_unique<actor::ILQRDrone>(
+              actor.id,
+              drone.initial_position,
+              drone.goal_position,
+              drone.velocity_cost));
         },
         [](const auto &) { REASSERT(false, "Unsupported MovementModel!"); });
   }

@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "resim/testing/random_matrix.hh"
+#include "resim/utils/nullable_reference.hh"
 
 namespace resim::planning {
 
@@ -83,8 +84,8 @@ make_random_linear_dynamics(Rng &&rng) {
                  DynamicsDiffs<TestState<STATE_DIM>, TestControl<CONTROL_DIM>>>
                  diffs) {
     if (diffs) {
-      diffs->f_x = A;
-      diffs->f_u = B;
+      diffs->f_x += A;
+      diffs->f_u += B;
     }
     return TestState<STATE_DIM>{.x = A * state.x + B * control.u + c};
   };
@@ -140,8 +141,8 @@ make_random_quadratic_cost(Rng &&rng) {
 
     if (diffs) {
       *diffs = {};
-      diffs->cost_x = K_xx * state.x + K_x;
-      diffs->cost_xx = K_xx;
+      diffs->cost_x += K_xx * state.x + K_x;
+      diffs->cost_xx += K_xx;
     }
 
     if (control) {
@@ -150,9 +151,9 @@ make_random_quadratic_cost(Rng &&rng) {
       cost += K_u.transpose() * control->u;
       if (diffs) {
         diffs->cost_x += K_ux.transpose() * control->u;
-        diffs->cost_u = K_uu * control->u + K_ux * state.x + K_u;
-        diffs->cost_ux = K_ux;
-        diffs->cost_uu = K_uu;
+        diffs->cost_u += K_uu * control->u + K_ux * state.x + K_u;
+        diffs->cost_ux += K_ux;
+        diffs->cost_uu += K_uu;
       }
     }
     return cost;
@@ -175,7 +176,10 @@ make_random_non_quadratic_cost(Rng &&rng) {
              const NullableReference<
                  CostDiffs<TestState<STATE_DIM>, TestControl<CONTROL_DIM>>>
                  diffs) {
-    const double quadratic_cost = base_cost(state, control, diffs);
+    CostDiffs<TestState<STATE_DIM>, TestControl<CONTROL_DIM>> base_diffs;
+    const double quadratic_cost =
+        diffs ? base_cost(state, control, NullableReference{base_diffs})
+              : base_cost(state, control, null_reference);
     constexpr double A = 0.1;
     const double cost = A * quadratic_cost - std::exp(-quadratic_cost);
     const double d_cost = A + std::exp(-quadratic_cost);
@@ -183,14 +187,17 @@ make_random_non_quadratic_cost(Rng &&rng) {
     if (diffs) {
       // Update these in reverse order to make sure we don't overwrite things
       // we still need.
-      diffs->cost_xx = d2_cost * (diffs->cost_x * diffs->cost_x.transpose()) +
-                       d_cost * diffs->cost_xx;
-      diffs->cost_ux = d2_cost * (diffs->cost_u * diffs->cost_x.transpose()) +
-                       d_cost * diffs->cost_ux;
-      diffs->cost_uu = d2_cost * (diffs->cost_u * diffs->cost_u.transpose()) +
-                       d_cost * diffs->cost_uu;
-      diffs->cost_x = d_cost * diffs->cost_x;
-      diffs->cost_u = d_cost * diffs->cost_u;
+      diffs->cost_xx +=
+          d2_cost * (base_diffs.cost_x * base_diffs.cost_x.transpose()) +
+          d_cost * base_diffs.cost_xx;
+      diffs->cost_ux +=
+          d2_cost * (base_diffs.cost_u * base_diffs.cost_x.transpose()) +
+          d_cost * base_diffs.cost_ux;
+      diffs->cost_uu +=
+          d2_cost * (base_diffs.cost_u * base_diffs.cost_u.transpose()) +
+          d_cost * base_diffs.cost_uu;
+      diffs->cost_x += d_cost * base_diffs.cost_x;
+      diffs->cost_u += d_cost * base_diffs.cost_u;
     }
     return cost;
   };
