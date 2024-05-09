@@ -1,3 +1,9 @@
+#  Copyright 2024 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 cc_library(
@@ -177,6 +183,20 @@ cc_library(
         "//resim/utils:mcap_logger",
         "//resim/visualization/foxglove:pose_to_foxglove",
         "//resim/visualization/foxglove:vector_to_foxglove",
+        "@foxglove_schemas",
+    ],
+)
+
+cc_test(
+    name = "visualize_world_glb_test",
+    srcs = ["visualize_world_glb_test.cc"],
+    deps = [
+        ":visualize_world_glb",
+        "//resim/converter:fuzz_helpers",
+        "//resim/simulator:standard_frames",
+        "//resim/time/proto:time_to_proto",
+        "//resim/utils/testing:mock_logger",
+        "@com_google_googletest//:gtest_main",
         "@foxglove_schemas",
     ],
 )
