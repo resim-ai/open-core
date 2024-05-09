@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 proto_library(
     name = "revision_proto",
@@ -117,6 +118,12 @@ proto_library(
 
 cc_proto_library(
     name = "experience_proto_cc",
+    visibility = ["//visibility:public"],
+    deps = [":experience_proto"],
+)
+
+py_proto_library(
+    name = "experience_proto_py",
     visibility = ["//visibility:public"],
     deps = [":experience_proto"],
 )
