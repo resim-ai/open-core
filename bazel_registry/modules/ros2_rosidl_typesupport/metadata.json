@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros2/rosidl_typesupport"
+  ],
+  "versions":[
+    "2.0.1"
+  ],
+  "yanked_versions": {}
+}

@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros-tooling/libstatistics_collector/archive/refs/tags/1.3.1.tar.gz",
+    "integrity": "sha256-EunlLis0LkcaMa1B2xjnJ5WsKw+vVqVK3LdKJN5jD6M=",
+    "strip_prefix": "libstatistics_collector-1.3.1",
+    "patches": {
+      "add_build_file.patch": "sha256-GMWSwSN0c3jaXAYld5ryTmrt5gX18KDRQjiodj13utM="
+    },
+    "patch_strip": 1
+}

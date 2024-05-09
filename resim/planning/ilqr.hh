@@ -232,6 +232,13 @@ double ILQR<State, Control>::forward_pass(const double linesearch_factor) {
 
 template <StateType State, ControlType Control>
 void ILQR<State, Control>::compute_derivatives() {
+  // Zero out diffs
+  for (auto &diff : dynamics_diffs_) {
+    diff.set_zero();
+  }
+  for (auto &diff : cost_diffs_) {
+    diff.set_zero();
+  }
   for (std::size_t ii = 0; ii < num_steps_; ++ii) {
     dynamics_(
         states_.current().at(ii),

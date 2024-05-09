@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros2/rclcpp"
+  ],
+  "versions":[
+    "16.0.8"
+  ],
+  "yanked_versions": {}
+}

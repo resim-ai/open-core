@@ -1,0 +1,156 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,150 @@
++""" Builds rclcpp.
++"""
++
++load(
++    "@com_github_mvukov_rules_ros2//repositories:logging_macros.bzl",
++    "logging_macros",
++)
++load(
++    "@com_github_mvukov_rules_ros2//repositories:rclcpp_interfaces.bzl",
++    "rclcpp_interfaces",
++)
++load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_library")
++load("@rules_python//python:defs.bzl", "py_binary")
++load("@rules_ros2_pip_deps//:requirements.bzl", "requirement")
++
++_GENERATE_LOGGING_MACROS_PY = "@com_github_mvukov_rules_ros2//repositories:generate_rclcpp_logging_macros.py"
++
++py_binary(
++    name = "generate_logging_macros",
++    srcs = [_GENERATE_LOGGING_MACROS_PY],
++    main = _GENERATE_LOGGING_MACROS_PY,
++    deps = [
++        "@ros2_rcutils//:logging_generator",
++        requirement("empy"),
++    ],
++)
++
++logging_macros(
++    name = "logging_macros",
++    generator = ":generate_logging_macros",
++    output = "include/rclcpp/logging.hpp",
++    template = "rclcpp/resource/logging.hpp.em",
++)
++
++filegroup(
++    name = "interfaces",
++    srcs = glob(["rclcpp/include/rclcpp/node_interfaces/node_*_interface.hpp"]),
++    visibility = ["//visibility:public"],
++)
++
++_GENERATE_RCLCPP_INTERFACE_PY = "@com_github_mvukov_rules_ros2//repositories:generate_rclcpp_interface.py"
++
++py_binary(
++    name = "generate_rclcpp_interface",
++    srcs = [_GENERATE_RCLCPP_INTERFACE_PY],
++    main = _GENERATE_RCLCPP_INTERFACE_PY,
++    deps = [
++        "@ros2_rcutils//:logging_generator",
++        requirement("empy"),
++    ],
++)
++
++rclcpp_interfaces(
++    name = "rclcpp_interfaces",
++    generator = ":generate_rclcpp_interface",
++    getter_template = "rclcpp/resource/get_interface.hpp.em",
++    interfaces = ":interfaces",
++    prefix_path = "include/rclcpp/node_interfaces",
++    traits_template = "rclcpp/resource/interface_traits.hpp.em",
++)
++
++ros2_cpp_library(
++    name = "rclcpp",
++    srcs = glob([
++        "rclcpp/src/**/*.cpp",
++        "rclcpp/src/**/*.hpp",
++    ]),
++    hdrs = glob(["rclcpp/include/**/*.hpp"]) + [
++        ":logging_macros",
++        ":rclcpp_interfaces",
++    ],
++    copts = ["-w"],
++    includes = [
++        "include",
++        "rclcpp/include",
++    ],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_ament_index//:ament_index_cpp",
++        "@ros2_libstatistics_collector//:libstatistics_collector",
++        "@ros2_rcl//:rcl",
++        "@ros2_rcl//:rcl_yaml_param_parser",
++        "@ros2_rcl_interfaces//:cpp_builtin_interfaces",
++        "@ros2_rcl_interfaces//:cpp_rcl_interfaces",
++        "@ros2_rcl_interfaces//:cpp_rosgraph_msgs",
++        "@ros2_rcl_interfaces//:cpp_statistics_msgs",
++        "@ros2_rcpputils//:rcpputils",
++        "@ros2_rcutils//:rcutils",
++        "@ros2_rmw//:rmw",
++        "@ros2_rmw//:rmw_cpp",
++        "@ros2_rosidl//:rosidl_runtime_cpp",
++        "@ros2_rosidl_typesupport//:rosidl_typesupport_c",
++        "@ros2_rosidl_typesupport//:rosidl_typesupport_cpp",
++        "@ros2_tracing//:tracetools",
++    ],
++)
++
++ros2_cpp_library(
++    name = "rclcpp_action",
++    srcs = glob(["rclcpp_action/src/*.cpp"]),
++    hdrs = glob(["rclcpp_action/include/**/*.hpp"]),
++    includes = ["rclcpp_action/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":rclcpp",
++        "@ros2_rcl//:rcl_action",
++        "@ros2_rcl_interfaces//:cpp_action_msgs",
++    ],
++)
++
++ros2_cpp_library(
++    name = "rclcpp_lifecycle",
++    srcs = glob([
++        "rclcpp_lifecycle/src/**/*.cpp",
++        "rclcpp_lifecycle/src/*.hpp",
++    ]),
++    hdrs = glob([
++        "rclcpp_lifecycle/include/**/*.hpp",
++        "rclcpp_lifecycle/include/**/*.h",
++    ]),
++    includes = ["rclcpp_lifecycle/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":rclcpp",
++        "@ros2_rcl//:rcl_lifecycle",
++        "@ros2_rcl_interfaces//:c_lifecycle_msgs",
++        "@ros2_rcl_interfaces//:cpp_lifecycle_msgs",
++    ],
++)
++
++ros2_cpp_library(
++    name = "rclcpp_components",
++    srcs = glob([
++        "rclcpp_components/src/**/*.cpp",
++        "rclcpp_components/src/*.hpp",
++    ]),
++    hdrs = glob([
++        "rclcpp_components/include/**/*.hpp",
++        "rclcpp_components/include/**/*.h",
++    ]),
++    includes = ["rclcpp_components/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":rclcpp",
++        "@ros2_ament_index//:ament_index_cpp",
++        "@ros2_class_loader//:class_loader",
++        "@ros2_rcl_interfaces//:cpp_composition_interfaces",
++        "@ros2_rcpputils//:rcpputils",
++    ],
++)

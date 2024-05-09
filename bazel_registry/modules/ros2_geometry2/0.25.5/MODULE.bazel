@@ -1,0 +1,13 @@
+module(
+    name = "ros2_geometry2",
+    compatibility_level = 0,
+    version = "0.25.5",
+)
+
+bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
+bazel_dep(name = "ros2_rcutils", version = "5.1.4")
+bazel_dep(name = "ros2_rclcpp", version = "16.0.8")
+bazel_dep(name = "ros2_rcl_interfaces", version = "1.2.1")
+bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")
+bazel_dep(name = "ros2_unique_identifier_msgs", version = "2.2.1")
+bazel_dep(name = "rules_python", version = "0.31.0")

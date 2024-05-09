@@ -8,5 +8,8 @@ syntax = "proto3";
 
 package resim.experiences.proto;
 
-// TODO(Michael): add the appropriate parameters
-message ILQRDrone {}
+message ILQRDrone {
+    double          velocity_cost    = 1;
+    repeated double initial_position = 2;
+    repeated double goal_position    = 3;
+}

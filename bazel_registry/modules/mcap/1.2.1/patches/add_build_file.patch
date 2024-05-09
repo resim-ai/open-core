@@ -1,0 +1,19 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 000000000..fc7986503
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,13 @@
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
++cc_library(
++    name = "mcap",
++    hdrs = glob(["include/mcap/**"]),
++    includes = ["include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@lz4",
++        "@lz4//:lz4_frame",
++        "@zstd",
++    ],
++)

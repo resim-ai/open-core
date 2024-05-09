@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/"
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros/console_bridge"
+  ],
+  "versions":[
+    "1.0.2"
+  ],
+  "yanked_versions": {}
+}

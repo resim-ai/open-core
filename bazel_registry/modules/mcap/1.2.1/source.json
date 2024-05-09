@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v1.2.1.tar.gz",
+    "integrity": "sha256-/cDDUbvPiIP+wAR/+E/tdNqIRGhZCDvrZiSlhOLN5mk=",
+    "strip_prefix": "mcap-releases-cpp-v1.2.1/cpp/mcap",
+    "patches": {
+        "add_build_file.patch": "sha256-vUp+9yuRuV05pNUb+dVPKtTeVzY6VJZDHR8uPjkhwOk="
+    },
+    "patch_strip": 1
+}

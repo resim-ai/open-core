@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/eclipse-cyclonedds/cyclonedds/archive/refs/tags/0.10.4.tar.gz",
+    "integrity": "sha256-/nu1pDSOMWVqk19y3skJp9Kw/PEIQGFPtVLwjrLahIQ=",
+    "strip_prefix": "rmw_dds_common-1.6.0",
+    "patches": {
+      "add_build_file.patch": "sha256-xLYx27MH0ACTsTs74PYPzkHsbyYa16ACPy3LMMkV7iI="
+    },
+    "patch_strip": 1
+}
