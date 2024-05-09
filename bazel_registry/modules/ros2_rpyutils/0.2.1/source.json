@@ -1,9 +1,9 @@
 {
-    "url": "https://github.com/ros2/rosidl_python/archive/refs/tags/0.14.4.tar.gz",
-    "integrity": "sha256-S7OLZxigwjqm15lUjEz9AhujIClGc+derzE3gh4SNNE=",
-    "strip_prefix": "rosidl_python-0.14.4",
+    "url": "https://github.com/ros2/rpyutils/archive/refs/tags/0.2.1.tar.gz",
+    "integrity": "sha256-+H2MCisaXCi3IvFo1xcAdubYLmjFyzHP908VqfolH7k=",
+    "strip_prefix": "rpyutils-0.2.1",
     "patches": {
-      "add_build_file.patch": "sha256-7/xNilHrEXSty6TbGnESMI2giB3XUzrFIheN4UnOj0A="
+      "add_build_file.patch": "sha256-V2PDvbVKAxeH6RdVE/ALYp/xaTh4+irJw98HnESZctg="
     },
     "patch_strip": 1
 }
