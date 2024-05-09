@@ -1,5 +1,5 @@
 {
-  "homepage": "https://www.ros.org/"
+  "homepage": "https://www.ros.org/",
   "maintainers": [],
   "repository": [
     "https://github.com/ros/console_bridge"

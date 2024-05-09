@@ -75,6 +75,7 @@ cc_test(
 cc_library(
     name = "cost_function_registry",
     hdrs = ["cost_function_registry.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/planning:cost_function",
         "//resim/utils:nullable_reference",
