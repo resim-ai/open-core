@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <mcap/reader.hpp>
 #include <optional>
@@ -44,8 +45,12 @@ void generate_visualization_log(
     REASSERT(message_view.begin() != message_view.end());
     const auto time =
         time::Timestamp{time::Duration{message_view.begin()->message.logTime}};
+
+    std::ifstream glb_stream;
+    REASSERT(std::filesystem::exists(*maybe_world_glb));
+    glb_stream.open(*maybe_world_glb, std::ios::binary);
     visualize_world_glb(
-        *maybe_world_glb,
+        glb_stream,
         time,
         "/world_geometry",
         InOut{static_cast<LoggerInterface &>(logger)});

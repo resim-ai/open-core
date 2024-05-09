@@ -180,3 +180,17 @@ cc_library(
         "@foxglove_schemas",
     ],
 )
+
+cc_test(
+    name = "visualize_world_glb_test",
+    srcs = ["visualize_world_glb_test.cc"],
+    deps = [
+        ":visualize_world_glb",
+        "//resim/converter:fuzz_helpers",
+        "//resim/simulator:standard_frames",
+        "//resim/time/proto:time_to_proto",
+        "//resim/utils/testing:mock_logger",
+        "@com_google_googletest//:gtest_main",
+        "@foxglove_schemas",
+    ],
+)

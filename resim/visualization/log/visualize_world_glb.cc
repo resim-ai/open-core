@@ -5,7 +5,6 @@
 #include <foxglove/SceneUpdate.pb.h>
 
 #include <Eigen/Dense>
-#include <fstream>
 #include <sstream>
 
 #include "resim/simulator/standard_frames.hh"
@@ -16,19 +15,15 @@
 namespace resim::visualization::log {
 
 void visualize_world_glb(
-    const std::filesystem::path &world_glb_path,
+    const std::istream &glb_stream,
     const time::Timestamp &time,
     const std::string &channel_name,
     InOut<LoggerInterface> logger) {
-  std::ifstream glb_stream;
-  REASSERT(std::filesystem::exists(world_glb_path));
-  glb_stream.open(world_glb_path, std::ios::binary);
-
   ::foxglove::SceneUpdate update;
   auto &entity = *update.add_entities();
   time::proto::pack(time, entity.mutable_timestamp());
   entity.set_frame_id(std::string(simulator::SCENE_FRAME_NAME));
-  entity.set_id("world");
+  entity.set_id("world_geometry");
   auto &model = *entity.add_models();
   foxglove::pack_into_foxglove(
       transforms::SE3::identity(),
