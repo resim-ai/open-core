@@ -24,6 +24,10 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 
 use_repo(pip, "rules_ros2_pip_deps")
 
+# These dependencies are *NOT* complete, but we don't depend on any
+# targets that depend on the following, so we omit them for now.
+# TODO(michael) Add these for the sake of completeness.
+# We're missing at least:
 # readerwriterqueue
 # ros2_keyboard_handler
 # ros2cli
