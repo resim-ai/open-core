@@ -1,0 +1,48 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,42 @@
++""" Builds rosidl_python.
++"""
++
++load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
++load("@rules_python//python:defs.bzl", "py_binary", "py_library")
++load("@rules_ros2_pip_deps//:requirements.bzl", "requirement")
++
++py_library(
++    name = "rosidl_generator_py_lib",
++    srcs = glob(["rosidl_generator_py/rosidl_generator_py/*.py"]),
++    imports = ["rosidl_generator_py"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_rosidl//:rosidl_cmake",
++        "@ros2_rosidl//:rosidl_generator_c_lib",
++        "@ros2_rosidl//:rosidl_parser",
++        "@ros2_rpyutils//:rpyutils",
++        requirement("numpy"),
++    ],
++)
++
++_ROSIDL_GENERATOR_PYTHON_APP_PY = "rosidl_generator_py_app.py"
++
++copy_file(
++    name = "rosidl_generator_py_copy",
++    src = "rosidl_generator_py/bin/rosidl_generator_py",
++    out = _ROSIDL_GENERATOR_PYTHON_APP_PY,
++)
++
++py_binary(
++    name = "rosidl_generator_py_app",
++    srcs = [_ROSIDL_GENERATOR_PYTHON_APP_PY],
++    main = _ROSIDL_GENERATOR_PYTHON_APP_PY,
++    visibility = ["//visibility:public"],
++    deps = [":rosidl_generator_py_lib"],
++)
++
++filegroup(
++    name = "rosidl_generator_py_templates",
++    srcs = glob(["rosidl_generator_py/resource/*.em"]),
++    visibility = ["//visibility:public"],
++)

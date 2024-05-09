@@ -1,0 +1,33 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,27 @@
++""" Builds rmw_implementation.
++"""
++
++load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_library")
++
++ros2_cpp_library(
++    name = "rmw_implementation",
++    srcs = [
++        "rmw_implementation/src/functions.cpp",
++        "rmw_implementation/src/functions.hpp",
++        "rmw_implementation/src/visibility_control.h",
++    ],
++    copts = ["-w"],
++    data = [
++        "@ros2_rmw_cyclonedds//:rmw_cyclonedds",
++    ],
++    includes = ["include"],
++    local_defines = [
++        "RMW_LIBRARY_PATH=\\\"$(rootpath @ros2_rmw_cyclonedds//:rmw_cyclonedds)\\\"",
++    ],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_rcpputils//:rcpputils",
++        "@ros2_rcutils//:rcutils",
++        "@ros2_rmw//:rmw",
++    ],
++)

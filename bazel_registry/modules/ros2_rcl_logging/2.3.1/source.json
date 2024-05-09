@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rcl_logging/archive/refs/tags/2.3.1.tar.gz",
+    "integrity": "sha256-9xGnZ3y2jJJ2UOXp9ru10BPdmuMHNiCfm3D5xkhRcPY=",
+    "strip_prefix": "rcl_logging-2.3.1",
+    "patches": {
+      "add_build_file.patch": "sha256-451ulYRk+mPWseRXX6gNlP+FxCPI47TOr7fX2urzteU="
+    },
+    "patch_strip": 1
+}

@@ -1,0 +1,19 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,13 @@
++""" Builds rcpputils.
++"""
++
++load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_library")
++
++ros2_cpp_library(
++    name = "rcpputils",
++    srcs = glob(["src/*.cpp"]),
++    hdrs = glob(["include/**/*.hpp"]),
++    includes = ["include"],
++    visibility = ["//visibility:public"],
++    deps = ["@ros2_rcutils//:rcutils"],
++)

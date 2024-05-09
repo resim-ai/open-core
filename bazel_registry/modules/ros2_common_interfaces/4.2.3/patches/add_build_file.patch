@@ -1,0 +1,334 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,328 @@
++""" Builds common_interfaces.
++"""
++
++load(
++    "@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl",
++    "ros2_cpp_library",
++)
++load(
++    "@com_github_mvukov_rules_ros2//ros2:interfaces.bzl",
++    "c_ros2_interface_library",
++    "cpp_ros2_interface_library",
++    "py_ros2_interface_library",
++    "ros2_interface_library",
++)
++load("@rules_python//python:defs.bzl", "py_library")
++
++ros2_interface_library(
++    name = "std_msgs",
++    srcs = glob(["std_msgs/msg/*.msg"]),
++    visibility = ["//visibility:public"],
++    deps = ["@ros2_rcl_interfaces//:builtin_interfaces"],
++)
++
++c_ros2_interface_library(
++    name = "c_std_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":std_msgs"],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_std_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":std_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "py_std_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":std_msgs"],
++)
++
++ros2_interface_library(
++    name = "std_srvs",
++    srcs = glob(["std_srvs/srv/*.srv"]),
++    visibility = ["//visibility:public"],
++)
++
++c_ros2_interface_library(
++    name = "c_std_srvs",
++    visibility = ["//visibility:public"],
++    deps = [":std_srvs"],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_std_srvs",
++    visibility = ["//visibility:public"],
++    deps = [":std_srvs"],
++)
++
++py_ros2_interface_library(
++    name = "py_std_srvs",
++    visibility = ["//visibility:public"],
++    deps = [":std_srvs"],
++)
++
++ros2_interface_library(
++    name = "geometry_msgs",
++    srcs = glob(["geometry_msgs/msg/*.msg"]),
++    visibility = ["//visibility:public"],
++    deps = [":std_msgs"],
++)
++
++c_ros2_interface_library(
++    name = "c_geometry_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":geometry_msgs"],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_geometry_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":geometry_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "py_geometry_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":geometry_msgs"],
++)
++
++ros2_interface_library(
++    name = "nav_msgs",
++    srcs = glob([
++        "nav_msgs/msg/*.msg",
++        "nav_msgs/srv/*.srv",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":geometry_msgs",
++        ":std_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_nav_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":nav_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "py_nav_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":nav_msgs"],
++)
++
++ros2_interface_library(
++    name = "sensor_msgs",
++    srcs = glob([
++        "sensor_msgs/msg/*.msg",
++        "sensor_msgs/srv/*.srv",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":geometry_msgs",
++        ":std_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "_cpp_sensor_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":sensor_msgs"],
++)
++
++ros2_cpp_library(
++    name = "cpp_sensor_msgs",
++    hdrs = glob([
++        "sensor_msgs/include/**/*.hpp",
++    ]),
++    includes = ["sensor_msgs/include"],
++    visibility = ["//visibility:public"],
++    deps = [":_cpp_sensor_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "_py_sensor_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":sensor_msgs"],
++)
++
++py_library(
++    name = "py_sensor_msgs",
++    srcs = glob(
++        ["sensor_msgs_py/sensor_msgs_py/**/*.py"],
++    ),
++    imports = ["sensor_msgs_py"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":_py_sensor_msgs",
++    ],
++)
++
++ros2_interface_library(
++    name = "shape_msgs",
++    srcs = glob([
++        "shape_msgs/msg/*.msg",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":geometry_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "_cpp_shape_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":shape_msgs"],
++)
++
++ros2_cpp_library(
++    name = "cpp_shape_msgs",
++    hdrs = glob([
++        "shape_msgs/include/**/*.hpp",
++    ]),
++    includes = ["shape_msgs/include"],
++    visibility = ["//visibility:public"],
++    deps = [":_cpp_shape_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "_py_shape_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":shape_msgs"],
++)
++
++py_library(
++    name = "py_shape_msgs",
++    srcs = glob(
++        ["shape_msgs_py/shape_msgs_py/**/*.py"],
++    ),
++    imports = ["shape_msgs_py"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":_py_shape_msgs",
++    ],
++)
++
++ros2_interface_library(
++    name = "stereo_msgs",
++    srcs = glob([
++        "stereo_msgs/msg/*.msg",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":sensor_msgs",
++        ":std_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "_cpp_stereo_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":stereo_msgs"],
++)
++
++ros2_cpp_library(
++    name = "cpp_stereo_msgs",
++    hdrs = glob([
++        "stereo_msgs/include/**/*.hpp",
++    ]),
++    includes = ["stereo_msgs/include"],
++    visibility = ["//visibility:public"],
++    deps = [":_cpp_stereo_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "_py_stereo_msgs",
++    visibility = ["//visibility:private"],
++    deps = [":stereo_msgs"],
++)
++
++py_library(
++    name = "py_stereo_msgs",
++    srcs = glob(
++        ["stereo_msgs_py/stereo_msgs_py/**/*.py"],
++    ),
++    imports = ["stereo_msgs_py"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":_py_stereo_msgs",
++    ],
++)
++
++ros2_interface_library(
++    name = "visualization_msgs",
++    srcs = glob([
++        "visualization_msgs/msg/*.msg",
++        "visualization_msgs/srv/*.srv",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":geometry_msgs",
++        ":sensor_msgs",
++        ":std_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_visualization_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":visualization_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "py_visualization_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":visualization_msgs"],
++)
++
++ros2_interface_library(
++    name = "trajectory_msgs",
++    srcs = glob([
++        "trajectory_msgs/msg/*.msg",
++        "trajectory_msgs/srv/*.srv",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":geometry_msgs",
++        ":std_msgs",
++        "@ros2_rcl_interfaces//:builtin_interfaces",
++    ],
++)
++
++c_ros2_interface_library(
++    name = "c_trajectory_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":trajectory_msgs"],
++)
++
++ros2_interface_library(
++    name = "diagnostic_msgs",
++    srcs = glob([
++        "diagnostic_msgs/msg/*.msg",
++        "diagnostic_msgs/srv/*.srv",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        ":std_msgs",
++    ],
++)
++
++c_ros2_interface_library(
++    name = "c_diagnostic_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":diagnostic_msgs"],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_diagnostic_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":diagnostic_msgs"],
++)
++
++py_ros2_interface_library(
++    name = "py_diagnostic_msgs",
++    visibility = ["//visibility:public"],
++    deps = [":diagnostic_msgs"],
++)

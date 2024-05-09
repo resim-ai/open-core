@@ -1,0 +1,7 @@
+{
+    "integrity": "sha256-hB9J8uBFucY2WZfCqPv3bm8hUELdpFEaW7BLxevH+Io=",
+    "patch_strip": 1,
+    "patches": {},
+    "strip_prefix": "cxxopts-3.2.1",
+    "url": "https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.2.1.tar.gz"
+}

@@ -1,0 +1,9 @@
+module(
+    name = "iceoryx",
+    compatibility_level = 0,
+    version = "2.0.5",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.6.1")
+bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
+bazel_dep(name = "platforms", version = "0.0.10")

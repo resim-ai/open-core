@@ -1,0 +1,23 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..d129079
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,17 @@
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
++cc_library(
++    name = "httplib",
++    hdrs = ["httplib.h"],
++    defines = [
++        "CPPHTTPLIB_OPENSSL_SUPPORT",
++    ],
++    includes = [
++        ".",
++    ],
++    linkopts = [
++        "-lcrypto",
++        "-lssl",
++    ],
++    visibility = ["//visibility:public"],
++)

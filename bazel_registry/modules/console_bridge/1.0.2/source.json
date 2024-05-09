@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros/console_bridge/archive/refs/tags/1.0.2.tar.gz",
+    "integrity": "sha256-MDphnAGp4Uo8guuXYrikKO9TEabUY1OHKrmpBDWL5KQ=",
+    "strip_prefix": "console_bridge-1.0.2",
+    "patches": {
+      "add_build_file.patch": "sha256-xXVrRBUVKiKcYxdGHW2KNFUOzTbjD5AhQlPDc9ZdbxM="
+    },
+    "patch_strip": 1
+}

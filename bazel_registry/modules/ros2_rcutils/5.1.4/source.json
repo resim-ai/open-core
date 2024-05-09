@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rcutils/archive/refs/tags/5.1.4.tar.gz",
+    "integrity": "sha256-TM407FOWug01enYkK9Ni09muFym+FPOikOoNwUS5hNc=",
+    "strip_prefix": "rcutils-5.1.4",
+    "patches": {
+      "add_build_file.patch": "sha256-FtYAy1ttXfptbNP9H+j2if21U9aPsVsxwWjO+J0MjiM="
+    },
+    "patch_strip": 1
+}

@@ -1,0 +1,11 @@
+{
+  "homepage": "https://foxglove.dev/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/foxglove/schemas"
+  ],
+  "versions":[
+    "0.7.1"
+  ],
+  "yanked_versions": {}
+}

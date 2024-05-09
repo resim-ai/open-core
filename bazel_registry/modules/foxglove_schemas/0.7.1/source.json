@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-gX1gRRt/CTFLnM9ur9taDC81TcIZuNVRjR9Pxcb1Lag=",
+    "patch_strip": 0,
+    "patches": {
+        "add_build_file.patch": "sha256-v60gcK8CetYgWa/8VrNuktfzLYNcp1URuTGHf4rbZC8="
+    },
+    "strip_prefix" : "schemas-releases-typescript-v0.7.1/schemas/proto",
+    "url": "https://github.com/foxglove/schemas/archive/refs/tags/releases/typescript/v0.7.1.zip"
+}

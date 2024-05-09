@@ -1,0 +1,11 @@
+{
+  "homepage": "https://github.com/libcpr/cpr",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/libcpr/cpr",
+  ],
+  "versions":[
+    "1.10.5"
+  ],
+  "yanked_versions": {}
+}
