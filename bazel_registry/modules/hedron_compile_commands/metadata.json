@@ -1,0 +1,11 @@
+{
+  "homepage": "https://hedronvision.com/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/hedronvision/bazel-compile-commands-extractor"
+  ],
+  "versions":[
+    "a14ad3a64e7bf398ab48105aaa0348e032ac87f8"
+  ],
+  "yanked_versions": {}
+}
