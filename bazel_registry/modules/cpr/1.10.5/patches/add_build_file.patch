@@ -1,0 +1,18 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..664d005
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,12 @@
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
++cc_library(
++    name = "cpr",
++    srcs = glob(["cpr/**/*.cpp"]),
++    hdrs = glob(["include/cpr/**/*.h"]),
++    includes = ["include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@curl",
++    ],
++)

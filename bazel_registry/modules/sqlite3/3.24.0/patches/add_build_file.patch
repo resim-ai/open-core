@@ -1,0 +1,18 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,12 @@
++""" Builds sqlite3.
++"""
++
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
++cc_library(
++    name = "sqlite3",
++    srcs = glob(["*.c"]),
++    hdrs = glob(["*.h"]),
++    includes = ["."],
++    visibility = ["//visibility:public"],
++)

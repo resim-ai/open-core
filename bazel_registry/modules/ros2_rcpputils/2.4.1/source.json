@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rcpputils/archive/refs/tags/2.4.1.tar.gz",
+    "integrity": "sha256-V1JPXwuVpVrdNYJZuFmtRNTHyx7VGI2HvpLqt4p2WjM=",
+    "strip_prefix": "rcpputils-2.4.1",
+    "patches": {
+      "add_build_file.patch": "sha256-HcbDq//b7JJkDluPP8PJTmf8khEGb0I6m7SZHTGukG8="
+    },
+    "patch_strip": 1
+}

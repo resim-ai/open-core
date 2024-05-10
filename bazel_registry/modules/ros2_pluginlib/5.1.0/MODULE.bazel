@@ -1,0 +1,12 @@
+module(
+    name = "ros2_pluginlib",
+    compatibility_level = 5,
+    version = "5.1.0",
+)
+
+bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
+bazel_dep(name = "ros2_rcutils", version = "5.1.4")
+bazel_dep(name = "ros2_rcpputils", version = "2.4.1")
+bazel_dep(name = "ros2_class_loader", version = "2.2.0")
+bazel_dep(name = "tinyxml2", version = "10.0.0")
+bazel_dep(name = "ros2_ament_index", version = "1.4.0")

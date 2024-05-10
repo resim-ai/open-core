@@ -1,0 +1,214 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,208 @@
++load(
++    "@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl",
++    "ros2_cpp_binary",
++    "ros2_cpp_library",
++)
++load(
++    "@com_github_mvukov_rules_ros2//ros2:interfaces.bzl",
++    "cpp_ros2_interface_library",
++    "py_ros2_interface_library",
++    "ros2_interface_library",
++)
++load("@rules_python//python:defs.bzl", "py_library")
++
++ros2_interface_library(
++    name = "tf2_msgs",
++    srcs = glob([
++        "tf2_msgs/msg/*.msg",
++        "tf2_msgs/srv/*.srv",
++        "tf2_msgs/action/*.action",
++    ]),
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_common_interfaces//:geometry_msgs",
++        "@ros2_rcl_interfaces//:action_msgs",
++        "@ros2_rcl_interfaces//:builtin_interfaces",
++        "@ros2_unique_identifier_msgs//:unique_identifier_msgs",
++    ],
++)
++
++cpp_ros2_interface_library(
++    name = "cpp_tf2_msgs",
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2_msgs",
++    ],
++)
++
++py_ros2_interface_library(
++    name = "py_tf2_msgs",
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2_msgs",
++    ],
++)
++
++ros2_cpp_library(
++    name = "tf2",
++    srcs = glob([
++        "tf2/src/*.cpp",
++        "tf2/src/*.hpp",
++    ]),
++    hdrs = glob(["tf2/include/**/*.h"]),
++    includes = ["tf2/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@console_bridge",
++        "@ros2_common_interfaces//:cpp_geometry_msgs",
++        "@ros2_rcutils//:rcutils",
++    ],
++)
++
++ros2_cpp_library(
++    name = "tf2_ros",
++    srcs = [
++        "tf2_ros/src/buffer.cpp",
++        "tf2_ros/src/buffer_client.cpp",
++        "tf2_ros/src/buffer_server.cpp",
++        "tf2_ros/src/create_timer_ros.cpp",
++        "tf2_ros/src/static_transform_broadcaster.cpp",
++        "tf2_ros/src/transform_broadcaster.cpp",
++        "tf2_ros/src/transform_listener.cpp",
++    ],
++    hdrs = [
++        "tf2_ros/include/tf2_ros/async_buffer_interface.h",
++        "tf2_ros/include/tf2_ros/buffer.h",
++        "tf2_ros/include/tf2_ros/buffer_client.h",
++        "tf2_ros/include/tf2_ros/buffer_interface.h",
++        "tf2_ros/include/tf2_ros/buffer_server.h",
++        "tf2_ros/include/tf2_ros/create_timer_interface.h",
++        "tf2_ros/include/tf2_ros/create_timer_ros.h",
++        "tf2_ros/include/tf2_ros/message_filter.h",
++        "tf2_ros/include/tf2_ros/qos.hpp",
++        "tf2_ros/include/tf2_ros/static_transform_broadcaster.h",
++        "tf2_ros/include/tf2_ros/transform_broadcaster.h",
++        "tf2_ros/include/tf2_ros/transform_listener.h",
++        "tf2_ros/include/tf2_ros/visibility_control.h",
++    ],
++    includes = ["tf2_ros/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":cpp_tf2_msgs",
++        ":tf2",
++        "@ros2_common_interfaces//:cpp_geometry_msgs",
++        "@ros2_message_filters//:message_filters",
++        "@ros2_rclcpp//:rclcpp",
++        "@ros2_rclcpp//:rclcpp_action",
++    ],
++)
++
++ros2_cpp_binary(
++    name = "static_transform_publisher",
++    srcs = [
++        "tf2_ros/include/tf2_ros/static_transform_broadcaster_node.hpp",
++        "tf2_ros/include/tf2_ros/static_transform_broadcaster_visibility_control.h",
++        "tf2_ros/include/tf2_ros/visibility_control.h",
++        "tf2_ros/src/static_transform_broadcaster_node.cpp",
++        "tf2_ros/src/static_transform_broadcaster_program.cpp",
++    ],
++    includes = ["tf2_ros/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":cpp_tf2_msgs",
++        ":tf2",
++        ":tf2_ros",
++        "@ros2_common_interfaces//:cpp_geometry_msgs",
++        "@ros2_common_interfaces//:cpp_sensor_msgs",
++        "@ros2_rclcpp//:rclcpp",
++        "@ros2_rclcpp//:rclcpp_components",
++    ],
++)
++
++ros2_cpp_binary(
++    name = "tf2_echo",
++    srcs = ["tf2_ros/src/tf2_echo.cpp"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2",
++        ":tf2_ros",
++        "@ros2_rclcpp//:rclcpp",
++    ],
++)
++
++ros2_cpp_library(
++    name = "cpp_tf2_sensor_msgs",
++    srcs = [
++        "tf2_sensor_msgs/include/tf2_sensor_msgs/tf2_sensor_msgs.hpp",
++    ],
++    includes = ["tf2_sensor_msgs/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2",
++        ":tf2_ros",
++        "@eigen",
++        "@ros2_common_interfaces//:cpp_sensor_msgs",
++    ],
++)
++
++ros2_cpp_library(
++    name = "tf2_eigen",
++    hdrs = ["tf2_eigen/include/tf2_eigen/tf2_eigen.hpp"],
++    includes = ["tf2_eigen/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2",
++        ":tf2_ros",
++        "@eigen",
++    ],
++)
++
++ros2_cpp_binary(
++    name = "tf2_py/tf2_py/_tf2_py.so",
++    srcs = [
++        "tf2_py/src/tf2_py.cpp",
++    ],
++    linkshared = True,
++    deps = [
++        ":tf2",
++        "@rules_python//python/cc:current_py_cc_headers",
++    ],
++)
++
++ros2_cpp_library(
++    name = "cpp_tf2_geometry_msgs",
++    hdrs = ["tf2_geometry_msgs/include/tf2_geometry_msgs/tf2_geometry_msgs.hpp"],
++    includes = ["tf2_geometry_msgs/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":tf2",
++        ":tf2_ros",
++        "@orocos_kdl",
++        "@ros2_common_interfaces//:cpp_geometry_msgs",
++    ],
++)
++
++py_library(
++    name = "tf2_py",
++    srcs = [
++        "tf2_py/tf2_py/__init__.py",
++    ],
++    data = [
++        ":tf2_py/tf2_py/_tf2_py.so",
++    ],
++    imports = ["tf2_py"],
++)
++
++py_library(
++    name = "tf2_ros_py",
++    srcs = glob(["tf2_ros_py/tf2_ros/*.py"]),
++    imports = ["tf2_ros_py"],
++    visibility = ["//visibility:public"],
++    deps = [
++        ":py_tf2_msgs",
++        ":tf2_py",
++        "@ros2_common_interfaces//:py_geometry_msgs",
++        "@ros2_common_interfaces//:py_sensor_msgs",
++        "@ros2_common_interfaces//:py_std_msgs",
++    ],
++)
