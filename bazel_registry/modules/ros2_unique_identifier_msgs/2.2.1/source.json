@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/unique_identifier_msgs/archive/refs/tags/2.2.1.tar.gz",
+    "integrity": "sha256-zO3LfCttkn/E9lTM6rKZqMtVCClThndUeVxuoszdaKk=",
+    "strip_prefix": "unique_identifier_msgs-2.2.1",
+    "patches": {
+      "add_build_file.patch": "sha256-HpY+YqJveDl+67BP8M+c7NZGYgPIHezHUL1uOQ937+s="
+    },
+    "patch_strip": 1
+}

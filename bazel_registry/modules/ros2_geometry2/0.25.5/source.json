@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/geometry2/archive/refs/tags/0.25.5.tar.gz",
+    "integrity": "sha256-57U5udiE+h+HB6kuE1SVzbqYk/WIGOkd6G8kYcSrylQ=",
+    "strip_prefix": "geometry2-0.25.5",
+    "patches": {
+      "add_build_file.patch": "sha256-9zjnJ112UbB8dwpG7NCYwYTaJq3JFwHMpMVRvy2jRKw="
+    },
+    "patch_strip": 1
+}

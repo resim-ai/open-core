@@ -1,0 +1,11 @@
+{
+  "homepage": "https://github.com/mvukov/rules_ros2",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/mvukov/rules_ros2"
+  ],
+  "versions":[
+    "14b75cb377784f21d709663df6c599056a512c18"
+  ],
+  "yanked_versions": {}
+}

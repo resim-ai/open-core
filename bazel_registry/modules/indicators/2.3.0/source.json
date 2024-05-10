@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/p-ranav/indicators/archive/refs/tags/v2.3.tar.gz",
+    "integrity": "sha256-cNp6aT/3pqKDhQq21irPYo7qF9OGSIr4kYV20HYK73s=",
+    "strip_prefix": "indicators-2.3",
+    "patches": {
+        "add_build_file.patch": "sha256-2yxG/DvMMhD+YaOm+tb6X/NPvZEHHQX3nyPfm5Ux/3E="
+    },
+    "patch_strip": 1
+}

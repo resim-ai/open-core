@@ -1,0 +1,10 @@
+{
+    "url": "https://github.com/mvukov/rules_ros2/archive/14b75cb377784f21d709663df6c599056a512c18.tar.gz",
+    "integrity": "sha256-HU2Ycq0XhLJnnhJWVfPUFM4A01Ct/4zxGqOjRH6VoHo=",
+    "strip_prefix": "rules_ros2-14b75cb377784f21d709663df6c599056a512c18",
+    "patches": {
+        "copts.patch": "sha256-K1eh8WLxv4FQfWB3mFpsx7mXjqRCMowM9NZxbbM63Lk=",
+        "numpy_repo.patch": "sha256-DRrc7cj7R4sh4D6iHsCtqQ0bK32/79gjDXU3yPc7gAM="
+    },
+    "patch_strip": 1
+}

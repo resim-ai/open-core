@@ -1,0 +1,13 @@
+diff --git a/ros2/interfaces.bzl b/ros2/interfaces.bzl
+index 571d987..ac1c2bd 100644
+--- a/ros2/interfaces.bzl
++++ b/ros2/interfaces.bzl
+@@ -824,7 +824,7 @@ py_generator_aspect = aspect(
+         "_py_ext_c_deps": attr.label_list(
+             default = [
+                 Label("@rules_python//python/cc:current_py_cc_headers"),
+-                Label("@rules_ros2_pip_deps_numpy//:headers"),
++                Label("@rules_ros2_pip_deps_310_numpy//:headers"),
+             ],
+             providers = [CcInfo],
+         ),

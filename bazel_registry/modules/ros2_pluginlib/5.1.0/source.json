@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros/pluginlib/archive/refs/tags/5.1.0.tar.gz",
+    "integrity": "sha256-dBiLiG+bvn6FfSHzu1C0gOfA5a2rl8EFY9wXATYAGYs=",
+    "strip_prefix": "pluginlib-5.1.0",
+    "patches": {
+      "add_build_file.patch": "sha256-j3gGB6VzlgViEnxDeTXkdkOkiXSkV78peczUs1pYRPw="
+    },
+    "patch_strip": 1
+}

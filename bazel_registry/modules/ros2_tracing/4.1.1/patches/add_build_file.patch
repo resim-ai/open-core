@@ -1,0 +1,54 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,48 @@
++""" Builds ros2_tracing.
++"""
++
++load(
++    "@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl",
++    "ros2_c_library",
++    "ros2_cpp_library",
++)
++load(
++    "@com_github_mvukov_rules_ros2//third_party:expand_template.bzl",
++    "expand_template",
++)
++
++expand_template(
++    name = "config_h",
++    out = "tracetools/include/tracetools/config.h",
++    substitutions = {
++        "#cmakedefine TRACETOOLS_DISABLED": "/* #cmakedefine TRACETOOLS_DISABLED */",
++        "#cmakedefine TRACETOOLS_LTTNG_ENABLED": "/* #cmakedefine TRACETOOLS_LTTNG_ENABLED */",
++    },
++    template = "tracetools/include/tracetools/config.h.in",
++)
++
++ros2_c_library(
++    name = "tracetools_c",
++    srcs = [
++        "tracetools/src/tracetools.c",
++    ],
++    hdrs = [
++        "tracetools/include/tracetools/tracetools.h",
++        "tracetools/include/tracetools/visibility_control.hpp",
++        ":config_h",
++    ],
++    includes = ["tracetools/include/"],
++)
++
++ros2_cpp_library(
++    name = "tracetools",
++    srcs = [
++        "tracetools/src/utils.cpp",
++    ],
++    hdrs = [
++        "tracetools/include/tracetools/utils.hpp",
++    ],
++    includes = ["tracetools/include/"],
++    visibility = ["//visibility:public"],
++    deps = [":tracetools_c"],
++)

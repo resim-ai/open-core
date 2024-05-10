@@ -1,0 +1,38 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,32 @@
++""" Builds rmw.
++"""
++
++load(
++    "@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl",
++    "ros2_c_library",
++    "ros2_cpp_library",
++)
++
++ros2_c_library(
++    name = "rmw",
++    srcs = glob(["rmw/src/*.c"]),
++    hdrs = glob(["rmw/include/**/*.h"]),
++    copts = ["-std=c11"],
++    includes = ["rmw/include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_rcutils//:rcutils",
++        "@ros2_rosidl//:rosidl_runtime_c",
++    ],
++)
++
++ros2_cpp_library(
++    name = "rmw_cpp",
++    hdrs = glob([
++        "rmw/include/**/*.hpp",
++        "rmw/include/**/*.h",
++    ]),
++    includes = ["rmw/include"],
++    visibility = ["//visibility:public"],
++    deps = [":rmw"],
++)

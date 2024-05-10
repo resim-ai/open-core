@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros2/rmw_implementation"
+  ],
+  "versions":[
+    "2.8.2"
+  ],
+  "yanked_versions": {}
+}

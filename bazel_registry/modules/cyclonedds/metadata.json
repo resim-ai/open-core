@@ -1,0 +1,11 @@
+{
+  "homepage": "https://cyclonedds.io/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/eclipse-cyclonedds/cyclonedds"
+  ],
+  "versions":[
+    "0.10.4"
+  ],
+  "yanked_versions": {}
+}

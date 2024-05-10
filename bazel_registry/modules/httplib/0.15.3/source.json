@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-6tT+j2ycukBsgtxV4+1JF0tDtkPjQYpDMR0Ac5Y3+/Q=",
+    "patch_strip": 1,
+    "patches": {
+        "add_build_file.patch": "sha256-cvFc/djbv9NveTYib8Y0juK02H8FL3XXDnVUx6qCzMI="
+    },
+    "strip_prefix": "cpp-httplib-0.15.3",
+    "url": "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.15.3.zip"
+}

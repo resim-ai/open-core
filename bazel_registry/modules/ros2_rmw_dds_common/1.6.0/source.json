@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rmw_dds_common/archive/refs/tags/1.6.0.tar.gz",
+    "integrity": "sha256-hd2fWG1TtljlOJo4j+PZmohLoG9Weln5kI7LluKRMu8=",
+    "strip_prefix": "rmw_dds_common-1.6.0",
+    "patches": {
+      "add_build_file.patch": "sha256-PdEjrB+jPWATfMXd9g53BMhS/OgN783wZ3kkCLOPloI="
+    },
+    "patch_strip": 1
+}

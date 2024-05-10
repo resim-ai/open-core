@@ -1,0 +1,11 @@
+module(
+    name = "ros2_class_loader",
+    compatibility_level = 2,
+    version = "2.2.0",
+)
+
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "ros2_rcpputils", version = "2.4.1")
+bazel_dep(name = "console_bridge", version = "1.0.2")
+
+# console_bridge
