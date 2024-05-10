@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ament/ament_index/archive/refs/tags/1.4.0.tar.gz",
+    "integrity": "sha256-5miW4lVlNQjLK97Nd4n43VoD19K0od03RFghpWecRHw=",
+    "strip_prefix": "ament_index-1.4.0",
+    "patches": {
+      "add_build_file.patch": "sha256-opiDPiYIU9RS78PDo6L4U200j52PMe0ufzKwdgeqCk8="
+    },
+    "patch_strip": 1
+}

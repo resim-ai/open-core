@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros2/rosidl"
+  ],
+  "versions":[
+    "3.1.5"
+  ],
+  "yanked_versions": {}
+}

@@ -1,0 +1,11 @@
+{
+  "homepage": "https://sqlite.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/sqlite/sqlite"
+  ],
+  "versions":[
+    "3.24.0"
+  ],
+  "yanked_versions": {}
+}

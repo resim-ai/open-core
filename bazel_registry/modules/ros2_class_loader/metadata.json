@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros/class_loader"
+  ],
+  "versions":[
+    "2.2.0"
+  ],
+  "yanked_versions": {}
+}

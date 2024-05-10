@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rcl_interfaces/archive/refs/tags/1.2.1.tar.gz",
+    "integrity": "sha256-4mcEjJ94qr7UtL4RuwKMhIgSdYflBlw7Pa/zVQ3yWHU=",
+    "strip_prefix": "rcl_interfaces-1.2.1",
+    "patches": {
+      "add_build_file.patch": "sha256-vOpn999GUklPJuvj23oLG5AoNivopJ2CZwH9BrNvZ7c="
+    },
+    "patch_strip": 1
+}

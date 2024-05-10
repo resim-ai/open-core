@@ -1,0 +1,23 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,17 @@
++""" Builds libstatistics_collector.
++"""
++
++load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_library")
++
++ros2_cpp_library(
++    name = "libstatistics_collector",
++    srcs = glob(["src/**/*.cpp"]),
++    hdrs = glob(["include/**/*.hpp"]),
++    includes = ["include"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_rcl//:rcl",
++        "@ros2_rcl_interfaces//:cpp_statistics_msgs",
++        "@ros2_rcpputils//:rcpputils",
++    ],
++)
