@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000..95cec7b01
 --- /dev/null
 +++ BUILD.bazel
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,69 @@
 +cc_library(
 +    name = "common",
 +    srcs = [
@@ -55,6 +55,7 @@ index 000000000..95cec7b01
 +        "libuuid/src/uuidd.h",
 +        "libuuid/src/uuid_time.c",
 +        "libuuid/src/unpack.c",
++        "libuuid/src/unparse.c",
 +    ],
 +    deps = [
 +        ":common",
