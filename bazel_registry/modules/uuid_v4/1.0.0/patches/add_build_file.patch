@@ -1,0 +1,18 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,12 @@
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
++cc_library(
++    name = "uuid_v4",
++    hdrs = [
++        "endianness.h",
++        "uuid_v4.h",
++    ],
++    includes = ["."],
++    visibility = ["//visibility:public"],
++    deps = [],
++)
