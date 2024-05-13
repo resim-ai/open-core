@@ -36,6 +36,20 @@ cc_toolchain(
     visibility = ["//visibility:public"],
 )
 
+toolchain(
+    name = "cc_toolchain_for_k8",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    toolchain = ":k8_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
 # Tests to assert that the expected toolchain is being used.
 cc_library(
     name = "check_compiler",
