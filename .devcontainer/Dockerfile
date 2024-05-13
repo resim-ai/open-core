@@ -8,7 +8,6 @@ RUN apt-get install -y ca-certificates curl gnupg lsb-release software-propertie
 RUN apt-get install -y g++ clang lcov clang-format clang-tidy clangd
 RUN apt-get install -y openssh-server unzip groff man
 RUN apt-get install -y emacs vim zsh tmux
-RUN apt-get install -y uuid-dev
 RUN apt-get install -y cgdb
 RUN apt-get install -y libcurl4-openssl-dev
 
