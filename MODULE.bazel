@@ -33,6 +33,7 @@ bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_proto", version = "6.0.0")
 bazel_dep(name = "rules_python", version = "0.31.0")
 bazel_dep(name = "vision_msgs", version = "4.1.0")
+bazel_dep(name = "uuid_v4", version = "1.0.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 
