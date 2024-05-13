@@ -46,6 +46,7 @@ HttpResponse json_query(
       cpr::Header{{"Content-Type", "application/json"}},
       cpr::Body{request_json});
 
+  response->Clear();
   const auto parse_status =
       google::protobuf::util::JsonStringToMessage(r.text, &*response);
   REASSERT(parse_status.ok(), "Failed to parse response!");
