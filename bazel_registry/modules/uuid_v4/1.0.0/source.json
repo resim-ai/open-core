@@ -1,7 +1,7 @@
 {
   "url": "https://github.com/crashoz/uuid_v4/archive/refs/tags/v1.0.0.zip",
   "integrity": "sha256-8BUpzNqFNH34Sw2yjZu38LI+8cGeVOpF/KrzbcCfaaE=",
-  "strip_prefix": "uuid_v4-v1.0.0",
+  "strip_prefix": "uuid_v4-1.0.0",
   "patches": {
     "add_build_file.patch": "sha256-Ns1KKHoOydf/7PvoX+C29/2VlEau8ogFkQCw1Doy2GM="
   },
