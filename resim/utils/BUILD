@@ -22,6 +22,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
+        "@libuuid",
     ],
 )
 

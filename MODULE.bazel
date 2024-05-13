@@ -16,6 +16,7 @@ bazel_dep(name = "googletest", repo_name = "com_google_googletest", version = "1
 bazel_dep(name = "hedron_compile_commands", version = "a14ad3a64e7bf398ab48105aaa0348e032ac87f8")
 bazel_dep(name = "httplib", version = "0.15.3")
 bazel_dep(name = "indicators", version = "2.3.0")
+bazel_dep(name = "libuuid", version = "2.39.3")
 bazel_dep(name = "mcap", version = "1.2.1")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "platforms", version = "0.0.10")
@@ -33,7 +34,6 @@ bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_proto", version = "6.0.0")
 bazel_dep(name = "rules_python", version = "0.31.0")
 bazel_dep(name = "vision_msgs", version = "4.1.0")
-bazel_dep(name = "uuid_v4", version = "1.0.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 
