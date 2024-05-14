@@ -86,7 +86,6 @@ def _impl(ctx):
                             flags = [
                                 "-lm",
                                 "-lstdc++",
-                                "-luuid",
                             ],
                         ),
                     ]),
