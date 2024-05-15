@@ -1,0 +1,10 @@
+{
+    "integrity": "sha256-dI33O0ntG3cWoVcDhcoRutUqYvOEn8vKV2Qk13+/DfQ=",
+    "strip_prefix": "curl-76dba79028c7bbe045acae583b46ded643921ad4",
+    "url": "https://github.com/curl/curl/archive/76dba79028c7bbe045acae583b46ded643921ad4.zip"
+    "patch_strip": 1,
+    "patches": {
+        "add_build_file.patch": "sha256-v72CABzBMc2lrA1Oy/QLsxd8x0bv/zkPjxTPGfArI8I=",
+        "module_dot_bazel.patch": "sha256-6PKX5v/ZJiXvuIQOOqMHBOJNcgtiXbNVEecwtXgUPa8="
+    }
+}
