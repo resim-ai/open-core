@@ -36,7 +36,6 @@ State ForwardEuler<State>::operator()(
     const State &state,
     time::Timestamp time,
     const CompleteDynamics &complete_dynamics) {
-  using Jacobian = typename Base::MatXX;
   using Delta = typename Base::Delta;
   const Delta d_state_dt{complete_dynamics(state, time, null_reference)};
   const double dt_s = time::as_seconds(dt);
