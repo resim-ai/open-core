@@ -1,5 +1,5 @@
 {
-    "integrity": "",
+    "integrity": "sha256-dG184Ob7JY7GMluaJuqm2FWXkNPQ5dxUSKBNi8Hsh8o=",
     "patch_strip": 1,
     "patches": {},
     "strip_prefix": "resim-open-core-0.0.11",
