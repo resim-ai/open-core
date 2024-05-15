@@ -12,7 +12,7 @@ index 0000000..664d005
 +    hdrs = glob(["include/cpr/**/*.h"]),
 +    includes = ["include"],
 +    visibility = ["//visibility:public"],
++    linkopts = ["-lcurl"],
 +    deps = [
-+        "@curl",
 +    ],
 +)
