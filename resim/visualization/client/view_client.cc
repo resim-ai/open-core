@@ -111,7 +111,10 @@ Status ViewClient::send_view_update(const ViewUpdate &update) {
 
   // Parse the response.
   client::proto::ViewSessionUpdateResponse response_proto;
-  google::protobuf::util::JsonStringToMessage(response.text, &response_proto);
+  REASSERT(google::protobuf::util::JsonStringToMessage(
+               response.text,
+               &response_proto)
+               .ok());
 
   // Return the ReSim App page URL to the user.
   log_app_url(response_proto.view());

@@ -124,9 +124,10 @@ MockServer::MockServer(
         client::proto::ViewSessionUpdateResponse response_msg =
             receiver_(unpack(update_msg), session_id, update_id);
         std::string response_string;
-        google::protobuf::util::MessageToJsonString(
-            response_msg,
-            &response_string);
+        REASSERT(google::protobuf::util::MessageToJsonString(
+                     response_msg,
+                     &response_string)
+                     .ok());
         response->body = response_string;
         response->mime_type = "application/json";
       });
