@@ -5,4 +5,3 @@ module(
 )
 
 bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "curl", version = "8.7.1")

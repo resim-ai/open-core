@@ -3,7 +3,7 @@
   "strip_prefix": "cpr-1.10.5",
   "url": "https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.zip",
   "patches": {
-    "add_build_file.patch": "sha256-EFctl+bM5Ovn/Y7393dhebZkjIkGgiTSjnn26dPTLfs=",
+    "add_build_file.patch": "sha256-oLEPyszSdFEGf2JhJC8DI7HIVUcrnthAMqEZOvBZcJo=",
     "remove_cprver.patch": "sha256-0FY/A9lsnlB33AVfPzQNnbTKPD57VDban4Pvzrbm0UI="
   },
   "patch_strip": 1
