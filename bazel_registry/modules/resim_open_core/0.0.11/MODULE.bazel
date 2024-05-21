@@ -1,5 +1,5 @@
 module(
-    name = "resim-open-core",
+    name = "resim_open_core",
     version = "0.0.11",
 )
 
@@ -48,11 +48,11 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "resim_python_deps",
     python_version = "3.10",
-    requirements_lock = "@resim-open-core//:requirements_lock.txt",
+    requirements_lock = "@resim_open_core//:requirements_lock.txt",
 )
 
 use_repo(pip, "resim_python_deps")
 
 register_toolchains(
-    "@resim-open-core//resim/toolchain:cc_toolchain_for_k8",
+    "@resim_open_core//resim/toolchain:cc_toolchain_for_k8",
 )
