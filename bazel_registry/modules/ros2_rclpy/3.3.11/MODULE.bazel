@@ -12,3 +12,7 @@ bazel_dep(name = "ros2_rpyutils", version = "0.2.1")
 bazel_dep(name = "ros2_ament_index", version = "1.4.0")
 bazel_dep(name = "rules_python", version = "0.31.0")
 bazel_dep(name = "bazel_skylib", version = "1.6.1")
+
+internal_configure = use_extension("//:internal_configure.bzl", "internal_configure_extension")
+
+use_repo(internal_configure, "pybind11")
