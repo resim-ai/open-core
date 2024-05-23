@@ -4,7 +4,7 @@
     "strip_prefix": "rules_ros2-14b75cb377784f21d709663df6c599056a512c18",
     "patches": {
         "copts.patch": "sha256-K1eh8WLxv4FQfWB3mFpsx7mXjqRCMowM9NZxbbM63Lk=",
-        "numpy_repo.patch": "sha256-DRrc7cj7R4sh4D6iHsCtqQ0bK32/79gjDXU3yPc7gAM="
+        "numpy_repo.patch": "sha256-SY0nGFhrcPi1AgVLFkFl9roAICUOrcv60dKnEBEMquQ="
     },
     "patch_strip": 1
 }
