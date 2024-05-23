@@ -1,0 +1,55 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,49 @@
++""" Builds rclpy.
++"""
++
++load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
++load(
++    "@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl",
++    "ros2_cpp_binary",
++)
++load("@rules_python//python:defs.bzl", "py_library")
++
++ros2_cpp_binary(
++    name = "rclpy/rclpy/_rclpy_pybind11.so",
++    srcs = glob([
++        "rclpy/src/rclpy/*.cpp",
++        "rclpy/src/rclpy/*.hpp",
++    ]),
++    copts = ["-fvisibility=hidden"],
++    includes = ["rclpy/src"],
++    linkopts = [
++        "-fvisibility=hidden",
++        "-latomic",
++    ],
++    linkshared = True,
++    deps = [
++        "@pybind11",
++        "@ros2_rcl//:rcl",
++        "@ros2_rcl//:rcl_action",
++        "@ros2_rcl//:rcl_lifecycle",
++        "@ros2_rcl_interfaces//:c_lifecycle_msgs",
++    ],
++)
++
++py_library(
++    name = "rclpy",
++    srcs = glob(["rclpy/rclpy/**/*.py"]),
++    data = [
++        ":rclpy/rclpy/_rclpy_pybind11.so",
++    ],
++    imports = ["rclpy"],
++    visibility = ["//visibility:public"],
++    deps = [
++        "@ros2_ament_index//:ament_index_python",
++        "@ros2_rcl_interfaces//:py_action_msgs",
++        "@ros2_rcl_interfaces//:py_builtin_interfaces",
++        "@ros2_rcl_interfaces//:py_rcl_interfaces",
++        "@ros2_rcl_interfaces//:py_rosgraph_msgs",
++        "@ros2_rpyutils//:rpyutils",
++    ],
++)
