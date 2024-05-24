@@ -259,7 +259,7 @@ tar(
 
 oci_image(
     name = "sim_build",
-    base = "@python_image",
+    base = "@ubuntu",
     entrypoint = ["resim/simulator/sim_container_entrypoint"],
     tars = [":entrypoint_layer"],
     workdir = "/resim/simulator/sim_container_entrypoint.runfiles/_main/",

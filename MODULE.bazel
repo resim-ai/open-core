@@ -62,11 +62,11 @@ register_toolchains(
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
 oci.pull(
-    name = "python_image",
-    image = "python",
+    name = "ubuntu",
+    image = "ubuntu",
     platforms = ["linux/amd64"],
-    tag = "3.10",
+    tag = "jammy",
 )
 
 # For each oci.pull call, repeat the "name" here to expose them as dependencies.
-use_repo(oci, "python_image")
+use_repo(oci, "ubuntu")
