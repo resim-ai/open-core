@@ -125,6 +125,7 @@ cc_test(
 cc_binary(
     name = "make_visualization_log",
     srcs = ["make_visualization_log.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":extract_experience",
         ":visualize_actor_states",

@@ -4,7 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@aspect_bazel_lib//lib:tar.bzl", "tar")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
 
 cc_library(
     name = "step_executor",
@@ -237,4 +239,40 @@ cc_binary(
         "@cxxopts",
         "@indicators",
     ],
+)
+
+sh_binary(
+    name = "sim_container_entrypoint",
+    srcs = ["sim_container_entrypoint.sh"],
+    data = [
+        ":resim_run",
+        "//resim/visualization/log:make_visualization_log",
+    ],
+)
+
+tar(
+    name = "entrypoint_layer",
+    srcs = [
+        ":sim_container_entrypoint",
+    ],
+)
+
+oci_image(
+    name = "sim_build",
+    base = "@python_image",
+    entrypoint = ["resim/simulator/sim_container_entrypoint"],
+    tars = [":entrypoint_layer"],
+    workdir = "/resim/simulator/sim_container_entrypoint.runfiles/_main/",
+)
+
+oci_tarball(
+    name = "sim_build_tarball",
+    image = ":sim_build",
+    repo_tags = ["sim-build:latest"],
+)
+
+oci_push(
+    name = "sim_build_push",
+    image = ":sim_build",
+    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/core-sim-run",
 )
