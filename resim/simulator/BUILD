@@ -256,6 +256,7 @@ pkg_tar(
         ":sim_container_entrypoint",
     ],
     include_runfiles = True,
+    strip_prefix = ".",
 )
 
 oci_image(
