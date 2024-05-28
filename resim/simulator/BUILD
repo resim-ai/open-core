@@ -4,9 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@aspect_bazel_lib//lib:tar.bzl", "tar")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 cc_library(
     name = "step_executor",
@@ -250,11 +250,12 @@ sh_binary(
     ],
 )
 
-tar(
+pkg_tar(
     name = "entrypoint_layer",
     srcs = [
         ":sim_container_entrypoint",
     ],
+    include_runfiles = True,
 )
 
 oci_image(
@@ -262,7 +263,7 @@ oci_image(
     base = "@ubuntu",
     entrypoint = ["resim/simulator/sim_container_entrypoint"],
     tars = [":entrypoint_layer"],
-    workdir = "/resim/simulator/sim_container_entrypoint.runfiles/_main/",
+    workdir = "/sim_container_entrypoint.runfiles",
 )
 
 oci_tarball(
