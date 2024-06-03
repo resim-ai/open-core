@@ -6,6 +6,7 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "resim/utils/proto/uuid.proto";
 
@@ -31,6 +32,10 @@ enum MetricsDataType {
     INDEXED_UUID_SERIES_DATA_TYPE          = 8;
     INDEXED_STRING_SERIES_DATA_TYPE        = 9;
     INDEXED_METRIC_STATUS_SERIES_DATA_TYPE = 10;
+
+    // External Files are a special type of metrics
+    // data, which are most often not reused.
+    EXTERNAL_FILE_DATA_TYPE = 11;
 }
 
 message MetricsDataId {
@@ -87,6 +92,12 @@ message SeriesPerCategory {
     map<string, Series> category_to_series = 1;
 }
 
+// This Metrics Data enables the passing through of an external file to a ReSim
+// metrics card. The path is expected to be relative to the metrics.binproto
+message ExternalFile {
+    string path = 1;
+}
+
 message MetricsData {
     // Generic metrics data fields
     MetricsDataId   metrics_data_id = 1;
@@ -107,6 +118,7 @@ message MetricsData {
     oneof data {
         Series            series              = 10;
         SeriesPerCategory series_per_category = 11;
+        ExternalFile      external_file       = 12;
     }
 }
 
@@ -141,6 +153,8 @@ enum MetricType {
     STATES_OVER_TIME_METRIC_TYPE = 5;
     HISTOGRAM_METRIC_TYPE        = 6;
     SCALAR_METRIC_TYPE           = 7;
+    PLOTLY_METRIC_TYPE           = 8;
+    IMAGE_METRIC_TYPE            = 9;
 }
 
 message MetricId {
@@ -221,6 +235,8 @@ message MetricValues {
         StatesOverTimeMetricValues states_over_time_metric_values = 5;
         HistogramMetricValues      histogram_metric_values        = 6;
         ScalarMetricValues         scalar_metric_values           = 7;
+        PlotlyMetricValues         plotly_metric_values           = 8;
+        ImageMetricValues          image_metric_values            = 9;
     }
 }
 
@@ -330,4 +346,12 @@ message ScalarMetricValues {
 
     optional string unit =
         3;  // Unit is stored in metric here, as no data series are used.
+}
+
+message PlotlyMetricValues {
+    google.protobuf.Struct json = 1;
+}
+
+message ImageMetricValues {
+    MetricsDataId image_data_id = 1;
 }

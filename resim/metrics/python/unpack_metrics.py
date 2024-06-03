@@ -32,6 +32,9 @@ from resim.metrics.python.metrics import (
     DoubleOverTimeMetric,
     HistogramMetric,
     StatesOverTimeMetric,
+    PlotlyMetric,
+    ImageMetric,
+    VideoMetric,
     GroupedMetricsData,
     SeriesMetricsData,
     Metric,
@@ -171,6 +174,10 @@ def _unpack_metric(metric: mp.Metric,
         StatesOverTimeMetric: _unpack_states_over_time_metric,
         HistogramMetric: _unpack_histogram_metric,
         ScalarMetric: _unpack_scalar_metric,
+        PlotlyMetric: _unpack_plotly_metric,
+        ImageMetric: _unpack_image_metric,
+        VideoMetric: _unpack_video_metric,
+
     }
     unpacker: Callable = unpackers[type(unpacked)]
     unpacker(metric, unpacked, id_to_unpacked_metrics_data)
@@ -328,3 +335,17 @@ def _unpack_scalar_metric(metric: mp.Metric,
         _unpack_double_failure_definition(
             values.failure_definition)).with_unit(
                 values.unit)
+
+def _unpack_plotly_metric(metric: mp.Metric,
+                          unpacked: PlotlyMetric,
+                          _: dict[uuid.UUID, MetricsData]) -> None:
+    plotly_data = metric.metric_values.plotly_metric_values
+    unpacked.with_value(
+        plotly_data.value)
+
+def _unpack_image_metric(metric: mp.Metric,
+                          unpacked: ImageMetric,
+                          _: dict[uuid.UUID, MetricsData]) -> None:
+    image_data = metric.metric_values.image_metric_values
+    unpacked.with_value(
+        image_data.value)

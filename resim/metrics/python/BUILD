@@ -24,6 +24,7 @@ py_test(
         ":metrics",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 

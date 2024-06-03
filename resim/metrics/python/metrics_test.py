@@ -15,6 +15,7 @@ from typing import cast, Any
 
 import numpy as np
 
+from google.protobuf.struct_pb2 import Struct
 from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
 import resim.metrics.proto.metrics_pb2 as mp
@@ -167,7 +168,10 @@ class MetricsTest(unittest.TestCase):
             (mp.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'), metrics.StatesOverTimeMetric),
             (mp.MetricType.Value('HISTOGRAM_METRIC_TYPE'), metrics.HistogramMetric),
             (mp.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'), metrics.DoubleSummaryMetric),
-            (mp.MetricType.Value('SCALAR_METRIC_TYPE'), metrics.ScalarMetric)]
+            (mp.MetricType.Value('SCALAR_METRIC_TYPE'), metrics.ScalarMetric),
+            (mp.MetricType.Value('PLOTLY_METRIC_TYPE'), metrics.PlotlyMetric),
+            (mp.MetricType.Value('IMAGE_METRIC_TYPE'), metrics.ImageMetric),
+            (mp.MetricType.Value('VIDEO_METRIC_TYPE'), metrics.VideoMetric)]
 
         for metric_type, metric_class in metric_type_list:
             modified_msg = copy.copy(msg)
@@ -1256,6 +1260,203 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 2)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
 
+    def test_plotly_metric(self) -> None:
+        job_id = uuid.uuid4()
+        value_data = metrics.SeriesMetricsData(
+            name="values",
+            series=np.array([0.5]),
+            unit='m')
+        status_data = metrics.SeriesMetricsData(
+            name="statuses",
+            series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
+            unit='')
+        index = 0
+        failure_definition = metrics_utils.DoubleFailureDefinition(
+            fails_above=1.0,
+            fails_below=0.0,
+        )
+        metric = metrics.DoubleSummaryMetric(
+            name='test metric',
+            description='a test histogram metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
+
+        self.assertIs(metric.value_data, None)
+        self.assertIs(metric.status_data, None)
+        self.assertIs(metric.index, None)
+        self.assertIs(metric.failure_definition, None)
+
+        self.assertEqual(
+            metric, metric.with_value_data(value_data))
+        self.assertEqual(metric.value_data, value_data)
+
+        self.assertEqual(
+            metric, metric.with_status_data(status_data))
+        self.assertEqual(metric.status_data, status_data)
+
+        self.assertEqual(
+            metric, metric.with_index(index))
+        self.assertEqual(metric.index, index)
+
+        self.assertEqual(
+            metric, metric.with_failure_definition(failure_definition))
+        self.assertEqual(metric.failure_definition, failure_definition)
+
+    def test_double_summary_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
+        value_data = metrics.SeriesMetricsData(
+            name="values",
+            series=np.array([0.5]),
+            unit='m')
+        status_data = metrics.SeriesMetricsData(
+            name="statuses",
+            series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
+            unit='')
+        index = 0
+        failure_definition = metrics_utils.DoubleFailureDefinition(
+            fails_above=1.0,
+            fails_below=0.0,
+        )
+        metric = metrics.DoubleSummaryMetric(
+            name='test metric',
+            description='a test histogram metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            value_data=value_data,
+            status_data=status_data,
+            index=index,
+            failure_definition=failure_definition,
+        )
+
+        msg = metric.pack()
+
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(msg.type, mp.MetricType.Value(
+            "DOUBLE_SUMMARY_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField(
+            "double_metric_values"))
+        values = msg.metric_values.double_metric_values
+        self.assertEqual(values.value_data_id.id,
+                         metrics_utils.pack_uuid_to_proto(value_data.id))
+        self.assertEqual(values.status_data_id.id,
+                         metrics_utils.pack_uuid_to_proto(status_data.id))
+        self.assertTrue(values.HasField('series_index'))
+        self.assertEqual(values.series_index, metric.index)
+        assert metric.failure_definition is not None
+        self.assertEqual(
+            values.failure_definition,
+            metric.failure_definition.pack())
+
+        # Now set things to None:
+        def get_values(msg: Any) -> Any:
+            return msg.metric_values.double_metric_values
+
+        for attr in ('value_data', 'status_data'):
+            modified_metric = copy.copy(metric)
+            setattr(modified_metric, attr, None)
+            modified_msg = modified_metric.pack()
+            self.assertFalse(get_values(modified_msg).HasField(attr + "_id"))
+
+        modified_metric = copy.copy(metric)
+        modified_metric.index = None
+        modified_msg = modified_metric.pack()
+        self.assertIs(get_values(modified_msg).WhichOneof('index'), None)
+
+        modified_metric = copy.copy(metric)
+        modified_metric.index = 'string key'
+        modified_msg = modified_metric.pack()
+        self.assertEqual(get_values(modified_msg).string_index, 'string key')
+
+        uuid_key = uuid.uuid4()
+        modified_metric = copy.copy(metric)
+        modified_metric.index = uuid_key
+        modified_msg = modified_metric.pack()
+        self.assertEqual(
+            get_values(modified_msg).uuid_index,
+            metrics_utils.pack_uuid_to_proto(uuid_key))
+
+        time_key = metrics_utils.Timestamp(secs=1, nanos=3)
+        modified_metric = copy.copy(metric)
+        modified_metric.index = time_key
+        modified_msg = modified_metric.pack()
+        self.assertEqual(
+            get_values(modified_msg).timestamp_index,
+            time_key.pack())
+
+        bad_type_key = cast(None, metrics.SeriesMetricsData(name="whoops"))
+        modified_metric = copy.copy(metric)
+        modified_metric.index = bad_type_key
+        with self.assertRaises(ValueError):
+            modified_msg = modified_metric.pack()
+
+        modified_metric = copy.copy(metric)
+        modified_metric.failure_definition = None
+        modified_msg = modified_metric.pack()
+        self.assertFalse(
+            get_values(modified_msg).HasField('failure_definition'))
+
+    def test_double_summary_metric_recursive_pack(self) -> None:
+        job_id = uuid.uuid4()
+        value_data = metrics.SeriesMetricsData(
+            name="values",
+            series=np.array([0.5]),
+            unit='m')
+        status_data = metrics.SeriesMetricsData(
+            name="statuses",
+            series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
+            unit='')
+        index = 0
+        failure_definition = metrics_utils.DoubleFailureDefinition(
+            fails_above=1.0,
+            fails_below=0.0,
+        )
+        metric = metrics.DoubleSummaryMetric(
+            name='test metric',
+            description='a test histogram metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            value_data=value_data,
+            status_data=status_data,
+            index=index,
+            failure_definition=failure_definition,
+        )
+        msg = metric.pack()
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+        ids = [uuid.UUID(data.metrics_data_id.id.data)
+               for data in output.metrics_msg.metrics_data]
+        self.assertIn(value_data.id, ids)
+        self.assertIn(status_data.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+
+        # Check empty series, mainly for test coverage
+        metric = metrics.DoubleSummaryMetric(name="some empty metric")
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 2)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+        
     def test_metrics_data(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
