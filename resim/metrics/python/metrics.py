@@ -1170,7 +1170,7 @@ class PlotlyMetric(Metric['PlotlyMetric']):
         metric_values = msg.metric_values.plotly_metric_values
 
         if self.plotly_data is not None:
-            metric_values.json = self.plotly_data
+            metric_values.json.CopyFrom(self.plotly_data)
 
         return msg
 
@@ -1183,9 +1183,6 @@ class PlotlyMetric(Metric['PlotlyMetric']):
 
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([
                                                                     self.pack()])
-
-        if self.plotly_data is not None:
-            self.plotly_data.recursively_pack_into(metrics_output)
 
 @metric_dataclass
 class ImageMetric(Metric['ImageMetric']):
@@ -1216,7 +1213,7 @@ class ImageMetric(Metric['ImageMetric']):
 
     def with_image_data(self: ImageMetric,
                         image_data: MetricsData) -> ImageMetric:
-        self.image_data = image_data
+        self.image_data.CopyFrom(image_data)
         return self
 
     def pack(self: ImageMetric) -> metrics_pb2.Metric:

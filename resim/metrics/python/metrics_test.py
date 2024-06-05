@@ -1285,7 +1285,7 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
         self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
         values = msg.metric_values.plotly_metric_values
-        self.assertEqual(values.plotly_data, metric.plotly_data)
+        self.assertEqual(values.json, metric.plotly_data)
 
         output = metrics_utils.ResimMetricsOutput()
         metric.recursively_pack_into(output)
@@ -1350,9 +1350,8 @@ class MetricsTest(unittest.TestCase):
         self.assertTrue(msg.metric_values.HasField(
             "image_metric_values"))
         values = msg.metric_values.image_metric_values
-        self.assertEqual(len(values.image_metric_values), 1)
         self.assertEqual(
-            values.image_data_id[0].id,
+            values.image_data_id.id,
             metrics_utils.pack_uuid_to_proto(
                 image_data.id))
 
