@@ -18,7 +18,6 @@ from resim.metrics.python.metrics import (
     LinePlotMetric,
     PlotlyMetric,
     ImageMetric,
-    VideoMetric,
     DoubleSummaryMetric,
     DoubleOverTimeMetric,
     HistogramMetric,
@@ -109,11 +108,6 @@ class ResimMetricsWriter:
 
     def add_image_metric(self, name: str) -> ImageMetric:
         metric = ImageMetric(name=name, parent_job_id=self.job_id)
-        self.add_metric(metric)
-        return metric
-
-    def add_video_metric(self, name: str) -> VideoMetric:
-        metric = VideoMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
 

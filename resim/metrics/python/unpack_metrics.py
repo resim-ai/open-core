@@ -34,7 +34,6 @@ from resim.metrics.python.metrics import (
     StatesOverTimeMetric,
     PlotlyMetric,
     ImageMetric,
-    VideoMetric,
     GroupedMetricsData,
     SeriesMetricsData,
     Metric,
@@ -176,7 +175,6 @@ def _unpack_metric(metric: mp.Metric,
         ScalarMetric: _unpack_scalar_metric,
         PlotlyMetric: _unpack_plotly_metric,
         ImageMetric: _unpack_image_metric,
-        VideoMetric: _unpack_video_metric,
 
     }
     unpacker: Callable = unpackers[type(unpacked)]
