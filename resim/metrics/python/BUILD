@@ -50,6 +50,7 @@ py_test(
         ":metrics_writer",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/utils/proto:uuid_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -94,5 +95,6 @@ py_test(
         "//resim/metrics/proto:generate_test_metrics",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )

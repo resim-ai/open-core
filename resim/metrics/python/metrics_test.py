@@ -1297,5 +1297,79 @@ def test_plotly_metric(self) -> None:
     metric.recursively_pack_into(output)
     self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
 
+def test_image_metric(self) -> None:
+    job_id = uuid.uuid4()
+
+    file_data = metrics.ExternalFileMetricsData(
+        name="an external image",
+        filename='test.gif')
+
+    metric = metrics.ImageMetric(
+        name='test metric',
+        description='a test image metric',
+        status=MetricStatus.PASSED_METRIC_STATUS,
+        importance=MetricImportance.ZERO_IMPORTANCE,
+        blocking=False,
+        should_display=True,
+        parent_job_id=job_id,
+        order=0.5,
+    )
+
+    self.assertEqual(metric.image_data, None)
+
+    self.assertEqual(
+        metric, metric.with_image_data(
+            file_data))
+
+def test_image_metric_pack(self) -> None:
+    job_id = uuid.uuid4()
+
+    image_data = metrics.ExternalFileMetricsData(
+        name="an external image",
+        filename='test.gif')
+
+    # Use the constructor to initialize the data this time, in contrast with
+    # the above test.
+    metric = metrics.ImageMetric(
+        name='test metric',
+        description='a test image metric',
+        status=MetricStatus.PASSED_METRIC_STATUS,
+        importance=MetricImportance.ZERO_IMPORTANCE,
+        blocking=False,
+        should_display=True,
+        parent_job_id=job_id,
+        order=0.5,
+        image_data=image_data
+    )
+
+    msg = metric.pack()
+
+    self.assert_common_fields_match(msg=msg, metric=metric)
+    self.assertEqual(msg.type, mp.MetricType.Value(
+        "IMAGE_METRIC_TYPE"))
+    self.assertTrue(msg.metric_values.HasField(
+        "image_metric_values"))
+    values = msg.metric_values.image_metric_values
+    self.assertEqual(len(values.image_metric_values), 1)
+    self.assertEqual(
+        values.image_data_id[0].id,
+        metrics_utils.pack_uuid_to_proto(
+            image_data.id))
+
+    output = metrics_utils.ResimMetricsOutput()
+    metric.recursively_pack_into(output)
+    self.assertIn(metric.id, output.packed_ids)
+    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+    self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+    ids = [uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data]
+    self.assertIn(image_data.id, ids)
+    self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+    # Check no duplication
+    metric.recursively_pack_into(output)
+    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+    self.assertEqual(len(output.metrics_msg.metrics_data), )
+
 if __name__ == "__main__":
     unittest.main()

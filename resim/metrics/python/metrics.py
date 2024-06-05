@@ -1255,16 +1255,13 @@ MetricsDataT = TypeVar('MetricsDataT', bound='MetricsData')
 class BaseMetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
-    unit: Optional[str]
 
     @abstractmethod
     def __init__(self: MetricsDataT,
-                 name: str,
-                 unit: Optional[str] = None):
+                 name: str):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
-        self.unit = unit
 
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -1274,10 +1271,6 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
                 __value.id is not None), "Cannot compare values without valid ids"
 
         return self.id == __value.id
-
-    def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
-        self.unit = unit
-        return self
 
     @abstractmethod
     def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
@@ -1296,14 +1289,20 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
 
 @metric_dataclass
 class MetricsData(BaseMetricsData, Generic[MetricsDataT]):
+    unit: Optional[str] = None
     index_data: Optional[MetricsDataT]
 
     def __init__(self: MetricsDataT,
                  name: str,
                  unit: Optional[str] = None,
                  index_data: Optional[MetricsDataT] = None):
-        super().__init__(name, unit)
+        super().__init__(name)
+        self.unit = unit
         self.index_data = index_data
+
+    def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
+        self.unit = unit
+        return self
 
     def with_index_data(
             self: MetricsDataT,
@@ -1584,9 +1583,8 @@ class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
 
     def __init__(self: ExternalFileMetricsData,
                  name: str,
-                 filename: Optional[str] = None,
-                 unit: Optional[str] = None):
-        super().__init__(name=name, unit=unit)
+                 filename: Optional[str] = None):
+        super().__init__(name=name)
         self.filename = filename
 
     def with_filename(self: ExternalFileMetricsData,
