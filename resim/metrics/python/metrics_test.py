@@ -1369,7 +1369,7 @@ def test_image_metric_pack(self) -> None:
     # Check no duplication
     metric.recursively_pack_into(output)
     self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-    self.assertEqual(len(output.metrics_msg.metrics_data), )
+    self.assertEqual(len(output.metrics_msg.metrics_data), 1)
 
 if __name__ == "__main__":
     unittest.main()
