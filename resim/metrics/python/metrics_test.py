@@ -1260,42 +1260,42 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
 
 def test_plotly_metric(self) -> None:
-        # CONSTRUCTION
-        job_id = uuid.uuid4()
-        metric = metrics.PlotlyMetric(
-            "test_metric",
-            "A metric for testing",
-            MetricStatus.PASSED_METRIC_STATUS,
-            MetricImportance.ZERO_IMPORTANCE,
-            should_display=True,
-            blocking=False,
-            parent_job_id=job_id,
-            order=None,
-            plotly_data=None,
-        )
+    # CONSTRUCTION
+    job_id = uuid.uuid4()
+    metric = metrics.PlotlyMetric(
+        "test_metric",
+        "A metric for testing",
+        MetricStatus.PASSED_METRIC_STATUS,
+        MetricImportance.ZERO_IMPORTANCE,
+        should_display=True,
+        blocking=False,
+        parent_job_id=job_id,
+        order=None,
+        plotly_data=None,
+    )
 
-        # SETTING
-        test_data = Struct()
-        test_data["test"] = "test"
-        self.assertIs(metric, metric.with_plotly_data(test_data))
-        self.assertEqual(metric.plotly_data, test_data)
+    # SETTING
+    test_data = Struct()
+    test_data["test"] = "test"
+    self.assertIs(metric, metric.with_plotly_data(test_data))
+    self.assertEqual(metric.plotly_data, test_data)
 
-        # PACKING
-        msg = metric.pack()
-        self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
-        values = msg.metric_values.plotly_metric_values
-        self.assertEqual(values.plotly_data, metric.plotly_data)
+    # PACKING
+    msg = metric.pack()
+    self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
+    self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
+    values = msg.metric_values.plotly_metric_values
+    self.assertEqual(values.plotly_data, metric.plotly_data)
 
-        output = metrics_utils.ResimMetricsOutput()
-        metric.recursively_pack_into(output)
-        self.assertIn(metric.id, output.packed_ids)
-        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+    output = metrics_utils.ResimMetricsOutput()
+    metric.recursively_pack_into(output)
+    self.assertIn(metric.id, output.packed_ids)
+    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+    self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
 
-        # Check no duplication
-        metric.recursively_pack_into(output)
-        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-        
+    # Check no duplication
+    metric.recursively_pack_into(output)
+    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+    
 if __name__ == "__main__":
     unittest.main()

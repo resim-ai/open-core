@@ -1171,7 +1171,7 @@ class PlotlyMetric(Metric['PlotlyMetric']):
 
         if self.plotly_data is not None:
             metric_values.json = self.plotly_data
-            
+
         return msg
 
     def recursively_pack_into(
@@ -1256,7 +1256,7 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
     unit: Optional[str]
-    
+
     @abstractmethod
     def __init__(self: MetricsDataT,
                  name: str,
@@ -1265,7 +1265,7 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
         self.id = uuid.uuid4()
         self.name = name
         self.unit = unit
-        
+
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, type(self)):
             return False
@@ -1274,11 +1274,11 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
                 __value.id is not None), "Cannot compare values without valid ids"
 
         return self.id == __value.id
-    
+
     def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
         self.unit = unit
         return self
-    
+
     @abstractmethod
     def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
@@ -1293,11 +1293,11 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
         output = self.pack()
 
         metrics_output.metrics_msg.metrics_data.extend([output])
-    
+
 @metric_dataclass
 class MetricsData(BaseMetricsData, Generic[MetricsDataT]):
     index_data: Optional[MetricsDataT]
-    
+
     def __init__(self: MetricsDataT,
                  name: str,
                  unit: Optional[str] = None,
@@ -1580,14 +1580,13 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
 
 @metric_dataclass
 class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
-    filename: str 
+    filename: str
 
     def __init__(self: ExternalFileMetricsData,
                  name: str,
                  filename: Optional[str] = None,
-                 unit: Optional[str] = None,
-                 index_data: Optional[ExternalFileMetricsData] = None):
-        super().__init__(name=name, unit=unit, index_data=index_data)
+                 unit: Optional[str] = None):
+        super().__init__(name=name, unit=unit)
         self.filename = filename
 
     def with_filename(self: ExternalFileMetricsData,
@@ -1606,7 +1605,7 @@ class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
 
         assert len(self.filename) > 0, "Cannot pack an empty string."
 
-        external_file = metrics_pb2.ExternalFile() 
+        external_file = metrics_pb2.ExternalFile()
         external_file.path = self.filename
         msg.external_file.CopyFrom(external_file)
 

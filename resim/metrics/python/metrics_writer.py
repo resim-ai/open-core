@@ -100,7 +100,7 @@ class ResimMetricsWriter:
         metric = DoubleSummaryMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
-    
+
     def add_plotly_metric(self, name: str) -> PlotlyMetric:
         metric = PlotlyMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
