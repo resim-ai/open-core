@@ -563,41 +563,41 @@ class TestMetricsWriter(unittest.TestCase):
     def tearDown(self) -> None:
         pass
 
-def test_plotly_metric(self) -> None:
-    METRIC_NAME = "Plotly metric"
-    METRIC_DESCRIPTION = "Description"
-    METRIC_BLOCKING = True
-    METRIC_DISPLAY = True
-    METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
-    METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
-    METRIC_DATA = Struct()
+    def test_plotly_metric(self) -> None:
+        METRIC_NAME = "Plotly metric"
+        METRIC_DESCRIPTION = "Description"
+        METRIC_BLOCKING = True
+        METRIC_DISPLAY = True
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
+        METRIC_DATA = Struct()
 
-    (
-        self.writer
-        .add_plotly_metric(METRIC_NAME)
-        .with_plotly_data(METRIC_DATA)
-        .with_description(METRIC_DESCRIPTION)
-        .with_blocking(METRIC_BLOCKING)
-        .with_should_display(METRIC_DISPLAY)
-        .with_importance(METRIC_IMPORTANCE)
-        .with_status(METRIC_STATUS)
-    )
+        (
+            self.writer
+            .add_plotly_metric(METRIC_NAME)
+            .with_plotly_data(METRIC_DATA)
+            .with_description(METRIC_DESCRIPTION)
+            .with_blocking(METRIC_BLOCKING)
+            .with_should_display(METRIC_DISPLAY)
+            .with_importance(METRIC_IMPORTANCE)
+            .with_status(METRIC_STATUS)
+        )
 
-    output = self.writer.write()
-    self.assertEqual(len(output.packed_ids), 1)
-    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-    self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+        output = self.writer.write()
+        self.assertEqual(len(output.packed_ids), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
 
-    metric_base = output.metrics_msg.job_level_metrics.metrics[0]
-    metric_values = metric_base.metric_values.scalar_metric_values
+        metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = metric_base.metric_values.scalar_metric_values
 
-    self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
-    self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
-    self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
-    self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
-    self.assertEqual(metric_base.status, METRIC_STATUS.value)
-    self.assertEqual(metric_base.name, METRIC_NAME)
-    self.assertEqual(metric_values.plotly_data, METRIC_DATA)
+        self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
+        self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
+        self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
+        self.assertEqual(metric_base.name, METRIC_NAME)
+        self.assertEqual(metric_values.plotly_data, METRIC_DATA)
 
 # This is the entry point of the unittest script
 if __name__ == '__main__':

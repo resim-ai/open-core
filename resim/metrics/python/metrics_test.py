@@ -334,7 +334,7 @@ class MetricsTest(unittest.TestCase):
         time_data = metrics.SeriesMetricsData(
             name="times",
             series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)]),
+                                metrics_utils.Timestamp(secs=5, nanos=0)]),
             unit='m')
         value_data = metrics.SeriesMetricsData(
             name="values",
@@ -422,7 +422,7 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
         ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+                for data in output.metrics_msg.metrics_data]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertIn(time_data.id, ids)
@@ -1259,117 +1259,117 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 2)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
 
-def test_plotly_metric(self) -> None:
-    # CONSTRUCTION
-    job_id = uuid.uuid4()
-    metric = metrics.PlotlyMetric(
-        "test_metric",
-        "A metric for testing",
-        MetricStatus.PASSED_METRIC_STATUS,
-        MetricImportance.ZERO_IMPORTANCE,
-        should_display=True,
-        blocking=False,
-        parent_job_id=job_id,
-        order=None,
-        plotly_data=None,
-    )
+    def test_plotly_metric(self) -> None:
+        # CONSTRUCTION
+        job_id = uuid.uuid4()
+        metric = metrics.PlotlyMetric(
+            "test_metric",
+            "A metric for testing",
+            MetricStatus.PASSED_METRIC_STATUS,
+            MetricImportance.ZERO_IMPORTANCE,
+            should_display=True,
+            blocking=False,
+            parent_job_id=job_id,
+            order=None,
+            plotly_data=None,
+        )
 
-    # SETTING
-    test_data = Struct()
-    test_data["test"] = "test"
-    self.assertIs(metric, metric.with_plotly_data(test_data))
-    self.assertEqual(metric.plotly_data, test_data)
+        # SETTING
+        test_data = Struct()
+        test_data["test"] = "test"
+        self.assertIs(metric, metric.with_plotly_data(test_data))
+        self.assertEqual(metric.plotly_data, test_data)
 
-    # PACKING
-    msg = metric.pack()
-    self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
-    self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
-    values = msg.metric_values.plotly_metric_values
-    self.assertEqual(values.plotly_data, metric.plotly_data)
+        # PACKING
+        msg = metric.pack()
+        self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
+        values = msg.metric_values.plotly_metric_values
+        self.assertEqual(values.plotly_data, metric.plotly_data)
 
-    output = metrics_utils.ResimMetricsOutput()
-    metric.recursively_pack_into(output)
-    self.assertIn(metric.id, output.packed_ids)
-    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-    self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
 
-    # Check no duplication
-    metric.recursively_pack_into(output)
-    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
 
-def test_image_metric(self) -> None:
-    job_id = uuid.uuid4()
+    def test_image_metric(self) -> None:
+        job_id = uuid.uuid4()
 
-    file_data = metrics.ExternalFileMetricsData(
-        name="an external image",
-        filename='test.gif')
+        file_data = metrics.ExternalFileMetricsData(
+            name="an external image",
+            filename='test.gif')
 
-    metric = metrics.ImageMetric(
-        name='test metric',
-        description='a test image metric',
-        status=MetricStatus.PASSED_METRIC_STATUS,
-        importance=MetricImportance.ZERO_IMPORTANCE,
-        blocking=False,
-        should_display=True,
-        parent_job_id=job_id,
-        order=0.5,
-    )
+        metric = metrics.ImageMetric(
+            name='test metric',
+            description='a test image metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
 
-    self.assertEqual(metric.image_data, None)
+        self.assertEqual(metric.image_data, None)
 
-    self.assertEqual(
-        metric, metric.with_image_data(
-            file_data))
+        self.assertEqual(
+            metric, metric.with_image_data(
+                file_data))
 
-def test_image_metric_pack(self) -> None:
-    job_id = uuid.uuid4()
+    def test_image_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
 
-    image_data = metrics.ExternalFileMetricsData(
-        name="an external image",
-        filename='test.gif')
+        image_data = metrics.ExternalFileMetricsData(
+            name="an external image",
+            filename='test.gif')
 
-    # Use the constructor to initialize the data this time, in contrast with
-    # the above test.
-    metric = metrics.ImageMetric(
-        name='test metric',
-        description='a test image metric',
-        status=MetricStatus.PASSED_METRIC_STATUS,
-        importance=MetricImportance.ZERO_IMPORTANCE,
-        blocking=False,
-        should_display=True,
-        parent_job_id=job_id,
-        order=0.5,
-        image_data=image_data
-    )
+        # Use the constructor to initialize the data this time, in contrast with
+        # the above test.
+        metric = metrics.ImageMetric(
+            name='test metric',
+            description='a test image metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            image_data=image_data
+        )
 
-    msg = metric.pack()
+        msg = metric.pack()
 
-    self.assert_common_fields_match(msg=msg, metric=metric)
-    self.assertEqual(msg.type, mp.MetricType.Value(
-        "IMAGE_METRIC_TYPE"))
-    self.assertTrue(msg.metric_values.HasField(
-        "image_metric_values"))
-    values = msg.metric_values.image_metric_values
-    self.assertEqual(len(values.image_metric_values), 1)
-    self.assertEqual(
-        values.image_data_id[0].id,
-        metrics_utils.pack_uuid_to_proto(
-            image_data.id))
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(msg.type, mp.MetricType.Value(
+            "IMAGE_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField(
+            "image_metric_values"))
+        values = msg.metric_values.image_metric_values
+        self.assertEqual(len(values.image_metric_values), 1)
+        self.assertEqual(
+            values.image_data_id[0].id,
+            metrics_utils.pack_uuid_to_proto(
+                image_data.id))
 
-    output = metrics_utils.ResimMetricsOutput()
-    metric.recursively_pack_into(output)
-    self.assertIn(metric.id, output.packed_ids)
-    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-    self.assertEqual(len(output.metrics_msg.metrics_data), 1)
-    ids = [uuid.UUID(data.metrics_data_id.id.data)
-            for data in output.metrics_msg.metrics_data]
-    self.assertIn(image_data.id, ids)
-    self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+        ids = [uuid.UUID(data.metrics_data_id.id.data)
+                for data in output.metrics_msg.metrics_data]
+        self.assertIn(image_data.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
 
-    # Check no duplication
-    metric.recursively_pack_into(output)
-    self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-    self.assertEqual(len(output.metrics_msg.metrics_data), 1)
-
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+    
 if __name__ == "__main__":
     unittest.main()
