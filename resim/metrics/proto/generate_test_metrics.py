@@ -680,7 +680,7 @@ def _add_scalar_metric(job_metrics: mp.JobMetrics) -> None:
     metric.order = 12.0
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.scalar_metric_values.value = 6.28318530718
- 
+
 def _add_plotly_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
@@ -700,7 +700,7 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "A photo of a tree"
     metric.type = mp.IMAGE_METRIC_TYPE
-    metric.description = ("Actual photo of a real-world tree")
+    metric.description = "Actual photo of a real-world tree"
     metric.status = mp.PASSED_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False

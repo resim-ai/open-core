@@ -16,8 +16,8 @@ from resim.metrics.python.metrics_utils import (
     MetricImportance
 )
 from resim.metrics.python.metrics import (
-    ExternalFileMetricsData, 
-    SeriesMetricsData, 
+    ExternalFileMetricsData,
+    SeriesMetricsData,
     GroupedMetricsData)
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
@@ -634,7 +634,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.status, METRIC_STATUS.value)
         self.assertEqual(metric_base.name, METRIC_NAME)
         self.assertEqual(uuid.UUID(metric_values.image_data_id.id.data), METRIC_DATA.id)
-    
+
     def test_external_file_metrics_data(self) -> None:
         """Test that we can add an external file metrics data."""
         NAME = "test_metrics_data"

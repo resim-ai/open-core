@@ -441,7 +441,7 @@ def _validate_image_metric_values(
     print("yay debug!")
     print(value_data.data_type)
     _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
-    
+
 def _validate_metric_values(
         metric_values: mp.MetricValues,
         metrics_data_map: dict[str, mp.MetricsData]) -> None:
