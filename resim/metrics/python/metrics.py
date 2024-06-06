@@ -1186,7 +1186,7 @@ class PlotlyMetric(Metric['PlotlyMetric']):
 
 @metric_dataclass
 class ImageMetric(Metric['ImageMetric']):
-    image_data: Optional[MetricsData]
+    image_data: Optional[ExternalFileMetricsData]
 
     def __init__(self: ImageMetric,
                  name: str,
@@ -1197,7 +1197,7 @@ class ImageMetric(Metric['ImageMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
-                 image_data: Optional[MetricsData] = None,
+                 image_data: Optional[ExternalFileMetricsData] = None,
                  ):
         super().__init__(
             name=name,
@@ -1212,8 +1212,8 @@ class ImageMetric(Metric['ImageMetric']):
         self.image_data = image_data
 
     def with_image_data(self: ImageMetric,
-                        image_data: MetricsData) -> ImageMetric:
-        self.image_data.CopyFrom(image_data)
+                        image_data: ExternalFileMetricsData) -> ImageMetric:
+        self.image_data = image_data
         return self
 
     def pack(self: ImageMetric) -> metrics_pb2.Metric:
@@ -1593,15 +1593,14 @@ class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
         msg = metrics_pb2.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
-        msg.unit = None
 
         msg.is_per_category = False
-        msg.is_indexed = None
 
         assert len(self.filename) > 0, "Cannot pack an empty string."
 
         external_file = metrics_pb2.ExternalFile()
         external_file.path = self.filename
+        #this copy from wont world, i don't think
         msg.external_file.CopyFrom(external_file)
 
         return msg
