@@ -1629,6 +1629,32 @@ class MetricsTest(unittest.TestCase):
                          for md in output.metrics_msg.metrics_data},
                          {index_data.id, metrics_data.id})
 
+    def test_external_metrics_data(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="file data",
+        )
+        self.assertEqual(metrics_data, metrics_data.with_filename(filename))
+        self.assertTrue(metrics_data.filename == filename)
+
+    def test_series_metrics_data_pack(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="metrics data",
+            filename=filename,
+        )
+
+        msg = metrics_data.pack()
+        self.assertEqual(
+            msg.metrics_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                metrics_data.id))
+        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
+            'EXTERNAL_FILE_DATA_TYPE'))
+
+        self.assertEqual(msg.name, metrics_data.name)
+        self.assertEqual(msg.external_file.path, filename)
+
 
 if __name__ == "__main__":
     unittest.main()
