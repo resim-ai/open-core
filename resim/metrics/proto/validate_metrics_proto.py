@@ -438,8 +438,6 @@ def _validate_image_metric_values(
     id_str = image_data_id.id.data
     _metrics_assert(id_str in metrics_data_map)
     value_data = metrics_data_map[id_str]
-    print("yay debug!")
-    print(value_data.data_type)
     _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
 
 def _validate_metric_values(
