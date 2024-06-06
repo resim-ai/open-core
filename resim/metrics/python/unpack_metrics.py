@@ -36,6 +36,7 @@ from resim.metrics.python.metrics import (
     ImageMetric,
     GroupedMetricsData,
     SeriesMetricsData,
+    ExternalFileMetricsData,
     Metric,
     MetricsData)
 
@@ -127,7 +128,12 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
                          id_to_unpacked_metrics_data: dict[uuid.UUID,
                                                            MetricsData]) -> None:
     data_id = _unpack_uuid(metrics_data.metrics_data_id.id)
-    if metrics_data.is_per_category:
+    if metrics_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE:
+        unpacked: MetricsData = ExternalFileMetricsData(
+            name=metrics_data.name,
+            filename=metrics_data.external_file.path
+        )
+    elif metrics_data.is_per_category:
         assert metrics_data.WhichOneof("data") == "series_per_category"
 
         category_to_series = {}
@@ -337,13 +343,14 @@ def _unpack_scalar_metric(metric: mp.Metric,
 def _unpack_plotly_metric(metric: mp.Metric,
                           unpacked: PlotlyMetric,
                           _: dict[uuid.UUID, MetricsData]) -> None:
-    plotly_data = metric.metric_values.plotly_metric_values
-    unpacked.with_value(
-        plotly_data.value)
+    plotly_data = metric.metric_values.plotly_metric_values.json
+    unpacked.with_plotly_data(
+        plotly_data)
 
 def _unpack_image_metric(metric: mp.Metric,
                           unpacked: ImageMetric,
-                          _: dict[uuid.UUID, MetricsData]) -> None:
+                          id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData]) -> None:
     image_data = metric.metric_values.image_metric_values
-    unpacked.with_value(
-        image_data.value)
+    data = id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)]
+    unpacked.with_image_data(
+        data)

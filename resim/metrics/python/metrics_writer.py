@@ -24,6 +24,7 @@ from resim.metrics.python.metrics import (
     StatesOverTimeMetric,
     GroupedMetricsData,
     SeriesMetricsData,
+    ExternalFileMetricsData,
     Metric,
     MetricsData,
     MetricsDataT,
@@ -110,6 +111,11 @@ class ResimMetricsWriter:
         metric = ImageMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
+
+    def add_external_file_metrics_data(self, name: str) -> ExternalFileMetricsData:
+        metrics_data = ExternalFileMetricsData(name=name)
+        self.add_metrics_data(metrics_data)
+        return metrics_data
 
     def write(self) -> ResimMetricsOutput:
         output = ResimMetricsOutput()

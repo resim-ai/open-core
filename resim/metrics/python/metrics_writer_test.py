@@ -15,7 +15,10 @@ from resim.metrics.python.metrics_utils import (
     MetricStatus,
     MetricImportance
 )
-from resim.metrics.python.metrics import SeriesMetricsData, GroupedMetricsData
+from resim.metrics.python.metrics import (
+    ExternalFileMetricsData, 
+    SeriesMetricsData, 
+    GroupedMetricsData)
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
 rd = random.Random()
@@ -595,6 +598,53 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.status, METRIC_STATUS.value)
         self.assertEqual(metric_base.name, METRIC_NAME)
         self.assertEqual(metric_values.json, METRIC_DATA)
+
+    def test_image_metric(self) -> None:
+        METRIC_NAME = "Image metric"
+        METRIC_DESCRIPTION = "Description"
+        METRIC_BLOCKING = True
+        METRIC_DISPLAY = True
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
+        METRIC_DATA = ExternalFileMetricsData(name="test date", filename="test.txt")
+
+        (
+            self.writer
+            .add_image_metric(METRIC_NAME)
+            .with_image_data(METRIC_DATA)
+            .with_description(METRIC_DESCRIPTION)
+            .with_blocking(METRIC_BLOCKING)
+            .with_should_display(METRIC_DISPLAY)
+            .with_importance(METRIC_IMPORTANCE)
+            .with_status(METRIC_STATUS)
+        )
+
+        output = self.writer.write()
+        self.assertEqual(len(output.packed_ids), 2)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
+        metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = metric_base.metric_values.image_metric_values
+
+        self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
+        self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
+        self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
+        self.assertEqual(metric_base.name, METRIC_NAME)
+        self.assertEqual(uuid.UUID(metric_values.image_data_id.id.data), METRIC_DATA.id)
+    
+    def test_external_file_metrics_data(self) -> None:
+        """Test that we can add an external file metrics data."""
+        NAME = "test_metrics_data"
+        metrics_data = self.writer.add_external_file_metrics_data(name=NAME)
+        self.assertEqual(type(metrics_data), ExternalFileMetricsData)
+        self.assertEqual(metrics_data.name, NAME)
+        self.assertIn(NAME, self.writer.names)
+        self.assertIn(metrics_data.id, self.writer.metrics_data)
+        self.assertEqual(
+            self.writer.metrics_data[metrics_data.id], metrics_data)
 
     def tearDown(self) -> None:
         pass
