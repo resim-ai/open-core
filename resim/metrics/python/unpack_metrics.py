@@ -129,7 +129,6 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
                                                            MetricsData]) -> None:
     data_id = _unpack_uuid(metrics_data.metrics_data_id.id)
     if metrics_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE:
-        print("unpacking an external file metrics data")
         unpacked: MetricsData = ExternalFileMetricsData(
             name=metrics_data.name,
             filename=metrics_data.external_file.path
