@@ -1593,14 +1593,13 @@ class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
         msg = metrics_pb2.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
-
+        msg.data_type = metrics_pb2.EXTERNAL_FILE_DATA_TYPE
         msg.is_per_category = False
 
         assert len(self.filename) > 0, "Cannot pack an empty string."
 
         external_file = metrics_pb2.ExternalFile()
         external_file.path = self.filename
-        #this copy from wont world, i don't think
         msg.external_file.CopyFrom(external_file)
 
         return msg
