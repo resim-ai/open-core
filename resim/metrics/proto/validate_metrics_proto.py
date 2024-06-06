@@ -476,7 +476,7 @@ def _validate_metric_values(
     elif metric_values.HasField("plotly_metric_values"):
         _validate_plotly_metric_values(
             metric_values.plotly_metric_values)
-    else: # mp.ImageMetricType
+    else: # metric_values.HasField("image_metric_values")
         _validate_image_metric_values(
             metric_values.image_metric_values, metrics_data_map)
 
