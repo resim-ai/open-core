@@ -686,7 +686,7 @@ def _add_plotly_metric(job_metrics: mp.JobMetrics) -> None:
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "A plotly chart"
     metric.type = mp.PLOTLY_METRIC_TYPE
-    metric.description = "The most plotly of plotly charts"
+    metric.description = "The plotliest of plotly charts"
     metric.status = mp.NOT_APPLICABLE_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
