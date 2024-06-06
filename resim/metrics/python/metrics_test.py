@@ -78,7 +78,6 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.with_blocking(True))
         self.assertTrue(metric.blocking)
 
-
     def assert_common_fields_match(self, *,
                                    msg: mp.Metric,
                                    metric: metrics.Metric) -> None:
@@ -1369,6 +1368,266 @@ class MetricsTest(unittest.TestCase):
         metric.recursively_pack_into(output)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
+    def test_metrics_data(self) -> None:
+        index_data = metrics.SeriesMetricsData(
+            name="index data",
+            series=np.array([1., 2., 3.]),
+        )
+        metrics_data = metrics.SeriesMetricsData(
+            name="metrics data",
+            series=np.array([1., 2., 3.]),
+        )
+        unit = 'm'
+
+        self.assertEqual(metrics_data, metrics_data.with_unit(unit))
+        self.assertEqual(metrics_data.unit, unit)
+
+        self.assertEqual(
+            metrics_data,
+            metrics_data.with_index_data(index_data))
+        self.assertEqual(metrics_data.index_data, index_data)
+
+        self.assertEqual(metrics_data, metrics_data)
+        self.assertNotEqual(metrics_data, 4)
+        self.assertNotEqual(metrics_data, index_data)
+
+        with self.assertRaises(NotImplementedError):
+            metrics.MetricsData.map(metrics_data, lambda *_: _, '')
+        with self.assertRaises(NotImplementedError):
+            metrics.MetricsData.group_by(metrics_data, index_data)
+        with self.assertRaises(NotImplementedError):
+            metrics.MetricsData.pack(metrics_data)
+
+        output = metrics_utils.ResimMetricsOutput()
+        metrics_data.recursively_pack_into(output)
+        self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
+        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
+                         for md in output.metrics_msg.metrics_data},
+                         {index_data.id, metrics_data.id})
+        metrics_data.recursively_pack_into(output)
+        self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
+        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
+                         for md in output.metrics_msg.metrics_data},
+                         {index_data.id, metrics_data.id})
+
+    def test_series_metrics_data(self) -> None:
+        index_data = metrics.SeriesMetricsData(
+            name="index data",
+            series=np.array([1., 2., 3.]),
+        )
+        series = np.array([4., 5., 6.])
+        metrics_data = metrics.SeriesMetricsData(
+            name="metrics data",
+            unit='m',
+            index_data=index_data,
+        )
+        self.assertEqual(metrics_data, metrics_data.with_series(series))
+        self.assertTrue((metrics_data.series == series).all())
+
+        negated_metrics_data = metrics_data.map(lambda arr, i: -arr[i],
+                                                'negated metrics data',
+                                                'm')
+
+        for normal, negated in zip(metrics_data.series,
+                                   negated_metrics_data.series):
+            self.assertEqual(normal, -negated)
+
+        grouping_data = metrics.SeriesMetricsData(
+            name="grouping data",
+            series=np.array(["yes", "no", "yes"])
+        )
+
+        grouped_data = metrics_data.group_by(grouping_data,
+                                             'grouped data',
+                                             'grouped data index')
+
+        expected = {"yes": np.array([4., 6.]),
+                    "no": np.array([5.])}
+        expected_index = {"yes": np.array([1., 3.]),
+                          "no": np.array([2.])}
+
+        assert grouped_data is not None
+        assert grouped_data.index_data is not None
+        for key, val in expected.items():
+            self.assertTrue(
+                (val == grouped_data.category_to_series[key]).all())
+            self.assertTrue(
+                (expected_index[key] == grouped_data.index_data.category_to_series[key]).all())
+
+        self.assertEqual(grouped_data.name, 'grouped data')
+        self.assertEqual(grouped_data.index_data.name, 'grouped data index')
+
+        # Cover the override case:
+        regrouped_index = index_data.group_by(grouping_data,
+                                              'regrouped data',
+                                              'regrouped data index',
+                                              grouped_data.index_data)
+
+        for key, val in expected_index.items():
+            self.assertTrue(
+                (val == regrouped_index.category_to_series[key]).all())
+        self.assertEqual(regrouped_index.index_data, grouped_data.index_data)
+
+        assert regrouped_index is not None
+        assert regrouped_index.index_data is not None
+
+        self.assertEqual(regrouped_index.name, 'regrouped data')
+        self.assertEqual(regrouped_index.index_data.name, 'grouped data index')
+
+        # Check the auto naming:
+        autonamed_grouped_data = metrics_data.group_by(grouping_data)
+        assert autonamed_grouped_data is not None
+        assert autonamed_grouped_data.index_data is not None
+
+        self.assertEqual(
+            autonamed_grouped_data.name,
+            "metrics data-grouped-by-grouping data")
+        self.assertEqual(
+            autonamed_grouped_data.index_data.name,
+            "index data-grouped-by-grouping data")
+
+        autonamed_grouped_index = index_data.group_by(grouping_data)
+        assert autonamed_grouped_index is not None
+        assert autonamed_grouped_index.index_data is None
+
+        self.assertEqual(
+            autonamed_grouped_index.name,
+            "index data-grouped-by-grouping data")
+
+    def test_series_metrics_data_pack(self) -> None:
+        index_data = metrics.SeriesMetricsData(
+            name="index data",
+            series=np.array([1., 2., 3.]),
+        )
+        series = np.array([4., 5., 6.])
+        metrics_data = metrics.SeriesMetricsData(
+            name="metrics data",
+            series=series,
+            unit='m',
+            index_data=index_data,
+        )
+
+        msg = metrics_data.pack()
+        self.assertEqual(
+            msg.metrics_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                metrics_data.id))
+        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
+            'INDEXED_DOUBLE_SERIES_DATA_TYPE'))
+
+        self.assertEqual(msg.name, metrics_data.name)
+        self.assertEqual(msg.unit, metrics_data.unit)
+        self.assertFalse(msg.is_per_category)
+        self.assertEqual(len(msg.category_names), 0)
+        self.assertTrue(msg.is_indexed)
+        self.assertEqual(
+            msg.index_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                index_data.id))
+        self.assertEqual(
+            msg.index_data_type,
+            mp.MetricsDataType.Value('DOUBLE_SERIES_DATA_TYPE'))
+        for packed_val, val in zip(msg.series.doubles.series, series):
+            self.assertEqual(packed_val, val)
+
+    def test_grouped_metrics_data(self) -> None:
+        category_to_series = {"yes": np.array([4., 6.]),
+                              "no": np.array([5.])}
+
+        metrics_data = metrics.GroupedMetricsData(
+            name="grouped metrics data",
+            unit='m')
+
+        self.assertEqual(
+            metrics_data,
+            metrics_data.with_category_to_series(category_to_series))
+
+        # Check the case where the category_to_series is passed into the
+        # constructor
+        other_data = metrics.GroupedMetricsData(
+            name="other metrics data",
+            category_to_series=category_to_series,
+            unit="m",
+        )
+
+        for key, val in category_to_series.items():
+            self.assertTrue((other_data.category_to_series[key] == val).all())
+
+        negated_data = metrics_data.map(lambda arr, i, cat: -arr[i],
+                                        'negated data',
+                                        'm')
+
+        self.assertEqual(negated_data.name, 'negated data')
+        self.assertEqual(negated_data.unit, 'm')
+        for key, val in category_to_series.items():
+            self.assertTrue(
+                (negated_data.category_to_series[key] == -val).all())
+
+        with self.assertRaises(NotImplementedError):
+            metrics_data.group_by(metrics_data)
+
+        new_series = np.array([5.0, 6.0])
+        metrics_data.add_category('maybe', new_series)
+        self.assertIn('maybe', metrics_data.category_to_series)
+        self.assertTrue(
+            (metrics_data.category_to_series['maybe'] == new_series).all())
+
+    def test_grouped_metrics_data_pack(self) -> None:
+        index_category_to_series = {"yes": np.array([1., 2.]),
+                                    "no": np.array([3.])}
+        category_to_series = {"yes": np.array([4., 6.]),
+                              "no": np.array([5.])}
+
+        index_data = metrics.GroupedMetricsData(
+            name="index metrics data",
+            category_to_series=index_category_to_series,
+        )
+
+        metrics_data = metrics.GroupedMetricsData(
+            name="metrics data",
+            category_to_series=category_to_series,
+            unit='m',
+            index_data=index_data,
+        )
+
+        msg = metrics_data.pack()
+        self.assertEqual(
+            msg.metrics_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                metrics_data.id))
+        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
+            'INDEXED_DOUBLE_SERIES_DATA_TYPE'))
+
+        self.assertEqual(msg.name, metrics_data.name)
+        self.assertEqual(msg.unit, metrics_data.unit)
+        self.assertTrue(msg.is_per_category)
+        self.assertEqual(set(msg.category_names), {"yes", "no"})
+        self.assertTrue(msg.is_indexed)
+        self.assertEqual(
+            msg.index_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                index_data.id))
+        self.assertEqual(
+            msg.index_data_type,
+            mp.MetricsDataType.Value('DOUBLE_SERIES_DATA_TYPE'))
+
+        for key, packed_series in msg.series_per_category.category_to_series.items():
+            for packed_val, val in zip(
+                    packed_series.doubles.series, category_to_series[key]):
+                self.assertEqual(packed_val, val)
+
+        output = metrics_utils.ResimMetricsOutput()
+        metrics_data.recursively_pack_into(output)
+        self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
+        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
+                         for md in output.metrics_msg.metrics_data},
+                         {index_data.id, metrics_data.id})
+        metrics_data.recursively_pack_into(output)
+        self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
+        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
+                         for md in output.metrics_msg.metrics_data},
+                         {index_data.id, metrics_data.id})
 
 if __name__ == "__main__":
     unittest.main()
