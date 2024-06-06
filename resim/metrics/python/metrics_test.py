@@ -333,7 +333,7 @@ class MetricsTest(unittest.TestCase):
         time_data = metrics.SeriesMetricsData(
             name="times",
             series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                                metrics_utils.Timestamp(secs=5, nanos=0)]),
+                             metrics_utils.Timestamp(secs=5, nanos=0)]),
             unit='m')
         value_data = metrics.SeriesMetricsData(
             name="values",
@@ -421,7 +421,7 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
         ids = [uuid.UUID(data.metrics_data_id.id.data)
-                for data in output.metrics_msg.metrics_data]
+               for data in output.metrics_msg.metrics_data]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertIn(time_data.id, ids)
@@ -1628,6 +1628,7 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
                          for md in output.metrics_msg.metrics_data},
                          {index_data.id, metrics_data.id})
+
 
 if __name__ == "__main__":
     unittest.main()
