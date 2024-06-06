@@ -351,8 +351,8 @@ def _unpack_plotly_metric(metric: mp.Metric,
 
 
 def _unpack_image_metric(metric: mp.Metric,
-                          unpacked: ImageMetric,
-                          id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData]) -> None:
+                         unpacked: ImageMetric,
+                         id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData]) -> None:
     image_data = metric.metric_values.image_metric_values
     data = id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)]
     unpacked.with_image_data(
