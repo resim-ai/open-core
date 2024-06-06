@@ -1159,7 +1159,7 @@ class PlotlyMetric(Metric['PlotlyMetric']):
         self.plotly_data = plotly_data
 
     def with_plotly_data(self: PlotlyMetric,
-                        plotly_data: Struct) -> PlotlyMetric:
+                         plotly_data: Struct) -> PlotlyMetric:
         self.plotly_data = plotly_data
         return self
 
