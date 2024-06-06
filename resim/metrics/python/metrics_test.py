@@ -1629,7 +1629,7 @@ class MetricsTest(unittest.TestCase):
                          for md in output.metrics_msg.metrics_data},
                          {index_data.id, metrics_data.id})
 
-    def test_external_metrics_data(self) -> None:
+    def test_external_file_metrics_data(self) -> None:
         filename = "my_file.gif"
         metrics_data = metrics.ExternalFileMetricsData(
             name="file data",
@@ -1637,7 +1637,7 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metrics_data, metrics_data.with_filename(filename))
         self.assertTrue(metrics_data.filename == filename)
 
-    def test_series_metrics_data_pack(self) -> None:
+    def test_external_file_metrics_data_pack(self) -> None:
         filename = "my_file.gif"
         metrics_data = metrics.ExternalFileMetricsData(
             name="metrics data",
