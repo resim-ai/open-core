@@ -408,11 +408,40 @@ def _validate_scalar_metric_values(
     Check that a ScalarMetricValues is valid.
 
     Args:
-        histogram_metric_values: The metric values to check.
+        scalar_metric_values: The metric values to check.
     """
     _metrics_assert(scalar_metric_values.HasField('value'))
 
+def _validate_plotly_metric_values(
+        plotly_metric_values: mp.PlotlyMetricValues) -> None:
+    """
+    Check that a PlotlyMetricValues is valid.
 
+    Args:
+        plotly_metric_values: The metric values to check.
+    """
+    _metrics_assert(plotly_metric_values.HasField('json'))
+
+def _validate_image_metric_values(
+        image_metric_values: mp.ImageMetricValues,
+        metrics_data_map: dict[str, mp.MetricsData]) -> None:
+    """
+    Check that an ImageMetricValues is valid.
+
+    Args:
+        image_metric_values: The metric values to check.
+        metrics_data_map: A map to find the metrics data in.
+    """
+    _metrics_assert(image_metric_values.HasField('image_data_id'))
+    image_data_id = image_metric_values.image_data_id
+    _validate_metrics_data_id(image_data_id)
+    id_str = image_data_id.id.data
+    _metrics_assert(id_str in metrics_data_map)
+    value_data = metrics_data_map[id_str]
+    print("yay debug!")
+    print(value_data.data_type)
+    _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
+    
 def _validate_metric_values(
         metric_values: mp.MetricValues,
         metrics_data_map: dict[str, mp.MetricsData]) -> None:
@@ -443,9 +472,15 @@ def _validate_metric_values(
     elif metric_values.HasField("histogram_metric_values"):
         _validate_histogram_metric_values(
             metric_values.histogram_metric_values, metrics_data_map)
-    else:  # metric_values.HasField("scalar_metric_values")
+    elif metric_values.HasField("scalar_metric_values"):
         _validate_scalar_metric_values(
             metric_values.scalar_metric_values)
+    elif metric_values.HasField("plotly_metric_values"):
+        _validate_plotly_metric_values(
+            metric_values.plotly_metric_values)
+    else: # mp.ImageMetricType
+        _validate_image_metric_values(
+            metric_values.image_metric_values, metrics_data_map)
 
 
 def _validate_metric(metric: mp.Metric,
@@ -486,8 +521,12 @@ def _validate_metric(metric: mp.Metric,
     elif metric.type == mp.HISTOGRAM_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField(
             'histogram_metric_values'))
-    else:  # metric.type == mp.SCALAR_METRIC_TYPE:
+    elif metric.type == mp.SCALAR_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField('scalar_metric_values'))
+    elif metric.type == mp.PLOTLY_METRIC_TYPE:
+        _metrics_assert(metric.metric_values.HasField('plotly_metric_values'))
+    else:  # mp.IMAGE_METRIC_TYPE
+        _metrics_assert(metric.metric_values.HasField('image_metric_values'))
 
 
 def _validate_job_level_metrics(
@@ -543,7 +582,10 @@ def _validate_metrics_data(
     _validate_metrics_data_id(metrics_data.metrics_data_id)
     _validate_metrics_data_type(metrics_data.data_type)
 
-    if metrics_data.is_per_category:
+    if metrics_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE:
+        _metrics_assert(metrics_data.HasField('external_file'))
+        _metrics_assert(len(metrics_data.external_file.path) > 0)
+    elif metrics_data.is_per_category:
         _metrics_assert(metrics_data.HasField('series_per_category'))
         for _, series in metrics_data.series_per_category.category_to_series.items():
             _metrics_assert(_series_length(series) > 0)
