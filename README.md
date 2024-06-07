@@ -62,3 +62,13 @@ included in our development docker container.
 # Documentation
 
 If you add a new file to `docs/`, it needs to be added to the `nav:` section in the `mkdocs.yml` of our internal docs repo before it will be easy to find on docs.resim.ai
+
+
+# Releasing a Go Package
+
+This branch currently contains a hacky way to release the Go package of the metrics protobuf. 
+
+- Rebase on main to ensure that the latest proto exist
+- Run `go generate ./...` to run the protoc executable (which you may need to install)
+- Move the generated metrics.pb.go to the /metrics dir
+- Tag and push
