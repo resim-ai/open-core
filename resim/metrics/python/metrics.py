@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeAlias,
 
 import numpy as np
 
+from google.protobuf.struct_pb2 import Struct
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import (
     ResimMetricsOutput,
@@ -164,6 +165,10 @@ class Metric(ABC, Generic[MetricT]):
             unpacked = HistogramMetric(name=msg.name)
         elif msg.type == metrics_pb2.MetricType.Value('SCALAR_METRIC_TYPE'):
             unpacked = ScalarMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value('PLOTLY_METRIC_TYPE'):
+            unpacked = PlotlyMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value('IMAGE_METRIC_TYPE'):
+            unpacked = ImageMetric(name=msg.name)
         else:
             raise ValueError('Invalid metric type')
 
@@ -1126,6 +1131,116 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
         if self.status_data is not None:
             self.status_data.recursively_pack_into(metrics_output)
 
+@metric_dataclass
+class PlotlyMetric(Metric['PlotlyMetric']):
+    plotly_data: Optional[Struct]
+
+    def __init__(self: PlotlyMetric,
+                 name: str,
+                 description: Optional[str] = None,
+                 status: Optional[MetricStatus] = None,
+                 importance: Optional[MetricImportance] = None,
+                 blocking: Optional[bool] = None,
+                 should_display: Optional[bool] = None,
+                 parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
+                 plotly_data: Optional[Struct] = None,
+                 ):
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
+
+        self.plotly_data = plotly_data
+
+    def with_plotly_data(self: PlotlyMetric,
+                         plotly_data: Struct) -> PlotlyMetric:
+        self.plotly_data = plotly_data
+        return self
+
+    def pack(self: PlotlyMetric) -> metrics_pb2.Metric:
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('PLOTLY_METRIC_TYPE')
+
+        metric_values = msg.metric_values.plotly_metric_values
+
+        if self.plotly_data is not None:
+            metric_values.json.CopyFrom(self.plotly_data)
+
+        return msg
+
+    def recursively_pack_into(
+            self: PlotlyMetric,
+            metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+@metric_dataclass
+class ImageMetric(Metric['ImageMetric']):
+    image_data: Optional[ExternalFileMetricsData]
+
+    def __init__(self: ImageMetric,
+                 name: str,
+                 description: Optional[str] = None,
+                 status: Optional[MetricStatus] = None,
+                 importance: Optional[MetricImportance] = None,
+                 blocking: Optional[bool] = None,
+                 should_display: Optional[bool] = None,
+                 parent_job_id: Optional[uuid.UUID] = None,
+                 order: Optional[float] = None,
+                 image_data: Optional[ExternalFileMetricsData] = None,
+                 ):
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order)
+
+        self.image_data = image_data
+
+    def with_image_data(self: ImageMetric,
+                        image_data: ExternalFileMetricsData) -> ImageMetric:
+        self.image_data = image_data
+        return self
+
+    def pack(self: ImageMetric) -> metrics_pb2.Metric:
+        msg = super().pack()
+        msg.type = metrics_pb2.MetricType.Value('IMAGE_METRIC_TYPE')
+
+        metric_values = msg.metric_values.image_metric_values
+
+        if self.image_data is not None:
+            metric_values.image_data_id.id.CopyFrom(
+                pack_uuid_to_proto(self.image_data.id))
+
+        return msg
+
+    def recursively_pack_into(
+            self: ImageMetric,
+            metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([
+                                                                    self.pack()])
+
+        if self.image_data is not None:
+            self.image_data.recursively_pack_into(metrics_output)
+
 # -------------------
 # Data representation
 # -------------------
@@ -1133,24 +1248,17 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
 
 MetricsDataT = TypeVar('MetricsDataT', bound='MetricsData')
 
-
 @metric_dataclass
-class MetricsData(ABC, Generic[MetricsDataT]):
+class BaseMetricsData(ABC, Generic[MetricsDataT]):
     id: uuid.UUID
     name: str
-    unit: Optional[str]
-    index_data: Optional[MetricsDataT]
 
     @abstractmethod
     def __init__(self: MetricsDataT,
-                 name: str,
-                 unit: Optional[str] = None,
-                 index_data: Optional[MetricsDataT] = None):
+                 name: str):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
-        self.unit = unit
-        self.index_data = index_data
 
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -1160,6 +1268,34 @@ class MetricsData(ABC, Generic[MetricsDataT]):
                 __value.id is not None), "Cannot compare values without valid ids"
 
         return self.id == __value.id
+
+    @abstractmethod
+    def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def recursively_pack_into(self: MetricsDataT,
+                              metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        output = self.pack()
+
+        metrics_output.metrics_msg.metrics_data.extend([output])
+
+@metric_dataclass
+class MetricsData(BaseMetricsData, Generic[MetricsDataT]):
+    unit: Optional[str] = None
+    index_data: Optional[MetricsDataT]
+
+    def __init__(self: MetricsDataT,
+                 name: str,
+                 unit: Optional[str] = None,
+                 index_data: Optional[MetricsDataT] = None):
+        super().__init__(name)
+        self.unit = unit
+        self.index_data = index_data
 
     def with_unit(self: MetricsDataT, unit: str) -> MetricsDataT:
         self.unit = unit
@@ -1185,10 +1321,6 @@ class MetricsData(ABC, Generic[MetricsDataT]):
             grouped_data_name: Optional[str] = None,
             grouped_index_name: Optional[str] = None,
             override_grouped_index_data: Optional[GroupedMetricsData] = None) -> GroupedMetricsData:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
         raise NotImplementedError()
 
     @abstractmethod
@@ -1438,5 +1570,41 @@ class GroupedMetricsData(MetricsData['GroupedMetricsData']):
 
     def recursively_pack_into(
             self: GroupedMetricsData,
+            metrics_output: ResimMetricsOutput) -> None:
+        super().recursively_pack_into(metrics_output)
+
+
+@metric_dataclass
+class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
+    filename: str
+
+    def __init__(self: ExternalFileMetricsData,
+                 name: str,
+                 filename: Optional[str] = None):
+        super().__init__(name=name)
+        self.filename = filename
+
+    def with_filename(self: ExternalFileMetricsData,
+                    filename: str) -> ExternalFileMetricsData:
+        self.filename = filename
+        return self
+
+    def pack(self: ExternalFileMetricsData) -> metrics_pb2.MetricsData:
+        msg = metrics_pb2.MetricsData()
+        msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.name = self.name
+        msg.data_type = metrics_pb2.EXTERNAL_FILE_DATA_TYPE
+        msg.is_per_category = False
+
+        assert len(self.filename) > 0, "Cannot pack an empty string."
+
+        external_file = metrics_pb2.ExternalFile()
+        external_file.path = self.filename
+        msg.external_file.CopyFrom(external_file)
+
+        return msg
+
+    def recursively_pack_into(
+            self: ExternalFileMetricsData,
             metrics_output: ResimMetricsOutput) -> None:
         super().recursively_pack_into(metrics_output)
