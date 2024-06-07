@@ -234,3 +234,28 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "geodetic",
+    srcs = ["geodetic.cc"],
+    hdrs = ["geodetic.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":se3",
+        "//resim/math:newton_solver",
+        "//resim/utils:nullable_reference",
+        "@au//au",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "geodetic_test",
+    srcs = ["geodetic_test.cc"],
+    deps = [
+        ":geodetic",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)

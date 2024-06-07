@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros2/rclpy/archive/refs/tags/3.3.11.tar.gz",
+    "integrity": "sha256-ZLCQtVeq7Tp64i6gL6Iei9Ktey7YSorZ/MAkbr8bTMk=",
+    "strip_prefix": "rclpy-3.3.11",
+    "patches": {
+      "add_build_file.patch": "sha256-YCYvgktnHCT2cbEIebgC/1HNMvU7iYVJ6lW6jtn/olI="
+    },
+    "patch_strip": 1
+}

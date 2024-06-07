@@ -1,0 +1,8 @@
+module(
+    name = "vision_msgs",
+    compatibility_level = 4,
+    version = "4.1.0",
+)
+
+bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
+bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")

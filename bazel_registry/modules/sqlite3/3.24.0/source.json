@@ -1,0 +1,9 @@
+{
+    "url": "https://www.sqlite.org/2018/sqlite-amalgamation-3240000.zip",
+    "integrity": "sha256-rWjBIWw6R0zzYMdYGkAB6VJRWzZJNCEA8tfKfI4xPaY=",
+    "strip_prefix": "sqlite-amalgamation-3240000",
+    "patches": {
+      "add_build_file.patch": "sha256-9iA3XiYPmXPLrhltDXXC3/OjubaSFLdQzW/3TRrzCn8="
+    },
+    "patch_strip": 1
+}

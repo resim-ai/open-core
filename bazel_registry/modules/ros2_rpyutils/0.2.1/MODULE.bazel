@@ -1,0 +1,7 @@
+module(
+    name = "ros2_rpyutils",
+    compatibility_level = 0,
+    version = "0.2.1",
+)
+
+bazel_dep(name = "rules_python", version = "0.31.0")

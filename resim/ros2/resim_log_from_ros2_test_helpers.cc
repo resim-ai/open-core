@@ -15,14 +15,15 @@
 #include <rclcpp/serialized_message.hpp>
 #include <rosbag2_cpp/writer.hpp>
 #include <std_msgs/msg/byte.hpp>
+#include <std_msgs/msg/u_int8_multi_array.hpp>
 #include <string>
 #include <tuple>
 
 #include "resim/assert/assert.hh"
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/msg/fuzz_helpers.hh"
 #include "resim/ros2/odometry_from_ros2.hh"
 #include "resim/ros2/transform_from_ros2.hh"
-#include "resim/testing/fuzz_helpers.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/proto/dependency_file_descriptor_set.hh"
 #include "resim/utils/tuple_utils.hh"
@@ -61,13 +62,14 @@ MessageMap make_test_messages() {
         using MessageType = typename decltype(channel)::type;
         for (int ii = 0; ii < MESSAGES_PER_CHANNEL; ++ii) {
           const mcap::Timestamp stamp =
-              resim::random_element<uint32_t>(InOut{rng});
-          REASSERT(result[channel.name]
-                       .emplace(
-                           stamp,
-                           std::make_unique<MessageType>(
-                               random_element<MessageType>(InOut{rng})))
-                       .second);
+              resim::converter::random_element<uint32_t>(InOut{rng});
+          REASSERT(
+              result[channel.name]
+                  .emplace(
+                      stamp,
+                      std::make_unique<MessageType>(
+                          converter::random_element<MessageType>(InOut{rng})))
+                  .second);
         }
         // Need to return something even though we don't use it.
         return true;
@@ -112,6 +114,9 @@ void populate_log(const std::filesystem::path &log_path) {
   // Write a message type we don't support converting
   std_msgs::msg::Byte byte;
   writer.write(byte, "/should_not_be_converted", rclcpp::Time());
+
+  std_msgs::msg::UInt8MultiArray arr;
+  writer.write(arr, "/should_fail_when_converted", rclcpp::Time());
 }
 
 // Helper function to confirm that the ReSim log at the given path contains the
@@ -142,7 +147,7 @@ void verify_log_contents(const std::filesystem::path &log_path) {
             auto &expected_message = static_cast<const ReSimType &>(
                 *test_messages.at(topic).at(time));
 
-            verify_equality(logged_message, expected_message);
+            converter::verify_equality(logged_message, expected_message);
             REASSERT(type == ReSimType::GetDescriptor()->full_name());
 
             const std::string expected_data{

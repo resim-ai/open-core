@@ -6,7 +6,7 @@
 
 
 """
-This module contains a simple function for fetching all pages form a given
+This module contains a simple function for fetching all pages from a given
 endpoint.
 
 In ReSim's API we have a number of endpoints with paged responses. These work

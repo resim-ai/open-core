@@ -1,0 +1,11 @@
+{
+  "homepage": "https://github.com/ros-perception/vision_msgs",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros-perception/vision_msgs"
+  ],
+  "versions":[
+    "4.1.0"
+  ],
+  "yanked_versions": {}
+}

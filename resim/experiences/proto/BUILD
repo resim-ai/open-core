@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 proto_library(
     name = "revision_proto",
@@ -121,6 +122,12 @@ cc_proto_library(
     deps = [":experience_proto"],
 )
 
+py_proto_library(
+    name = "experience_proto_py",
+    visibility = ["//visibility:public"],
+    deps = [":experience_proto"],
+)
+
 cc_library(
     name = "experiences_test_helpers",
     testonly = 1,
@@ -231,6 +238,8 @@ cc_library(
         ":ilqr_drone_proto_cc",
         "//resim/assert",
         "//resim/experiences:ilqr_drone",
+        "//resim/math/proto:matrix_to_proto",
+        "//resim/utils:inout",
     ],
 )
 

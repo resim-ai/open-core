@@ -22,6 +22,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
+        "@libuuid",
     ],
 )
 
@@ -296,5 +297,23 @@ cc_binary(
         ":snippet_mcap",
         "@cxxopts",
         "@fmt",
+    ],
+)
+
+cc_library(
+    name = "setter_reference",
+    hdrs = ["setter_reference.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+cc_test(
+    name = "setter_reference_test",
+    srcs = ["setter_reference_test.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":setter_reference",
+        "@com_google_googletest//:gtest_main",
     ],
 )

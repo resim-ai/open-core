@@ -15,9 +15,7 @@ from typing import Optional, Set, Tuple
 from google.protobuf import timestamp_pb2
 import numpy as np
 
-# trunk-ignore(mypy/attr-defined)
 from resim.metrics.proto import metrics_pb2
-# trunk-ignore(mypy/attr-defined)
 from resim.utils.proto import uuid_pb2
 
 

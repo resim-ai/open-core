@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 cc_library(
     name = "liegroup_to_proto",
@@ -96,6 +97,12 @@ cc_proto_library(
     deps = [":framed_vector_3_proto"],
 )
 
+py_proto_library(
+    name = "framed_vector_3_proto_py",
+    visibility = ["//visibility:public"],
+    deps = [":framed_vector_3_proto"],
+)
+
 cc_library(
     name = "framed_vector_3_to_proto",
     srcs = ["framed_vector_3_to_proto.cc"],
@@ -180,10 +187,13 @@ cc_library(
     hdrs = ["fuzz_helpers.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        ":framed_vector_3_proto_cc",
+        ":framed_vector_3_to_proto",
         ":se3_proto_cc",
         ":se3_to_proto",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/testing:random_matrix",
+        "//resim/transforms:framed_vector",
         "//resim/transforms:se3",
         "//resim/utils:inout",
     ],
@@ -195,7 +205,7 @@ cc_test(
     deps = [
         ":fuzz_helpers",
         ":se3_proto_cc",
-        "//resim/testing:fuzz_helpers",
+        "//resim/converter:fuzz_helpers",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],

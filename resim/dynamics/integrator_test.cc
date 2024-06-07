@@ -48,7 +48,7 @@ class TestIntegrator : public Integrator<testing::OscillatorState> {
       const Delta perturbation{EPSILON * Delta::Unit(ii)};
       const State perturbed_state{state + perturbation};
       const Delta perturbed_delta{
-          complete_dynamics(perturbed_state, time, null_reference<MatXX>)};
+          complete_dynamics(perturbed_state, time, null_reference)};
       EXPECT_TRUE(
           (perturbed_delta - delta).isApprox(jacobian * perturbation, EPSILON));
     }

@@ -20,6 +20,7 @@ from resim.metrics.fetch_all_pages import fetch_all_pages
 
 
 def fetch_metrics_urls(*,
+                       project_id: uuid.UUID,
                        batch_id: uuid.UUID,
                        job_id: uuid.UUID,
                        client: AuthenticatedClient) -> list[str]:
@@ -27,12 +28,14 @@ def fetch_metrics_urls(*,
     return [
         metric.metric_url for metrics_response in fetch_all_pages(
             list_metrics_for_job.sync,
+            str(project_id),
             str(batch_id),
             str(job_id),
             client=client) for metric in metrics_response.metrics]
 
 
 def fetch_metrics_data_urls(*,
+                            project_id: uuid.UUID,
                             batch_id: uuid.UUID,
                             job_id: uuid.UUID,
                             client: AuthenticatedClient) -> list[str]:
@@ -40,6 +43,7 @@ def fetch_metrics_data_urls(*,
     return [
         metrics_data.metrics_data_url for metrics_data_response in fetch_all_pages(
             list_metrics_data_for_job.sync,
+            str(project_id),
             str(batch_id),
             str(job_id),
             client=client) for metrics_data in metrics_data_response.metrics_data]

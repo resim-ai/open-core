@@ -8,12 +8,14 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
 #include "resim/actor/actor.hh"
 #include "resim/actor/actor_id.hh"
+#include "resim/actor/ilqr_drone.hh"
 #include "resim/actor/state/trajectory.hh"
 #include "resim/assert/assert.hh"
 #include "resim/curves/t_curve.hh"
@@ -61,6 +63,22 @@ void expect_actor_matches_curve(
             curve.point_at(t_s).right_two_jet()));
   }
 }
+
+// Helper to ensure that a given ilqr drone actor matches a given start position
+void expect_ilqr_actor_initialized_correctly(
+    const ActorId &id,
+    const Eigen::Vector3d &expected_initial_position,
+    Actor &actor) {
+  auto *actor_ptr = dynamic_cast<ILQRDrone *>(&actor);
+  ASSERT_NE(actor_ptr, nullptr);
+  actor.simulate_forward(time::Timestamp());
+  EXPECT_TRUE(
+      actor.observable_state().state.ref_from_body().is_approx(transforms::SE3(
+          expected_initial_position,
+          simulator::SCENE_FRAME,
+          transforms::Frame<3>{id})));
+}
+
 }  // namespace
 
 TEST(FactoryTest, TestMakeTrajectoryActor) {
@@ -90,6 +108,37 @@ TEST(FactoryTest, TestMakeTrajectoryActor) {
   EXPECT_EQ(actors.front()->id(), id);
 }
 
+TEST(FactoryTest, TestMakeILQRDrone) {
+  // SETUP
+  experiences::DynamicBehavior dynamic_behavior;
+  const ActorId id{ActorId::new_uuid()};
+  dynamic_behavior.actors.push_back(experiences::Actor{
+      .id = id,
+      .actor_type = experiences::ActorType::SIMULATION_ACTOR,
+  });
+
+  const Eigen::Vector3d initial_position{1.0, 2.0, 3.0};
+  dynamic_behavior.storyboard.movement_models.push_back(
+      experiences::MovementModel{
+          .actor_reference = id,
+          .model =
+              experiences::ILQRDrone{
+                  .initial_position = initial_position,
+              },
+      });
+  // ACTION
+  const std::vector<std::unique_ptr<Actor>> actors{factory(dynamic_behavior)};
+
+  // VERIFICATION
+  ASSERT_EQ(actors.size(), 1U);
+  ASSERT_NE(actors.front(), nullptr);
+  expect_ilqr_actor_initialized_correctly(
+      id,
+      initial_position,
+      *actors.front().get());
+  EXPECT_EQ(actors.front()->id(), id);
+}
+
 TEST(FactoryTest, TestFailsOnBadMovementModel) {
   // SETUP
   experiences::DynamicBehavior dynamic_behavior;
@@ -104,16 +153,6 @@ TEST(FactoryTest, TestFailsOnBadMovementModel) {
 
   // Not enough models:
 
-  // ACTION / VERIFICATION
-  EXPECT_THROW(factory(dynamic_behavior), AssertException);
-
-  // SETUP
-  // Unsupported model:
-  dynamic_behavior.storyboard.movement_models.push_back(
-      experiences::MovementModel{
-          .actor_reference = id,
-          .model = experiences::ILQRDrone{},
-      });
   // ACTION / VERIFICATION
   EXPECT_THROW(factory(dynamic_behavior), AssertException);
 

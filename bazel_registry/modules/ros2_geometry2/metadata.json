@@ -1,0 +1,11 @@
+{
+  "homepage": "https://www.ros.org/",
+  "maintainers": [],
+  "repository": [
+    "https://github.com/ros2/geometry2"
+  ],
+  "versions":[
+    "0.25.5"
+  ],
+  "yanked_versions": {}
+}

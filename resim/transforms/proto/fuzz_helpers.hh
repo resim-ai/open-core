@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include "resim/testing/fuzz_helpers.hh"
+#include "resim/converter/fuzz_helpers.hh"
 #include "resim/testing/random_matrix.hh"
+#include "resim/transforms/framed_vector.hh"
+#include "resim/transforms/proto/framed_vector_3.pb.h"
+#include "resim/transforms/proto/framed_vector_3_to_proto.hh"
 #include "resim/transforms/proto/se3.pb.h"
 #include "resim/transforms/proto/se3_to_proto.hh"
 #include "resim/transforms/se3.hh"
@@ -16,7 +19,7 @@
 namespace resim::transforms::proto {
 
 template <typename Rng>
-SE3 random_element(TypeTag<SE3> /*unused*/, InOut<Rng> rng) {
+SE3 random_element(converter::TypeTag<SE3> /*unused*/, InOut<Rng> rng) {
   SE3 result;
   const transforms::SE3 pose{transforms::SE3::exp(
       testing::random_vector<transforms::SE3::TangentVector>(*rng),
@@ -26,6 +29,24 @@ SE3 random_element(TypeTag<SE3> /*unused*/, InOut<Rng> rng) {
   return result;
 }
 
-bool verify_equality(const SE3 &a, const SE3 &b);
+template <typename Rng>
+FramedVector_3 random_element(
+    converter::TypeTag<FramedVector_3> /*unused*/,
+    InOut<Rng> rng) {
+  constexpr int THREE = 3;
+  FramedVector_3 result;
+
+  const transforms::FramedVector<THREE> vec{
+      testing::random_vector<Eigen::Vector3d>(*rng),
+      Frame<THREE>::new_frame()};
+
+  pack(vec, &result);
+
+  return result;
+}
+
+bool custom_verify_equality(const SE3 &a, const SE3 &b);
+
+bool custom_verify_equality(const FramedVector_3 &a, const FramedVector_3 &b);
 
 }  // namespace resim::transforms::proto

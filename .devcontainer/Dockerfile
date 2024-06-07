@@ -8,7 +8,6 @@ RUN apt-get install -y ca-certificates curl gnupg lsb-release software-propertie
 RUN apt-get install -y g++ clang lcov clang-format clang-tidy clangd
 RUN apt-get install -y openssh-server unzip groff man
 RUN apt-get install -y emacs vim zsh tmux
-RUN apt-get install -y uuid-dev
 RUN apt-get install -y cgdb
 RUN apt-get install -y libcurl4-openssl-dev
 
@@ -42,7 +41,7 @@ RUN apt install -y apt-transport-https curl gnupg
 RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
 RUN mv bazel-archive-keyring.gpg /usr/share/keyrings
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-RUN apt-get update && apt-get -y install bazel=6.3.1
+RUN apt-get update && apt-get -y install bazel-6.3.1 bazel=7.1.1
 # Prevent automatically upgrading bazel version
 RUN apt-mark hold bazel  
 

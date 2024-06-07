@@ -55,8 +55,7 @@ class RandomTaskGraphMaker {
 
  private:
   using TaskId = int;
-  using CheckpointToTaskMultiMap =
-      std::unordered_multimap<std::string_view, TaskId>;
+  using CheckpointToTaskMultiMap = std::unordered_multimap<ExecutorKey, TaskId>;
   using TaskSet = std::unordered_set<TaskId>;
 
   CheckpointToTaskMultiMap checkpoint_to_upstream_tasks_map_;

@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/eclipse-iceoryx/iceoryx/archive/refs/tags/v2.0.5.tar.gz",
+    "integrity": "sha256-v23nDj7e5xIj+ZOim/9eYa+VzkhxEEkp2L0XKfVEuvs=",
+    "strip_prefix": "rmw_dds_common-1.6.0",
+    "patches": {
+      "add_build_file.patch": "sha256-tKzej9rhlUtzS57H5Ry6Ac2iczsgcXGGRKJ1jlfspeE="
+    },
+    "patch_strip": 1
+}

@@ -1,0 +1,81 @@
+diff --git a/BUILD b/BUILD
+new file mode 100644
+index 0000000..e738bc5
+--- /dev/null
++++ b/BUILD
+@@ -0,0 +1,75 @@
++load("@bazel_skylib//lib:dicts.bzl", "dicts")
++load("@bazel_skylib//lib:selects.bzl", "selects")
++load("@rules_foreign_cc//foreign_cc:cmake.bzl", "cmake")
++
++filegroup(
++    name = "all_srcs",
++    srcs = glob(["**"]),
++    visibility = ["//visibility:public"],
++)
++
++cache_entries = {
++    "BUILD_SHARED_LIBS": "OFF",
++    "CCACHE": "OFF",
++}
++
++cache_entries_qnx = {
++    "CMAKE_SYSTEM_NAME": "ANDROID_OR_QNX",
++}
++
++# Depends on libacl. On Ubuntu install as `sudo apt-get install libacl1-dev`.
++cmake(
++    name = "iceoryx",
++    build_args = [
++        "--",  # <- Pass options to the native tool.
++        "-j4",
++    ],
++    cache_entries = selects.with_or(
++        {
++            ("@platforms//os:linux", "@platforms//os:macos"): cache_entries,
++            ("@platforms//os:android", "@platforms//os:qnx"): dicts.add(
++                cache_entries,
++                cache_entries_qnx,
++            ),
++        },
++        no_match_error = "Supported OSs: Android, Linux, macOS, QNX",
++    ),
++    generate_args = ["-GNinja"],
++    lib_source = ":all_srcs",
++    linkopts = selects.with_or(
++        {
++            ("@platforms//os:linux", "@platforms//os:macos"): [
++                "-lacl",
++                "-latomic",
++                "-lpthread",
++                "-lrt",
++            ],
++            ("@platforms//os:android", "@platforms//os:qnx"): ["-latomic"],
++        },
++        no_match_error = "Supported OSs: Android, Linux, macOS, QNX",
++    ),
++    out_binaries = ["iox-roudi"],
++    out_data_dirs = ["lib/cmake"],
++    out_include_dir = "include/iceoryx/v2.0.5/",
++    out_static_libs = [
++        # The order of the libs is important for linking to work out.
++        "libiceoryx_binding_c.a",
++        "libiceoryx_posh_config.a",
++        "libiceoryx_posh_roudi.a",
++        "libiceoryx_posh.a",
++        "libiceoryx_posh_gateway.a",
++        "libiceoryx_hoofs.a",
++        "libiceoryx_platform.a",
++    ],
++    # TODO(mvukov) Provide toml library instead of allowing network access?
++    tags = ["requires-network"],
++    visibility = ["//visibility:public"],
++    working_directory = "iceoryx_meta",
++)
++
++filegroup(
++    name = "iox_roudi",
++    srcs = [":iceoryx"],
++    output_group = "iox-roudi",
++    visibility = ["//visibility:public"],
++)

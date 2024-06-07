@@ -75,7 +75,7 @@ class SimpleStepExecutor final : public StepExecutor {
   // detail.
   CheckPoint start_;
 
-  std::unordered_map<std::string_view, CheckPoint> checkpoints_;
+  std::unordered_map<ExecutorKey, CheckPoint> checkpoints_;
   std::vector<Task> tasks_;
 
   // A queue to handle the actual running of all of our tasks.

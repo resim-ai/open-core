@@ -22,6 +22,7 @@
 #include "resim/ros2/odometry_from_ros2.hh"
 #include "resim/ros2/oriented_box_from_ros2.hh"
 #include "resim/ros2/pose_from_ros2.hh"
+#include "resim/ros2/primitives_from_ros2.hh"
 #include "resim/ros2/time_from_ros2.hh"
 #include "resim/ros2/transform_from_ros2.hh"
 #include "resim/transforms/proto/fuzz_helpers.hh"
@@ -51,7 +52,22 @@ using Ros2Types = ::testing::Types<
     vision_msgs::msg::Detection3DArray,
     vision_msgs::msg::BoundingBox2D,
     vision_msgs::msg::Detection2D,
-    vision_msgs::msg::Detection2DArray>;
+    vision_msgs::msg::Detection2DArray,
+    std_msgs::msg::Bool,
+    std_msgs::msg::Byte,
+    std_msgs::msg::Char,
+    std_msgs::msg::Empty,
+    std_msgs::msg::Float32,
+    std_msgs::msg::Float64,
+    std_msgs::msg::Int16,
+    std_msgs::msg::Int32,
+    std_msgs::msg::Int64,
+    std_msgs::msg::Int8,
+    std_msgs::msg::String,
+    std_msgs::msg::UInt16,
+    std_msgs::msg::UInt32,
+    std_msgs::msg::UInt64,
+    std_msgs::msg::UInt8>;
 
 template <typename T>
 struct DefaultConverterPluginTest : public ::testing::Test {
@@ -112,14 +128,15 @@ namespace {
 // By default, we use random_element() to get test elements.
 template <typename ReSimType>
 ReSimType get_test_element(InOut<std::mt19937> rng) {
-  return random_element<ReSimType>(rng);
+  return converter::random_element<ReSimType>(rng);
 }
 
 // For OrientedBox, we don't want the frame IDs
 template <>
 geometry::proto::OrientedBoxSE3
 get_test_element<geometry::proto::OrientedBoxSE3>(InOut<std::mt19937> rng) {
-  auto random_box = random_element<geometry::proto::OrientedBoxSE3>(rng);
+  auto random_box =
+      converter::random_element<geometry::proto::OrientedBoxSE3>(rng);
   // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   random_box.mutable_reference_from_box()
@@ -137,7 +154,7 @@ get_test_element<geometry::proto::OrientedBoxSE3>(InOut<std::mt19937> rng) {
 template <>
 transforms::proto::SE3 get_test_element<transforms::proto::SE3>(
     InOut<std::mt19937> rng) {
-  auto pose = random_element<transforms::proto::SE3>(rng);
+  auto pose = converter::random_element<transforms::proto::SE3>(rng);
   // We don't use frame IDs when converting to/from ROS2.
   constexpr int DIMS = 3;
   pose.mutable_into()->mutable_id()->set_data(
@@ -164,14 +181,6 @@ geometry_msgs::msg::Transform convert<geometry_msgs::msg::Transform>(
   return convert_to_ros2_transform(x);
 }
 
-// Bring this into this namespace since it will get shadowed by the other
-// verify_equality overloads that are in this namespace.
-bool verify_equality(
-    const google::protobuf::Timestamp &a,
-    const google::protobuf::Timestamp &b) {
-  return resim::verify_equality(a, b);
-}
-
 }  // namespace
 
 TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
@@ -190,12 +199,15 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvert) {
   serialization.serialize_message(&ros2_message, &serialized_message);
 
   // ACTION
-  auto converted = plugin.convert(ros2_type_name, serialized_message);
+  const auto maybe_converted =
+      plugin.convert(ros2_type_name, serialized_message);
+  ASSERT_TRUE(maybe_converted.has_value());
+  const auto &converted = maybe_converted.value();
 
   // VERIFICATION
   ReSimType deserialized;
   ASSERT_TRUE(deserialized.ParseFromArray(converted.data(), converted.size()));
-  EXPECT_TRUE(verify_equality(test_message, deserialized));
+  EXPECT_TRUE(converter::verify_equality(test_message, deserialized));
 }
 
 TYPED_TEST(DefaultConverterPluginTest, TestConvertBadMessage) {
@@ -209,9 +221,7 @@ TYPED_TEST(DefaultConverterPluginTest, TestConvertBadMessage) {
   rclcpp::SerializedMessage serialized_message;
 
   // ACTION / VERIFICATION
-  EXPECT_THROW(
-      plugin.convert(ros2_type_name, serialized_message),
-      AssertException);
+  EXPECT_EQ(plugin.convert(ros2_type_name, serialized_message), std::nullopt);
 }
 
 }  // namespace resim::ros2

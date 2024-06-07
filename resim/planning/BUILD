@@ -12,6 +12,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/utils:nullable_reference",
+        "@libeigen//:eigen",
     ],
 )
 
@@ -21,6 +22,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/utils:nullable_reference",
+        "@libeigen//:eigen",
     ],
 )
 
@@ -65,6 +67,26 @@ cc_test(
     srcs = ["ilqr_test.cc"],
     deps = [
         ":ilqr",
+        "//resim/testing:random_matrix",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "cost_function_registry",
+    hdrs = ["cost_function_registry.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/planning:cost_function",
+        "//resim/utils:nullable_reference",
+    ],
+)
+
+cc_test(
+    name = "cost_function_registry_test",
+    srcs = ["cost_function_registry_test.cc"],
+    deps = [
+        ":cost_function_registry",
         "//resim/testing:random_matrix",
         "@com_google_googletest//:gtest_main",
     ],

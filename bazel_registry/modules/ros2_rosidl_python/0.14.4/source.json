@@ -1,0 +1,10 @@
+{
+    "url": "https://github.com/ros2/rosidl_python/archive/refs/tags/0.14.4.tar.gz",
+    "integrity": "sha256-S7OLZxigwjqm15lUjEz9AhujIClGc+derzE3gh4SNNE=",
+    "strip_prefix": "rosidl_python-0.14.4",
+    "patches": {
+      "add_build_file.patch": "sha256-7/xNilHrEXSty6TbGnESMI2giB3XUzrFIheN4UnOj0A=",
+      "rosidl_python_fix_imports.patch": "sha256-AbMYhGw8EruPrCs1N1MmGXIseZ7+KLeMgNXMHvEZTV0="
+    },
+    "patch_strip": 1
+}

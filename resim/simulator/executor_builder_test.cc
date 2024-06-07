@@ -390,4 +390,85 @@ TEST(ExecutorBuilderTest, TestAddConditionalTaskFalse) {
   EXPECT_FALSE(task_ran);
 }
 
+TEST(ExecutorBuilderTest, TestMultiFanIn) {
+  // SETUP
+  ExecutorBuilder executor_builder;
+
+  bool start_task_ran = false;
+  bool fan_in_task_a_ran = false;
+  bool fan_in_task_b_ran = false;
+  bool fan_in_task_c_ran = false;
+  bool fan_in_task_d_ran = false;
+  bool end_task_ran = false;
+  bool multifanin_task_ran = false;
+  constexpr int TASK_A_RESULT = 3;
+  constexpr auto TASK_B_RESULT = "foo";
+  constexpr auto TASK_C_RESULT = "bar";
+  constexpr bool TASK_D_RESULT = true;
+
+  // ACTION
+  executor_builder.add_independent_task("start_task", "start", [&]() {
+    start_task_ran = true;
+  });
+  executor_builder.add_task<int>("fan_in_task_a", "start", "fan_in_a", [&]() {
+    EXPECT_TRUE(start_task_ran);
+    fan_in_task_a_ran = true;
+    return TASK_A_RESULT;
+  });
+  executor_builder
+      .add_task<const char *>("fan_in_task_b", "start", "fan_in_bc", [&]() {
+        EXPECT_TRUE(start_task_ran);
+        fan_in_task_b_ran = true;
+        return TASK_B_RESULT;
+      });
+  executor_builder
+      .add_task<const char *>("fan_in_task_c", "start", "fan_in_bc", [&]() {
+        EXPECT_TRUE(start_task_ran);
+        fan_in_task_c_ran = true;
+        return TASK_C_RESULT;
+      });
+  executor_builder.add_task<bool>("fan_in_task_d", "start", "fan_in_d", [&]() {
+    EXPECT_TRUE(start_task_ran);
+    fan_in_task_d_ran = true;
+    return TASK_D_RESULT;
+  });
+
+  executor_builder.add_task(
+      "multi_fanin_task",
+      std::make_tuple(
+          TypedDependency<int>{"fan_in_a"},
+          TypedDependency<const char *>{"fan_in_bc"},
+          TypedDependency<bool>{"fan_in_d"}),
+      TypedProvision<bool>{"multi_fanin_task_result"},
+      [&](const std::vector<int> &a_in,
+          const std::vector<const char *> &bc_in,
+          const std::vector<bool> &d_in) {
+        EXPECT_TRUE(fan_in_task_a_ran);
+        EXPECT_TRUE(fan_in_task_b_ran);
+        EXPECT_TRUE(fan_in_task_c_ran);
+        EXPECT_TRUE(fan_in_task_d_ran);
+        EXPECT_EQ(a_in.size(), 1U);
+        EXPECT_EQ(bc_in.size(), 2U);
+        EXPECT_EQ(d_in.size(), 1U);
+        multifanin_task_ran = true;
+        return true;
+      });
+
+  executor_builder.add_task<bool>(
+      "end",
+      "multi_fanin_task_result",
+      "end",
+      [&](const bool result) {
+        EXPECT_TRUE(multifanin_task_ran);
+        EXPECT_TRUE(result);
+        end_task_ran = true;
+      });
+
+  const std::unique_ptr<StepExecutor> executor{executor_builder.build()};
+
+  // VERIFICATION
+  executor->run_step();
+  EXPECT_TRUE(end_task_ran);
+}
+
 }  // namespace resim::simulator

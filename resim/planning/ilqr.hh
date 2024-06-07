@@ -210,12 +210,12 @@ double ILQR<State, Control>::forward_pass(const double linesearch_factor) {
          feedback_term_.at(ii) *
              (states_.next().at(ii) - states_.current().at(ii)));
     {
-      const auto no_diffs = null_reference<DynamicsDiffs<State, Control>>;
+      const auto no_diffs = null_reference;
       states_.mutable_next().at(ii + 1U) =
           dynamics_(states_.next().at(ii), controls_.next().at(ii), no_diffs);
     }
     {
-      const auto no_diffs = null_reference<CostDiffs<State, Control>>;
+      const auto no_diffs = null_reference;
       cost += cost_(
           states_.next().at(ii),
           NullableReference{controls_.next().at(ii)},
@@ -224,14 +224,21 @@ double ILQR<State, Control>::forward_pass(const double linesearch_factor) {
   }
 
   // Don't forget to add the cost for the final state
-  const auto no_diffs = null_reference<CostDiffs<State, Control>>;
-  const auto no_control = null_reference<const Control>;
+  const auto no_diffs = null_reference;
+  const auto no_control = null_reference;
   cost += cost_(states_.next().at(num_steps_), no_control, no_diffs);
   return cost;
 }
 
 template <StateType State, ControlType Control>
 void ILQR<State, Control>::compute_derivatives() {
+  // Zero out diffs
+  for (auto &diff : dynamics_diffs_) {
+    diff.set_zero();
+  }
+  for (auto &diff : cost_diffs_) {
+    diff.set_zero();
+  }
   for (std::size_t ii = 0; ii < num_steps_; ++ii) {
     dynamics_(
         states_.current().at(ii),
@@ -242,7 +249,7 @@ void ILQR<State, Control>::compute_derivatives() {
         NullableReference{controls_.current().at(ii)},
         NullableReference{cost_diffs_.at(ii)});
   }
-  const auto no_control = null_reference<const Control>;
+  const auto no_control = null_reference;
   cost_(
       states_.current().at(num_steps_),
       no_control,

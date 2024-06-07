@@ -30,9 +30,10 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
             in_path = os.path.join(testdir, "in.mcap")
             out_path = os.path.join(testdir, "out.mcap")
             rfr2_test.populate_log(in_path)
-            rfr2.resim_log_from_ros2('resim/ros2/default_converter_plugin.so',
-                                     in_path,
-                                     out_path)
+            rfr2.resim_log_from_ros2(
+                "resim/ros2/testing/resim_log_from_ros2_test_converter_plugin.so",
+                in_path,
+                out_path)
             rfr2_test.verify_log_contents(out_path)
 
 

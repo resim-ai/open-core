@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/ros-perception/vision_msgs/archive/refs/tags/4.1.0.tar.gz",
+    "integrity": "sha256-IBTALSVLmCBtPTU4u+PBjlytPkXJJfShKkku/JfHB8A=",
+    "strip_prefix": "vision_msgs-4.1.0/vision_msgs/msg",
+    "patches": {
+      "add_build_file.patch": "sha256-EtkXSLliH3EiM5WJd7TdglDF2MElNxAfOODnwDHL0nY="
+    },
+    "patch_strip": 1
+}

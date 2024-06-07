@@ -10,12 +10,19 @@
 
 namespace resim {
 
+struct NullReferenceType {};
+
 // This class represents a nullable reference to an object of type T.
 template <class T>
 class NullableReference {
  public:
   // Constructor from a reference to T
   explicit NullableReference(T &x);
+
+  // This needs to allow implicit conversion since NullReferenceType
+  // is interchangable with any null NullableReference<T>.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  NullableReference(NullReferenceType /* unused */);
 
   NullableReference() = default;
 
@@ -38,11 +45,13 @@ class NullableReference {
 };
 
 // Variable respresening a NULL NullableReference
-template <typename T>
-const NullableReference<T> null_reference{};
+const NullReferenceType null_reference;
 
 template <typename T>
 NullableReference<T>::NullableReference(T &x) : x_{&x} {}
+
+template <typename T>
+NullableReference<T>::NullableReference(NullReferenceType /* unused */) {}
 
 template <typename T>
 bool NullableReference<T>::has_value() const {

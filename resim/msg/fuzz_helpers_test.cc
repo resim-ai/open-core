@@ -23,7 +23,7 @@ TEST(FuzzHelpersTest, TestHeaderEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Header header{random_element<Header>(InOut{rng})};
+  const Header header{converter::random_element<Header>(InOut{rng})};
   Header header_different_secs{header};
   header_different_secs.mutable_stamp()->set_seconds(
       header.stamp().seconds() + 1);
@@ -33,13 +33,13 @@ TEST(FuzzHelpersTest, TestHeaderEqual) {
   header_different_frame.set_frame_id(header.frame_id() + "_different");
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(header, header));
-  EXPECT_FALSE(verify_equality(header, header_different_secs));
-  EXPECT_FALSE(verify_equality(header, header_different_nanos));
-  EXPECT_FALSE(verify_equality(header, header_different_frame));
-  EXPECT_FALSE(verify_equality(header_different_secs, header));
-  EXPECT_FALSE(verify_equality(header_different_nanos, header));
-  EXPECT_FALSE(verify_equality(header_different_frame, header));
+  EXPECT_TRUE(converter::verify_equality(header, header));
+  EXPECT_FALSE(converter::verify_equality(header, header_different_secs));
+  EXPECT_FALSE(converter::verify_equality(header, header_different_nanos));
+  EXPECT_FALSE(converter::verify_equality(header, header_different_frame));
+  EXPECT_FALSE(converter::verify_equality(header_different_secs, header));
+  EXPECT_FALSE(converter::verify_equality(header_different_nanos, header));
+  EXPECT_FALSE(converter::verify_equality(header_different_frame, header));
 }
 
 TEST(FuzzHelpersTest, TestTransformStampedEqual) {
@@ -48,11 +48,11 @@ TEST(FuzzHelpersTest, TestTransformStampedEqual) {
   std::mt19937 rng{SEED};
 
   const TransformStamped transform{
-      random_element<TransformStamped>(InOut{rng})};
+      converter::random_element<TransformStamped>(InOut{rng})};
 
   TransformStamped transform_different_header{transform};
   transform_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   TransformStamped transform_different_child{transform};
   transform_different_child.set_child_frame_id(
@@ -60,16 +60,22 @@ TEST(FuzzHelpersTest, TestTransformStampedEqual) {
 
   TransformStamped transform_different_transform{transform};
   transform_different_transform.mutable_transform()->CopyFrom(
-      random_element<TransformStamped>(InOut{rng}).transform());
+      converter::random_element<TransformStamped>(InOut{rng}).transform());
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(transform, transform));
-  EXPECT_FALSE(verify_equality(transform, transform_different_header));
-  EXPECT_FALSE(verify_equality(transform, transform_different_child));
-  EXPECT_FALSE(verify_equality(transform, transform_different_transform));
-  EXPECT_FALSE(verify_equality(transform_different_header, transform));
-  EXPECT_FALSE(verify_equality(transform_different_child, transform));
-  EXPECT_FALSE(verify_equality(transform_different_transform, transform));
+  EXPECT_TRUE(converter::verify_equality(transform, transform));
+  EXPECT_FALSE(
+      converter::verify_equality(transform, transform_different_header));
+  EXPECT_FALSE(
+      converter::verify_equality(transform, transform_different_child));
+  EXPECT_FALSE(
+      converter::verify_equality(transform, transform_different_transform));
+  EXPECT_FALSE(
+      converter::verify_equality(transform_different_header, transform));
+  EXPECT_FALSE(
+      converter::verify_equality(transform_different_child, transform));
+  EXPECT_FALSE(
+      converter::verify_equality(transform_different_transform, transform));
 }
 
 TEST(FuzzHelpersTest, TestTransformArrayEqual) {
@@ -78,7 +84,7 @@ TEST(FuzzHelpersTest, TestTransformArrayEqual) {
   std::mt19937 rng{SEED};
 
   const TransformArray transform_array{
-      random_element<TransformArray>(InOut{rng})};
+      converter::random_element<TransformArray>(InOut{rng})};
 
   TransformArray transform_array_different_size{transform_array};
   ASSERT_GT(transform_array_different_size.transforms_size(), 0U);
@@ -88,18 +94,22 @@ TEST(FuzzHelpersTest, TestTransformArrayEqual) {
   TransformArray transform_array_different_element{transform_array};
   ASSERT_GT(transform_array_different_element.transforms_size(), 0U);
   transform_array_different_element.mutable_transforms(0)->CopyFrom(
-      random_element<TransformStamped>(InOut{rng}));
+      converter::random_element<TransformStamped>(InOut{rng}));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(transform_array, transform_array));
-  EXPECT_FALSE(
-      verify_equality(transform_array, transform_array_different_size));
-  EXPECT_FALSE(
-      verify_equality(transform_array, transform_array_different_element));
-  EXPECT_FALSE(
-      verify_equality(transform_array_different_size, transform_array));
-  EXPECT_FALSE(
-      verify_equality(transform_array_different_element, transform_array));
+  EXPECT_TRUE(converter::verify_equality(transform_array, transform_array));
+  EXPECT_FALSE(converter::verify_equality(
+      transform_array,
+      transform_array_different_size));
+  EXPECT_FALSE(converter::verify_equality(
+      transform_array,
+      transform_array_different_element));
+  EXPECT_FALSE(converter::verify_equality(
+      transform_array_different_size,
+      transform_array));
+  EXPECT_FALSE(converter::verify_equality(
+      transform_array_different_element,
+      transform_array));
 }
 
 TEST(FuzzHelpersTest, TestPoseWithCovarianceEqual) {
@@ -108,11 +118,11 @@ TEST(FuzzHelpersTest, TestPoseWithCovarianceEqual) {
   std::mt19937 rng{SEED};
 
   const PoseWithCovariance pose_with_covariance{
-      random_element<PoseWithCovariance>(InOut{rng})};
+      converter::random_element<PoseWithCovariance>(InOut{rng})};
 
   PoseWithCovariance pose_with_covariance_different_pose{pose_with_covariance};
   pose_with_covariance_different_pose.mutable_pose()->CopyFrom(
-      random_element<PoseWithCovariance>(InOut{rng}).pose());
+      converter::random_element<PoseWithCovariance>(InOut{rng}).pose());
 
   PoseWithCovariance pose_with_covariance_different_covariance{
       pose_with_covariance};
@@ -121,17 +131,18 @@ TEST(FuzzHelpersTest, TestPoseWithCovarianceEqual) {
       -pose_with_covariance.covariance(0));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(pose_with_covariance, pose_with_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_TRUE(
+      converter::verify_equality(pose_with_covariance, pose_with_covariance));
+  EXPECT_FALSE(converter::verify_equality(
       pose_with_covariance,
       pose_with_covariance_different_pose));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       pose_with_covariance,
       pose_with_covariance_different_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       pose_with_covariance_different_pose,
       pose_with_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       pose_with_covariance_different_covariance,
       pose_with_covariance));
 }
@@ -141,15 +152,15 @@ TEST(FuzzHelpersTest, TestTwistEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Twist twist{random_element<Twist>(InOut{rng})};
+  const Twist twist{converter::random_element<Twist>(InOut{rng})};
 
   Twist twist_different_algebra{twist};
   twist_different_algebra.mutable_algebra()->Set(0, -twist.algebra(0));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(twist, twist));
-  EXPECT_FALSE(verify_equality(twist, twist_different_algebra));
-  EXPECT_FALSE(verify_equality(twist_different_algebra, twist));
+  EXPECT_TRUE(converter::verify_equality(twist, twist));
+  EXPECT_FALSE(converter::verify_equality(twist, twist_different_algebra));
+  EXPECT_FALSE(converter::verify_equality(twist_different_algebra, twist));
 }
 
 TEST(FuzzHelpersTest, TestTwistWithCovarianceEqual) {
@@ -158,12 +169,12 @@ TEST(FuzzHelpersTest, TestTwistWithCovarianceEqual) {
   std::mt19937 rng{SEED};
 
   const TwistWithCovariance twist_with_covariance{
-      random_element<TwistWithCovariance>(InOut{rng})};
+      converter::random_element<TwistWithCovariance>(InOut{rng})};
 
   TwistWithCovariance twist_with_covariance_different_twist{
       twist_with_covariance};
   twist_with_covariance_different_twist.mutable_twist()->CopyFrom(
-      random_element<Twist>(InOut{rng}));
+      converter::random_element<Twist>(InOut{rng}));
 
   TwistWithCovariance twist_with_covariance_different_covariance{
       twist_with_covariance};
@@ -172,17 +183,18 @@ TEST(FuzzHelpersTest, TestTwistWithCovarianceEqual) {
       -twist_with_covariance.covariance(0));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(twist_with_covariance, twist_with_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_TRUE(
+      converter::verify_equality(twist_with_covariance, twist_with_covariance));
+  EXPECT_FALSE(converter::verify_equality(
       twist_with_covariance,
       twist_with_covariance_different_twist));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       twist_with_covariance,
       twist_with_covariance_different_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       twist_with_covariance_different_twist,
       twist_with_covariance));
-  EXPECT_FALSE(verify_equality(
+  EXPECT_FALSE(converter::verify_equality(
       twist_with_covariance_different_covariance,
       twist_with_covariance));
 }
@@ -192,11 +204,11 @@ TEST(FuzzHelpersTest, TestOdometryEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Odometry odometry{random_element<Odometry>(InOut{rng})};
+  const Odometry odometry{converter::random_element<Odometry>(InOut{rng})};
 
   Odometry odometry_different_header{odometry};
   odometry_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   Odometry odometry_different_child_frame_id{odometry};
   odometry_different_child_frame_id.set_child_frame_id(
@@ -204,21 +216,23 @@ TEST(FuzzHelpersTest, TestOdometryEqual) {
 
   Odometry odometry_different_pose{odometry};
   odometry_different_pose.mutable_pose()->CopyFrom(
-      random_element<PoseWithCovariance>(InOut{rng}));
+      converter::random_element<PoseWithCovariance>(InOut{rng}));
 
   Odometry odometry_different_twist{odometry};
   odometry_different_twist.mutable_twist()->CopyFrom(
-      random_element<TwistWithCovariance>(InOut{rng}));
+      converter::random_element<TwistWithCovariance>(InOut{rng}));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(odometry, odometry));
-  EXPECT_FALSE(verify_equality(odometry, odometry_different_header));
-  EXPECT_FALSE(verify_equality(odometry, odometry_different_child_frame_id));
-  EXPECT_FALSE(verify_equality(odometry, odometry_different_pose));
-  EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
-  EXPECT_FALSE(verify_equality(odometry_different_child_frame_id, odometry));
-  EXPECT_FALSE(verify_equality(odometry_different_pose, odometry));
-  EXPECT_FALSE(verify_equality(odometry_different_twist, odometry));
+  EXPECT_TRUE(converter::verify_equality(odometry, odometry));
+  EXPECT_FALSE(converter::verify_equality(odometry, odometry_different_header));
+  EXPECT_FALSE(
+      converter::verify_equality(odometry, odometry_different_child_frame_id));
+  EXPECT_FALSE(converter::verify_equality(odometry, odometry_different_pose));
+  EXPECT_FALSE(converter::verify_equality(odometry_different_twist, odometry));
+  EXPECT_FALSE(
+      converter::verify_equality(odometry_different_child_frame_id, odometry));
+  EXPECT_FALSE(converter::verify_equality(odometry_different_pose, odometry));
+  EXPECT_FALSE(converter::verify_equality(odometry_different_twist, odometry));
 }
 
 TEST(FuzzHelpersTest, TestObjectHypothesisEqual) {
@@ -227,7 +241,7 @@ TEST(FuzzHelpersTest, TestObjectHypothesisEqual) {
   std::mt19937 rng{SEED};
 
   const ObjectHypothesis hypothesis{
-      random_element<ObjectHypothesis>(InOut{rng})};
+      converter::random_element<ObjectHypothesis>(InOut{rng})};
 
   ObjectHypothesis hypothesis_different_class{hypothesis};
   hypothesis_different_class.set_class_id(hypothesis.class_id() + "_different");
@@ -236,11 +250,15 @@ TEST(FuzzHelpersTest, TestObjectHypothesisEqual) {
   hypothesis_different_score.set_score(1.0 - hypothesis.score());
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(hypothesis, hypothesis));
-  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_class));
-  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_score));
-  EXPECT_FALSE(verify_equality(hypothesis_different_class, hypothesis));
-  EXPECT_FALSE(verify_equality(hypothesis_different_score, hypothesis));
+  EXPECT_TRUE(converter::verify_equality(hypothesis, hypothesis));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis, hypothesis_different_class));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis, hypothesis_different_score));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis_different_class, hypothesis));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis_different_score, hypothesis));
 }
 
 TEST(FuzzHelpersTest, TestObjectHypothesisWithPoseEqual) {
@@ -249,22 +267,26 @@ TEST(FuzzHelpersTest, TestObjectHypothesisWithPoseEqual) {
   std::mt19937 rng{SEED};
 
   const ObjectHypothesisWithPose hypothesis{
-      random_element<ObjectHypothesisWithPose>(InOut{rng})};
+      converter::random_element<ObjectHypothesisWithPose>(InOut{rng})};
 
   ObjectHypothesisWithPose hypothesis_different_hypothesis{hypothesis};
   hypothesis_different_hypothesis.mutable_hypothesis()->CopyFrom(
-      random_element<ObjectHypothesis>(InOut{rng}));
+      converter::random_element<ObjectHypothesis>(InOut{rng}));
 
   ObjectHypothesisWithPose hypothesis_different_pose{hypothesis};
   hypothesis_different_pose.mutable_pose()->CopyFrom(
-      random_element<PoseWithCovariance>(InOut{rng}));
+      converter::random_element<PoseWithCovariance>(InOut{rng}));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(hypothesis, hypothesis));
-  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_hypothesis));
-  EXPECT_FALSE(verify_equality(hypothesis, hypothesis_different_pose));
-  EXPECT_FALSE(verify_equality(hypothesis_different_hypothesis, hypothesis));
-  EXPECT_FALSE(verify_equality(hypothesis_different_pose, hypothesis));
+  EXPECT_TRUE(converter::verify_equality(hypothesis, hypothesis));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis, hypothesis_different_hypothesis));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis, hypothesis_different_pose));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis_different_hypothesis, hypothesis));
+  EXPECT_FALSE(
+      converter::verify_equality(hypothesis_different_pose, hypothesis));
 }
 
 TEST(FuzzHelpersTest, TestDetection3DEqual) {
@@ -272,26 +294,28 @@ TEST(FuzzHelpersTest, TestDetection3DEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Detection3D detection{random_element<Detection3D>(InOut{rng})};
+  const Detection3D detection{
+      converter::random_element<Detection3D>(InOut{rng})};
 
   Detection3D detection_different_header{detection};
   detection_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   Detection3D detection_different_bbox{detection};
   detection_different_bbox.mutable_bbox()->CopyFrom(
-      random_element<geometry::proto::OrientedBoxSE3>(InOut{rng}));
+      converter::random_element<geometry::proto::OrientedBoxSE3>(InOut{rng}));
 
   Detection3D detection_different_id{detection};
   detection_different_id.set_id(detection.id() + "_different");
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(detection, detection));
-  EXPECT_FALSE(verify_equality(detection, detection_different_header));
-  EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
-  EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
-  EXPECT_FALSE(verify_equality(detection, detection_different_id));
-  EXPECT_FALSE(verify_equality(detection_different_id, detection));
+  EXPECT_TRUE(converter::verify_equality(detection, detection));
+  EXPECT_FALSE(
+      converter::verify_equality(detection, detection_different_header));
+  EXPECT_FALSE(converter::verify_equality(detection, detection_different_bbox));
+  EXPECT_FALSE(converter::verify_equality(detection_different_bbox, detection));
+  EXPECT_FALSE(converter::verify_equality(detection, detection_different_id));
+  EXPECT_FALSE(converter::verify_equality(detection_different_id, detection));
 }
 
 TEST(FuzzHelpersTest, TestBoundingBox2DEqual) {
@@ -299,7 +323,8 @@ TEST(FuzzHelpersTest, TestBoundingBox2DEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const BoundingBox2D bbox{random_element<BoundingBox2D>(InOut{rng})};
+  const BoundingBox2D bbox{
+      converter::random_element<BoundingBox2D>(InOut{rng})};
 
   BoundingBox2D bbox_different_center_x{bbox};
   bbox_different_center_x.set_center_x(-bbox.center_x());
@@ -317,19 +342,19 @@ TEST(FuzzHelpersTest, TestBoundingBox2DEqual) {
   bbox_different_size_y.set_size_y(-bbox.size_y());
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(bbox, bbox));
+  EXPECT_TRUE(converter::verify_equality(bbox, bbox));
 
-  EXPECT_FALSE(verify_equality(bbox, bbox_different_center_x));
-  EXPECT_FALSE(verify_equality(bbox, bbox_different_center_y));
-  EXPECT_FALSE(verify_equality(bbox, bbox_different_theta_rad));
-  EXPECT_FALSE(verify_equality(bbox, bbox_different_size_x));
-  EXPECT_FALSE(verify_equality(bbox, bbox_different_size_y));
+  EXPECT_FALSE(converter::verify_equality(bbox, bbox_different_center_x));
+  EXPECT_FALSE(converter::verify_equality(bbox, bbox_different_center_y));
+  EXPECT_FALSE(converter::verify_equality(bbox, bbox_different_theta_rad));
+  EXPECT_FALSE(converter::verify_equality(bbox, bbox_different_size_x));
+  EXPECT_FALSE(converter::verify_equality(bbox, bbox_different_size_y));
 
-  EXPECT_FALSE(verify_equality(bbox_different_center_x, bbox));
-  EXPECT_FALSE(verify_equality(bbox_different_center_y, bbox));
-  EXPECT_FALSE(verify_equality(bbox_different_theta_rad, bbox));
-  EXPECT_FALSE(verify_equality(bbox_different_size_x, bbox));
-  EXPECT_FALSE(verify_equality(bbox_different_size_y, bbox));
+  EXPECT_FALSE(converter::verify_equality(bbox_different_center_x, bbox));
+  EXPECT_FALSE(converter::verify_equality(bbox_different_center_y, bbox));
+  EXPECT_FALSE(converter::verify_equality(bbox_different_theta_rad, bbox));
+  EXPECT_FALSE(converter::verify_equality(bbox_different_size_x, bbox));
+  EXPECT_FALSE(converter::verify_equality(bbox_different_size_y, bbox));
 }
 
 TEST(FuzzHelpersTest, TestDetection2DEqual) {
@@ -337,38 +362,44 @@ TEST(FuzzHelpersTest, TestDetection2DEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Detection2D detection{random_element<Detection2D>(InOut{rng})};
+  const Detection2D detection{
+      converter::random_element<Detection2D>(InOut{rng})};
 
   Detection2D detection_different_header{detection};
   detection_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   Detection2D detection_different_bbox{detection};
   detection_different_bbox.mutable_bbox()->CopyFrom(
-      random_element<BoundingBox2D>(InOut{rng}));
+      converter::random_element<BoundingBox2D>(InOut{rng}));
 
   Detection2D detection_different_id{detection};
   detection_different_id.set_id(detection.id() + "_different");
 
   Detection2D detection_different_results{detection};
   detection_different_results.mutable_results(0)->CopyFrom(
-      random_element<ObjectHypothesisWithPose>(InOut{rng}));
+      converter::random_element<ObjectHypothesisWithPose>(InOut{rng}));
 
   Detection2D detection_different_results_size{detection};
   detection_different_results_size.add_results();
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(detection, detection));
-  EXPECT_FALSE(verify_equality(detection, detection_different_header));
-  EXPECT_FALSE(verify_equality(detection, detection_different_bbox));
-  EXPECT_FALSE(verify_equality(detection, detection_different_results));
-  EXPECT_FALSE(verify_equality(detection, detection_different_results_size));
+  EXPECT_TRUE(converter::verify_equality(detection, detection));
+  EXPECT_FALSE(
+      converter::verify_equality(detection, detection_different_header));
+  EXPECT_FALSE(converter::verify_equality(detection, detection_different_bbox));
+  EXPECT_FALSE(
+      converter::verify_equality(detection, detection_different_results));
+  EXPECT_FALSE(
+      converter::verify_equality(detection, detection_different_results_size));
 
-  EXPECT_FALSE(verify_equality(detection_different_bbox, detection));
-  EXPECT_FALSE(verify_equality(detection, detection_different_id));
-  EXPECT_FALSE(verify_equality(detection_different_id, detection));
-  EXPECT_FALSE(verify_equality(detection_different_results, detection));
-  EXPECT_FALSE(verify_equality(detection_different_results_size, detection));
+  EXPECT_FALSE(converter::verify_equality(detection_different_bbox, detection));
+  EXPECT_FALSE(converter::verify_equality(detection, detection_different_id));
+  EXPECT_FALSE(converter::verify_equality(detection_different_id, detection));
+  EXPECT_FALSE(
+      converter::verify_equality(detection_different_results, detection));
+  EXPECT_FALSE(
+      converter::verify_equality(detection_different_results_size, detection));
 }
 
 TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
@@ -376,11 +407,12 @@ TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Detection3DArray array{random_element<Detection3DArray>(InOut{rng})};
+  const Detection3DArray array{
+      converter::random_element<Detection3DArray>(InOut{rng})};
 
   Detection3DArray array_different_header{array};
   array_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   Detection3DArray array_different_size{array};
   ASSERT_GT(array_different_size.detections_size(), 0U);
@@ -390,16 +422,16 @@ TEST(FuzzHelpersTest, TestDetection3DArrayEqual) {
   Detection3DArray array_different_element{array};
   ASSERT_GT(array_different_element.detections_size(), 0U);
   array_different_element.mutable_detections(0)->CopyFrom(
-      random_element<Detection3D>(InOut{rng}));
+      converter::random_element<Detection3D>(InOut{rng}));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(array, array));
-  EXPECT_FALSE(verify_equality(array, array_different_header));
-  EXPECT_FALSE(verify_equality(array, array_different_size));
-  EXPECT_FALSE(verify_equality(array, array_different_element));
-  EXPECT_FALSE(verify_equality(array_different_header, array));
-  EXPECT_FALSE(verify_equality(array_different_size, array));
-  EXPECT_FALSE(verify_equality(array_different_element, array));
+  EXPECT_TRUE(converter::verify_equality(array, array));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_header));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_size));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_element));
+  EXPECT_FALSE(converter::verify_equality(array_different_header, array));
+  EXPECT_FALSE(converter::verify_equality(array_different_size, array));
+  EXPECT_FALSE(converter::verify_equality(array_different_element, array));
 }
 
 TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
@@ -407,11 +439,12 @@ TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const Detection2DArray array{random_element<Detection2DArray>(InOut{rng})};
+  const Detection2DArray array{
+      converter::random_element<Detection2DArray>(InOut{rng})};
 
   Detection2DArray array_different_header{array};
   array_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   Detection2DArray array_different_size{array};
   ASSERT_GT(array_different_size.detections_size(), 0U);
@@ -421,16 +454,16 @@ TEST(FuzzHelpersTest, TestDetection2DArrayEqual) {
   Detection2DArray array_different_element{array};
   ASSERT_GT(array_different_element.detections_size(), 0U);
   array_different_element.mutable_detections(0)->CopyFrom(
-      random_element<Detection2D>(InOut{rng}));
+      converter::random_element<Detection2D>(InOut{rng}));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(array, array));
-  EXPECT_FALSE(verify_equality(array, array_different_header));
-  EXPECT_FALSE(verify_equality(array, array_different_size));
-  EXPECT_FALSE(verify_equality(array, array_different_element));
-  EXPECT_FALSE(verify_equality(array_different_header, array));
-  EXPECT_FALSE(verify_equality(array_different_size, array));
-  EXPECT_FALSE(verify_equality(array_different_element, array));
+  EXPECT_TRUE(converter::verify_equality(array, array));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_header));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_size));
+  EXPECT_FALSE(converter::verify_equality(array, array_different_element));
+  EXPECT_FALSE(converter::verify_equality(array_different_header, array));
+  EXPECT_FALSE(converter::verify_equality(array_different_size, array));
+  EXPECT_FALSE(converter::verify_equality(array_different_element, array));
 }
 
 TEST(FuzzHelpersTest, TestNavSatFixEqual) {
@@ -438,11 +471,11 @@ TEST(FuzzHelpersTest, TestNavSatFixEqual) {
   constexpr std::size_t SEED = 913U;
   std::mt19937 rng{SEED};
 
-  const NavSatFix nav_sat_fix{random_element<NavSatFix>(InOut{rng})};
+  const NavSatFix nav_sat_fix{converter::random_element<NavSatFix>(InOut{rng})};
 
   NavSatFix nav_sat_fix_different_header{nav_sat_fix};
   nav_sat_fix_different_header.mutable_header()->CopyFrom(
-      random_element<Header>(InOut{rng}));
+      converter::random_element<Header>(InOut{rng}));
 
   constexpr int NUM_STATUSES = 4;
   NavSatFix nav_sat_fix_different_status{nav_sat_fix};
@@ -472,23 +505,90 @@ TEST(FuzzHelpersTest, TestNavSatFixEqual) {
            NUM_COV_TYPES)));
 
   // ACTION / VERIFICATION
-  EXPECT_TRUE(verify_equality(nav_sat_fix, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_header));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_status));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_latitude));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_longitude));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_altitude_m));
-  EXPECT_FALSE(verify_equality(nav_sat_fix, nav_sat_fix_different_covariance));
+  EXPECT_TRUE(converter::verify_equality(nav_sat_fix, nav_sat_fix));
   EXPECT_FALSE(
-      verify_equality(nav_sat_fix, nav_sat_fix_different_covariance_type));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_header, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_status, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_latitude, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_longitude, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_altitude_m, nav_sat_fix));
-  EXPECT_FALSE(verify_equality(nav_sat_fix_different_covariance, nav_sat_fix));
+      converter::verify_equality(nav_sat_fix, nav_sat_fix_different_header));
   EXPECT_FALSE(
-      verify_equality(nav_sat_fix_different_covariance_type, nav_sat_fix));
+      converter::verify_equality(nav_sat_fix, nav_sat_fix_different_status));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix, nav_sat_fix_different_latitude));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix, nav_sat_fix_different_longitude));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix,
+      nav_sat_fix_different_altitude_m));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix,
+      nav_sat_fix_different_covariance));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix,
+      nav_sat_fix_different_covariance_type));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix_different_header, nav_sat_fix));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix_different_status, nav_sat_fix));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix_different_latitude, nav_sat_fix));
+  EXPECT_FALSE(
+      converter::verify_equality(nav_sat_fix_different_longitude, nav_sat_fix));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix_different_altitude_m,
+      nav_sat_fix));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix_different_covariance,
+      nav_sat_fix));
+  EXPECT_FALSE(converter::verify_equality(
+      nav_sat_fix_different_covariance_type,
+      nav_sat_fix));
+}
+
+template <typename T>
+class PrimitiveFuzzHelpersTest : public ::testing::Test {};
+
+using PrimitiveTypes = ::testing::Types<
+    Bool,
+    Byte,
+    Char,
+    Float32,
+    Float64,
+    Int16,
+    Int32,
+    Int64,
+    Int8,
+    String,
+    UInt16,
+    UInt32,
+    UInt64,
+    UInt8>;
+
+TYPED_TEST_SUITE(PrimitiveFuzzHelpersTest, PrimitiveTypes);
+
+TYPED_TEST(PrimitiveFuzzHelpersTest, TestEquality) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const auto test_value{converter::random_element<TypeParam>(InOut{rng})};
+  const auto different_value{converter::random_element<TypeParam>(InOut{rng})};
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(converter::verify_equality(test_value, test_value));
+  EXPECT_FALSE(converter::verify_equality(test_value, different_value));
+  EXPECT_FALSE(converter::verify_equality(different_value, test_value));
+}
+
+TEST(FuzzHelpersTest, TestEmpty) {
+  // SETUP
+  constexpr std::size_t SEED = 913U;
+  std::mt19937 rng{SEED};
+
+  const auto test_value{converter::random_element<Empty>(InOut{rng})};
+  const auto different_value{converter::random_element<Empty>(InOut{rng})};
+
+  // ACTION / VERIFICATION
+  EXPECT_TRUE(converter::verify_equality(test_value, test_value));
+  EXPECT_TRUE(converter::verify_equality(test_value, different_value));
+  EXPECT_TRUE(converter::verify_equality(different_value, test_value));
 }
 
 }  // namespace resim::msg

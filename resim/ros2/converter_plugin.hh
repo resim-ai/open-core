@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <rclcpp/serialized_message.hpp>
 #include <string_view>
 #include <vector>
@@ -95,9 +96,7 @@ class ConverterPlugin {
   // @param[in] ros2_message: The message to convert.
   // @returns The converted message if successful or nullopt if this
   // converter doesn't know how to handle this type of message.
-  // @throws AssertException If the contained converter plugin returns
-  //         RESIM_CONVERTER_PLUGIN_STATUS_ERROR
-  std::vector<std::byte> convert(
+  std::optional<std::vector<std::byte>> convert(
       std::string_view ros2_message_type,
       const rclcpp::SerializedMessage &ros2_message) const;
 
