@@ -55,6 +55,7 @@ py_test(
 py_library(
     name = "metrics_utils",
     srcs = ["metrics_utils.py"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
         "//resim/metrics/proto:metrics_proto_py",

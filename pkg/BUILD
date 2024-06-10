@@ -10,7 +10,7 @@ load("//:version.bzl", "version")
 # This "7 spaces and a pipe" format is needed to make the resulting metadata to
 # be parsable by RFC822 parser when using multiple lines. See
 # https://packaging.python.org/en/latest/specifications/core-metadata/#description
-LICENSE = """Copyright 2023 ReSim, Inc.
+LICENSE = """Copyright 2024 ReSim, Inc.
        |
        |Permission is hereby granted, free of charge, to any person obtaining a copy of
        |this software and associated documentation files (the "Software"), to deal in
@@ -29,6 +29,58 @@ LICENSE = """Copyright 2023 ReSim, Inc.
        |LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
        |OUT OF OR IN CONNECTION WITH THE SOFTWAREOR THE USE OR OTHER DEALINGS IN THE
        |SOFTWARE."""
+
+py_package(
+    name = "resim_package",
+    packages = ["resim"],
+    deps = [
+        "//resim/actor/state/proto:observable_state_proto_py",
+        "//resim/auth/python:device_code_client",
+        "//resim/experiences/proto:experience_proto_py",
+        "//resim/geometry/python:polygon_distance_python.so",
+        "//resim/metrics:dice_coefficient",
+        "//resim/metrics:fetch_all_pages",
+        "//resim/metrics:fetch_job_metrics",
+        "//resim/metrics/proto:metrics_proto_py",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/metrics/python:metrics",
+        "//resim/metrics/python:metrics_utils",
+        "//resim/metrics/python:metrics_writer",
+        "//resim/metrics/python:unpack_metrics",
+        "//resim/msg:detection_proto_py",
+        "//resim/msg:header_proto_py",
+        "//resim/msg:navsat_proto_py",
+        "//resim/msg:odometry_proto_py",
+        "//resim/msg:pose_proto_py",
+        "//resim/msg:primitives_proto_py",
+        "//resim/msg:transform_proto_py",
+        "//resim/transforms/proto:framed_vector_3_proto_py",
+        "//resim/transforms/python:geodetic_python.so",
+        "//resim/transforms/python:quaternion.so",
+        "//resim/transforms/python:se3_python.so",
+        "//resim/transforms/python:so3_python.so",
+        "//resim/utils/proto:uuid_proto_py",
+    ],
+)
+
+py_wheel(
+    name = "resim_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim-open-core",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    platform = "manylinux2014_x86_64",
+    python_tag = "py3",
+    requires = [
+        "protobuf>=4.24.4",
+    ],
+    summary = "ReSim Metrics Libraries.",
+    version = version,
+    deps = [":resim_package"],
+)
 
 py_package(
     name = "metrics_schema_package",
