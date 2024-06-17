@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""The version of open-core"""
+"""Repository rule to get the version of open core passed into the release workflow."""
 
 def _resim_version_impl(repository_ctx):
     version = repository_ctx.os.environ.get("RESIM_VERSION", default = "0.0.0")

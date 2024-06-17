@@ -15,6 +15,7 @@ from typing import cast, Any
 
 import numpy as np
 
+from google.protobuf.struct_pb2 import Struct
 from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
 import resim.metrics.proto.metrics_pb2 as mp
@@ -76,7 +77,6 @@ class MetricsTest(unittest.TestCase):
 
         self.assertEqual(metric, metric.with_blocking(True))
         self.assertTrue(metric.blocking)
-
 
     def assert_common_fields_match(self, *,
                                    msg: mp.Metric,
@@ -167,7 +167,9 @@ class MetricsTest(unittest.TestCase):
             (mp.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'), metrics.StatesOverTimeMetric),
             (mp.MetricType.Value('HISTOGRAM_METRIC_TYPE'), metrics.HistogramMetric),
             (mp.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'), metrics.DoubleSummaryMetric),
-            (mp.MetricType.Value('SCALAR_METRIC_TYPE'), metrics.ScalarMetric)]
+            (mp.MetricType.Value('SCALAR_METRIC_TYPE'), metrics.ScalarMetric),
+            (mp.MetricType.Value('PLOTLY_METRIC_TYPE'), metrics.PlotlyMetric),
+            (mp.MetricType.Value('IMAGE_METRIC_TYPE'), metrics.ImageMetric)]
 
         for metric_type, metric_class in metric_type_list:
             modified_msg = copy.copy(msg)
@@ -1256,6 +1258,117 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 2)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
 
+    def test_plotly_metric(self) -> None:
+        # CONSTRUCTION
+        job_id = uuid.uuid4()
+        metric = metrics.PlotlyMetric(
+            "test_metric",
+            "A metric for testing",
+            MetricStatus.PASSED_METRIC_STATUS,
+            MetricImportance.ZERO_IMPORTANCE,
+            should_display=True,
+            blocking=False,
+            parent_job_id=job_id,
+            order=None,
+            plotly_data=None,
+        )
+
+        # SETTING
+        test_data = Struct()
+        test_data["test"] = "test"
+        self.assertIs(metric, metric.with_plotly_data(test_data))
+        self.assertEqual(metric.plotly_data, test_data)
+
+        # PACKING
+        msg = metric.pack()
+        self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
+        values = msg.metric_values.plotly_metric_values
+        self.assertEqual(values.json, metric.plotly_data)
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+
+    def test_image_metric(self) -> None:
+        job_id = uuid.uuid4()
+
+        file_data = metrics.ExternalFileMetricsData(
+            name="an external image",
+            filename='test.gif')
+
+        metric = metrics.ImageMetric(
+            name='test metric',
+            description='a test image metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
+
+        self.assertEqual(metric.image_data, None)
+
+        self.assertEqual(
+            metric, metric.with_image_data(
+                file_data))
+
+    def test_image_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
+
+        image_data = metrics.ExternalFileMetricsData(
+            name="an external image",
+            filename='test.gif')
+
+        # Use the constructor to initialize the data this time, in contrast with
+        # the above test.
+        metric = metrics.ImageMetric(
+            name='test metric',
+            description='a test image metric',
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            image_data=image_data
+        )
+
+        msg = metric.pack()
+
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(msg.type, mp.MetricType.Value(
+            "IMAGE_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField(
+            "image_metric_values"))
+        values = msg.metric_values.image_metric_values
+        self.assertEqual(
+            values.image_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                image_data.id))
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+        ids = [uuid.UUID(data.metrics_data_id.id.data)
+                for data in output.metrics_msg.metrics_data]
+        self.assertIn(image_data.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
     def test_metrics_data(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
@@ -1515,6 +1628,32 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
                          for md in output.metrics_msg.metrics_data},
                          {index_data.id, metrics_data.id})
+
+    def test_external_file_metrics_data(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="file data",
+        )
+        self.assertEqual(metrics_data, metrics_data.with_filename(filename))
+        self.assertTrue(metrics_data.filename == filename)
+
+    def test_external_file_metrics_data_pack(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="metrics data",
+            filename=filename,
+        )
+
+        msg = metrics_data.pack()
+        self.assertEqual(
+            msg.metrics_data_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                metrics_data.id))
+        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
+            'EXTERNAL_FILE_DATA_TYPE'))
+
+        self.assertEqual(msg.name, metrics_data.name)
+        self.assertEqual(msg.external_file.path, filename)
 
 
 if __name__ == "__main__":
