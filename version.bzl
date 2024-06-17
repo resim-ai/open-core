@@ -30,7 +30,7 @@ resim_version = repository_rule(
     implementation = _resim_version_impl,
 )
 
-def _extension_impl(mctx):
+def _extension_impl(_):
     resim_version(name = "resim_version")
 
 resim_version_extension = module_extension(

@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
+load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 
 # This "7 spaces and a pipe" format is needed to make the resulting metadata to
 # be parsable by RFC822 parser when using multiple lines. See
