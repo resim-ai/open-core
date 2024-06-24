@@ -533,7 +533,7 @@ def _validate_metric(metric: mp.Metric,
 
     if metric.event_metric:
         _validate_metric_used_in_event(metric.metric_id, events_list)
-  
+
     if metric.type == mp.DOUBLE_SUMMARY_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField('double_metric_values'))
     elif metric.type == mp.DOUBLE_OVER_TIME_METRIC_TYPE:
@@ -690,7 +690,7 @@ def _validate_event(
     for metric_id in event.metrics:
         _validate_metric_id(metric_id)
         _metrics_assert(metric_id.id.data in metrics_map)
- 
+
     _validate_metric_status(event.status)
     _validate_timestamp(event.timestamp)
     _validate_metric_importance(event.importance)
