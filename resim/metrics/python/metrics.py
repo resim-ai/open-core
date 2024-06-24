@@ -1712,9 +1712,8 @@ class Event():
         self.metrics = metrics
         return self
 
-    @abstractmethod
-    def pack(self: MetricT) -> metrics_pb2.Metric:
-        msg = metrics_pb2.Metric()
+    def pack(self: Event) -> metrics_pb2.Event:
+        msg = metrics_pb2.Event()
 
         msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
@@ -1728,74 +1727,22 @@ class Event():
         if self.importance is not None:
             msg.importance = self.importance.value
 
-        if self.should_display is not None:
-            msg.should_display = self.should_display
+        if self.timestamp is not None:
+            msg.timestamp.CopyFrom(self.start_time.pack())
 
-        if self.blocking is not None:
-            msg.blocking = self.blocking
+        if self.tags is not None:
+            msg.tags = self.tags
 
-        if self.parent_job_id is not None:
-            msg.job_id.id.CopyFrom(pack_uuid_to_proto(self.parent_job_id))
-
-        if self.order is not None:
-            msg.order = self.order
+        if self.metrics is not None:
+            msg.metrics.extend([m.metric_id for m in self.metrics])
 
         return msg
 
-    @classmethod
-    def unpack_common_fields(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
-        if msg.type == metrics_pb2.MetricType.Value('NO_METRIC_TYPE'):
-            raise ValueError('Cannot unpack with no metric type')
-        if msg.type == metrics_pb2.MetricType.Value(
-                'DOUBLE_SUMMARY_METRIC_TYPE'):
-            unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE'):
-            unpacked = DoubleOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('LINE_PLOT_METRIC_TYPE'):
-            unpacked = LinePlotMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('BAR_CHART_METRIC_TYPE'):
-            unpacked = BarChartMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'):
-            unpacked = StatesOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('HISTOGRAM_METRIC_TYPE'):
-            unpacked = HistogramMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('SCALAR_METRIC_TYPE'):
-            unpacked = ScalarMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('PLOTLY_METRIC_TYPE'):
-            unpacked = PlotlyMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value('IMAGE_METRIC_TYPE'):
-            unpacked = ImageMetric(name=msg.name)
-        else:
-            raise ValueError('Invalid metric type')
-
-        unpacked.id = uuid.UUID(msg.metric_id.id.data)
-        unpacked.description = msg.description
-        unpacked.status = MetricStatus(msg.status)
-        unpacked.importance = MetricImportance(msg.importance)
-        if msg.HasField('should_display'):
-            unpacked.should_display = msg.should_display
-        else:
-            unpacked.should_display = None
-
-        if msg.HasField('blocking'):
-            unpacked.blocking = msg.blocking
-        else:
-            unpacked.blocking = None
-
-        if msg.HasField('job_id'):
-            unpacked.parent_job_id = uuid.UUID(msg.job_id.id.data)
-        else:
-            unpacked.parent_job_id = None
-
-        if msg.HasField('order'):
-            unpacked.order = msg.order
-        else:
-            unpacked.order = None
-
-        return unpacked
-
-    @abstractmethod
     def recursively_pack_into(
             self,
             metrics_output: ResimMetricsOutput) -> None:
-        raise NotImplementedError()
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.events.extend([self.pack()])
