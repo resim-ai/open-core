@@ -165,7 +165,11 @@ message JobId {
     resim.proto.UUID id = 1;
 }
 
-// All metrics  associated with a given job.
+message EventId {
+    resim.proto.UUID id = 1;
+}
+
+// All metrics associated with a given job.
 // This is the type output by metrics scripts for validation.
 message JobMetrics {
     JobId job_id = 1;
@@ -175,6 +179,8 @@ message JobMetrics {
     repeated MetricsData metrics_data = 3;
 
     MetricStatus metrics_status = 4;
+
+    repeated Event events = 5;
 }
 
 // Top-level generic metric collection within JobMetrics.
@@ -224,6 +230,39 @@ message Metric {
     // therefore ordered (alphabetically in the case of multiple) after any set
     // fields.
     optional float order = 11;
+
+    // An optional boolean to be set to true in the case that this metric
+    // should not be displayed outside the context of the event.
+    optional bool event_metric = 12;
+}
+
+// An event is a tagged timestamp, reflecting, well, what it sounds like:
+// something happened. That event could be good, bad, neutral (and thus contains
+// the usual statues), but by definition is something worth looking at, at
+// provides an insight. Thus, events, provide a way to index into the experience
+// to find what matters.
+//
+// Events are associated with metrics, and can be used to provide insight into
+// the nature of the event.
+//
+// We allow events to be given names (not required unique in a job) and a list
+// of tags.
+message Event {
+    EventId event_id = 1;
+
+    string name = 2;
+
+    string description = 3;
+
+    repeated string tags = 4;
+
+    repeated MetricId metrics = 5;
+
+    MetricStatus status = 6;
+
+    google.protobuf.Timestamp timestamp = 7;
+
+    MetricImportance importance = 8;
 }
 
 message MetricValues {

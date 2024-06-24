@@ -93,6 +93,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -102,5 +103,6 @@ py_test(
     deps = [
         ":generate_test_metrics",
         ":validate_metrics_proto",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
