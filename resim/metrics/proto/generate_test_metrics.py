@@ -787,13 +787,14 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
 
     return job_metrics
 
-def generate_bad_events() -> mp.JobMetrics:
+def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     """
     Generate a set of test metrics with a badly tagged event metric.
     """
     job_metrics = mp.JobMetrics()
     job_metrics.job_id.id.data = _get_uuid_str()
     event_metric_id = _add_event_scalar_metric(job_metrics, False)
-    _add_event(job_metrics, event_metric_id)
+    if expect_event:
+        _add_event(job_metrics, event_metric_id)
 
     return job_metrics
