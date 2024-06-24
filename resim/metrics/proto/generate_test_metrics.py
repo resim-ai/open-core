@@ -734,7 +734,23 @@ def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     metric.event_metric = tag_as_event
     return metric.metric_id
 
-def _add_event(job_metrics: mp.JobMetrics, metric_id: mp.MetricId) -> None:
+def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> None:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "A plotly chart for an event"
+    metric.type = mp.PLOTLY_METRIC_TYPE
+    metric.description = "The plotliest of plotly events"
+    metric.status = mp.NOT_APPLICABLE_METRIC_STATUS
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 13.0
+    metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.event_metric = tag_as_event
+    metric.metric_values.plotly_metric_values.json.CopyFrom(Struct())
+
+
+def _add_event(job_metrics: mp.JobMetrics, metric_ids: list[mp.MetricId]) -> None:
     event = job_metrics.events.add()
     event.event_id.id.data = _get_uuid_str()
     event.name = "Emergency Stop"
@@ -743,7 +759,7 @@ def _add_event(job_metrics: mp.JobMetrics, metric_id: mp.MetricId) -> None:
     event.status = mp.FAIL_BLOCK_METRIC_STATUS
     event.importance = mp.LOW_IMPORTANCE
     event.timestamp.seconds = 42
-    event.metrics.append(metric_id)
+    event.metrics.extend(metric_ids)
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
@@ -782,8 +798,10 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     _add_image_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
     # Test events:
-    event_metric_id = _add_event_scalar_metric(job_metrics, True)
-    _add_event(job_metrics, event_metric_id)
+    scalar_event_metric_id = _add_event_scalar_metric(job_metrics, True)
+    plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
+    _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
+    _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
 
     return job_metrics
 
@@ -793,8 +811,9 @@ def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     """
     job_metrics = mp.JobMetrics()
     job_metrics.job_id.id.data = _get_uuid_str()
-    event_metric_id = _add_event_scalar_metric(job_metrics, False)
+    scalar_event_metric_id = _add_event_scalar_metric(job_metrics, False)
+    plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
     if expect_event:
-        _add_event(job_metrics, event_metric_id)
+        _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
 
     return job_metrics
