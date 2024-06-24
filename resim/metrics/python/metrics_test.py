@@ -77,6 +77,9 @@ class MetricsTest(unittest.TestCase):
 
         self.assertEqual(metric, metric.with_blocking(True))
         self.assertTrue(metric.blocking)
+        
+        self.assertEqual(metric, metric.with_event_metric(True))
+        self.assertTrue(metric.event_metric)
 
     def assert_common_fields_match(self, *,
                                    msg: mp.Metric,

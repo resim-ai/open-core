@@ -85,6 +85,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
         METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
         METRIC_VALUE = 5.0
+        EVENT_METRIC = False
 
         (
             self.writer
@@ -97,6 +98,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
+            .with_event_metric(EVENT_METRIC)
         )
 
         output = self.writer.write()
@@ -431,6 +433,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_BLOCKING = True
         METRIC_SHOULD_DISPLAY = True
         METRIC_STATUS = MetricStatus.FAIL_BLOCK_METRIC_STATUS
+        EVENT_METRIC = False
 
         timestamp_data = (SeriesMetricsData('Timestamps')
                           .with_series(EXAMPLE_TIMESTAMPS)
@@ -472,6 +475,7 @@ class TestMetricsWriter(unittest.TestCase):
                 .with_blocking(METRIC_BLOCKING)
                 .with_should_display(METRIC_SHOULD_DISPLAY)
                 .with_status(METRIC_STATUS)
+                .with_event_metric(EVENT_METRIC)
         )
 
         output = self.writer.write()
@@ -571,6 +575,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
         METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
         METRIC_DATA = Struct()
+        EVENT_METRIC = False
 
         (
             self.writer
@@ -581,6 +586,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
+            .with_event_metric(EVENT_METRIC)
         )
 
         output = self.writer.write()
@@ -607,6 +613,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
         METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
         METRIC_DATA = ExternalFileMetricsData(name="test date", filename="test.txt")
+        EVENT_METRIC = False
 
         (
             self.writer
@@ -617,6 +624,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
+            .with_event_metric(EVENT_METRIC)
         )
 
         output = self.writer.write()

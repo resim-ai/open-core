@@ -62,6 +62,8 @@ class Metric(ABC, Generic[MetricT]):
     blocking: Optional[bool]
     parent_job_id: Optional[uuid.UUID]
     order: Optional[float]
+    
+    event_metric: Optional[bool]
 
     @abstractmethod
     def __init__(self: Metric[MetricT],
@@ -72,7 +74,8 @@ class Metric(ABC, Generic[MetricT]):
                  should_display: Optional[bool] = None,
                  blocking: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
-                 order: Optional[float] = None
+                 order: Optional[float] = None,
+                 event_metric: Optional[bool] = None
                  ):
         assert name is not None
         self.id = uuid.uuid4()
@@ -84,6 +87,7 @@ class Metric(ABC, Generic[MetricT]):
         self.blocking = blocking
         self.parent_job_id = parent_job_id
         self.order = order
+        self.event_metric = event_metric
 
     def __eq__(self: MetricT, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -116,6 +120,10 @@ class Metric(ABC, Generic[MetricT]):
         self.blocking = blocking
         return self
 
+    def with_event_metric(self: MetricT, event_metric: bool) -> MetricT:
+        self.event_metric = event_metric
+        return self
+    
     @abstractmethod
     def pack(self: MetricT) -> metrics_pb2.Metric:
         msg = metrics_pb2.Metric()
@@ -143,6 +151,9 @@ class Metric(ABC, Generic[MetricT]):
 
         if self.order is not None:
             msg.order = self.order
+            
+        if self.event_metric is not None:
+            msg.event_metric = self.event_metric
 
         return msg
 
@@ -195,6 +206,11 @@ class Metric(ABC, Generic[MetricT]):
             unpacked.order = msg.order
         else:
             unpacked.order = None
+        
+        if msg.HasField('event_metric'):
+            unpacked.event_metric = msg.event_metric
+        else:
+            unpacked.event_metric = None
 
         return unpacked
 
@@ -220,6 +236,7 @@ class ScalarMetric(Metric['ScalarMetric']):
                  blocking: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  value: Optional[float] = None,
                  failure_definition: Optional[DoubleFailureDefinition] = None,
                  unit: Optional[str] = None):
@@ -231,7 +248,8 @@ class ScalarMetric(Metric['ScalarMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
         self.value = value
         self.failure_definition = failure_definition
         self.unit = unit
@@ -299,6 +317,7 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  doubles_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  failure_definitions: Optional[List[DoubleFailureDefinition]] = None,
@@ -314,7 +333,8 @@ class DoubleOverTimeMetric(Metric['DoubleOverTimeMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
         if doubles_over_time_data is None:
             self.doubles_over_time_data = []
         else:
@@ -465,6 +485,7 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  states_over_time_data: Optional[List[MetricsData]] = None,
                  statuses_over_time_data: Optional[List[MetricsData]] = None,
                  states_set: Optional[Set[str]] = None,
@@ -478,7 +499,8 @@ class StatesOverTimeMetric(Metric['StatesOverTimeMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
         if states_over_time_data is None:
             self.states_over_time_data = []
         else:
@@ -633,6 +655,7 @@ class LinePlotMetric(Metric['LinePlotMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  x_doubles_data: Optional[List[MetricsData]] = None,
                  y_doubles_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
@@ -647,7 +670,8 @@ class LinePlotMetric(Metric['LinePlotMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
         if x_doubles_data is None:
             self.x_doubles_data = []
         else:
@@ -778,6 +802,7 @@ class BarChartMetric(Metric['BarChartMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  values_data: Optional[List[MetricsData]] = None,
                  statuses_data: Optional[List[MetricsData]] = None,
                  legend_series_names: Optional[List[Optional[str]]] = None,
@@ -793,7 +818,8 @@ class BarChartMetric(Metric['BarChartMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
 
         if values_data is None:
             self.values_data = []
@@ -917,6 +943,7 @@ class HistogramMetric(Metric['HistogramMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  values_data: Optional[MetricsData] = None,
                  statuses_data: Optional[MetricsData] = None,
                  buckets: Optional[List[HistogramBucket]] = None,
@@ -932,7 +959,8 @@ class HistogramMetric(Metric['HistogramMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
 
         self.values_data = values_data
         self.statuses_data = statuses_data
@@ -1039,6 +1067,7 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  value_data: Optional[MetricsData] = None,
                  status_data: Optional[MetricsData] = None,
                  index: Optional[IndexType] = None,
@@ -1052,7 +1081,8 @@ class DoubleSummaryMetric(Metric['DoubleSummaryMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
 
         self.value_data = value_data
         self.status_data = status_data
@@ -1144,6 +1174,7 @@ class PlotlyMetric(Metric['PlotlyMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  plotly_data: Optional[Struct] = None,
                  ):
         super().__init__(
@@ -1154,7 +1185,8 @@ class PlotlyMetric(Metric['PlotlyMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
 
         self.plotly_data = plotly_data
 
@@ -1197,6 +1229,7 @@ class ImageMetric(Metric['ImageMetric']):
                  should_display: Optional[bool] = None,
                  parent_job_id: Optional[uuid.UUID] = None,
                  order: Optional[float] = None,
+                 event_metric: Optional[bool] = None,
                  image_data: Optional[ExternalFileMetricsData] = None,
                  ):
         super().__init__(
@@ -1207,7 +1240,8 @@ class ImageMetric(Metric['ImageMetric']):
             blocking=blocking,
             should_display=should_display,
             parent_job_id=parent_job_id,
-            order=order)
+            order=order,
+            event_metric=event_metric)
 
         self.image_data = image_data
 
