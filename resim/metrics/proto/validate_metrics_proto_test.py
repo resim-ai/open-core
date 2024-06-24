@@ -65,7 +65,7 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         data_empty = _make_data_empty(self._warn_metrics)
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(data_empty)
-    
+
     def test_invalid_event_metric(self) -> None:
         """
         Test that the validator fails when a metric used in an event isn't tagged
@@ -73,7 +73,7 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         bad_event_job_proto = gtm.generate_bad_events()
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(bad_event_job_proto)
-        
+     
 
 if __name__ == '__main__':
     unittest.main()
