@@ -759,7 +759,7 @@ def _add_event(job_metrics: mp.JobMetrics, metric_ids: list[mp.MetricId]) -> Non
     event.status = mp.FAIL_BLOCK_METRIC_STATUS
     event.importance = mp.LOW_IMPORTANCE
     event.timestamp.seconds = 42
-    event.metrics.extend(metric_ids)
+    event.metrics.add().MergeFrom(metric_ids)
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
