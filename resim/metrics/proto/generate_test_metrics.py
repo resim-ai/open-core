@@ -732,7 +732,7 @@ def _add_event_scalar_metric(job_metrics: mp.JobMetrics) -> mp.MetricId:
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.scalar_metric_values.value = 1.61803398875
     return metric.metric_id
-    
+
 def _add_event(job_metrics: mp.JobMetrics, metric_id: mp.MetricId) -> None:
     event = job_metrics.events.add()
     event.event_id.id.data = _get_uuid_str()
@@ -783,5 +783,5 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     # Test events:
     event_metric_id = _add_event_scalar_metric(job_metrics)
     _add_event(job_metrics, event_metric_id)
-    
+
     return job_metrics

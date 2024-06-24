@@ -505,8 +505,8 @@ def _validate_metric_used_in_event(metric_id: mp.MetricId,
         if metric_id in event.metrics:
             return True
     return False
-    
-     
+
+
 def _validate_metric(metric: mp.Metric,
                      metrics_data_map: dict[str, mp.MetricsData],
                      events_list: list[mp.Event]) -> None:
@@ -527,13 +527,13 @@ def _validate_metric(metric: mp.Metric,
     _validate_metric_values(metric.metric_values, metrics_data_map)
     # No constraints on blocking
     _validate_metric_importance(metric.importance)
-    
+
     _metrics_assert(metric.HasField("job_id"))
     _validate_job_id(metric.job_id)
 
     if metric.event_metric:
         _validate_metric_used_in_event(metric.metric_id, events_list)
-        
+  
     if metric.type == mp.DOUBLE_SUMMARY_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField('double_metric_values'))
     elif metric.type == mp.DOUBLE_OVER_TIME_METRIC_TYPE:
@@ -685,12 +685,12 @@ def _validate_event(
     _metrics_assert(event.name != "")
     # No constraints on description
     # No constraints on tags
-    
+
     # Validate that each metric id is in the metrics_map:
     for metric_id in event.metrics:
         _validate_metric_id(metric_id)
         _metrics_assert(metric_id.id.data in metrics_map)
-        
+ 
     _validate_metric_status(event.status)
     _validate_timestamp(event.timestamp)
     _validate_metric_importance(event.importance)
@@ -796,7 +796,7 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         _metrics_assert(metric_data.name not in metric_data_names)
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
- 
+
     for event in job_metrics.events:
         _validate_event(event, metrics_map)
 
