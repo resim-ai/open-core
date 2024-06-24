@@ -718,7 +718,7 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     image_metric_values.image_data_id.CopyFrom(metrics_data.metrics_data_id)
 
 
-def _add_event_scalar_metric(job_metrics: mp.JobMetrics) -> mp.MetricId:
+def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Scalar for an event"
@@ -731,6 +731,7 @@ def _add_event_scalar_metric(job_metrics: mp.JobMetrics) -> mp.MetricId:
     metric.order = 42.0
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.scalar_metric_values.value = 1.61803398875
+    metric.event_metric = tag_as_event
     return metric.metric_id
 
 def _add_event(job_metrics: mp.JobMetrics, metric_id: mp.MetricId) -> None:
@@ -781,7 +782,18 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     _add_image_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
     # Test events:
-    event_metric_id = _add_event_scalar_metric(job_metrics)
+    event_metric_id = _add_event_scalar_metric(job_metrics, True)
+    _add_event(job_metrics, event_metric_id)
+
+    return job_metrics
+
+def generate_bad_events() -> mp.JobMetrics:
+    """
+    Generate a set of test metrics with a badly tagged event metric.
+    """
+    job_metrics = mp.JobMetrics()
+    job_metrics.job_id.id.data = _get_uuid_str()
+    event_metric_id = _add_event_scalar_metric(job_metrics, False)
     _add_event(job_metrics, event_metric_id)
 
     return job_metrics
