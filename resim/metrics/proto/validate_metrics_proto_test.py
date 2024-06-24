@@ -69,10 +69,12 @@ class ValidateMetricsProtoTest(unittest.TestCase):
     def test_invalid_event_metric(self) -> None:
         """
         Test that the validator fails when a metric used in an event isn't tagged
+        or doesn't exist
         """
-        bad_event_job_proto = gtm.generate_bad_events()
-        with self.assertRaises(vmp.InvalidMetricsException):
-            vmp.validate_job_metrics(bad_event_job_proto)
+        for expected_event in [True, False]:
+            bad_event_job_proto = gtm.generate_bad_events(expect_event=expected_event)
+            with self.assertRaises(vmp.InvalidMetricsException):
+                vmp.validate_job_metrics(bad_event_job_proto)
 
 
 if __name__ == '__main__':
