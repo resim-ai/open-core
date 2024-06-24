@@ -73,7 +73,7 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         bad_event_job_proto = gtm.generate_bad_events()
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(bad_event_job_proto)
-     
+
 
 if __name__ == '__main__':
     unittest.main()
