@@ -103,6 +103,5 @@ py_test(
     deps = [
         ":generate_test_metrics",
         ":validate_metrics_proto",
-        "@com_google_protobuf//:protobuf_python",
     ],
 )
