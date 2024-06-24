@@ -62,7 +62,7 @@ class Metric(ABC, Generic[MetricT]):
     blocking: Optional[bool]
     parent_job_id: Optional[uuid.UUID]
     order: Optional[float]
-    
+
     event_metric: Optional[bool]
 
     @abstractmethod
@@ -123,7 +123,7 @@ class Metric(ABC, Generic[MetricT]):
     def with_event_metric(self: MetricT, event_metric: bool) -> MetricT:
         self.event_metric = event_metric
         return self
-    
+
     @abstractmethod
     def pack(self: MetricT) -> metrics_pb2.Metric:
         msg = metrics_pb2.Metric()
@@ -151,7 +151,7 @@ class Metric(ABC, Generic[MetricT]):
 
         if self.order is not None:
             msg.order = self.order
-            
+
         if self.event_metric is not None:
             msg.event_metric = self.event_metric
 
@@ -206,7 +206,7 @@ class Metric(ABC, Generic[MetricT]):
             unpacked.order = msg.order
         else:
             unpacked.order = None
-        
+
         if msg.HasField('event_metric'):
             unpacked.event_metric = msg.event_metric
         else:
