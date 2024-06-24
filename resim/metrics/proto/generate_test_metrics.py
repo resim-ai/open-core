@@ -816,5 +816,9 @@ def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
     if expect_event:
         _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
+    else:
+        random_id = mp.MetricId()
+        random_id.id.data =  _get_uuid_str()
+        _add_event(job_metrics, [random_id])
 
     return job_metrics
