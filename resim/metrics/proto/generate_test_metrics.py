@@ -734,7 +734,7 @@ def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     metric.event_metric = tag_as_event
     return metric.metric_id
 
-def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> None:
+def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "A plotly chart for an event"
@@ -748,6 +748,7 @@ def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.event_metric = tag_as_event
     metric.metric_values.plotly_metric_values.json.CopyFrom(Struct())
+    return metric.metric_id
 
 
 def _add_event(job_metrics: mp.JobMetrics, metric_ids: list[mp.MetricId]) -> None:
@@ -759,7 +760,7 @@ def _add_event(job_metrics: mp.JobMetrics, metric_ids: list[mp.MetricId]) -> Non
     event.status = mp.FAIL_BLOCK_METRIC_STATUS
     event.importance = mp.LOW_IMPORTANCE
     event.timestamp.seconds = 42
-    event.metrics.add().MergeFrom(metric_ids)
+    event.metrics.extend(metric_ids)
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
