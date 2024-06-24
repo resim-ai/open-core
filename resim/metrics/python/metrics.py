@@ -1700,12 +1700,16 @@ class Event():
         self.importance = importance
         return self
 
-    def with_should_display(self: MetricT, should_display: bool) -> MetricT:
-        self.should_display = should_display
+    def with_tags(self: MetricT, tags: List[str]) -> MetricT:
+        self.tags = tags
         return self
 
-    def with_blocking(self: MetricT, blocking: bool) -> MetricT:
-        self.blocking = blocking
+    def with_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+        self.timestamp = timestamp
+        return self
+
+    def with_metrics(self: MetricT, metrics: List[Metric]) -> MetricT:
+        self.metrics = metrics
         return self
 
     @abstractmethod
