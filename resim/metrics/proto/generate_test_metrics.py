@@ -751,11 +751,11 @@ def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     return metric.metric_id
 
 
-def _add_event(job_metrics: mp.JobMetrics, metric_ids: list[mp.MetricId]) -> None:
+def _add_event(job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.MetricId]) -> None:
     event = job_metrics.events.add()
     event.event_id.id.data = _get_uuid_str()
-    event.name = "Emergency Stop"
-    event.description = "Actor 2 changes lanes"
+    event.name = event_name
+    event.description = "event description"
     event.tags.extend(["tag1", "tag2", "tag3"])
     event.status = mp.FAIL_BLOCK_METRIC_STATUS
     event.importance = mp.LOW_IMPORTANCE
@@ -801,8 +801,8 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     # Test events:
     scalar_event_metric_id = _add_event_scalar_metric(job_metrics, True)
     plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
-    _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
-    _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
+    _add_event(job_metrics, "first event", [scalar_event_metric_id,plotly_event_metric_id])
+    _add_event(job_metrics, "second event", [scalar_event_metric_id,plotly_event_metric_id])
 
     return job_metrics
 
@@ -815,10 +815,10 @@ def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     scalar_event_metric_id = _add_event_scalar_metric(job_metrics, False)
     plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
     if expect_event:
-        _add_event(job_metrics, [scalar_event_metric_id,plotly_event_metric_id])
+        _add_event(job_metrics, "event", [scalar_event_metric_id,plotly_event_metric_id])
     else:
         random_id = mp.MetricId()
         random_id.id.data =  _get_uuid_str()
-        _add_event(job_metrics, [random_id])
+        _add_event(job_metrics, "event", [random_id])
 
     return job_metrics
