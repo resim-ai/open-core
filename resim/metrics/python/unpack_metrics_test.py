@@ -62,7 +62,7 @@ class UnpackMetricsTest(unittest.TestCase):
             unpacked_metrics_data_ids,
             reunpacked_metrics_data_ids)
         self.assertEqual(unpacked_event_ids,repacked_event_ids)
-        
+
         self.assertEqual(unpacked.metrics, reunpacked.metrics)
         self.assertEqual(unpacked.events, reunpacked.events)
 
