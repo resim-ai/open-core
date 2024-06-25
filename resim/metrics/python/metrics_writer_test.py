@@ -98,7 +98,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
-            .with_event_metric(EVENT_METRIC)
+            .is_event_metric()
         )
 
         output = self.writer.write()
@@ -475,7 +475,7 @@ class TestMetricsWriter(unittest.TestCase):
                 .with_blocking(METRIC_BLOCKING)
                 .with_should_display(METRIC_SHOULD_DISPLAY)
                 .with_status(METRIC_STATUS)
-                .with_event_metric(EVENT_METRIC)
+                .is_event_metric()
         )
 
         output = self.writer.write()
@@ -586,7 +586,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
-            .with_event_metric(EVENT_METRIC)
+            .is_event_metric()
         )
 
         output = self.writer.write()
@@ -624,7 +624,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
-            .with_event_metric(EVENT_METRIC)
+            .is_event_metric()
         )
 
         output = self.writer.write()
