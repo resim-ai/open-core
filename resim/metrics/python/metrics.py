@@ -121,8 +121,8 @@ class Metric(ABC, Generic[MetricT]):
         self.blocking = blocking
         return self
 
-    def with_event_metric(self: MetricT, event_metric: bool) -> MetricT:
-        self.event_metric = event_metric
+    def is_event_metric(self: MetricT) -> MetricT:
+        self.event_metric = True
         return self
 
     @abstractmethod
