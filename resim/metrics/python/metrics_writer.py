@@ -65,7 +65,7 @@ class ResimMetricsWriter:
         self.names.add(event.name)
         self.events[event.id] = event
         return event
-    
+
     def add_event(self, name: str) -> Event:
         event = Event(name=name)
         return self.base_add_event(event)

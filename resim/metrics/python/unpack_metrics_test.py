@@ -36,7 +36,7 @@ class UnpackMetricsTest(unittest.TestCase):
 
         for metric in unpacked.metrics:
             writer.add_metric(metric)
-        
+
         for event in unpacked.events:
             writer.base_add_event(event)
 
@@ -62,6 +62,9 @@ class UnpackMetricsTest(unittest.TestCase):
             unpacked_metrics_data_ids,
             reunpacked_metrics_data_ids)
         self.assertEqual(unpacked_event_ids,repacked_event_ids)
+        
+        self.assertEqual(unpacked.metrics, reunpacked.metrics)
+        self.assertEqual(unpacked.events, reunpacked.events)
 
 
 if __name__ == "__main__":

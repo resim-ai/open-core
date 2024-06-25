@@ -68,10 +68,6 @@ def unpack_metrics(*,
             md.metrics_data_id.id): md for md in metrics_data}
 
     id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData] = {}
-    
-    id_to_metrics_map = {
-        _unpack_uuid(
-            m.metric_id.id): m for m in metrics}
 
     id_to_unpacked_metrics: dict[uuid.UUID, Metric] = {}
 
@@ -95,12 +91,10 @@ def unpack_metrics(*,
         unpacked_metrics.append(
             _unpack_metric(
                 metric,
-                id_to_unpacked_metrics_data))
+                id_to_unpacked_metrics_data,
+                id_to_unpacked_metrics))
 
     unpacked_metrics_data = list(id_to_unpacked_metrics_data.values())
-    names = ({metric.name for metric in unpacked_metrics} |
-             {metrics_data.name for metrics_data in unpacked_metrics_data} |
-             {events.name for events in unpacked_events})
 
     unpacked_events = []
     for event in events:
@@ -108,9 +102,13 @@ def unpack_metrics(*,
             _unpack_event(
                 event,
                 id_to_unpacked_metrics))
-    
+
+    names = ({metric.name for metric in unpacked_metrics} |
+            {metrics_data.name for metrics_data in unpacked_metrics_data} |
+            {events.name for events in unpacked_events})
+
     # Enforce name uniqueness (events don't count)
-    assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data)
+    assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data) + len(unpacked_events)
 
     return UnpackedMetrics(
         metrics=unpacked_metrics,
@@ -187,7 +185,8 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
 
 def _unpack_metric(metric: mp.Metric,
                    id_to_unpacked_metrics_data: dict[uuid.UUID,
-                                                     MetricsData]) -> Metric:
+                                                     MetricsData],
+                   id_to_unpacked_metrics: dict[uuid.UUID, Metric]) -> Metric:
 
     unpacked = Metric.unpack_common_fields(metric)
     unpackers: dict[type[Any], Callable] = {
@@ -204,6 +203,7 @@ def _unpack_metric(metric: mp.Metric,
     }
     unpacker: Callable = unpackers[type(unpacked)]
     unpacker(metric, unpacked, id_to_unpacked_metrics_data)
+    id_to_unpacked_metrics[unpacked.id] = unpacked
     return unpacked
 
 
@@ -383,4 +383,13 @@ def _unpack_event(msg: mp.Event,
     unpacked.description = msg.description
     unpacked.status = MetricStatus(msg.status)
     unpacked.importance = MetricImportance(msg.importance)
+    unpacked.with_timestamp(Timestamp.unpack(
+            msg.timestamp))
+    unpacked.with_tags(msg.tags)
+    # build the list of metrics:
+    metrics = []
+    for metric_id in msg.metrics:
+        metrics.append(id_to_unpacked_metrics[_unpack_uuid(metric_id.id)])
+    unpacked.with_metrics(metrics)
+    
     return unpacked
