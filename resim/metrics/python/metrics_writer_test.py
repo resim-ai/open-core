@@ -648,6 +648,58 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(
             self.writer.metrics_data[metrics_data.id], metrics_data)
 
+    def test_event(self) -> None:
+        # first create a few scalar metrics
+        METRIC_1_NAME = "Scalar metric 1"
+        METRIC_2_NAME = "Scalar metric 2"
+        METRIC_VALUE = 5.0
+
+        metric_1 = (self.writer
+            .add_scalar_metric(METRIC_1_NAME)
+            .with_value(METRIC_VALUE)
+            .is_event_metric())
+        metric_2 = (self.writer
+            .add_scalar_metric(METRIC_2_NAME)
+            .with_value(METRIC_VALUE)
+            .is_event_metric())
+
+        # then create an event
+        EVENT_NAME = "my_event"
+        EVENT_DESCRIPTION = "event description"
+        EVENT_TAGS = ["a tag", "another tag"]
+        EVENT_TIMESTAMP = Timestamp(secs=1, nanos=2)
+        EVENT_IMPORTANCE = MetricImportance.CRITICAL_IMPORTANCE
+        EVENT_STATUS = MetricStatus.FAIL_WARN_METRIC_STATUS
+        (
+            self.writer
+            .add_event(EVENT_NAME)
+            .with_description(EVENT_DESCRIPTION)
+            .with_tags(EVENT_TAGS)
+            .with_timestamp(EVENT_TIMESTAMP)
+            .with_importance(EVENT_IMPORTANCE)
+            .with_status(EVENT_STATUS)
+            .with_metrics([metric_1,metric_2])
+        )
+
+        output = self.writer.write()
+        metrics = output.metrics_msg.job_level_metrics.metrics
+        self.assertEqual(len(output.packed_ids), 3)
+        self.assertEqual(len(metrics), 2)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+        self.assertEqual(len(output.metrics_msg.events), 1)
+
+        event = output.metrics_msg.events[0]
+        self.assertEqual(event.description, EVENT_DESCRIPTION)
+        self.assertEqual(event.tags, EVENT_TAGS)
+        self.assertEqual(event.name, EVENT_NAME)
+        self.assertEqual(event.importance, EVENT_IMPORTANCE.value)
+        self.assertEqual(event.status, EVENT_STATUS.value)
+        self.assertEqual(event.timestamp.nanos, EVENT_TIMESTAMP.nanos)
+        self.assertEqual(event.timestamp.seconds, EVENT_TIMESTAMP.secs)
+        metric_id_uuids = list(map(lambda m: m.metric_id, metrics))
+        for metric_id in event.metrics:
+            self.assertIn(metric_id, metric_id_uuids)
+
     def tearDown(self) -> None:
         pass
 

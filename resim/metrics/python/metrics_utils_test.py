@@ -93,6 +93,16 @@ class MetricsUtilsTest(unittest.TestCase):
         # VERIFICATION
         self.assertEqual(uuid.UUID(packed.data), test_uuid)
 
+    def test_pack_uuid_to_metric_id(self) -> None:
+        # SETUP
+        test_uuid = uuid.uuid4()
+
+        # ACTION
+        packed = mu.pack_uuid_to_metric_id(test_uuid)
+
+        # VERIFICATION
+        self.assertEqual(uuid.UUID(packed.id.data), test_uuid)
+
     def test_pack_series_to_proto(self) -> None:
         # SETUP
         inputs = {

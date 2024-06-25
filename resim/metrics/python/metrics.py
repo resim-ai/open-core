@@ -29,6 +29,7 @@ from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
     HistogramBucket,
     pack_uuid_to_proto,
+    pack_uuid_to_metric_id,
     pack_series_to_proto,
     MetricImportance,
     MetricStatus)
@@ -1642,3 +1643,107 @@ class ExternalFileMetricsData(BaseMetricsData['ExternalFileMetricsData']):
             self: ExternalFileMetricsData,
             metrics_output: ResimMetricsOutput) -> None:
         super().recursively_pack_into(metrics_output)
+
+# -------------------
+# Event representation
+# -------------------
+
+@metric_dataclass
+class Event():
+    id: uuid.UUID
+    name: str
+    description: Optional[str]
+    tags: Optional[list[str]]
+    status: Optional[MetricStatus]
+    importance: Optional[MetricImportance]
+    timestamp: Optional[Timestamp]
+    metrics: Optional[List[Metric]]
+
+    def __init__(self: Metric[MetricT],
+                 name: str,
+                 description: Optional[str] = None,
+                 tags: Optional[list[str]] = None,
+                 status: Optional[MetricStatus] = None,
+                 importance: Optional[MetricImportance] = None,
+                 timestamp: Optional[Timestamp] = None,
+                 metrics: Optional[List[Metric]] = None,
+                 ):
+        assert name is not None
+        self.id = uuid.uuid4()
+        self.name = name
+        self.description = description
+        self.tags = tags
+        self.status = status
+        self.importance = importance
+        self.timestamp = timestamp
+        self.metrics = metrics
+
+    def __eq__(self: MetricT, __value: object) -> bool:
+        if not isinstance(__value, type(self)):
+            return False
+
+        assert (self.id is not None and
+                __value.id is not None), "Cannot compare values without valid ids"
+
+        return self.id == __value.id
+
+    def with_description(self: MetricT, description: str) -> MetricT:
+        self.description = description
+        return self
+
+    def with_status(self: MetricT, status: MetricStatus) -> MetricT:
+        self.status = status
+        return self
+
+    def with_importance(
+            self: MetricT,
+            importance: MetricImportance) -> MetricT:
+        self.importance = importance
+        return self
+
+    def with_tags(self: MetricT, tags: List[str]) -> MetricT:
+        self.tags = tags
+        return self
+
+    def with_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+        self.timestamp = timestamp
+        return self
+
+    def with_metrics(self: MetricT, metrics: List[Metric]) -> MetricT:
+        self.metrics = metrics
+        return self
+
+    def pack(self: Event) -> metrics_pb2.Event:
+        msg = metrics_pb2.Event()
+
+        msg.event_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.name = self.name
+
+        if self.description is not None:
+            msg.description = self.description
+
+        if self.status is not None:
+            msg.status = self.status.value
+
+        if self.importance is not None:
+            msg.importance = self.importance.value
+
+        if self.timestamp is not None:
+            msg.timestamp.CopyFrom(self.timestamp.pack())
+
+        if self.tags is not None:
+            msg.tags.extend(self.tags)
+
+        if self.metrics is not None:
+            msg.metrics.extend([pack_uuid_to_metric_id(m.id) for m in self.metrics])
+
+        return msg
+
+    def recursively_pack_into(
+            self,
+            metrics_output: ResimMetricsOutput) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.events.extend([self.pack()])
