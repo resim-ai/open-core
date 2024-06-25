@@ -52,7 +52,7 @@ class UnpackMetricsTest(unittest.TestCase):
         reunpacked_metrics_data_ids = {
             metric_data.id for metric_data in reunpacked.metrics_data}
         reunpacked_event_ids = {event.id for event in reunpacked.events}
-        
+
         unpacked_metrics_ids = {metric.id for metric in unpacked.metrics}
         unpacked_metrics_data_ids = {
             metric_data.id for metric_data in unpacked.metrics_data}
