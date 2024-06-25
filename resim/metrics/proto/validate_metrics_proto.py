@@ -797,7 +797,11 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
+    # Use a set to check for duplicated names
+    event_names = set()
     for event in job_metrics.events:
+        _metrics_assert(event.name not in event_names)
+        event_names.add(event.name)
         _validate_event(event, metrics_map)
 
     _validate_statuses(job_metrics)
