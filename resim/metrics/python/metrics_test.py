@@ -1776,20 +1776,19 @@ class MetricsTest(unittest.TestCase):
         for metric in event_metrics:
             self.assertIn(metrics_utils.pack_uuid_to_proto(metric.id), metric_id_uuids)
 
-        # output = metrics_utils.ResimMetricsOutput()
-        # event.recursively_pack_into(output)
-        # self.assertIn(event.id, output.packed_ids)
-        # self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-        # self.assertEqual(len(output.metrics_msg.metrics_data), 1)
-        # ids = [uuid.UUID(data.metrics_data_id.id.data)
-        #         for data in output.metrics_msg.metrics_data]
-        # self.assertIn(image_data.id, ids)
-        # self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+        output = metrics_utils.ResimMetricsOutput()
+        event.recursively_pack_into(output)
+        self.assertIn(event.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.events), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 0)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+        self.assertEqual(output.metrics_msg.events[0], msg)
 
-        # # Check no duplication
-        # metric.recursively_pack_into(output)
-        # self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
-        # self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+        # Check no duplication
+        event.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.events), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 0)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
 
 if __name__ == "__main__":
     unittest.main()
