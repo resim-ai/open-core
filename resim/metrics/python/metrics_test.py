@@ -1665,7 +1665,7 @@ class MetricsTest(unittest.TestCase):
             value=24.0)
         metric_2 = metrics.ScalarMetric(
             name="test_metric_2",
-            value=24.0)
+            value=48.0)
 
         event = metrics.Event(
             name="my_event",

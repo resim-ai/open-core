@@ -653,16 +653,15 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_1_NAME = "Scalar metric 1"
         METRIC_2_NAME = "Scalar metric 2"
         METRIC_VALUE = 5.0
-        EVENT_METRIC = True
 
         metric_1 = (self.writer
             .add_scalar_metric(METRIC_1_NAME)
             .with_value(METRIC_VALUE)
-            .with_event_metric(EVENT_METRIC))
+            .is_event_metric())
         metric_2 = (self.writer
             .add_scalar_metric(METRIC_2_NAME)
             .with_value(METRIC_VALUE)
-            .with_event_metric(EVENT_METRIC))
+            .is_event_metric())
 
         # then create an event
         EVENT_NAME = "my_event"
