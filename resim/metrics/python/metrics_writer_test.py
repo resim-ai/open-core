@@ -654,13 +654,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(
             self.writer.metrics_data[metrics_data.id], metrics_data)
 
-    def test_get_name_id_map(self) -> None:
-        """Test that we can get a name to id map."""
-        NAME = "test_metrics_data"
-        metric = self.writer.add_external_file_metrics_data(name=NAME)
-        name_id_map = self.writer.get_name_id_map()
-        self.assertEqual(name_id_map, {NAME: metrics_data.id})
-    
+
     def tearDown(self) -> None:
         pass
 

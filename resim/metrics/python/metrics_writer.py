@@ -117,9 +117,6 @@ class ResimMetricsWriter:
         self.add_metrics_data(metrics_data)
         return metrics_data
 
-    def get_metric_name_ids(self) -> Dict[str, uuid.UUID]:
-        return {metric.name: metric.id for metric in self.metrics.values()}
-    
     def write(self) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 

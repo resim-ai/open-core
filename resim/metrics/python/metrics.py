@@ -29,6 +29,7 @@ from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
     HistogramBucket,
     pack_uuid_to_proto,
+    pack_uuid_to_metric_id,
     pack_series_to_proto,
     MetricImportance,
     MetricStatus)
@@ -1715,7 +1716,7 @@ class Event():
     def pack(self: Event) -> metrics_pb2.Event:
         msg = metrics_pb2.Event()
 
-        msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
+        msg.event_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
 
         if self.description is not None:
@@ -1728,13 +1729,13 @@ class Event():
             msg.importance = self.importance.value
 
         if self.timestamp is not None:
-            msg.timestamp.CopyFrom(self.start_time.pack())
+            msg.timestamp.CopyFrom(self.timestamp.pack())
 
         if self.tags is not None:
-            msg.tags = self.tags
+            msg.tags.extend(self.tags)
 
         if self.metrics is not None:
-            msg.metrics.extend([m.metric_id for m in self.metrics])
+            msg.metrics.extend([pack_uuid_to_metric_id(m.id) for m in self.metrics])
 
         return msg
 

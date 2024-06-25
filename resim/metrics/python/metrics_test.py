@@ -1658,6 +1658,121 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.name, metrics_data.name)
         self.assertEqual(msg.external_file.path, filename)
 
+    def test_event_eq(self) -> None:
+        # SETUP
+        metric_1 = metrics.ScalarMetric(
+            name="test_metric_1",
+            value=24.0)
+        metric_2 = metrics.ScalarMetric(
+            name="test_metric_2",
+            value=24.0)
+
+        event = metrics.Event(
+            name="my_event",
+            description="event description",
+            tags=["a tag", "another tag"],
+            timestamp=metrics_utils.Timestamp(secs=1, nanos=2),
+            importance=MetricImportance.CRITICAL_IMPORTANCE,
+            status=MetricStatus.FAIL_BLOCK_METRIC_STATUS,
+            metrics=[metric_1, metric_2],
+        )
+
+        # Test equality
+        self.assertEqual(event, event)
+
+        # Different type
+        self.assertNotEqual(event, 3)
+
+        # Non-existent id
+        event_with_none_id = copy.copy(event)
+        event_with_none_id.id = cast(uuid.UUID, None)
+        with self.assertRaises(AssertionError):
+            _ = event_with_none_id == event
+        with self.assertRaises(AssertionError):
+            _ = event == event_with_none_id
+
+        # Different id
+        event_with_diff_id = copy.copy(event)
+        event_with_diff_id.id = uuid.uuid4()
+        self.assertNotEqual(event_with_diff_id, event)
+        self.assertNotEqual(event, event_with_diff_id)
+
+    def generate_event_metrics(self) -> list[metrics.Metric]:
+        metric_1 = metrics.ScalarMetric(
+            name="test_metric_1",
+            value=24.0)
+        metric_2 = metrics.ScalarMetric(
+            name="test_metric_2",
+            value=24.0)
+        return [metric_1, metric_2]
+
+    def test_event(self) -> None:
+        name = "my_event"
+        description = "event description"
+        tags = ["a tag", "another tag"]
+        timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        importance = MetricImportance.CRITICAL_IMPORTANCE
+        status = MetricStatus.FAIL_WARN_METRIC_STATUS
+        event_metrics = self.generate_event_metrics()
+
+        event = metrics.Event(
+            name=name,
+            description=description,
+            tags=tags,
+            timestamp=timestamp,
+            importance=importance,
+            status=status,
+            metrics=event_metrics,
+        )
+
+        self.assertEqual(event, event.with_description(description))
+        self.assertEqual(event, event.with_tags(tags))
+        self.assertEqual(event, event.with_timestamp(timestamp))
+        self.assertEqual(event, event.with_importance(importance))
+        self.assertEqual(event, event.with_status(status))
+        self.assertEqual(event, event.with_metrics(event_metrics))
+
+        self.assertTrue(event.name == name)
+        self.assertTrue(event.description == description)
+        self.assertTrue(event.tags == tags)
+        self.assertTrue(event.timestamp == timestamp)
+        self.assertTrue(event.importance == importance)
+        self.assertTrue(event.status == status)
+        self.assertTrue(event.metrics == event_metrics)
+
+
+    def test_event_pack(self) -> None:
+        name = "my_event"
+        description = "event description"
+        tags = ["a tag", "another tag"]
+        timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        importance = MetricImportance.CRITICAL_IMPORTANCE
+        status = MetricStatus.FAIL_WARN_METRIC_STATUS
+        event_metrics = self.generate_event_metrics()
+        event = metrics.Event(
+            name=name,
+            description=description,
+            tags=tags,
+            timestamp=timestamp,
+            importance=importance,
+            status=status,
+            metrics=event_metrics,
+        )
+
+        msg = event.pack()
+        self.assertEqual(
+            msg.event_id.id,
+            metrics_utils.pack_uuid_to_proto(
+                event.id))
+        self.assertEqual(msg.name, event.name)
+        self.assertTrue(msg.description == event.description)
+        self.assertTrue(msg.tags == event.tags)
+        assert event.timestamp is not None
+        self.assertEqual(msg.timestamp, event.timestamp.pack())
+        self.assertTrue(msg.importance == getattr(event.importance, "value"))
+        self.assertTrue(msg.status == getattr(event.status, "value"))
+        # here. Need to figure out how to compare the metrics
+        # self.assertTrue(msg.metrics == event_metrics)
 
 if __name__ == "__main__":
     unittest.main()
