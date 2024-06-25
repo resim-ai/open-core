@@ -391,5 +391,5 @@ def _unpack_event(msg: mp.Event,
     for metric_id in msg.metrics:
         metrics.append(id_to_unpacked_metrics[_unpack_uuid(metric_id.id)])
     unpacked.with_metrics(metrics)
-    
+
     return unpacked
