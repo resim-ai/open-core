@@ -107,7 +107,7 @@ def unpack_metrics(*,
             {metrics_data.name for metrics_data in unpacked_metrics_data} |
             {events.name for events in unpacked_events})
 
-    # Enforce name uniqueness (events don't count)
+    # Enforce name uniqueness
     assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data) + len(unpacked_events)
 
     return UnpackedMetrics(

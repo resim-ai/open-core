@@ -51,7 +51,8 @@ class UnpackMetricsTest(unittest.TestCase):
         reunpacked_metrics_ids = {metric.id for metric in reunpacked.metrics}
         reunpacked_metrics_data_ids = {
             metric_data.id for metric_data in reunpacked.metrics_data}
-        repacked_event_ids = {event.id for event in reunpacked.events}
+        reunpacked_event_ids = {event.id for event in reunpacked.events}
+        
         unpacked_metrics_ids = {metric.id for metric in unpacked.metrics}
         unpacked_metrics_data_ids = {
             metric_data.id for metric_data in unpacked.metrics_data}
@@ -61,7 +62,7 @@ class UnpackMetricsTest(unittest.TestCase):
         self.assertEqual(
             unpacked_metrics_data_ids,
             reunpacked_metrics_data_ids)
-        self.assertEqual(unpacked_event_ids,repacked_event_ids)
+        self.assertEqual(unpacked_event_ids,reunpacked_event_ids)
 
         self.assertEqual(unpacked.metrics, reunpacked.metrics)
         self.assertEqual(unpacked.events, reunpacked.events)
