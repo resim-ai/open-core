@@ -97,6 +97,10 @@ def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_pb2.UUID:
     uuid_msg.data = str(uuid_obj)
     return uuid_msg
 
+def pack_uuid_to_metric_id (uuid_obj: uuid.UUID) -> metrics_pb2.MetricID:
+    metric_id = metrics_pb2.MetricId()
+    metric_id.id.CopyFrom(pack_uuid_to_proto(uuid_obj))
+    return metric_id
 
 def pack_series_to_proto(series: np.ndarray,
                          indexed: bool) -> Tuple[metrics_pb2.MetricsDataType,

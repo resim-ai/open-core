@@ -22,6 +22,7 @@ import resim.utils.proto.uuid_pb2 as uuid_proto
 from resim.metrics.python.metrics_utils import (
     Timestamp,
     MetricStatus,
+    MetricImportance,
     DoubleFailureDefinition,
     HistogramBucket)
 from resim.metrics.python.metrics import (
@@ -37,6 +38,7 @@ from resim.metrics.python.metrics import (
     GroupedMetricsData,
     SeriesMetricsData,
     ExternalFileMetricsData,
+    Event,
     Metric,
     MetricsData)
 
@@ -46,16 +48,18 @@ class UnpackedMetrics:
     """A class representing unpacked metrics."""
     metrics: list[Metric]
     metrics_data: list[MetricsData]
+    events: list[Event]
     names: set[str]
 
 
 def unpack_metrics(*,
                    metrics: list[mp.Metric],
-                   metrics_data: list[mp.MetricsData]) -> UnpackedMetrics:
-    """The main unpacker for metrics and metrics data
+                   metrics_data: list[mp.MetricsData],
+                   events: list[mp.Event]) -> UnpackedMetrics:
+    """The main unpacker for metrics, metrics data, and events
 
-    This function reads a list of metrics and metrics data protobuf messages and
-    unpacks them into Metric and MetricsData classes wrapped in the
+    This function reads a list of metrics, metrics data, and event protobuf messages and
+    unpacks them into Metric, MetricsData, and Event classes wrapped in the
     UnpackedMetrics class.
     """
 
@@ -64,6 +68,8 @@ def unpack_metrics(*,
             md.metrics_data_id.id): md for md in metrics_data}
 
     id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData] = {}
+
+    id_to_unpacked_metrics: dict[uuid.UUID, Metric] = {}
 
     def recursive_unpack_metrics_data(current_id: uuid.UUID) -> None:
         if current_id in id_to_unpacked_metrics_data:
@@ -85,18 +91,29 @@ def unpack_metrics(*,
         unpacked_metrics.append(
             _unpack_metric(
                 metric,
-                id_to_unpacked_metrics_data))
+                id_to_unpacked_metrics_data,
+                id_to_unpacked_metrics))
 
     unpacked_metrics_data = list(id_to_unpacked_metrics_data.values())
+
+    unpacked_events = []
+    for event in events:
+        unpacked_events.append(
+            _unpack_event(
+                event,
+                id_to_unpacked_metrics))
+
     names = ({metric.name for metric in unpacked_metrics} |
-             {metrics_data.name for metrics_data in unpacked_metrics_data})
+            {metrics_data.name for metrics_data in unpacked_metrics_data} |
+            {events.name for events in unpacked_events})
 
     # Enforce name uniqueness
-    assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data)
+    assert len(names) == len(unpacked_metrics) + len(unpacked_metrics_data) + len(unpacked_events)
 
     return UnpackedMetrics(
         metrics=unpacked_metrics,
         metrics_data=unpacked_metrics_data,
+        events=unpacked_events,
         names=names)
 
 
@@ -168,7 +185,8 @@ def _unpack_metrics_data(metrics_data: mp.MetricsData,
 
 def _unpack_metric(metric: mp.Metric,
                    id_to_unpacked_metrics_data: dict[uuid.UUID,
-                                                     MetricsData]) -> Metric:
+                                                     MetricsData],
+                   id_to_unpacked_metrics: dict[uuid.UUID, Metric]) -> Metric:
 
     unpacked = Metric.unpack_common_fields(metric)
     unpackers: dict[type[Any], Callable] = {
@@ -185,6 +203,7 @@ def _unpack_metric(metric: mp.Metric,
     }
     unpacker: Callable = unpackers[type(unpacked)]
     unpacker(metric, unpacked, id_to_unpacked_metrics_data)
+    id_to_unpacked_metrics[unpacked.id] = unpacked
     return unpacked
 
 
@@ -356,3 +375,21 @@ def _unpack_image_metric(metric: mp.Metric,
     data = id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)]
     unpacked.with_image_data(
         data)
+
+def _unpack_event(msg: mp.Event,
+                  id_to_unpacked_metrics: dict[uuid.UUID, Metric]) -> Event:
+    unpacked = Event(name=msg.name)
+    unpacked.id = uuid.UUID(msg.event_id.id.data)
+    unpacked.description = msg.description
+    unpacked.status = MetricStatus(msg.status)
+    unpacked.importance = MetricImportance(msg.importance)
+    unpacked.with_timestamp(Timestamp.unpack(
+            msg.timestamp))
+    unpacked.with_tags(msg.tags)
+    # build the list of metrics:
+    metrics = []
+    for metric_id in msg.metrics:
+        metrics.append(id_to_unpacked_metrics[_unpack_uuid(metric_id.id)])
+    unpacked.with_metrics(metrics)
+
+    return unpacked
