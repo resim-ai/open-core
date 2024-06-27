@@ -239,7 +239,7 @@ message Metric {
 // An event is a tagged timestamp, reflecting, well, what it sounds like:
 // something happened. That event could be good, bad, neutral (and thus contains
 // the usual statues), but by definition is something worth looking at, at
-// provides an insight. Thus, events, provide a way to index into the experience
+// provides an insight. Thus, events provide a way to index into the experience
 // to find what matters.
 //
 // Events are associated with metrics, and can be used to provide insight into
