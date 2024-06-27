@@ -346,7 +346,7 @@ def _unpack_plotly_metric(metric: mp.Metric,
                           unpacked: PlotlyMetric,
                           _: dict[uuid.UUID, MetricsData]) -> None:
     plotly_data_struct = metric.metric_values.plotly_metric_values.json
-    plotly_data = MessageToJson(plotly_data_struct) 
+    plotly_data = MessageToJson(plotly_data_struct)
     unpacked.with_plotly_data(
         plotly_data)
 
