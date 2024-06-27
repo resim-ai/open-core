@@ -14,6 +14,7 @@ py_library(
     deps = [
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -37,7 +38,6 @@ py_library(
         ":metrics",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
-        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -82,6 +82,7 @@ py_library(
     deps = [
         ":metrics",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -95,6 +96,5 @@ py_test(
         "//resim/metrics/proto:generate_test_metrics",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
-        "@com_google_protobuf//:protobuf_python",
     ],
 )

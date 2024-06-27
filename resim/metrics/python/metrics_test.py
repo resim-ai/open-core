@@ -9,13 +9,14 @@ Unit tests for metrics.py.
 """
 
 import copy
+import json
 import uuid
 import unittest
 from typing import cast, Any
 
 import numpy as np
 
-from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict
 from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
 import resim.metrics.proto.metrics_pb2 as mp
@@ -1274,8 +1275,7 @@ class MetricsTest(unittest.TestCase):
         )
 
         # SETTING
-        test_data = Struct()
-        test_data["test"] = "test"
+        test_data = '{"test": "test"}'
         self.assertIs(metric, metric.with_plotly_data(test_data))
         self.assertEqual(metric.plotly_data, test_data)
 
@@ -1284,7 +1284,8 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
         self.assertTrue(msg.metric_values.HasField('plotly_metric_values'))
         values = msg.metric_values.plotly_metric_values
-        self.assertEqual(values.json, metric.plotly_data)
+        # validate that as dicts, they are the same
+        self.assertEqual(MessageToDict(values.json), json.loads(test_data))
 
         output = metrics_utils.ResimMetricsOutput()
         metric.recursively_pack_into(output)
