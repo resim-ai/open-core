@@ -61,12 +61,28 @@ class ResimMetricsWriter:
         return metric
 
     def base_add_event(self, event: Event) -> Event:
+        """Given an existent event, add to the writer. 
+
+        Args:
+            event (Event): the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
         assert event.name not in self.names
         self.names.add(event.name)
         self.events[event.id] = event
         return event
 
     def add_event(self, name: str) -> Event:
+        """Create an add an event with the given name.
+
+        Args:
+            name (str): the name of the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
         event = Event(name=name)
         return self.base_add_event(event)
 
