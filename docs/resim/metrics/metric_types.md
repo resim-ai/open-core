@@ -14,6 +14,7 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 - `importance: MetricImportance` - An overall importance (e.g. CRITICAL, HIGH, LOW, ZERO).
 - `should_display: bool` - A bool representing whether this should be displayed in the UI.
 - `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing. NB: This will likely be deprecated shortly.
+- `order: float` - A float representing the order in which this metric should be displayed within the context of any analsis pages on the ReSim app. If explicitly set (even as 0), the implied order semantics are via '<' and alphabetically if '=='. If not explicitly set, it is assumed to be greater than MAX_FLOAT and, therefore, ordered after any set fields.
 
 ### Grouped data support
 
@@ -21,7 +22,7 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 
 ## Scalar Metric
 
-This is a maximally simple metric, with a single double. This is the only metric that does not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be distance traveled by a robot.
+This is a maximally simple metric, with a single double. This is one of only two metrics that do not have any `MetricsData` associated, and is intended to be used for easy top-line metrics. An example would be distance traveled by a robot.
 
 > Our roadmap includes support for scalar metrics being visualized over time on the same experience, and easily averaged and compared across multiple runs and batches, so use ScalarMetric for top-line metrics you want to see improve over time!
 
@@ -148,3 +149,35 @@ Histograms plot the frequencies with which doubles appear in an array, by bucket
 ### Grouped data support
 
 Grouped data should not currently be provided to histogram metrics.
+
+## Plotly Metric
+
+In the event that the above metric types are not sufficient, ReSim support displaying an arbitrary plotly chart, via serializing 
+the [plotly JSON model](https://plotly.com/chart-studio-help/json-chart-schema/). This is the second metric to not have any `MetricsData`
+associated. It takes advantage of the ability to serialize a plotly figure as a JSON string:
+
+```python
+figure = px.pie(
+    data_frame=<data_frame>,
+    values=<values>,
+    names=<name>,
+    title=f"Pie chart example",
+    template=<template>,
+)
+plotly_json = figure.to_json()
+```
+
+In this way, charts not yet supported natively can be displayed and have the rest of the metrics framework metadata e.g. importance, status associated.
+
+### Parameters
+
+- `plotly_data: str` - the metric's plotly chart.
+
+## Image Metric
+
+The ReSim metrics framework also supports attaching an arbitrary image as a metric. This could be used to attach images from sensors, or from extremely custom charts previously created. This is simply achieved by storing the image in the `/tmp/resim/outputs` directory and referencing the filename in the metric.
+
+
+### Parameters
+
+- `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
