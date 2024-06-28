@@ -10,6 +10,7 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 py_library(
     name = "device_code_client",
     srcs = ["device_code_client.py"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("polling2"),
         requirement("requests"),
