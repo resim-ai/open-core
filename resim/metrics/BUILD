@@ -107,6 +107,7 @@ py_test(
 py_library(
     name = "fetch_all_pages",
     srcs = ["fetch_all_pages.py"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
