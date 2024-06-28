@@ -25,6 +25,7 @@ from resim.metrics.python.metrics import (
     GroupedMetricsData,
     SeriesMetricsData,
     ExternalFileMetricsData,
+    Event,
     Metric,
     MetricsData,
     MetricsDataT,
@@ -36,6 +37,7 @@ class ResimMetricsWriter:
     job_id: uuid.UUID
     metrics: Dict[uuid.UUID, Metric]
     metrics_data: Dict[uuid.UUID, MetricsData]
+    events: Dict[uuid.UUID, Event]
 
     names: Set[str]
 
@@ -43,6 +45,7 @@ class ResimMetricsWriter:
         self.job_id = job_id
         self.metrics = {}
         self.metrics_data = {}
+        self.events = {}
         self.names = set()
 
     def add_metrics_data(self, data: MetricsDataT) -> MetricsDataT:
@@ -56,6 +59,32 @@ class ResimMetricsWriter:
         self.names.add(metric.name)
         self.metrics[metric.id] = metric
         return metric
+
+    def base_add_event(self, event: Event) -> Event:
+        """Given an existent event, add to the writer. 
+
+        Args:
+            event (Event): the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
+        assert event.name not in self.names
+        self.names.add(event.name)
+        self.events[event.id] = event
+        return event
+
+    def add_event(self, name: str) -> Event:
+        """Create an add an event with the given name.
+
+        Args:
+            name (str): the name of the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
+        event = Event(name=name)
+        return self.base_add_event(event)
 
     def add_series_metrics_data(self, name: str) -> SeriesMetricsData:
         metrics_data = SeriesMetricsData(name=name)
@@ -127,6 +156,9 @@ class ResimMetricsWriter:
 
         for metric_data in self.metrics_data.values():
             metric_data.recursively_pack_into(output)
+
+        for event in self.events.values():
+            event.recursively_pack_into(output)
 
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
