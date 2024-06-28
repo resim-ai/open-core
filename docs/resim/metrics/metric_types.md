@@ -154,7 +154,7 @@ Grouped data should not currently be provided to histogram metrics.
 
 In the event that the above metric types are not sufficient, ReSim support displaying an arbitrary plotly chart, via serializing 
 the [plotly JSON model](https://plotly.com/chart-studio-help/json-chart-schema/). This is the second metric to not have any `MetricsData`
-associated. It simply requires the passing of a JSON string to the metric. For example
+associated. It takes advantage of the ability to serialize a plotly figure as a JSON string:
 
 ```python
 figure = px.pie(
@@ -164,14 +164,20 @@ figure = px.pie(
     title=f"Pie chart example",
     template=<template>,
 )
-
-# serializable figure dict
-fig_dict = json.loads(figure.to_json())
+plotly_json = figure.to_json()
 ```
-![An example scalar metric](./scalar.png)
+
+In this way, charts not yet supported natively can be displayed and have the rest of the metrics framework metadata e.g. importance, status associated.
 
 ### Parameters
 
-- `value: float` - the metric's numerical value.
-- `failure_definition: DoubleFailureDefinition` - the thresholds (on `value`) for whether the metric fails.
-- `unit: str` - a unit associated with `value`.
+- `plotly_data: str` - the metric's plotly chart.
+
+## Image Metric
+
+The ReSim metrics framework also supports attaching an arbitrary image as a metric. This could be used to attach images from sensors, or from extremely custom charts previously created. This is simply achieved by storing the image in the `/tmp/resim/outputs` directory and referencing the filename in the metric.
+
+
+### Parameters
+
+- `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
