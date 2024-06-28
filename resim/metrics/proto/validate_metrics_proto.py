@@ -15,6 +15,7 @@ contents that can be posted to the metrics endpoint.
 
 import uuid
 
+import google.protobuf.timestamp_pb2 as timestamp_proto
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
 
@@ -64,6 +65,13 @@ def _validate_job_id(job_id: mp.JobId) -> None:
 def _validate_metric_id(metric_id: mp.MetricId) -> None:
     _validate_uuid(metric_id.id)
 
+def _validate_event_id(event_id: mp.EventId) -> None:
+    _validate_uuid(event_id.id)
+
+def _validate_timestamp(timestamp: timestamp_proto.Timestamp) -> None:
+    _metrics_assert(timestamp.seconds >= 0)
+    _metrics_assert(timestamp.nanos >= 0)
+    _metrics_assert(timestamp.nanos < 1e9)
 
 _ALL_SERIES_DATA_TYPES = {
     mp.DOUBLE_SERIES_DATA_TYPE,
@@ -412,6 +420,7 @@ def _validate_scalar_metric_values(
     """
     _metrics_assert(scalar_metric_values.HasField('value'))
 
+
 def _validate_plotly_metric_values(
         plotly_metric_values: mp.PlotlyMetricValues) -> None:
     """
@@ -421,6 +430,7 @@ def _validate_plotly_metric_values(
         plotly_metric_values: The metric values to check.
     """
     _metrics_assert(plotly_metric_values.HasField('json'))
+
 
 def _validate_image_metric_values(
         image_metric_values: mp.ImageMetricValues,
@@ -439,6 +449,7 @@ def _validate_image_metric_values(
     _metrics_assert(id_str in metrics_data_map)
     value_data = metrics_data_map[id_str]
     _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
+
 
 def _validate_metric_values(
         metric_values: mp.MetricValues,
@@ -481,14 +492,31 @@ def _validate_metric_values(
             metric_values.image_metric_values, metrics_data_map)
 
 
+def _validate_metric_used_in_event(metric_id: mp.MetricId,
+                                   events_list: list[mp.Event]) -> None:
+    """
+    Check that the metric_id is valid and used in an event.
+    
+    Args:
+        metric_id: The metric_id to check.
+        events_list: A list of the events.
+    """
+    for event in events_list:
+        if metric_id in event.metrics:
+            return True
+    return False
+
+
 def _validate_metric(metric: mp.Metric,
-                     metrics_data_map: dict[str, mp.MetricsData]) -> None:
+                     metrics_data_map: dict[str, mp.MetricsData],
+                     events_list: list[mp.Event]) -> None:
     """
     Check that a Metric is valid.
 
     Args:
         metric: The metric to check.
         metrics_data_map: A map to find the metrics data in.
+        events_list: A list of the events.
     """
     _validate_metric_id(metric.metric_id)
     _metrics_assert(metric.name != "")
@@ -499,8 +527,12 @@ def _validate_metric(metric: mp.Metric,
     _validate_metric_values(metric.metric_values, metrics_data_map)
     # No constraints on blocking
     _validate_metric_importance(metric.importance)
+
     _metrics_assert(metric.HasField("job_id"))
     _validate_job_id(metric.job_id)
+
+    if metric.event_metric:
+        _validate_metric_used_in_event(metric.metric_id, events_list)
 
     if metric.type == mp.DOUBLE_SUMMARY_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField('double_metric_values'))
@@ -529,16 +561,18 @@ def _validate_metric(metric: mp.Metric,
 
 def _validate_job_level_metrics(
         job_level_metrics: mp.MetricCollection,
-        metrics_data_map: dict[str, mp.MetricsData]) -> None:
+        metrics_data_map: dict[str, mp.MetricsData],
+        events_list: list[mp.Event]) -> None:
     """
     Check that a MetricCollection is valid.
 
     Args:
         job_level_metrics: The MetricCollection to check.
         metrics_data_map: A map to find the metrics data in.
+        events_list: A list of all the events
     """
     for metric in job_level_metrics.metrics:
-        _validate_metric(metric, metrics_data_map)
+        _validate_metric(metric, metrics_data_map, events_list)
     _validate_metric_status(job_level_metrics.metrics_status)
 
 
@@ -638,6 +672,30 @@ def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
                     job_metrics.metrics_status)
 
 
+def _validate_event(
+        event: mp.Event, metrics_map: dict[str, mp.Metric]) -> None:
+    """
+    Check that the Event is valid.
+
+    Args:
+        event: The Event to validate.
+        metrics_map: A map to find the metric in.
+    """
+    _validate_event_id(event.event_id)
+    _metrics_assert(event.name != "")
+    # No constraints on description
+    # No constraints on tags
+
+    # Validate that each metric id is in the metrics_map:
+    for metric_id in event.metrics:
+        _validate_metric_id(metric_id)
+        _metrics_assert(metric_id.id.data in metrics_map)
+
+    _validate_metric_status(event.status)
+    _validate_timestamp(event.timestamp)
+    _validate_metric_importance(event.importance)
+
+
 def build_metrics_data_map(
         job_metrics: mp.JobMetrics) -> dict[str, mp.MetricsData]:
     """
@@ -662,17 +720,67 @@ def build_metrics_data_map(
     return result
 
 
+def build_metrics_map(
+        job_metrics: mp.JobMetrics) -> dict[str, mp.Metric]:
+    """
+    Build a map of id (as a str) to mp.Metric.
+
+    We do this so we can quickly look these up while validating.
+
+    Args:
+        job_metrics: The job metrics to get the data from.
+
+    Returns:
+        A map of id -> mp.Metric from the job_level_metrics.metrics field
+        in the job_metrics.
+    """
+    result = {}
+    for metric in job_metrics.job_level_metrics.metrics:
+        _validate_metric_id(metric.metric_id)
+        result[metric.metric_id.id.data] = metric
+
+    # Checks uniqueness of ids
+    _metrics_assert(len(result) == len(job_metrics.job_level_metrics.metrics))
+    return result
+
+
+def build_events_list(
+        job_metrics: mp.JobMetrics) -> list[mp.Event]:
+    """
+    Build a list of mp.Event.
+
+    We do this so we can quickly look these up while validating.
+
+    Args:
+        job_metrics: The job metrics to get the data from.
+
+    Returns:
+        A list mp.Event from the events field
+        in the job_metrics.
+    """
+    result = []
+    for event in job_metrics.events:
+        _validate_event_id(event.event_id)
+        result.append(event)
+
+    # Checks uniqueness of ids
+    _metrics_assert(len(result) == len(job_metrics.events))
+    return result
+
+
 def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     """
     Validate that the given JobMetrics is valid and can be posted to the
     endpoint.
     """
     metrics_data_map = build_metrics_data_map(job_metrics)
+    metrics_map = build_metrics_map(job_metrics)
+    events_list = build_events_list(job_metrics)
 
     _validate_job_id(job_metrics.job_id)
     _validate_job_level_metrics(
         job_metrics.job_level_metrics,
-        metrics_data_map)
+        metrics_data_map, events_list)
     _validate_metric_status(job_metrics.metrics_status)
 
     # Use a set to check for duplicated names
@@ -688,5 +796,12 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         _metrics_assert(metric_data.name not in metric_data_names)
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
+
+    # Use a set to check for duplicated names
+    event_names = set()
+    for event in job_metrics.events:
+        _metrics_assert(event.name not in event_names)
+        event_names.add(event.name)
+        _validate_event(event, metrics_map)
 
     _validate_statuses(job_metrics)

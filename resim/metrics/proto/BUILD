@@ -121,6 +121,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 

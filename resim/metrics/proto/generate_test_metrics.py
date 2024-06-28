@@ -681,6 +681,7 @@ def _add_scalar_metric(job_metrics: mp.JobMetrics) -> None:
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.scalar_metric_values.value = 6.28318530718
 
+
 def _add_plotly_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
@@ -691,9 +692,10 @@ def _add_plotly_metric(job_metrics: mp.JobMetrics) -> None:
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.ZERO_IMPORTANCE
-    metric.order = 12.0
+    metric.order = 13.0
     metric.job_id.CopyFrom(job_metrics.job_id)
     metric.metric_values.plotly_metric_values.json.CopyFrom(Struct())
+
 
 def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
@@ -714,6 +716,51 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     metrics_data.external_file.path ="my_tree.gif"
     image_metric_values = metric.metric_values.image_metric_values
     image_metric_values.image_data_id.CopyFrom(metrics_data.metrics_data_id)
+
+
+def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "Scalar for an event"
+    metric.type = mp.SCALAR_METRIC_TYPE
+    metric.description = "A sample event metric"
+    metric.status = mp.NOT_APPLICABLE_METRIC_STATUS
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 42.0
+    metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.metric_values.scalar_metric_values.value = 1.61803398875
+    metric.event_metric = tag_as_event
+    return metric.metric_id
+
+def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "A plotly chart for an event"
+    metric.type = mp.PLOTLY_METRIC_TYPE
+    metric.description = "The plotliest of plotly events"
+    metric.status = mp.NOT_APPLICABLE_METRIC_STATUS
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 13.0
+    metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.event_metric = tag_as_event
+    metric.metric_values.plotly_metric_values.json.CopyFrom(Struct())
+    return metric.metric_id
+
+
+def _add_event(job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.MetricId]) -> None:
+    event = job_metrics.events.add()
+    event.event_id.id.data = _get_uuid_str()
+    event.name = event_name
+    event.description = "event description"
+    event.tags.extend(["tag1", "tag2", "tag3"])
+    event.status = mp.FAIL_BLOCK_METRIC_STATUS
+    event.importance = mp.LOW_IMPORTANCE
+    event.timestamp.seconds = 42
+    event.metrics.extend(metric_ids)
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
@@ -751,5 +798,27 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     _add_plotly_metric(job_metrics)
     _add_image_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
+    # Test events:
+    scalar_event_metric_id = _add_event_scalar_metric(job_metrics, True)
+    plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
+    _add_event(job_metrics, "first event", [scalar_event_metric_id,plotly_event_metric_id])
+    _add_event(job_metrics, "second event", [scalar_event_metric_id,plotly_event_metric_id])
+
+    return job_metrics
+
+def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
+    """
+    Generate a set of test metrics with a badly tagged event metric.
+    """
+    job_metrics = mp.JobMetrics()
+    job_metrics.job_id.id.data = _get_uuid_str()
+    scalar_event_metric_id = _add_event_scalar_metric(job_metrics, False)
+    plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
+    if expect_event:
+        _add_event(job_metrics, "event", [scalar_event_metric_id,plotly_event_metric_id])
+    else:
+        random_id = mp.MetricId()
+        random_id.id.data =  _get_uuid_str()
+        _add_event(job_metrics, "event", [random_id])
 
     return job_metrics
