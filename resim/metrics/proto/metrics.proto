@@ -6,6 +6,7 @@
 
 syntax = "proto3";
 
+import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "resim/utils/proto/uuid.proto";
@@ -236,6 +237,15 @@ message Metric {
     optional bool event_metric = 12;
 }
 
+enum TimestampType {
+    NO_TYPE = 0;
+    // An absolute timestamp refers to a datatime
+    ABSOLUTE_TIMESTAMP = 1;
+    // A relative timestamp refers to the duration into an experience the event
+    // occurred
+    RELATIVE_TIMESTAMP = 2;
+}
+
 // An event is a tagged timestamp, reflecting, well, what it sounds like:
 // something happened. That event could be good, bad, neutral (and thus contains
 // the usual statuses), but by definition is something worth looking at, at
@@ -260,7 +270,11 @@ message Event {
 
     MetricStatus status = 6;
 
-    google.protobuf.Timestamp timestamp = 7;
+    optional google.protobuf.Timestamp absolute_timestamp = 7;
+
+    optional google.protobuf.Duration relative_timestamp = 9;
+
+    TimestampType timestamp_type = 10;
 
     MetricImportance importance = 8;
 }

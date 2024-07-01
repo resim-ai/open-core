@@ -759,7 +759,8 @@ def _add_event(job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.
     event.tags.extend(["tag1", "tag2", "tag3"])
     event.status = mp.FAIL_BLOCK_METRIC_STATUS
     event.importance = mp.LOW_IMPORTANCE
-    event.timestamp.seconds = 42
+    event.relative_timestamp.seconds = 42
+    event.timestamp_type = mp.RELATIVE_TIMESTAMP
     event.metrics.extend(metric_ids)
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:

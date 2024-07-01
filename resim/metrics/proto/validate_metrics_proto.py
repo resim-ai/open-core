@@ -46,6 +46,10 @@ def _validate_metric_importance(importance: mp.MetricImportance) -> None:
     _metrics_assert(importance != mp.NO_SPECIFIED_IMPORTANCE)
 
 
+def _validate_timestamp_type(timestamp_type: mp.TimestampType) -> None:
+    _metrics_assert(timestamp_type != mp.NO_TYPE)
+
+
 def _validate_uuid(unique_id: uuid_proto.UUID) -> None:
     """Check that the given UUID proto is a valid UUID"""
     try:
@@ -692,7 +696,17 @@ def _validate_event(
         _metrics_assert(metric_id.id.data in metrics_map)
 
     _validate_metric_status(event.status)
-    _validate_timestamp(event.timestamp)
+
+    _metrics_assert(not (event.HasField("absolute_timestamp")
+                         and event.timestamp_type != mp.ABSOLUTE_TIMESTAMP))
+    _metrics_assert(not (event.HasField("relative_timestamp")
+                         and event.timestamp_type != mp.RELATIVE_TIMESTAMP))
+
+    if event.timestamp_type == mp.ABSOLUTE_TIMESTAMP:
+        _validate_timestamp(event.absolute_timestamp)
+    else:
+        _validate_timestamp(event.relative_timestamp)
+
     _validate_metric_importance(event.importance)
 
 
