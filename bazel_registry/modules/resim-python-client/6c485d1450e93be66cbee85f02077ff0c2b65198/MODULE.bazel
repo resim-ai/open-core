@@ -18,7 +18,7 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "resim_python_client_deps",
     python_version = "3.10",
-    requirements_lock = "@resim-python-client//:requirements.txt",
+    requirements_lock = "@resim-python-client//:requirements_lock.txt",
 )
 
 use_repo(pip, "resim_python_client_deps")
