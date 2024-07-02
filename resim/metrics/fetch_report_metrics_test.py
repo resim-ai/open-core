@@ -17,14 +17,12 @@ async def main():
     batches = await frp.fetch_batches_for_report(client=client,
                                        report_id=report_id,
                                        project_id=project_id)
-    print([b.batch_id for b in batches])
 
     jobs = await frp.fetch_jobs_for_batches(client=client,
                                             batch_ids=[b.batch_id for b in batches],
                                             project_id=project_id)
 
     print({k: len(v) for (k,v) in jobs.items()})
-                                            
 
 if __name__ == '__main__':
     asyncio.run(main())

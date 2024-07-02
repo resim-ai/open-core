@@ -27,9 +27,15 @@ async def fetch_batches_for_report(*,
     branch_id = report.branch_id
     start_timestamp = report.start_timestamp
     end_timestamp = report.end_timestamp
-    search_string = f"test_suite_id = \"{test_suite_id}\" AND branch_id = \"{branch_id}\" AND created_at > \"{start_timestamp}\" AND created_at < \"{end_timestamp}\""
+    search_string = (f"test_suite_id = \"{test_suite_id}\" " +
+                     f"AND branch_id = \"{branch_id}\" " +
+                     f"AND created_at > \"{start_timestamp}\" " +
+                     f"AND created_at < \"{end_timestamp}\"")
 
-    batches = await async_fetch_all_pages(list_batches.asyncio, project_id=project_id, search=search_string, client=client)
+    batches = await async_fetch_all_pages(list_batches.asyncio,
+                                          project_id=project_id,
+                                          search=search_string,
+                                          client=client)
 
     batches = [b for page in batches for b in page.batches]
     return batches
@@ -46,4 +52,4 @@ async def fetch_jobs_for_batches(*,
     for i, batch_jobs in enumerate(jobs):
         jobs[i] = [j for page in batch_jobs for j in page.jobs]
 
-    return {batch_id: batch_jobs for batch_id, batch_jobs in zip(batch_ids, jobs)}
+    return dict(zip(batch_ids, jobs))

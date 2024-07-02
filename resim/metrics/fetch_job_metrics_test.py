@@ -156,7 +156,7 @@ def _mock_unpack_metrics(
     *,
     metrics: list[MockMetric],
         metrics_data: list[MockMetricsData],
-        events: list[MockEvent]) -> MockUnpackedMetrics:
+        _: list[MockEvent]) -> MockUnpackedMetrics:
     return MockUnpackedMetrics(
         metrics=metrics[:],
         metrics_data=metrics_data[:],
