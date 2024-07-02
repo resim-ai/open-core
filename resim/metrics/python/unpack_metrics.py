@@ -16,33 +16,33 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional, cast
 
 import numpy as np
-
-from google.protobuf.json_format import MessageToJson
-import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
-from resim.metrics.python.metrics_utils import (
-    Timestamp,
-    MetricStatus,
-    MetricImportance,
-    DoubleFailureDefinition,
-    HistogramBucket,
-)
+from google.protobuf.json_format import MessageToJson
+
+import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python.metrics import (
-    ScalarMetric,
     BarChartMetric,
-    LinePlotMetric,
-    DoubleSummaryMetric,
     DoubleOverTimeMetric,
-    HistogramMetric,
-    StatesOverTimeMetric,
-    PlotlyMetric,
-    ImageMetric,
-    GroupedMetricsData,
-    SeriesMetricsData,
-    ExternalFileMetricsData,
+    DoubleSummaryMetric,
     Event,
+    ExternalFileMetricsData,
+    GroupedMetricsData,
+    HistogramMetric,
+    ImageMetric,
+    LinePlotMetric,
     Metric,
     MetricsData,
+    PlotlyMetric,
+    ScalarMetric,
+    SeriesMetricsData,
+    StatesOverTimeMetric,
+)
+from resim.metrics.python.metrics_utils import (
+    DoubleFailureDefinition,
+    HistogramBucket,
+    MetricImportance,
+    MetricStatus,
+    Timestamp,
 )
 
 

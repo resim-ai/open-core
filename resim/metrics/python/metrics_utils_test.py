@@ -5,9 +5,9 @@
 # https://opensource.org/licenses/MIT.
 
 import copy
-from itertools import product
 import unittest
 import uuid
+from itertools import product
 from random import Random
 
 import numpy as np

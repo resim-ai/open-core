@@ -6,31 +6,31 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import uuid
+from dataclasses import dataclass
 from typing import Dict, Set
 
 from resim.metrics.proto.metrics_pb2 import MetricStatus
-from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 from resim.metrics.python.metrics import (
-    ScalarMetric,
     BarChartMetric,
-    LinePlotMetric,
-    PlotlyMetric,
-    ImageMetric,
-    DoubleSummaryMetric,
     DoubleOverTimeMetric,
-    HistogramMetric,
-    StatesOverTimeMetric,
-    GroupedMetricsData,
-    SeriesMetricsData,
-    ExternalFileMetricsData,
+    DoubleSummaryMetric,
     Event,
+    ExternalFileMetricsData,
+    GroupedMetricsData,
+    HistogramMetric,
+    ImageMetric,
+    LinePlotMetric,
     Metric,
     MetricsData,
     MetricsDataT,
     MetricT,
+    PlotlyMetric,
+    ScalarMetric,
+    SeriesMetricsData,
+    StatesOverTimeMetric,
 )
+from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 
 
 @dataclass(init=False, repr=True, kw_only=True)

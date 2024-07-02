@@ -1,26 +1,26 @@
 from __future__ import annotations
 
 import json
-import uuid
-import unittest
 import random
+import unittest
+import uuid
 from typing import List, Optional
 
 import numpy as np
-
 from google.protobuf.json_format import MessageToDict
-from resim.metrics.python.metrics_utils import (
-    Timestamp,
-    TimestampType,
-    DoubleFailureDefinition,
-    HistogramBucket,
-    MetricStatus,
-    MetricImportance,
-)
+
 from resim.metrics.python.metrics import (
     ExternalFileMetricsData,
-    SeriesMetricsData,
     GroupedMetricsData,
+    SeriesMetricsData,
+)
+from resim.metrics.python.metrics_utils import (
+    DoubleFailureDefinition,
+    HistogramBucket,
+    MetricImportance,
+    MetricStatus,
+    Timestamp,
+    TimestampType,
 )
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 

@@ -16,8 +16,9 @@ contents that can be posted to the metrics endpoint.
 import uuid
 
 import google.protobuf.timestamp_pb2 as timestamp_proto
-import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
+
+import resim.metrics.proto.metrics_pb2 as mp
 
 
 class InvalidMetricsException(Exception):

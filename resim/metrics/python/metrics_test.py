@@ -10,20 +10,20 @@ Unit tests for metrics.py.
 
 import copy
 import json
-import uuid
 import unittest
-from typing import cast, Any
+import uuid
+from typing import Any, cast
 
 import numpy as np
-
 from google.protobuf.json_format import MessageToDict
+
+import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import (
-    MetricStatus,
     MetricImportance,
+    MetricStatus,
     TimestampType,
 )
-import resim.metrics.proto.metrics_pb2 as mp
 
 # pylint: disable=too-many-public-methods
 

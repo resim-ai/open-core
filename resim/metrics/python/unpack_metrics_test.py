@@ -7,13 +7,13 @@
 
 """Unit tests for unpack_metrics.py"""
 
-import uuid
 import unittest
+import uuid
 
-import resim.metrics.python.unpack_metrics as um
 import resim.metrics.proto.generate_test_metrics as gtm
-import resim.metrics.python.metrics_writer as mw
 import resim.metrics.proto.validate_metrics_proto as vmp
+import resim.metrics.python.metrics_writer as mw
+import resim.metrics.python.unpack_metrics as um
 
 
 class UnpackMetricsTest(unittest.TestCase):

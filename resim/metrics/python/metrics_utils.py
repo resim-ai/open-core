@@ -6,14 +6,13 @@
 
 from __future__ import annotations
 
-
 import uuid
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, Set, Tuple
 
-from google.protobuf import timestamp_pb2
 import numpy as np
+from google.protobuf import timestamp_pb2
 
 from resim.metrics.proto import metrics_pb2
 from resim.utils.proto import uuid_pb2

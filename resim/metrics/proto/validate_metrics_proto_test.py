@@ -12,9 +12,9 @@ Unit tests for validate_metrics_proto.
 import copy
 import unittest
 
-import resim.metrics.proto.validate_metrics_proto as vmp
-import resim.metrics.proto.metrics_pb2 as mp
 import resim.metrics.proto.generate_test_metrics as gtm
+import resim.metrics.proto.metrics_pb2 as mp
+import resim.metrics.proto.validate_metrics_proto as vmp
 
 
 def _make_id_bad(job_metrics: mp.JobMetrics) -> mp.JobMetrics:

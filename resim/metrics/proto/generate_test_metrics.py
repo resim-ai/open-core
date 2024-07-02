@@ -20,6 +20,7 @@ import uuid
 from typing import Any
 
 from google.protobuf.struct_pb2 import Struct
+
 import resim.metrics.proto.metrics_pb2 as mp
 
 

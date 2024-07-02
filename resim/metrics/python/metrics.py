@@ -13,10 +13,10 @@ create metrics of different types.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from collections import defaultdict
 import dataclasses
 import uuid
+from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import (
     Any,
     Callable,
@@ -31,23 +31,22 @@ from typing import (
 )
 
 import numpy as np
-
-from google.protobuf.struct_pb2 import Struct
 from google.protobuf.json_format import Parse
+from google.protobuf.struct_pb2 import Struct
+
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import (
+    DoubleFailureDefinition,
+    HistogramBucket,
+    MetricImportance,
+    MetricStatus,
     ResimMetricsOutput,
     Timestamp,
     TimestampType,
-    DoubleFailureDefinition,
-    HistogramBucket,
-    pack_uuid_to_proto,
-    pack_uuid_to_metric_id,
     pack_series_to_proto,
-    MetricImportance,
-    MetricStatus,
+    pack_uuid_to_metric_id,
+    pack_uuid_to_proto,
 )
-
 
 # ---------------------
 # Metric representation
