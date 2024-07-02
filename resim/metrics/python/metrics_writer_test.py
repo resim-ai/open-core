@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 import unittest
 import random
@@ -7,7 +8,7 @@ from typing import List, Optional
 
 import numpy as np
 
-from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict
 from resim.metrics.python.metrics_utils import (
     Timestamp,
     TimestampType,
@@ -572,7 +573,7 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_DISPLAY = True
         METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
         METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
-        METRIC_DATA = Struct()
+        METRIC_DATA = '{"test":"test"}'
 
         (
             self.writer
@@ -600,7 +601,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
         self.assertEqual(metric_base.status, METRIC_STATUS.value)
         self.assertEqual(metric_base.name, METRIC_NAME)
-        self.assertEqual(metric_values.json, METRIC_DATA)
+        self.assertEqual(MessageToDict(metric_values.json), json.loads(METRIC_DATA))
 
     def test_image_metric(self) -> None:
         METRIC_NAME = "Image metric"
