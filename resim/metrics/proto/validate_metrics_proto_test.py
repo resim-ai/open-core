@@ -76,6 +76,25 @@ class ValidateMetricsProtoTest(unittest.TestCase):
             with self.assertRaises(vmp.InvalidMetricsException):
                 vmp.validate_job_metrics(bad_event_job_proto)
 
+    def test_invalid_event_timestamps(self) -> None:
+        """
+        Test that the validator fails when a set of events has:
+        - an un-set timestamp_type
+        - conflicting timestamp types
+        """
+        basic_job_proto = gtm.generate_test_metrics(False)
+        vmp.validate_job_metrics(basic_job_proto)
+
+        # test that setting the timestamp type to none fails:
+        basic_job_proto.events[0].timestamp_type = mp.NO_TYPE
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(basic_job_proto)
+
+        # validate that when the types are different we get a failure:
+        basic_job_proto.events[0].timestamp_type = mp.ABSOLUTE_TIMESTAMP
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(basic_job_proto)
+
 
 if __name__ == '__main__':
     unittest.main()
