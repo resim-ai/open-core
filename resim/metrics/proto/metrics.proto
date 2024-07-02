@@ -236,6 +236,15 @@ message Metric {
     optional bool event_metric = 12;
 }
 
+enum TimestampType {
+    NO_TYPE = 0;
+    // An absolute timestamp refers to a date-time
+    ABSOLUTE_TIMESTAMP = 1;
+    // A relative timestamp refers to the duration into an experience the event
+    // occurred
+    RELATIVE_TIMESTAMP = 2;
+}
+
 // An event is a tagged timestamp, reflecting, well, what it sounds like:
 // something happened. That event could be good, bad, neutral (and thus contains
 // the usual statuses), but by definition is something worth looking at, at
@@ -261,6 +270,8 @@ message Event {
     MetricStatus status = 6;
 
     google.protobuf.Timestamp timestamp = 7;
+
+    TimestampType timestamp_type = 9;
 
     MetricImportance importance = 8;
 }
