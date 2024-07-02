@@ -78,10 +78,9 @@ class ValidateMetricsProtoTest(unittest.TestCase):
 
     def test_invalid_event_timestamps(self) -> None:
         """
-        Test that the validator fails when an event has:
-        - both absolute and relative timestamps set
-        - has relative set but marked as absolute
-        - vice versa
+        Test that the validator fails when a set of events has:
+        - an un-set timestamp_type
+        - conflicting timestamp types
         """
         basic_job_proto = gtm.generate_test_metrics(False)
         vmp.validate_job_metrics(basic_job_proto)
