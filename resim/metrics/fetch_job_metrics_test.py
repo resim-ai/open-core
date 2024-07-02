@@ -36,6 +36,10 @@ class MockMetricsData:
     name: str
     data: str
 
+@dataclass(frozen=True)
+class MockEvent:
+    name: str
+    data: str
 
 @dataclass(frozen=True)
 class MockJob:
@@ -151,7 +155,8 @@ def _mock_list_job_ids_by_batch(
 def _mock_unpack_metrics(
     *,
     metrics: list[MockMetric],
-        metrics_data: list[MockMetricsData]) -> MockUnpackedMetrics:
+        metrics_data: list[MockMetricsData],
+        events: list[MockEvent]) -> MockUnpackedMetrics:
     return MockUnpackedMetrics(
         metrics=metrics[:],
         metrics_data=metrics_data[:],

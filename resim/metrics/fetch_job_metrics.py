@@ -76,7 +76,9 @@ def fetch_job_metrics_by_batch(*,
         metrics_data = metrics_data_protos[job.job_id]
         unpacked_metrics_per_job[job.job_id] = unpack_metrics(
             metrics=metrics,
-            metrics_data=metrics_data)
+            metrics_data=metrics_data,
+            events=[],
+        )
 
     return unpacked_metrics_per_job
 
