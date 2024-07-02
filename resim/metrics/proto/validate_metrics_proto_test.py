@@ -88,7 +88,7 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         # test that setting the timestamp type to none fails:
         basic_job_proto.events[0].timestamp_type = mp.NO_TYPE
         with self.assertRaises(vmp.InvalidMetricsException):
-                vmp.validate_job_metrics(basic_job_proto)
+            vmp.validate_job_metrics(basic_job_proto)
 
         # validate that when the types are different we get a failure:
         basic_job_proto.events[0].timestamp_type = mp.ABSOLUTE_TIMESTAMP

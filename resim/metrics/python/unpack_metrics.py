@@ -21,7 +21,6 @@ import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
 from resim.metrics.python.metrics_utils import (
     Timestamp,
-    TimestampType,
     MetricStatus,
     MetricImportance,
     DoubleFailureDefinition,

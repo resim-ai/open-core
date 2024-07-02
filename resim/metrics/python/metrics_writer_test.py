@@ -698,7 +698,7 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(event_msg.status, EVENT_STATUS.value)
         self.assertEqual(event_msg.timestamp.nanos, EVENT_TIMESTAMP.nanos)
         self.assertEqual(event_msg.timestamp.seconds, EVENT_TIMESTAMP.secs)
-        self.assertEqual(event_msg.timestamp_type, EVENT_TIMESTAMP_TYPE._value_)
+        self.assertEqual(event_msg.timestamp_type, EVENT_TIMESTAMP_TYPE.value)
         metric_id_uuids = list(map(lambda m: m.metric_id, metrics))
         for metric_id in event_msg.metrics:
             self.assertIn(metric_id, metric_id_uuids)
