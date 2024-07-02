@@ -21,6 +21,7 @@ import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
 from resim.metrics.python.metrics_utils import (
     Timestamp,
+    TimestampType,
     MetricStatus,
     MetricImportance,
     DoubleFailureDefinition,
@@ -383,8 +384,14 @@ def _unpack_event(msg: mp.Event,
     unpacked.description = msg.description
     unpacked.status = MetricStatus(msg.status)
     unpacked.importance = MetricImportance(msg.importance)
-    unpacked.with_timestamp(Timestamp.unpack(
+    # unpack the timestamp as either relative or absolute
+    if msg.timestamp_type == mp.RELATIVE_TIMESTAMP:
+        unpacked.with_relative_timestamp(Timestamp.unpack(
             msg.timestamp))
+    else:
+        unpacked.with_absolute_timestamp(Timestamp.unpack(
+            msg.timestamp))
+
     unpacked.with_tags(msg.tags)
     # build the list of metrics:
     metrics = []

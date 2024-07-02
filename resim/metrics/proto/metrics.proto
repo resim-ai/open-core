@@ -6,7 +6,6 @@
 
 syntax = "proto3";
 
-import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "resim/utils/proto/uuid.proto";
@@ -270,11 +269,9 @@ message Event {
 
     MetricStatus status = 6;
 
-    optional google.protobuf.Timestamp absolute_timestamp = 7;
+    google.protobuf.Timestamp timestamp = 7;
 
-    optional google.protobuf.Duration relative_timestamp = 9;
-
-    TimestampType timestamp_type = 10;
+    TimestampType timestamp_type = 9;
 
     MetricImportance importance = 8;
 }

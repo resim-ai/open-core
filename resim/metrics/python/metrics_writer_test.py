@@ -10,6 +10,7 @@ import numpy as np
 from google.protobuf.struct_pb2 import Struct
 from resim.metrics.python.metrics_utils import (
     Timestamp,
+    TimestampType,
     DoubleFailureDefinition,
     HistogramBucket,
     MetricStatus,
@@ -668,6 +669,7 @@ class TestMetricsWriter(unittest.TestCase):
         EVENT_DESCRIPTION = "event description"
         EVENT_TAGS = ["a tag", "another tag"]
         EVENT_TIMESTAMP = Timestamp(secs=1, nanos=2)
+        EVENT_TIMESTAMP_TYPE = TimestampType.ABSOLUTE_TIMESTAMP
         EVENT_IMPORTANCE = MetricImportance.CRITICAL_IMPORTANCE
         EVENT_STATUS = MetricStatus.FAIL_WARN_METRIC_STATUS
         (
@@ -675,7 +677,7 @@ class TestMetricsWriter(unittest.TestCase):
             .add_event(EVENT_NAME)
             .with_description(EVENT_DESCRIPTION)
             .with_tags(EVENT_TAGS)
-            .with_timestamp(EVENT_TIMESTAMP)
+            .with_absolute_timestamp(EVENT_TIMESTAMP)
             .with_importance(EVENT_IMPORTANCE)
             .with_status(EVENT_STATUS)
             .with_metrics([metric_1,metric_2])
@@ -688,16 +690,17 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.metrics_data), 0)
         self.assertEqual(len(output.metrics_msg.events), 1)
 
-        event = output.metrics_msg.events[0]
-        self.assertEqual(event.description, EVENT_DESCRIPTION)
-        self.assertEqual(event.tags, EVENT_TAGS)
-        self.assertEqual(event.name, EVENT_NAME)
-        self.assertEqual(event.importance, EVENT_IMPORTANCE.value)
-        self.assertEqual(event.status, EVENT_STATUS.value)
-        self.assertEqual(event.timestamp.nanos, EVENT_TIMESTAMP.nanos)
-        self.assertEqual(event.timestamp.seconds, EVENT_TIMESTAMP.secs)
+        event_msg = output.metrics_msg.events[0]
+        self.assertEqual(event_msg.description, EVENT_DESCRIPTION)
+        self.assertEqual(event_msg.tags, EVENT_TAGS)
+        self.assertEqual(event_msg.name, EVENT_NAME)
+        self.assertEqual(event_msg.importance, EVENT_IMPORTANCE.value)
+        self.assertEqual(event_msg.status, EVENT_STATUS.value)
+        self.assertEqual(event_msg.timestamp.nanos, EVENT_TIMESTAMP.nanos)
+        self.assertEqual(event_msg.timestamp.seconds, EVENT_TIMESTAMP.secs)
+        self.assertEqual(event_msg.timestamp_type, EVENT_TIMESTAMP_TYPE._value_)
         metric_id_uuids = list(map(lambda m: m.metric_id, metrics))
-        for metric_id in event.metrics:
+        for metric_id in event_msg.metrics:
             self.assertIn(metric_id, metric_id_uuids)
 
     def tearDown(self) -> None:

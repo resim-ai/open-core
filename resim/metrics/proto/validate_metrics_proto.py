@@ -697,15 +697,9 @@ def _validate_event(
 
     _validate_metric_status(event.status)
 
-    _metrics_assert(not (event.HasField("absolute_timestamp")
-                         and event.timestamp_type != mp.ABSOLUTE_TIMESTAMP))
-    _metrics_assert(not (event.HasField("relative_timestamp")
-                         and event.timestamp_type != mp.RELATIVE_TIMESTAMP))
-
-    if event.timestamp_type == mp.ABSOLUTE_TIMESTAMP:
-        _validate_timestamp(event.absolute_timestamp)
-    else:
-        _validate_timestamp(event.relative_timestamp)
+    # Validate that the type is either absolute or relative
+    _validate_timestamp_type(event.timestamp_type)
+    _validate_timestamp(event.timestamp)
 
     _validate_metric_importance(event.importance)
 
@@ -813,8 +807,11 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
 
     # Use a set to check for duplicated names
     event_names = set()
+    # Validate that all events per-job use the same timestamp type:
+    timestamp_type = job_metrics.events[0].timestamp_type
     for event in job_metrics.events:
         _metrics_assert(event.name not in event_names)
+        _metrics_assert(event.timestamp_type == timestamp_type)
         event_names.add(event.name)
         _validate_event(event, metrics_map)
 

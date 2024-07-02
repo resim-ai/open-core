@@ -85,29 +85,16 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         """
         basic_job_proto = gtm.generate_test_metrics(False)
         vmp.validate_job_metrics(basic_job_proto)
-        for event in basic_job_proto.events:
-            # test that using both absolute and relative timestamps fails
-            event.absolute_timestamp.seconds = 1
-            event.relative_timestamp.seconds = 1
-            event.timestamp_type = mp.ABSOLUTE_TIMESTAMP
-            with self.assertRaises(vmp.InvalidMetricsException):
-                vmp.validate_job_metrics(basic_job_proto)
-            # ditto for the other timestamp type
-            event.timestamp_type = mp.RELATIVE_TIMESTAMP
-            with self.assertRaises(vmp.InvalidMetricsException):
+
+        # test that setting the timestamp type to none fails:
+        basic_job_proto.events[0].timestamp_type = mp.NO_TYPE
+        with self.assertRaises(vmp.InvalidMetricsException):
                 vmp.validate_job_metrics(basic_job_proto)
 
-            # test that using absolute, but signalling relative fails
-            event.ClearField("relative_timestamp")
-            with self.assertRaises(vmp.InvalidMetricsException):
-                vmp.validate_job_metrics(basic_job_proto)
-
-            # test that using relative, but signalling absolute fails
-            event.ClearField("absolute_timestamp")
-            event.relative_timestamp.seconds = 1
-            event.timestamp_type = mp.ABSOLUTE_TIMESTAMP
-            with self.assertRaises(vmp.InvalidMetricsException):
-                vmp.validate_job_metrics(basic_job_proto)
+        # validate that when the types are different we get a failure:
+        basic_job_proto.events[0].timestamp_type = mp.ABSOLUTE_TIMESTAMP
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(basic_job_proto)
 
 
 if __name__ == '__main__':
