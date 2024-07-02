@@ -36,6 +36,10 @@ class MetricImportance(Enum):
     HIGH_IMPORTANCE = 4
     CRITICAL_IMPORTANCE = 5
 
+class TimestampType(Enum):
+    NO_TYPE = 0
+    ABSOLUTE_TIMESTAMP = 1
+    RELATIVE_TIMESTAMP = 2
 
 @dataclass(init=False, repr=True)
 class ResimMetricsOutput:
