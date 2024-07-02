@@ -18,7 +18,7 @@ import numpy as np
 
 from google.protobuf.json_format import MessageToDict
 from resim.metrics.python import metrics, metrics_utils
-from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
+from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance, TimestampType
 import resim.metrics.proto.metrics_pb2 as mp
 
 # pylint: disable=too-many-public-methods
@@ -1673,6 +1673,7 @@ class MetricsTest(unittest.TestCase):
             description="event description",
             tags=["a tag", "another tag"],
             timestamp=metrics_utils.Timestamp(secs=1, nanos=2),
+            timestamp_type=TimestampType.RELATIVE_TIMESTAMP,
             importance=MetricImportance.CRITICAL_IMPORTANCE,
             status=MetricStatus.FAIL_BLOCK_METRIC_STATUS,
             metrics=[metric_1, metric_2],
@@ -1712,6 +1713,7 @@ class MetricsTest(unittest.TestCase):
         description = "event description"
         tags = ["a tag", "another tag"]
         timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        timestamp_type = TimestampType.RELATIVE_TIMESTAMP
         importance = MetricImportance.CRITICAL_IMPORTANCE
         status = MetricStatus.FAIL_WARN_METRIC_STATUS
         event_metrics = self.generate_event_metrics()
@@ -1721,6 +1723,7 @@ class MetricsTest(unittest.TestCase):
             description=description,
             tags=tags,
             timestamp=timestamp,
+            timestamp_type=timestamp_type,
             importance=importance,
             status=status,
             metrics=event_metrics,
@@ -1728,7 +1731,7 @@ class MetricsTest(unittest.TestCase):
 
         self.assertEqual(event, event.with_description(description))
         self.assertEqual(event, event.with_tags(tags))
-        self.assertEqual(event, event.with_timestamp(timestamp))
+        self.assertEqual(event, event.with_relative_timestamp(timestamp))
         self.assertEqual(event, event.with_importance(importance))
         self.assertEqual(event, event.with_status(status))
         self.assertEqual(event, event.with_metrics(event_metrics))
@@ -1737,16 +1740,22 @@ class MetricsTest(unittest.TestCase):
         self.assertTrue(event.description == description)
         self.assertTrue(event.tags == tags)
         self.assertTrue(event.timestamp == timestamp)
+        self.assertTrue(event.timestamp_type == timestamp_type)
         self.assertTrue(event.importance == importance)
         self.assertTrue(event.status == status)
         self.assertTrue(event.metrics == event_metrics)
 
+        event.timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
+        self.assertEqual(event, event.with_absolute_timestamp(timestamp))
+        self.assertTrue(event.timestamp == timestamp)
+        self.assertTrue(event.timestamp_type == TimestampType.ABSOLUTE_TIMESTAMP)
 
     def test_event_pack(self) -> None:
         name = "my_event"
         description = "event description"
         tags = ["a tag", "another tag"]
         timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
         importance = MetricImportance.CRITICAL_IMPORTANCE
         status = MetricStatus.FAIL_WARN_METRIC_STATUS
         event_metrics = self.generate_event_metrics()
@@ -1755,6 +1764,7 @@ class MetricsTest(unittest.TestCase):
             description=description,
             tags=tags,
             timestamp=timestamp,
+            timestamp_type=timestamp_type,
             importance=importance,
             status=status,
             metrics=event_metrics,
@@ -1770,6 +1780,7 @@ class MetricsTest(unittest.TestCase):
         self.assertTrue(msg.tags == event.tags)
         assert event.timestamp is not None
         self.assertEqual(msg.timestamp, event.timestamp.pack())
+        self.assertTrue(msg.timestamp_type == getattr(event.timestamp_type, "value"))
         self.assertTrue(msg.importance == getattr(event.importance, "value"))
         self.assertTrue(msg.status == getattr(event.status, "value"))
 

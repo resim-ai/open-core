@@ -27,6 +27,7 @@ from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import (
     ResimMetricsOutput,
     Timestamp,
+    TimestampType,
     DoubleFailureDefinition,
     HistogramBucket,
     pack_uuid_to_proto,
@@ -1662,6 +1663,7 @@ class Event():
     status: Optional[MetricStatus]
     importance: Optional[MetricImportance]
     timestamp: Optional[Timestamp]
+    timestamp_type: Optional[TimestampType]
     metrics: Optional[List[Metric]]
 
     def __init__(self: Metric[MetricT],
@@ -1671,6 +1673,7 @@ class Event():
                  status: Optional[MetricStatus] = None,
                  importance: Optional[MetricImportance] = None,
                  timestamp: Optional[Timestamp] = None,
+                 timestamp_type: Optional[TimestampType] = None,
                  metrics: Optional[List[Metric]] = None,
                  ):
         assert name is not None
@@ -1681,6 +1684,7 @@ class Event():
         self.status = status
         self.importance = importance
         self.timestamp = timestamp
+        self.timestamp_type = timestamp_type
         self.metrics = metrics
 
     def __eq__(self: MetricT, __value: object) -> bool:
@@ -1710,8 +1714,14 @@ class Event():
         self.tags = tags
         return self
 
-    def with_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+    def with_absolute_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
         self.timestamp = timestamp
+        self.timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
+        return self
+
+    def with_relative_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+        self.timestamp = timestamp
+        self.timestamp_type = TimestampType.RELATIVE_TIMESTAMP
         return self
 
     def with_metrics(self: MetricT, metrics: List[Metric]) -> MetricT:
@@ -1735,6 +1745,9 @@ class Event():
 
         if self.timestamp is not None:
             msg.timestamp.CopyFrom(self.timestamp.pack())
+
+        if self.timestamp_type is not None:
+            msg.timestamp_type = self.timestamp_type.value
 
         if self.tags is not None:
             msg.tags.extend(self.tags)
