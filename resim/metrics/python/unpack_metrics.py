@@ -15,9 +15,9 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, cast
 
+import google.protobuf.json_format as pjf
 import numpy as np
 import resim.utils.proto.uuid_pb2 as uuid_proto
-from google.protobuf.json_format import MessageToJson
 
 import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python.metrics import (
@@ -388,7 +388,7 @@ def _unpack_plotly_metric(
     metric: mp.Metric, unpacked: PlotlyMetric, _: dict[uuid.UUID, MetricsData]
 ) -> None:
     plotly_data_struct = metric.metric_values.plotly_metric_values.json
-    plotly_data = MessageToJson(plotly_data_struct)
+    plotly_data = pjf.MessageToJson(plotly_data_struct)
     unpacked.with_plotly_data(plotly_data)
 
 
