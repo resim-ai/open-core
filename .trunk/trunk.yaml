@@ -38,6 +38,7 @@ lint:
         - types-requests
         - types-protobuf
   enabled:
+    - black@24.4.2
     - buildifier@6.1.0
     - clang-tidy@15.0.6
     - clang-format@14.0.0

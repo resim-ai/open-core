@@ -29,7 +29,8 @@ from resim.metrics.python.metrics import (
     Metric,
     MetricsData,
     MetricsDataT,
-    MetricT)
+    MetricT,
+)
 
 
 @dataclass(init=False, repr=True, kw_only=True)
@@ -61,7 +62,7 @@ class ResimMetricsWriter:
         return metric
 
     def base_add_event(self, event: Event) -> Event:
-        """Given an existent event, add to the writer. 
+        """Given an existent event, add to the writer.
 
         Args:
             event (Event): the event to add
@@ -163,11 +164,15 @@ class ResimMetricsWriter:
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        fail_block = any(metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
-                      for metric in output.metrics_msg.job_level_metrics.metrics)
+        fail_block = any(
+            metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
+            for metric in output.metrics_msg.job_level_metrics.metrics
+        )
 
-        fail_warn = any(metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
-                      for metric in output.metrics_msg.job_level_metrics.metrics)
+        fail_warn = any(
+            metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+            for metric in output.metrics_msg.job_level_metrics.metrics
+        )
 
         if fail_block:
             metrics_status = MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")

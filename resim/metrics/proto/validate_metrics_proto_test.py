@@ -16,6 +16,7 @@ import resim.metrics.proto.validate_metrics_proto as vmp
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.metrics.proto.generate_test_metrics as gtm
 
+
 def _make_id_bad(job_metrics: mp.JobMetrics) -> mp.JobMetrics:
     """
     Make the job_metrics invalid by setting its job_id data to an invalid hex
@@ -25,6 +26,7 @@ def _make_id_bad(job_metrics: mp.JobMetrics) -> mp.JobMetrics:
     result.job_id.id.data = "foo"
     return result
 
+
 def _make_data_empty(job_metrics: mp.JobMetrics) -> mp.JobMetrics:
     """
     Make the job_metrics invalid by emptying out the data.
@@ -32,7 +34,6 @@ def _make_data_empty(job_metrics: mp.JobMetrics) -> mp.JobMetrics:
     result = copy.deepcopy(job_metrics)
     del result.metrics_data[:]
     return result
-
 
 
 class ValidateMetricsProtoTest(unittest.TestCase):
@@ -96,5 +97,5 @@ class ValidateMetricsProtoTest(unittest.TestCase):
             vmp.validate_job_metrics(basic_job_proto)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

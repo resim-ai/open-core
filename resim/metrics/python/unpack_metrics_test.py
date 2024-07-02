@@ -26,11 +26,10 @@ class UnpackMetricsTest(unittest.TestCase):
         unpacked = um.unpack_metrics(
             metrics=test_metrics.job_level_metrics.metrics,
             metrics_data=test_metrics.metrics_data,
-            events=test_metrics.events)
+            events=test_metrics.events,
+        )
 
-        writer = mw.ResimMetricsWriter(
-            job_id=uuid.UUID(
-                test_metrics.job_id.id.data))
+        writer = mw.ResimMetricsWriter(job_id=uuid.UUID(test_metrics.job_id.id.data))
         for metrics_data in unpacked.metrics_data:
             writer.add_metrics_data(metrics_data)
 
@@ -46,23 +45,24 @@ class UnpackMetricsTest(unittest.TestCase):
         reunpacked = um.unpack_metrics(
             metrics=repacked.job_level_metrics.metrics,
             metrics_data=repacked.metrics_data,
-            events=repacked.events)
+            events=repacked.events,
+        )
 
         reunpacked_metrics_ids = {metric.id for metric in reunpacked.metrics}
         reunpacked_metrics_data_ids = {
-            metric_data.id for metric_data in reunpacked.metrics_data}
+            metric_data.id for metric_data in reunpacked.metrics_data
+        }
         reunpacked_event_ids = {event.id for event in reunpacked.events}
 
         unpacked_metrics_ids = {metric.id for metric in unpacked.metrics}
         unpacked_metrics_data_ids = {
-            metric_data.id for metric_data in unpacked.metrics_data}
+            metric_data.id for metric_data in unpacked.metrics_data
+        }
         unpacked_event_ids = {event.id for event in unpacked.events}
 
         self.assertEqual(unpacked_metrics_ids, reunpacked_metrics_ids)
-        self.assertEqual(
-            unpacked_metrics_data_ids,
-            reunpacked_metrics_data_ids)
-        self.assertEqual(unpacked_event_ids,reunpacked_event_ids)
+        self.assertEqual(unpacked_metrics_data_ids, reunpacked_metrics_data_ids)
+        self.assertEqual(unpacked_event_ids, reunpacked_event_ids)
 
         self.assertEqual(unpacked.metrics, reunpacked.metrics)
         self.assertEqual(unpacked.events, reunpacked.events)
