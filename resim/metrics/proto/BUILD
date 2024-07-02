@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
@@ -69,6 +70,33 @@ cc_proto_library(
     name = "metrics_proto_cc",
     visibility = ["//visibility:public"],
     deps = [":metrics_proto"],
+)
+
+go_proto_library(
+    name = "metrics_go_proto",
+    importpath = "github.com/resim-ai/open-core/metrics_proto",
+    protos = [":metrics_proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/utils/proto:uuid_go_proto",
+    ],
+)
+
+cc_library(
+    name = "validate_metrics_proto",
+    srcs = ["validate_metrics_proto.cc"],
+    hdrs = ["validate_metrics_proto.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":metrics_proto_cc",
+        "//resim/actor:actor_id",
+        "//resim/assert",
+        "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
+        "//resim/utils:uuid",
+        "//resim/utils/proto:uuid_to_proto",
+        "@com_google_protobuf//:protobuf",
+    ],
 )
 
 py_proto_library(
