@@ -17,6 +17,7 @@ from typing import Any, Callable, Optional, cast
 
 import numpy as np
 
+from google.protobuf.json_format import MessageToJson
 import resim.metrics.proto.metrics_pb2 as mp
 import resim.utils.proto.uuid_pb2 as uuid_proto
 from resim.metrics.python.metrics_utils import (
@@ -363,7 +364,8 @@ def _unpack_scalar_metric(metric: mp.Metric,
 def _unpack_plotly_metric(metric: mp.Metric,
                           unpacked: PlotlyMetric,
                           _: dict[uuid.UUID, MetricsData]) -> None:
-    plotly_data = metric.metric_values.plotly_metric_values.json
+    plotly_data_struct = metric.metric_values.plotly_metric_values.json
+    plotly_data = MessageToJson(plotly_data_struct)
     unpacked.with_plotly_data(
         plotly_data)
 
