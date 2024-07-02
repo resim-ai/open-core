@@ -238,7 +238,7 @@ message Metric {
 
 enum TimestampType {
     NO_TYPE = 0;
-    // An absolute timestamp refers to a datatime
+    // An absolute timestamp refers to a date-time
     ABSOLUTE_TIMESTAMP = 1;
     // A relative timestamp refers to the duration into an experience the event
     // occurred
