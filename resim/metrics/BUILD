@@ -179,6 +179,25 @@ py_test(
     ],
 )
 
+py_library(
+    name = "fetch_report_metrics",
+    srcs = ["fetch_report_metrics.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fetch_all_pages",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_test(
+    name = "fetch_report_metrics_test",
+    srcs = ["fetch_report_metrics_test.py"],
+    deps = [
+        ":fetch_report_metrics",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
 pkg_tar(
     name = "resim_metrics_tools",
     srcs = [

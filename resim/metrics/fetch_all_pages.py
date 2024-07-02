@@ -47,3 +47,21 @@ def fetch_all_pages(endpoint: typing.Callable[..., ResponseType],
         assert responses[-1] is not None
         page_token = responses[-1].next_page_token
     return responses
+
+
+async def async_fetch_all_pages(endpoint: typing.Callable[..., ResponseType],
+                                *args: typing.Any,
+                                **kwargs: typing.Any) -> list[ResponseType]:
+    """
+    Fetches all pages from a given endpoint.
+    """
+    responses = []
+    responses.append(await endpoint(*args, **kwargs))
+    assert responses[-1] is not None
+
+    page_token = responses[-1].next_page_token
+    while page_token:
+        responses.append(await endpoint(*args, **kwargs, page_token=page_token))
+        assert responses[-1] is not None
+        page_token = responses[-1].next_page_token
+    return responses
