@@ -8,11 +8,13 @@ import datetime
 import unittest
 import uuid
 from dataclasses import dataclass
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import Mock, patch
 
-from resim_python_client.api.batches import list_batches
+from resim_python_client.api.batches import list_batches, list_jobs
 from resim_python_client.models.batch import Batch
 from resim_python_client.models.list_batches_output import ListBatchesOutput
+from resim_python_client.models.list_jobs_output import ListJobsOutput
 from resim_python_client.models.metric_status import MetricStatus
 from resim_python_client.models.report import Report
 from resim_python_client.models.report_status import ReportStatus
@@ -26,7 +28,7 @@ class ClientMock:
 
 
 class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.report = Report(
             associated_account="",
@@ -60,19 +62,29 @@ class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
+        self.batches_to_jobs = {
+            self.batches[0].batches[0].batch_id: ListJobsOutput(jobs=[]),
+            self.batches[1].batches[0].batch_id: ListJobsOutput(jobs=[]),
+        }
+
     @patch("resim.metrics.fetch_report_metrics.AuthenticatedClient", ClientMock)
     @patch("resim.metrics.fetch_report_metrics.get_report.asyncio")
     @patch("resim.metrics.fetch_report_metrics.async_fetch_all_pages")
-    async def test_fetch_batches_for_report(self, get_batches_mock, get_report_mock):
+    async def test_fetch_batches_for_report(
+        self, get_batches_mock: Mock, get_report_mock: Mock
+    ) -> None:
+        # SETUP
         get_report_mock.return_value = self.report
         get_batches_mock.return_value = self.batches
 
+        # ACTION
         batches = await frp.fetch_batches_for_report(
             client=self.client,
             report_id=uuid.UUID(self.report.report_id),
             project_id=uuid.UUID(self.report.project_id),
         )
 
+        # VERIFICATION
         get_report_mock.assert_called_once()
         self.assertEqual(get_report_mock.call_args.args[0], self.report.project_id)
         self.assertEqual(get_report_mock.call_args.args[1], self.report.report_id)
@@ -98,13 +110,53 @@ class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batches[0].batch_id, self.batches[0].batches[0].batch_id)
         self.assertEqual(batches[1].batch_id, self.batches[1].batches[0].batch_id)
 
+        # SETUP
         get_report_mock.return_value = None
 
+        # ACTION / VERIFICATION
         with self.assertRaises(RuntimeError):
             await frp.fetch_batches_for_report(
                 client=self.client,
                 report_id=uuid.UUID(self.report.report_id),
                 project_id=uuid.UUID(self.report.project_id),
+            )
+
+    @patch("resim.metrics.fetch_report_metrics.AuthenticatedClient", ClientMock)
+    @patch("resim.metrics.fetch_report_metrics.async_fetch_all_pages")
+    async def test_fetch_jobs_for_batches(self, list_jobs_mock: Mock) -> None:
+        # SETUP
+        def list_jobs_mock_impl(
+            *_: Any, batch_id: str = "", **__: Any
+        ) -> list[ListBatchesOutput]:
+            return [self.batches_to_jobs[batch_id]]
+
+        list_jobs_mock.side_effect = list_jobs_mock_impl
+
+        # ACTION
+        batch_ids = [b.batch_id for page in self.batches for b in page.batches]
+        batch_ids.sort()
+        batches_to_jobs = await frp.fetch_jobs_for_batches(
+            client=self.client,
+            batch_ids=batch_ids,
+            project_id=uuid.UUID(self.report.project_id),
+        )
+
+        # VERIFICATION
+        observed_batch_ids = []
+        for call_args in list_jobs_mock.call_args_list:
+            self.assertEqual(call_args.args[0], list_jobs.asyncio)
+            self.assertEqual(call_args.kwargs["project_id"], self.report.project_id)
+            self.assertEqual(call_args.kwargs["client"], self.client)
+            observed_batch_ids.append(call_args.kwargs["batch_id"])
+        observed_batch_ids.sort()
+
+        self.assertEqual(batch_ids, observed_batch_ids)
+
+        self.assertEqual(len(batch_ids), len(batches_to_jobs))
+        for batch_id in batch_ids:
+            self.assertIn(batch_id, batches_to_jobs)
+            self.assertEqual(
+                batches_to_jobs[batch_id], self.batches_to_jobs[batch_id].jobs
             )
 
 

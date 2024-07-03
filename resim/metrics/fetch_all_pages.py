@@ -54,7 +54,7 @@ def fetch_all_pages(
 
 
 async def async_fetch_all_pages(
-    endpoint: typing.Callable[..., ResponseType],
+    endpoint: typing.Callable[..., typing.Awaitable[ResponseType]],
     *args: typing.Any,
     **kwargs: typing.Any
 ) -> list[ResponseType]:

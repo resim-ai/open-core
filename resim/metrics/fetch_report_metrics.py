@@ -20,10 +20,14 @@ from resim.metrics.fetch_all_pages import async_fetch_all_pages
 async def fetch_batches_for_report(
     *, client: AuthenticatedClient, report_id: uuid.UUID, project_id: uuid.UUID
 ) -> list[Batch]:
-    report_id = str(report_id)
-    project_id = str(project_id)
+    """Fetch all batches corresponding to a report in the correct time range.
 
-    report = await get_report.asyncio(project_id, report_id, client=client)
+    Note that this does not yet filter batches by test suite revision.
+    """
+    report_id_str = str(report_id)
+    project_id_str = str(project_id)
+
+    report = await get_report.asyncio(project_id_str, report_id_str, client=client)
 
     if report is None:
         raise RuntimeError("Failed to fetch report")
@@ -32,15 +36,21 @@ async def fetch_batches_for_report(
     branch_id = report.branch_id
     start_timestamp = report.start_timestamp
     end_timestamp = report.end_timestamp
-    search_string = (
-        f'test_suite_id = "{test_suite_id}" '
-        + f'AND branch_id = "{branch_id}" '
-        + f'AND created_at > "{start_timestamp}" '
-        + f'AND created_at < "{end_timestamp}"'
+    search_string = " AND ".join(
+        [
+            f'test_suite_id = "{test_suite_id}"',
+            f'AND branch_id = "{branch_id}"',
+            f'AND created_at > "{start_timestamp}"',
+            f'AND created_at < "{end_timestamp}"',
+        ]
     )
+    # TODO(michael) Add filtering for respect revision boundary
 
     batches = await async_fetch_all_pages(
-        list_batches.asyncio, project_id=project_id, search=search_string, client=client
+        list_batches.asyncio,
+        project_id=project_id_str,
+        search=search_string,
+        client=client,
     )
 
     batches = [b for page in batches for b in page.batches]
@@ -50,11 +60,13 @@ async def fetch_batches_for_report(
 async def fetch_jobs_for_batches(
     *, client: AuthenticatedClient, batch_ids: list[str], project_id: uuid.UUID
 ) -> dict[str, list[Job]]:
+    """Fetch all jobs for the given list of batch_ids and return them in a dict
+    of batch ids to lists of jobs."""
     jobs = await asyncio.gather(
         *(
             async_fetch_all_pages(
                 list_jobs.asyncio,
-                project_id=project_id,
+                project_id=str(project_id),
                 batch_id=batch_id,
                 client=client,
             )

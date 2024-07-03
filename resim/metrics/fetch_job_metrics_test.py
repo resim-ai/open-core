@@ -191,7 +191,7 @@ T = typing.TypeVar("T")
 
 def _mock_get_metrics_proto(
     *, message_type: type[T], session: requests.Session, url: str
-) -> str:
+) -> typing.Union[MockMetric, MockMetricsData]:
     assert session is not None
     if message_type is MockMetric:
         return _METRICS_URL_TO_MESSAGE_MAP[url]
