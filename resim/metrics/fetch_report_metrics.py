@@ -54,6 +54,8 @@ async def fetch_batches_for_report(
     )
 
     batches = [b for page in batches for b in page.batches]
+    batches.sort(key=lambda b: b.creation_timestamp)
+
     return batches
 
 
