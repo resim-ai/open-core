@@ -39,9 +39,9 @@ async def fetch_batches_for_report(
     search_string = " AND ".join(
         [
             f'test_suite_id = "{test_suite_id}"',
-            f'AND branch_id = "{branch_id}"',
-            f'AND created_at > "{start_timestamp}"',
-            f'AND created_at < "{end_timestamp}"',
+            f'branch_id = "{branch_id}"',
+            f'created_at > "{start_timestamp}"',
+            f'created_at < "{end_timestamp}"',
         ]
     )
     # TODO(michael) Add filtering for respect revision boundary
