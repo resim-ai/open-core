@@ -21,9 +21,11 @@ returned.
 
 import typing
 
+
 # pylint: disable-next=too-few-public-methods
 class HasNextPageToken(typing.Protocol):
     """A simple protocol for classes having the next_page_token field"""
+
     next_page_token: str
 
 
@@ -31,9 +33,11 @@ class HasNextPageToken(typing.Protocol):
 ResponseType = typing.TypeVar("ResponseType", bound=HasNextPageToken)
 
 
-def fetch_all_pages(endpoint: typing.Callable[..., ResponseType],
-                    *args: typing.Any,
-                    **kwargs: typing.Any) -> list[ResponseType]:
+def fetch_all_pages(
+    endpoint: typing.Callable[..., ResponseType],
+    *args: typing.Any,
+    **kwargs: typing.Any
+) -> list[ResponseType]:
     """
     Fetches all pages from a given endpoint.
     """
@@ -49,9 +53,11 @@ def fetch_all_pages(endpoint: typing.Callable[..., ResponseType],
     return responses
 
 
-async def async_fetch_all_pages(endpoint: typing.Callable[..., ResponseType],
-                                *args: typing.Any,
-                                **kwargs: typing.Any) -> list[ResponseType]:
+async def async_fetch_all_pages(
+    endpoint: typing.Callable[..., ResponseType],
+    *args: typing.Any,
+    **kwargs: typing.Any
+) -> list[ResponseType]:
     """
     Fetches all pages from a given endpoint.
     """
