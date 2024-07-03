@@ -11,7 +11,7 @@ Test for fetch_all_pages.
 
 from dataclasses import dataclass
 import unittest
-from resim.metrics.fetch_all_pages import fetch_all_pages
+from resim.metrics.fetch_all_pages import fetch_all_pages, async_fetch_all_pages
 
 
 _TEST_ARG = "some_arg"
@@ -43,6 +43,15 @@ def _test_endpoint(test_arg: str, *,
     testcase.assertEqual(test_arg, _TEST_ARG)
     return TestResponseType(value=test_arg, next_page_token=new_token)
 
+async def _async_test_endpoint(test_arg: str, *,
+                               testcase: unittest.TestCase,
+                               page_token: str = "") -> TestResponseType:
+    """A simple endpoint mock for testing purposes"""
+    if not page_token:
+        page_token = _START_TOKEN
+    new_token = _PAGE_TOKENS[page_token]
+    testcase.assertEqual(test_arg, _TEST_ARG)
+    return TestResponseType(value=test_arg, next_page_token=new_token)
 
 class FetchAllPagesTest(unittest.TestCase):
     """The unittest case itself"""
@@ -53,6 +62,15 @@ class FetchAllPagesTest(unittest.TestCase):
         self.assertEqual(len(all_pages), len(_PAGE_TOKENS))
         for page in all_pages:
             self.assertEqual(page.value, _TEST_ARG)
+
+class AsyncFetchAllPagesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_async_fetch_all_pages(self) -> None:
+        """Test that we fetch all pages we expect to"""
+        all_pages = await async_fetch_all_pages(_async_test_endpoint, _TEST_ARG, testcase=self)
+        self.assertEqual(len(all_pages), len(_PAGE_TOKENS))
+        for page in all_pages:
+            self.assertEqual(page.value, _TEST_ARG)
+            
 
 
 if __name__ == "__main__":
