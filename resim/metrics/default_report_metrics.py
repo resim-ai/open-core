@@ -8,19 +8,24 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.job import Job
 from resim_python_client.models.job_status import JobStatus
 from resim_python_client.models.metric_status import MetricStatus
 
+import resim.metrics.python.metrics_utils as mu
 from resim.metrics.fetch_report_metrics import (
     fetch_batches_for_report,
     fetch_jobs_for_batches,
 )
+from resim.metrics.proto.validate_metrics_proto import validate_job_metrics
+from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
 logger = logging.getLogger("resim")
 
 DEFAULT_CONFIG_PATH = pathlib.Path("/tmp/resim/inputs/report_config.json")
+DEFAULT_OUTPUT_PATH = pathlib.Path("/tmp/resim/outputs/metrics.binproto")
 
 
 async def main() -> None:
@@ -32,6 +37,7 @@ async def main() -> None:
         description="Compute a basic set of report metrics.",
     )
     parser.add_argument("--report-config", default=str(DEFAULT_CONFIG_PATH))
+    parser.add_argument("--output-path", default=str(DEFAULT_OUTPUT_PATH))
 
     args = parser.parse_args()
 
@@ -43,11 +49,17 @@ async def main() -> None:
         api_url=report_config["apiURL"],
         project_id=uuid.UUID(report_config["projectID"]),
         report_id=uuid.UUID(report_config["reportID"]),
+        output_path=args.output_path,
     )
 
 
 async def compute_metrics(
-    *, token: str, api_url: str, project_id: uuid.UUID, report_id: uuid.UUID
+    *,
+    token: str,
+    api_url: str,
+    project_id: uuid.UUID,
+    report_id: uuid.UUID,
+    output_path: str
 ) -> None:
     client = AuthenticatedClient(base_url=api_url, token=token)
 
@@ -67,6 +79,42 @@ async def compute_metrics(
 
     status_counts = count_batch_statuses(batch_ids, batch_to_jobs_map)
     print(status_counts)
+
+    fig = px.area(
+        status_counts,
+        x=range(len(batch_ids)),
+        y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
+    )
+
+    writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
+    (
+        writer.add_plotly_metric("Plotly example")
+        .with_description("Some sort of thing.")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+    metrics_proto = writer.write()
+    with open(output_path, "wb") as f:
+        f.write(metrics_proto.metrics_msg.SerializeToString())
+
+
+def count_batch_statuses(
+    batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
+) -> pd.DataFrame:
+    status_counts = []
+    for batch_id in batch_ids:
+        status_counts.append(count_job_statuses(batch_to_jobs_map[batch_id]))
+
+    status_counts = pd.DataFrame(
+        data=np.array(status_counts),
+        columns=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
+        index=range(len(batch_ids)),
+    )
+
+    return status_counts
 
 
 def count_job_statuses(jobs: list[Job]) -> list[int]:
@@ -93,20 +141,12 @@ def count_job_statuses(jobs: list[Job]) -> list[int]:
     return categorized_counts
 
 
-def count_batch_statuses(
-    batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
-) -> pd.DataFrame:
-    status_counts = []
-    for batch_id in batch_ids:
-        status_counts.append(count_job_statuses(batch_to_jobs_map[batch_id]))
-
-    status_counts = pd.DataFrame(
-        data=np.array(status_counts).transpose(),
-        index=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
-        columns=range(len(batch_ids)),
-    )
-
-    return status_counts
+def _write_proto(writer: ResimMetricsWriter) -> None:
+    metrics_proto = writer.write()
+    validate_job_metrics(metrics_proto.metrics_msg)
+    # Known location where the runner looks for metrics
+    with open("/tmp/resim/outputs/metrics.binproto", "wb") as f:
+        f.write(metrics_proto.metrics_msg.SerializeToString())
 
 
 if __name__ == "__main__":

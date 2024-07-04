@@ -203,7 +203,11 @@ py_binary(
     srcs = ["default_report_metrics.py"],
     deps = [
         ":fetch_report_metrics",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/metrics/python:metrics_utils",
+        "//resim/metrics/python:metrics_writer",
         requirement("pandas"),
+        requirement("plotly"),
     ],
 )
 
