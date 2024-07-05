@@ -1,3 +1,10 @@
+# Copyright 2024 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+
 import argparse
 import asyncio
 import json
@@ -10,6 +17,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from resim_python_client.client import AuthenticatedClient
+from resim_python_client.models.batch import Batch
 from resim_python_client.models.job import Job
 from resim_python_client.models.job_status import JobStatus
 from resim_python_client.models.metric_status import MetricStatus
@@ -66,11 +74,7 @@ async def compute_metrics(
     batches = await fetch_batches_for_report(
         client=client, report_id=report_id, project_id=project_id
     )
-
     logger.info("Fetched %d batches for report.", len(batches))
-
-    if len(batches) == 0:
-        return
 
     batch_ids = [b.batch_id for b in batches]
     batch_to_jobs_map = await fetch_jobs_for_batches(
@@ -80,16 +84,34 @@ async def compute_metrics(
     for batch_id, jobs in batch_to_jobs_map.items():
         logger.info("Fetched %d jobs for batch %s", len(jobs), batch_id)
 
-    status_counts = count_batch_statuses(batch_ids, batch_to_jobs_map)
-    print(status_counts)
+    if len(batches) == 0:
+        return
+
+    writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
+
+    job_status_categories_metric(
+        writer, batches=batches, batch_to_jobs_map=batch_to_jobs_map
+    )
+
+    metrics_proto = writer.write()
+    with open(output_path, "wb") as f:
+        f.write(metrics_proto.metrics_msg.SerializeToString())
+
+
+def job_status_categories_metric(
+    writer: ResimMetricsWriter,
+    batches: list[Batch],
+    batch_to_jobs_map: dict[str, list[Job]],
+) -> None:
+    status_counts = _count_batch_statuses(
+        list(batch_to_jobs_map.keys()), batch_to_jobs_map
+    )
 
     fig = px.area(
         status_counts,
-        x=range(len(batch_ids)),
+        x=range(len(batch_to_jobs_map)),
         y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
     )
-
-    writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
     (
         writer.add_plotly_metric("Plotly example")
         .with_description("Some sort of thing.")
@@ -99,17 +121,14 @@ async def compute_metrics(
         .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
         .with_plotly_data(fig.to_json())
     )
-    metrics_proto = writer.write()
-    with open(output_path, "wb") as f:
-        f.write(metrics_proto.metrics_msg.SerializeToString())
 
 
-def count_batch_statuses(
+def _count_batch_statuses(
     batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
 ) -> pd.DataFrame:
     status_counts = []
     for batch_id in batch_ids:
-        status_counts.append(count_job_statuses(batch_to_jobs_map[batch_id]))
+        status_counts.append(_count_job_statuses(batch_to_jobs_map[batch_id]))
 
     status_counts = pd.DataFrame(
         data=np.array(status_counts),
@@ -120,7 +139,7 @@ def count_batch_statuses(
     return status_counts
 
 
-def count_job_statuses(jobs: list[Job]) -> list[int]:
+def _count_job_statuses(jobs: list[Job]) -> list[int]:
     counts: dict[JobStatus, MetricStatus] = defaultdict(int)
     for job in jobs:
         counts[(job.job_status, job.job_metrics_status)] += 1
