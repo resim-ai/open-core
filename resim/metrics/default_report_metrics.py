@@ -7,6 +7,7 @@
 
 import argparse
 import asyncio
+import itertools
 import json
 import logging
 import pathlib
@@ -16,13 +17,16 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from resim_python_client.api.batches import list_metrics_for_job
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.batch import Batch
 from resim_python_client.models.job import Job
+from resim_python_client.models.job_metric import JobMetric
 from resim_python_client.models.job_status import JobStatus
 from resim_python_client.models.metric_status import MetricStatus
 
 import resim.metrics.python.metrics_utils as mu
+from resim.metrics.fetch_all_pages import async_fetch_all_pages
 from resim.metrics.fetch_report_metrics import (
     fetch_batches_for_report,
     fetch_jobs_for_batches,
@@ -61,6 +65,54 @@ async def main() -> None:
     )
 
 
+async def _fetch_metrics_for_job(
+    client: AuthenticatedClient, *, project_id: str, batch_id: str, job_id: str
+) -> tuple[str, list[JobMetric]]:
+    job_metrics = await async_fetch_all_pages(
+        list_metrics_for_job.asyncio,
+        project_id=project_id,
+        batch_id=batch_id,
+        job_id=job_id,
+        client=client,
+    )
+    return job_id, [j for page in job_metrics for j in page.metrics]
+
+
+async def _fetch_metrics_for_batch(
+    client: AuthenticatedClient, *, project_id: str, batch_id: str, jobs: list[Job]
+) -> list[tuple[str, list[JobMetric]]]:
+    return list(
+        await asyncio.gather(
+            *[
+                _fetch_metrics_for_job(
+                    client, project_id=project_id, batch_id=batch_id, job_id=job.job_id
+                )
+                for job in jobs
+            ]
+        )
+    )
+
+
+async def fetch_job_metrics(
+    client: AuthenticatedClient,
+    *,
+    project_id: uuid.UUID,
+    batch_to_jobs_map: dict[str, list[Job]],
+) -> dict[str, list[JobMetric]]:
+    all_metrics = list(
+        await asyncio.gather(
+            *[
+                _fetch_metrics_for_batch(
+                    client, project_id=str(project_id), batch_id=batch_id, jobs=jobs
+                )
+                for (batch_id, jobs) in batch_to_jobs_map.items()
+            ]
+        )
+    )
+
+    return dict(itertools.chain.from_iterable(all_metrics))
+
+
 async def compute_metrics(
     *,
     token: str,
@@ -84,13 +136,22 @@ async def compute_metrics(
     for batch_id, jobs in batch_to_jobs_map.items():
         logger.info("Fetched %d jobs for batch %s", len(jobs), batch_id)
 
+    job_to_metrics_map = await fetch_job_metrics(
+        client=client, project_id=project_id, batch_to_jobs_map=batch_to_jobs_map
+    )
+
+    logger.info("Fetched metrics for %d jobs", len(job_to_metrics_map))
+
     if len(batches) == 0:
         return
 
     writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
 
     job_status_categories_metric(
-        writer, batches=batches, batch_to_jobs_map=batch_to_jobs_map
+        writer,
+        batches=batches,
+        batch_to_jobs_map=batch_to_jobs_map,
+        job_to_metrics_map=job_to_metrics_map,
     )
 
     metrics_proto = writer.write()
@@ -103,6 +164,7 @@ def job_status_categories_metric(
     *,
     batches: list[Batch],
     batch_to_jobs_map: dict[str, list[Job]],
+    job_to_metrics_map: dict[str, list[JobMetric]],
 ) -> None:
     # pylint: disable=unused-argument
     status_counts = _count_batch_statuses(
