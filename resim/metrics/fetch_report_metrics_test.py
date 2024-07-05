@@ -43,22 +43,34 @@ class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
             output_location="",
             project_id=str(uuid.uuid4()),
             report_id=str(uuid.uuid4()),
-            respect_revision_boundary=False,
+            respect_revision_boundary=True,
             start_timestamp=datetime.datetime(2022, 1, 30),
             status=ReportStatus.SUCCEEDED,
             status_history=[],
             test_suite_id=str(uuid.uuid4()),
-            test_suite_revision=0,
+            test_suite_revision=3,
             user_id="",
         )
         self.client = ClientMock()
 
         self.batches = [
             ListBatchesOutput(
-                batches=[Batch(batch_id=str(uuid.uuid4()), associated_account="")]
+                batches=[
+                    Batch(
+                        batch_id=str(uuid.uuid4()),
+                        creation_timestamp=datetime.datetime(2022, 2, 1),
+                        associated_account="",
+                    )
+                ]
             ),
             ListBatchesOutput(
-                batches=[Batch(batch_id=str(uuid.uuid4()), associated_account="")]
+                batches=[
+                    Batch(
+                        batch_id=str(uuid.uuid4()),
+                        creation_timestamp=datetime.datetime(2022, 2, 2),
+                        associated_account="",
+                    )
+                ]
             ),
         ]
 
@@ -73,53 +85,70 @@ class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
     async def test_fetch_batches_for_report(
         self, get_batches_mock: Mock, get_report_mock: Mock
     ) -> None:
-        # SETUP
-        get_report_mock.return_value = self.report
-        get_batches_mock.return_value = self.batches
+        for respect_revision_boundary in (True, False):
+            self.report.respect_revision_boundary = respect_revision_boundary
 
-        # ACTION
-        batches = await frp.fetch_batches_for_report(
-            client=self.client,
-            report_id=uuid.UUID(self.report.report_id),
-            project_id=uuid.UUID(self.report.project_id),
-        )
+            # SETUP
+            get_report_mock.return_value = self.report
+            get_batches_mock.return_value = self.batches
 
-        # VERIFICATION
-        get_report_mock.assert_called_once()
-        self.assertEqual(get_report_mock.call_args.args[0], self.report.project_id)
-        self.assertEqual(get_report_mock.call_args.args[1], self.report.report_id)
-        self.assertEqual(get_report_mock.call_args.kwargs["client"], self.client)
-
-        get_batches_mock.assert_called_once()
-        self.assertEqual(get_batches_mock.call_args.args[0], list_batches.asyncio)
-        self.assertEqual(get_batches_mock.call_args.kwargs["client"], self.client)
-        self.assertEqual(
-            get_batches_mock.call_args.kwargs["project_id"], self.report.project_id
-        )
-
-        search_components = get_batches_mock.call_args.kwargs["search"].split(" AND ")
-        self.assertIn(
-            f'test_suite_id = "{self.report.test_suite_id}"', search_components
-        )
-        self.assertIn(f'branch_id = "{self.report.branch_id}"', search_components)
-        self.assertIn(
-            f'created_at > "{self.report.start_timestamp}"', search_components
-        )
-        self.assertIn(f'created_at < "{self.report.end_timestamp}"', search_components)
-
-        self.assertEqual(batches[0].batch_id, self.batches[0].batches[0].batch_id)
-        self.assertEqual(batches[1].batch_id, self.batches[1].batches[0].batch_id)
-
-        # SETUP
-        get_report_mock.return_value = None
-
-        # ACTION / VERIFICATION
-        with self.assertRaises(RuntimeError):
-            await frp.fetch_batches_for_report(
+            # ACTION
+            batches = await frp.fetch_batches_for_report(
                 client=self.client,
                 report_id=uuid.UUID(self.report.report_id),
                 project_id=uuid.UUID(self.report.project_id),
             )
+
+            # VERIFICATION
+            get_report_mock.assert_called_once()
+            self.assertEqual(get_report_mock.call_args.args[0], self.report.project_id)
+            self.assertEqual(get_report_mock.call_args.args[1], self.report.report_id)
+            self.assertEqual(get_report_mock.call_args.kwargs["client"], self.client)
+
+            get_batches_mock.assert_called_once()
+            self.assertEqual(get_batches_mock.call_args.args[0], list_batches.asyncio)
+            self.assertEqual(get_batches_mock.call_args.kwargs["client"], self.client)
+            self.assertEqual(
+                get_batches_mock.call_args.kwargs["project_id"], self.report.project_id
+            )
+
+            search_components = get_batches_mock.call_args.kwargs["search"].split(
+                " AND "
+            )
+            NUM_SEARCH_COMPONENTS = 5 if respect_revision_boundary else 4
+            self.assertEqual(len(search_components), NUM_SEARCH_COMPONENTS)
+            self.assertIn(
+                f'test_suite_id = "{self.report.test_suite_id}"', search_components
+            )
+            self.assertIn(f'branch_id = "{self.report.branch_id}"', search_components)
+            self.assertIn(
+                f'created_at > "{self.report.start_timestamp}"', search_components
+            )
+            self.assertIn(
+                f'created_at < "{self.report.end_timestamp}"', search_components
+            )
+            if respect_revision_boundary:
+                self.assertIn(
+                    f"test_suite_revision = {self.report.test_suite_revision}",
+                    search_components,
+                )
+
+            self.assertEqual(batches[0].batch_id, self.batches[0].batches[0].batch_id)
+            self.assertEqual(batches[1].batch_id, self.batches[1].batches[0].batch_id)
+
+            # SETUP
+            get_report_mock.return_value = None
+
+            # ACTION / VERIFICATION
+            with self.assertRaises(RuntimeError):
+                await frp.fetch_batches_for_report(
+                    client=self.client,
+                    report_id=uuid.UUID(self.report.report_id),
+                    project_id=uuid.UUID(self.report.project_id),
+                )
+
+            get_batches_mock.reset_mock()
+            get_report_mock.reset_mock()
 
     @patch("resim.metrics.fetch_report_metrics.AuthenticatedClient", ClientMock)
     @patch("resim.metrics.fetch_report_metrics.async_fetch_all_pages")

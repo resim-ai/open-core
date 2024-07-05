@@ -69,6 +69,9 @@ async def compute_metrics(
 
     logger.info("Fetched %d batches for report.", len(batches))
 
+    if len(batches) == 0:
+        return
+
     batch_ids = [b.batch_id for b in batches]
     batch_to_jobs_map = await fetch_jobs_for_batches(
         client=client, batch_ids=batch_ids, project_id=project_id
