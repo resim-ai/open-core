@@ -21,11 +21,13 @@ from resim_python_client.api.batches import list_batch_metrics, list_metrics_for
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.batch import Batch
 from resim_python_client.models.batch_metric import BatchMetric
+from resim_python_client.models.batch_status import BatchStatus
 from resim_python_client.models.job import Job
 from resim_python_client.models.job_metric import JobMetric
 from resim_python_client.models.job_status import JobStatus
 from resim_python_client.models.metric_status import MetricStatus
 
+import resim.metrics.python.metrics as rm
 import resim.metrics.python.metrics_utils as mu
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
 from resim.metrics.fetch_report_metrics import (
@@ -186,13 +188,18 @@ async def compute_metrics(
 
     writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
 
-    job_status_categories_metric(
-        writer,
-        batches=batches,
-        batch_to_jobs_map=batch_to_jobs_map,
-        job_to_metrics_map=job_to_metrics_map,
-        batch_to_metrics_map=batch_to_metrics_map,
-    )
+    all_metrics = [
+        job_status_categories_metric,
+    ]
+
+    for metric in all_metrics:
+        metric(
+            writer,
+            batches=batches,
+            batch_to_jobs_map=batch_to_jobs_map,
+            job_to_metrics_map=job_to_metrics_map,
+            batch_to_metrics_map=batch_to_metrics_map,
+        )
 
     metrics_proto = writer.write()
     with open(output_path, "wb") as f:
@@ -218,8 +225,8 @@ def job_status_categories_metric(
         y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
     )
     (
-        writer.add_plotly_metric("Plotly example")
-        .with_description("Some sort of thing.")
+        writer.add_plotly_metric("Job Statuses Over Time")
+        .with_description("Job Statuses Over Sequential Batches")
         .with_blocking(False)
         .with_should_display(True)
         .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
@@ -227,17 +234,79 @@ def job_status_categories_metric(
         .with_plotly_data(fig.to_json())
     )
 
+    fail_statuses = (MetricStatus.FAIL_BLOCK, MetricStatus.FAIL_WARN)
 
-def totals_metrics(
-    writer: ResimMetricsWriter,
-    *,
-    batches: list[Batch],
-    batch_to_jobs_map: dict[str, list[Job]],
-    job_to_metrics_map: dict[str, list[JobMetric]],
-    batch_to_metrics_map: dict[str, list[BatchMetric]],
-) -> None:
-    # pylint: disable=unused-argument
-    pass
+    def batch_is_failure(batch: Batch) -> bool:
+        if batch.status == BatchStatus.ERROR:
+            return True
+
+        if batch.status != BatchStatus.SUCCEEDED:
+            return False
+
+        return (
+            batch.batch_metrics_status in fail_statuses
+            or batch.jobs_metrics_status in fail_statuses
+        )
+
+    def batch_is_success(batch: Batch) -> bool:
+        if batch.status != BatchStatus.SUCCEEDED:
+            return False
+
+        return (
+            batch.batch_metrics_status not in fail_statuses
+            and batch.jobs_metrics_status not in fail_statuses
+        )
+
+    if len(batches) == 0:
+        raise ValueError("Can't compute totals on zero batches!")
+
+    batches_sorted = all(
+        batches[i].creation_timestamp < batches[i + 1].creation_timestamp
+        for i in range(len(batches) - 1)
+    )
+
+    if not batches_sorted:
+        raise ValueError("Batches must be sorted!")
+
+    totals = {
+        "Number of Batches": len(batches),
+        "Number of Jobs": len(job_to_metrics_map),
+        "Number of Passing Batches": sum(batch_is_success(b) for b in batches),
+        "Number of Failing Batches": sum(batch_is_failure(b) for b in batches),
+        "Failed Jobs on Most Recent Batch": status_counts.tail(1)[
+            ["FAIL_WARN", "FAIL_BLOCK", "ERROR"]
+        ]
+        .sum(axis=1)
+        .iloc[0],
+        "Passed Jobs on Most Recent Batch": status_counts.tail(1)["PASSED"].iloc[0],
+    }
+
+    totals_status: dict[str, mu.MetricStatus] = {}
+
+    for k, v in totals.items():
+        totals[k] = np.array([v], dtype=np.float64)
+        totals_status[k] = np.array([mu.MetricStatus.PASSED_METRIC_STATUS])
+
+    totals_data = rm.GroupedMetricsData(
+        name="Totals Summary", category_to_series=totals
+    )
+
+    totals_status_data = rm.GroupedMetricsData(
+        name="Totals Summary Statuses", category_to_series=totals_status
+    )
+
+    failure_def = mu.DoubleFailureDefinition(fails_below=None, fails_above=None)
+    (
+        writer.add_double_summary_metric("Totals")
+        .with_description("High-level totals")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+        .with_importance(mu.MetricImportance.ZERO_IMPORTANCE)
+        .with_value_data(totals_data)
+        .with_status_data(totals_status_data)
+        .with_failure_definition(failure_def)
+    )
 
 
 def _count_batch_statuses(
