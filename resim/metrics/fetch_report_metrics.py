@@ -36,15 +36,18 @@ async def fetch_batches_for_report(
     branch_id = report.branch_id
     start_timestamp = report.start_timestamp
     end_timestamp = report.end_timestamp
-    search_string = " AND ".join(
-        [
-            f'test_suite_id = "{test_suite_id}"',
-            f'branch_id = "{branch_id}"',
-            f'created_at > "{start_timestamp}"',
-            f'created_at < "{end_timestamp}"',
-        ]
-    )
-    # TODO(michael) Add filtering for respect revision boundary
+    test_suite_revision = report.test_suite_revision
+    search_components = [
+        f'test_suite_id = "{test_suite_id}"',
+        f'branch_id = "{branch_id}"',
+        f'created_at > "{start_timestamp}"',
+        f'created_at < "{end_timestamp}"',
+    ]
+
+    if report.respect_revision_boundary:
+        search_components.append(f"test_suite_revision = {test_suite_revision}")
+
+    search_string = " AND ".join(search_components)
 
     batches = await async_fetch_all_pages(
         list_batches.asyncio,
@@ -54,6 +57,8 @@ async def fetch_batches_for_report(
     )
 
     batches = [b for page in batches for b in page.batches]
+    batches.sort(key=lambda b: b.creation_timestamp)
+
     return batches
 
 
