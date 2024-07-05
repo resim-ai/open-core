@@ -67,7 +67,7 @@ async def compute_metrics(
     api_url: str,
     project_id: uuid.UUID,
     report_id: uuid.UUID,
-    output_path: str
+    output_path: str,
 ) -> None:
     client = AuthenticatedClient(base_url=api_url, token=token)
 
@@ -100,9 +100,11 @@ async def compute_metrics(
 
 def job_status_categories_metric(
     writer: ResimMetricsWriter,
+    *,
     batches: list[Batch],
     batch_to_jobs_map: dict[str, list[Job]],
 ) -> None:
+    # pylint: disable=unused-argument
     status_counts = _count_batch_statuses(
         list(batch_to_jobs_map.keys()), batch_to_jobs_map
     )
