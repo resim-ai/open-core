@@ -228,6 +228,12 @@ def job_status_categories_metric(
         x=range(len(batch_to_jobs_map)),
         y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
     )
+    fig.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+    )
+
     (
         writer.add_plotly_metric("Job Statuses Over Time")
         .with_description("Job Statuses Over Sequential Batches")
@@ -376,6 +382,11 @@ def flaky_experiences_metric(
             )
         ]
     )
+    fig.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+    )
 
     (
         writer.add_plotly_metric("Failures per Experience")
@@ -400,6 +411,11 @@ def flaky_experiences_metric(
             )
         ]
     )
+    fig.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+    )
 
     (
         writer.add_plotly_metric("Failures per Job Metric")
@@ -423,6 +439,11 @@ def flaky_experiences_metric(
                 },
             )
         ]
+    )
+    fig.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        paper_bgcolor="rgba(0, 0, 0, 0)",
     )
 
     (
