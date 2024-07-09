@@ -17,6 +17,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from resim_python_client.api.batches import list_batch_metrics, list_metrics_for_job
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.batch import Batch
@@ -26,6 +27,7 @@ from resim_python_client.models.job import Job
 from resim_python_client.models.job_metric import JobMetric
 from resim_python_client.models.job_status import JobStatus
 from resim_python_client.models.metric_status import MetricStatus
+from resim_python_client.models.metric_type import MetricType
 
 import resim.metrics.python.metrics as rm
 import resim.metrics.python.metrics_utils as mu
@@ -190,6 +192,8 @@ async def compute_metrics(
 
     all_metrics = [
         job_status_categories_metric,
+        flaky_experiences_metric,
+        batch_metrics_scalars_over_time_metric,
     ]
 
     for metric in all_metrics:
@@ -307,6 +311,174 @@ def job_status_categories_metric(
         .with_status_data(totals_status_data)
         .with_failure_definition(failure_def)
     )
+
+
+def flaky_experiences_metric(
+    writer: ResimMetricsWriter,
+    *,
+    batches: list[Batch],
+    batch_to_jobs_map: dict[str, list[Job]],
+    job_to_metrics_map: dict[str, list[JobMetric]],
+    batch_to_metrics_map: dict[str, list[BatchMetric]],
+) -> None:
+
+    fail_statuses = (MetricStatus.FAIL_BLOCK, MetricStatus.FAIL_WARN)
+
+    def job_is_failure(job: Job) -> bool:
+        if job.job_status == JobStatus.ERROR:
+            return True
+
+        if job.job_status != JobStatus.SUCCEEDED:
+            return False
+
+        return job.job_metrics_status in fail_statuses
+
+    def metric_is_failure(metric: JobMetric) -> bool:
+        return metric.status in fail_statuses
+
+    def batch_metric_is_failure(metric: BatchMetric) -> bool:
+        return metric.status in fail_statuses
+
+    fail_counts: dict[str, int] = defaultdict(int)
+    job_metric_fail_counts: dict[str, int] = defaultdict(int)
+    batch_metric_fail_counts: dict[str, int] = defaultdict(int)
+    for jobs in batch_to_jobs_map.values():
+        for job in jobs:
+            fail_counts[job.experience_name] += job_is_failure(job)
+            for metric in job_to_metrics_map[job.job_id]:
+                job_metric_fail_counts[metric.name] += metric_is_failure(metric)
+
+    for batch in batches:
+        for batch_metric in batch_to_metrics_map[batch.batch_id]:
+            batch_metric_fail_counts[batch_metric.name] += batch_metric_is_failure(
+                batch_metric
+            )
+
+    fail_counts_list = list(fail_counts.items())
+    fail_counts_list.sort(key=lambda t: t[1], reverse=True)
+
+    job_metric_fail_counts_list = list(job_metric_fail_counts.items())
+    job_metric_fail_counts_list.sort(key=lambda t: t[1], reverse=True)
+
+    batch_metric_fail_counts_list = list(batch_metric_fail_counts.items())
+    batch_metric_fail_counts_list.sort(key=lambda t: t[1], reverse=True)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header={"values": ["Experience Name", "Fail Count"]},
+                cells={
+                    "values": [
+                        [t[0] for t in fail_counts_list],
+                        [t[1] for t in fail_counts_list],
+                    ]
+                },
+            )
+        ]
+    )
+
+    (
+        writer.add_plotly_metric("Failures per Experience")
+        .with_description("Experiences sorted by number of failures.")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header={"values": ["Metric Name", "Fail Count"]},
+                cells={
+                    "values": [
+                        [t[0] for t in job_metric_fail_counts_list],
+                        [t[1] for t in job_metric_fail_counts_list],
+                    ]
+                },
+            )
+        ]
+    )
+
+    (
+        writer.add_plotly_metric("Failures per Job Metric")
+        .with_description("Job Metrics sorted by number of failures.")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header={"values": ["Metric Name", "Fail Count"]},
+                cells={
+                    "values": [
+                        [t[0] for t in batch_metric_fail_counts_list],
+                        [t[1] for t in batch_metric_fail_counts_list],
+                    ]
+                },
+            )
+        ]
+    )
+
+    (
+        writer.add_plotly_metric("Failures per Batch Metric")
+        .with_description("Batch Metrics sorted by number of failures.")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+
+def batch_metrics_scalars_over_time_metric(
+    writer: ResimMetricsWriter,
+    *,
+    batches: list[Batch],
+    batch_to_jobs_map: dict[str, list[Job]],
+    job_to_metrics_map: dict[str, list[JobMetric]],
+    batch_to_metrics_map: dict[str, list[BatchMetric]],
+) -> None:
+    # pylint: disable=unused-argument
+    values: dict[str, list] = defaultdict(list)
+
+    for i, batch in enumerate(batches):
+        for metric in batch_to_metrics_map[batch.batch_id]:
+            if metric.type == MetricType.SCALAR:
+                values[metric.name].append([i, metric.value])
+
+    array_values = {key: np.array(value) for (key, value) in values.items()}
+
+    for key, value in array_values.items():
+        index_data = rm.SeriesMetricsData(
+            name=f"{key} Batch Index Data", series=value[:, 0]
+        )
+
+        value_data = rm.SeriesMetricsData(name=f"{key} Data", series=value[:, 1])
+
+        status_data = rm.SeriesMetricsData(
+            name=f"{key} statuses",
+            series=np.array(
+                [mu.MetricStatus.PASSED_METRIC_STATUS] * len(index_data.series)
+            ),
+        )
+        (
+            writer.add_line_plot_metric(f'"{key}" over time')
+            .with_description(f'"{key}" collected from sequential test suite batches')
+            .with_blocking(False)
+            .with_should_display(True)
+            .with_status(mu.MetricStatus.PASSED_METRIC_STATUS)
+            .append_series_data(index_data, value_data, "Value over time")
+            .append_statuses_data(status_data)
+            .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+            .with_x_axis_name("Batch Index Over Time")
+            .with_y_axis_name("Metric Value")
+        )
 
 
 def _count_batch_statuses(
