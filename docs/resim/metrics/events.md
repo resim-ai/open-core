@@ -27,7 +27,7 @@ event = metrics_writer
         .add_event("My Unique Event Name") # Event specified here
         .with_description("An optional description of an event")
         .with_tags(["collision", "pedestrian"]) # A list of tags that can be used to categorize the event 
-        .with_timestamp(Timestamp(secs=10)) # Specify the timestamp in your simulation that the event occurs
+        .with_relative_timestamp(Timestamp(secs=10)) # Specify the timestamp in your simulation that the event occurs
         .with_status(MetricStatus.PASSED_METRIC_STATUS)
         .with_importance(MetricImportance.HIGH_IMPORTANCE)
 ```
@@ -51,3 +51,21 @@ metric_2 = metrics_writer
 # Now associate with the event.
 event.with_metrics(metric_1, metric_2)
 ```
+
+The ReSim Metrics Validator checks that all metrics associated with an event have been flagged as event metrics
+via the `is_event_metric()` function.
+
+## Available Parameters
+
+Aside from the list of metrics, the available parameters for an event are described below:
+
+- `name: str` - A required, immutable name. The same name cannot be used twice, so they are uniquely identifying.
+- `description: str` - A string description of the event.
+- `timestamp: Timestamp` - A seconds and nanos representation of the timestamp that the event occurs at. In the SDK, this
+can be interpreted as either a `relative` (to the start of the simulation) or an `absolute` timestamp via `with_absolute_timestamp()`
+and `with_relative_timestamp()`. The most common use case is for relative times e.g. 3s into the simulation, but for processing
+real-world logs, the absolute timestamp is more relevant.
+- `tags: list[str]` - An optional list of tags associated with the event, that can be used to filter and organize on the web app.
+- `status: MetricStatus` - An overall status (e.g. PASSED, FAIL_BLOCK) for the event itself. Note that this is not, by default, computed from
+the statuses of any associated metrics: it needs to be computed by the user
+- `importance: MetricImportance` - An overall importance (e.g. CRITICAL, HIGH, LOW, ZERO).

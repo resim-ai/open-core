@@ -16,6 +16,6 @@ To allow you to use this, we recommend working through the docs in this order:
 1. [Metrics Data](./metrics_data.md): how to extract and represent data from your logs, ready to visualize in a metric.
 1. [Metric Types](./metric_types.md): a summary of the types of metrics supported in the dashboard, and how to use them.
 1. [Metrics Writer](./metrics_writer.md): how to write metrics in a way such that they appear in the dashboard.
-1. [Events](./events.md): a summary of events, the assignment of metrics to events, and how to use them
+1. [Events](./events.md): a summary of events, the assignment of metrics to events, and how to use them.
 1. [Batch Metrics](./batch_metrics.md): how to compute batch metrics.
 1. [Test Suite Reports](./report_metrics.md): how to compute test suite reports and their metrics.
