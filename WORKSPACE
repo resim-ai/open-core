@@ -66,6 +66,30 @@ load("@resim-python-client//:deps_3.bzl", "resim_python_client_dependencies_3")
 resim_python_client_dependencies_3()
 
 http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "f5ea76682b209cc0bd90d0f5a3b26d2f7a6a2885f0c5f615e72913f4805dbb0d",
+    strip_prefix = "bazel-lib-2.5.0",
+    url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.5.0/bazel-lib-v2.5.0.tar.gz",
+)
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "aspect_bazel_lib_register_toolchains")
+
+# Required bazel-lib dependencies
+
+aspect_bazel_lib_dependencies()
+
+# Register bazel-lib toolchains
+
+aspect_bazel_lib_register_toolchains()
+
+http_archive(
+    name = "aspect_rules_py",
+    sha256 = "e1d1023bc9ba8545dc87c6df10508d9d7c20f489f5e5c5c1e16380b33c013485",
+    strip_prefix = "rules_py-0.5.0",
+    url = "https://github.com/aspect-build/rules_py/releases/download/v0.5.0/rules_py-v0.5.0.tar.gz",
+)
+
+http_archive(
     name = "rules_oci",
     sha256 = "d41d0ba7855f029ad0e5ee35025f882cbe45b0d5d570842c52704f7a47ba8668",
     strip_prefix = "rules_oci-1.4.3",
