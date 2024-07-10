@@ -207,6 +207,7 @@ py_binary(
         "//resim/metrics/python:metrics_utils",
         "//resim/metrics/python:metrics_writer",
         requirement("pandas"),
+        requirement("httpx"),
         requirement("plotly"),
     ],
 )

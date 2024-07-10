@@ -13,7 +13,9 @@ import logging
 import pathlib
 import uuid
 from collections import defaultdict
+from typing import Awaitable, Hashable
 
+import httpx
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -36,6 +38,7 @@ from resim.metrics.fetch_report_metrics import (
     fetch_batches_for_report,
     fetch_jobs_for_batches,
 )
+from resim.metrics.proto.metrics_pb2 import Metric as MetricProto
 from resim.metrics.proto.validate_metrics_proto import validate_job_metrics
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 
@@ -43,6 +46,17 @@ logger = logging.getLogger("resim")
 
 DEFAULT_CONFIG_PATH = pathlib.Path("/tmp/resim/inputs/report_config.json")
 DEFAULT_OUTPUT_PATH = pathlib.Path("/tmp/resim/outputs/metrics.binproto")
+
+
+async def dict_gather(coroutine_dict: dict) -> dict:
+    async def tag(key: Hashable, coroutine: Awaitable) -> tuple:
+        return key, await coroutine
+
+    return dict(
+        await asyncio.gather(
+            *(tag(key, coroutine) for (key, coroutine) in coroutine_dict.items())
+        )
+    )
 
 
 async def main() -> None:
@@ -135,7 +149,7 @@ async def fetch_batch_metrics(
     *,
     project_id: uuid.UUID,
     batch_ids: list[str],
-) -> dict[str, list[Batch]]:
+) -> dict[str, list[BatchMetric]]:
     all_metrics = list(
         await asyncio.gather(
             *[
@@ -147,6 +161,28 @@ async def fetch_batch_metrics(
         )
     )
     return dict(all_metrics)
+
+
+async def fetch_scalar_batch_metrics(
+    *, batch_to_metrics_map: dict[str, list[BatchMetric]]
+) -> dict[str, dict[str, MetricProto]]:
+    client = httpx.AsyncClient()
+    tasks = {}
+
+    async def unpack(query: Awaitable) -> MetricProto:
+        response = await query
+        message = MetricProto()
+        message.ParseFromString(response.content)
+        return message
+
+    for batch, metrics in batch_to_metrics_map.items():
+        batch_tasks = {}
+        for metric in metrics:
+            if metric.type == MetricType.SCALAR:
+                batch_tasks[metric.name] = unpack(client.get(metric.metric_url))
+        tasks[batch] = dict_gather(batch_tasks)
+    responses = await dict_gather(tasks)
+    return responses
 
 
 async def compute_metrics(
@@ -179,6 +215,10 @@ async def compute_metrics(
         fetch_batch_metrics(client=client, project_id=project_id, batch_ids=batch_ids),
     )
 
+    scalar_batch_metrics_map = await fetch_scalar_batch_metrics(
+        batch_to_metrics_map=batch_to_metrics_map
+    )
+
     logger.info(
         "Fetched metrics for %d jobs and %d batches",
         len(job_to_metrics_map),
@@ -203,6 +243,7 @@ async def compute_metrics(
             batch_to_jobs_map=batch_to_jobs_map,
             job_to_metrics_map=job_to_metrics_map,
             batch_to_metrics_map=batch_to_metrics_map,
+            scalar_batch_metrics_map=scalar_batch_metrics_map,
         )
 
     metrics_proto = writer.write()
@@ -217,6 +258,7 @@ def job_status_categories_metric(
     batch_to_jobs_map: dict[str, list[Job]],
     job_to_metrics_map: dict[str, list[JobMetric]],
     batch_to_metrics_map: dict[str, list[BatchMetric]],
+    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
     # pylint: disable=unused-argument
     status_counts = _count_batch_statuses(
@@ -326,7 +368,9 @@ def flaky_experiences_metric(
     batch_to_jobs_map: dict[str, list[Job]],
     job_to_metrics_map: dict[str, list[JobMetric]],
     batch_to_metrics_map: dict[str, list[BatchMetric]],
+    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
+    # pylint: disable=unused-argument
 
     fail_statuses = (MetricStatus.FAIL_BLOCK, MetricStatus.FAIL_WARN)
 
@@ -464,14 +508,22 @@ def batch_metrics_scalars_over_time_metric(
     batch_to_jobs_map: dict[str, list[Job]],
     job_to_metrics_map: dict[str, list[JobMetric]],
     batch_to_metrics_map: dict[str, list[BatchMetric]],
+    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
     # pylint: disable=unused-argument
     values: dict[str, list] = defaultdict(list)
+    units: dict[str, str] = {}
 
     for i, batch in enumerate(batches):
         for metric in batch_to_metrics_map[batch.batch_id]:
             if metric.type == MetricType.SCALAR:
                 values[metric.name].append([i, metric.value])
+                metric = scalar_batch_metrics_map[batch.batch_id][metric.name]
+                unit = metric.metric_values.scalar_metric_values.unit
+                if metric.name in units and unit != units[metric.name]:
+                    logger.warning("Inconsistent units for metric %s", metric.name)
+                else:
+                    units[metric.name] = unit
 
     array_values = {key: np.array(value) for (key, value) in values.items()}
 
@@ -480,7 +532,9 @@ def batch_metrics_scalars_over_time_metric(
             name=f"{key} Batch Index Data", series=value[:, 0]
         )
 
-        value_data = rm.SeriesMetricsData(name=f"{key} Data", series=value[:, 1])
+        value_data = rm.SeriesMetricsData(
+            name=f"{key} Data", series=value[:, 1], unit=units[key]
+        )
 
         status_data = rm.SeriesMetricsData(
             name=f"{key} statuses",
