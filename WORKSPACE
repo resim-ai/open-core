@@ -65,6 +65,8 @@ load("@resim-python-client//:deps_3.bzl", "resim_python_client_dependencies_3")
 
 resim_python_client_dependencies_3()
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "aspect_bazel_lib",
     sha256 = "f5ea76682b209cc0bd90d0f5a3b26d2f7a6a2885f0c5f615e72913f4805dbb0d",
