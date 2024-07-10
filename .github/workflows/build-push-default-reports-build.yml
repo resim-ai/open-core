@@ -1,9 +1,9 @@
+name: Report Builds
 on:
   push:
     branches: 
     - main
     - prod/iain/report-metrics-docker
-  pull_request:
 
 permissions:
   id-token: write
