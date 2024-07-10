@@ -50,7 +50,7 @@ jobs:
           REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
           IMAGE_VERSION: ${{ steps.meta.outputs.version }}
           SHA: ${{ github.sha }}
-        run: bazel build //:default_report_metrics_build
+        run: bazel build //resim/metrics/default-report-metrics:default_report_metrics_build
 
       # - name: Push
       #   # if: ${{ github.ref == 'refs/heads/main' }}
