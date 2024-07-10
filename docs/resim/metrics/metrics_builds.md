@@ -10,7 +10,7 @@ Just like regular test builds, you need to make a docker image and register metr
 
 ## Job Mode vs Batch Mode
 
-Metrics Builds have two modes, both of which are implemented within the same single metrics build.
+Metrics Builds have three modes, two of which must implemented within the same metrics build.
 
 1. [job mode](#job-mode-computation) - in this mode, we compute metrics associated with a single job, based off output data from the job.
 2. [batch mode](#batch-mode-computation) - in this mode, we compute metrics associated with a batch of jobs, based off output metrics data from `job mode`. 
@@ -19,6 +19,12 @@ Whether we are in `job mode` or `batch mode` is determined by the files present 
 
 - If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in batch mode, and our build should compute batch metrics using this config.
 - If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in job mode, and our build should compute job metrics. In this case, `/tmp/resim/inputs/` will instead contain an `experience` and `logs` directory respectively containing the input and output of the test job, based off of which we can compute our job metrics.
+
+## Test Suite Report Mode
+
+The third mode that a metrics build can operate in is to compute test suite reports. A test suite report is a longitudinal comparison of a given [test suite](https://docs.resim.ai/test-suites) over time. A report is expected to compute how performance of a given branch of the system has changed over time. For more information, please see the main [reports documentation](https://docs.resim.ai/test-suite-reports).
+
+For a metrics build to determine that it is in `report mode`, it must check that a file called `report_config.json` exists in the `tmp/resim/inputs` directory. If this file is present, we are in report mode and we should compute reports.
 
 # Output
 
@@ -52,3 +58,20 @@ If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in 
 ```
 
 These three things will be used to retrieve the metrics data associated from jobs with the API. This is made easier by various tooling we provide in this repo. We then compute metrics based off this, just as we'd do for job metrics. See [Batch Metrics](./batch_metrics.md) for more on this.
+
+## Report Mode computation
+
+> WARNING:
+> The information here represents the current status of the report metrics worker which is not final. We will improve the system by making it more generic and automated in the future
+
+If the file `/tmp/resim/inputs/report_config.json` is present, we are in `report mode`! This file should look something like this:
+
+```
+{
+  "authToken" : "...",
+  "apiURL" : "https://api.resim.ai/v1",
+  "reportID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
+}
+```
+
+These three things will be used to retrieve the metrics data associated from batches with the API. This is made easier by various tooling we provide in this repo. See [Report Metrics](./report_metrics.md) for more on this.
