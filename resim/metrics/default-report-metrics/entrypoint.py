@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import asyncio
 import pathlib
 import sys
 
@@ -21,4 +22,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
