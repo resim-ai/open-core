@@ -1,0 +1,63 @@
+on:
+  push:
+    branches: 
+    - main
+    - prod/iain/report-metrics-docker
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  REPO_NAME: customer-test-images
+  REGISTRY_NAME: 909785973729.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::909785973729:role/actions-${{ env.REPO_NAME }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_NAME }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            
+      - name: Build
+        env:
+          REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: bazel build //:default_report_metrics_build
+
+      - name: Push
+        # if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: bazel run //:default_report_metrics_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"

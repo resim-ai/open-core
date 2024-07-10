@@ -64,3 +64,33 @@ resim_python_client_dependencies_2()
 load("@resim-python-client//:deps_3.bzl", "resim_python_client_dependencies_3")
 
 resim_python_client_dependencies_3()
+
+http_archive(
+    name = "rules_oci",
+    sha256 = "d41d0ba7855f029ad0e5ee35025f882cbe45b0d5d570842c52704f7a47ba8668",
+    strip_prefix = "rules_oci-1.4.3",
+    url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.4.3/rules_oci-v1.4.3.tar.gz",
+)
+
+load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
+
+rules_oci_dependencies()
+
+load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
+
+oci_register_toolchains(
+    name = "oci",
+    crane_version = LATEST_CRANE_VERSION,
+)
+
+# You can pull your base images using oci_pull like this:
+load("@rules_oci//oci:pull.bzl", "oci_pull")
+
+oci_pull(
+    name = "ubuntu",
+    image = "ubuntu:jammy",
+    platforms = [
+        "linux/arm64/v8",
+        "linux/amd64",
+    ],
+)
