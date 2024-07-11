@@ -1,13 +1,13 @@
 # Introduction
 
 The ReSim metrics SDK and web app supports the creation of so-called **events** to aid the
-analysis of a robot's performance in a simulation.
+analysis of an Embodied AI system's performance in a simulation.
 
-An event is a time-centered occurrence of some importance to a robotics developer, which can 
+An event is a time-centered occurrence of some importance to an engineer, which can 
 occur at a timestamp and have metrics specifically associated with it. In comparison to the
 usual ReSim metrics types e.g. line chart of velocity over time, or scalar precision/recall
-values, an event is centered around a timestamp and allows the user to highlight parts of the
-simulation of most interest and metrics relevant to them.
+values, an event is centered around a timestamp and allows the engineer to highlight parts of 
+the simulation of most interest and metrics relevant to them.
 
 As a simple example, consider an autonomous mower, processing a large field. A metrics build
 could generate an event every time the mower got within a safe distance to a pedestrian

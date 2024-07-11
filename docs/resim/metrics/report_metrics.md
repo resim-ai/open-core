@@ -9,10 +9,12 @@ are designed to offer a longitudinal perspective on a test suite.
 
 ## Report metrics mode
 
-As mentioned in [the Metrics Builds docs](./metrics_builds.md), report metrics use a similar (potentially identical) Docker image as job and 
-batch metrics. 
+As mentioned in [the Metrics Builds docs](./metrics_builds.md), report metrics use a similar (potentially 
+identical) Docker image as job and batch metrics. 
 
-This image can differentiate whether it's computing in `job mode`, `batch mode`, or `report mode` , based off whether the file `/tmp/resim/inputs/report_config.json` is present. If it is present, it should be computing report metrics.
+This image can differentiate whether it's computing in `test mode`, `batch mode`, or `report mode` , based off 
+whether the file `/tmp/resim/inputs/report_config.json` is present. If it is present, it should be computing
+report metrics.
 
 ## Computing report metrics
 
@@ -22,43 +24,35 @@ The report metrics config (as provided to the report metrics run on launch) is a
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
+  "projectID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
   "reportID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
 }
 ```
 
 These fields should be used to retrieve the report and therefore the list of batches to be used to compute the report.
-
-
-# Scrap
-, and use these to compute batch-level metrics. We provide code to do this in [open-core](https://github.com/resim-ai/open-core), in combination with some code snippets below.
+We provide code to do this in [open-core](https://github.com/resim-ai/open-core), in combination with some code snippets below.
 
 First you can read the config in using the following snippet:
 
 ```
 import json 
 
-with open(BATCH_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
+with open(REPORT_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
     metrics_config = json.load(metrics_config_file)
 
 token=metrics_config["authToken"],
 api_url=metrics_config["apiURL"],
-batch_id=metrics_config["batchID"],
+project_id=metrics_config["projectID"],
+report_id=metrics_config["reportID"],
 ```
 
-Once these are loaded, you can download the metrics using our `fetch_job_metrics` Python package.
+Once these are loaded, you can download the batches associated with the report 
+using our `fetch_report_metrics` Python package.
 
 ```
-import resim.metrics.fetch_job_metrics as fjm
+from resim_python_client.client import AuthenticatedClient
+import resim.metrics.fetch_report_metrics as frm
 
-job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token, api_url, uuid.UUID(batchID))
+client = AuthenticatedClient(base_url=api_url, token=token)
+batches = await frm.fetch_batches_for_report(client, report_id, project_id)
 ```
-
-The result maps job IDs to `UnpackedMetrics` - this is a simple `dataclass` with three fields:
-
-- `metrics: List[Metric]` - a list of all the metrics in that job
-- `metrics_data: List[MetricsData]` - a list of all the metrics data in that job
-- `names: Set[str]` - a set of all the names of Metrics and MetricsData present
-
-In other words, it very simply gives you all the metrics and metrics data associated with each job. You then use these metrics and data in order to compute and write your batch metrics - (just as you did for job metrics!) - by following the instructions in the [Metrics writer docs](./metrics_writer.md). You write the output to the exact same place as before: `/tmp/resim/outputs/metrics.binproto`.
-
-> NOTE: A common pattern is to write MetricsData in the job metrics *without an associated Metric*, and then use this data when it comes to computing batch metrics. This allows you to make new batch metrics without having associated job metrics.
