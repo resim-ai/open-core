@@ -1,6 +1,6 @@
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 py_binary(
     name = "entrypoint",

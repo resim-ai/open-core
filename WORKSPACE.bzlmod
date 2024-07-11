@@ -1,0 +1,10 @@
+load("@rules_oci//oci:pull.bzl", "oci_pull")
+
+oci_pull(
+    name = "ubuntu",
+    image = "ubuntu:jammy",
+    platforms = [
+        "linux/arm64/v8",
+        "linux/amd64",
+    ],
+)
