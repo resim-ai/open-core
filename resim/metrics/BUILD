@@ -201,6 +201,7 @@ py_test(
 py_binary(
     name = "default_report_metrics",
     srcs = ["default_report_metrics.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":fetch_report_metrics",
         "//resim/metrics/proto:validate_metrics_proto",

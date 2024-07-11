@@ -14,15 +14,16 @@ py_binary(
 tar(
     name = "entrypoint_layer",
     srcs = [
-        "//src:entrypoint",
+        ":entrypoint",
     ],
 )
 
 oci_image(
     name = "default_report_metrics_build",
-    base = "@ubuntu",
-    entrypoint = ["/src/entrypoint"],
+    base = "@python_image",
+    entrypoint = ["resim/metrics/default_report_metrics"],
     tars = [":entrypoint_layer"],
+    workdir = "/resim/metrics/default-report-metrics/entrypoint.runfiles/_main",
 )
 
 oci_tarball(
