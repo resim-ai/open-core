@@ -27,15 +27,15 @@ wraps any metrics code you write. The image is run by the ReSim app after every 
 It is ReSim's core philosophy to allow maximum flexibility for engineers to display
 the analysis that is most relevant to them. We aim to achieve this in three ways:
 
-1. Open Source: The entirety of our metrics framework is open source, so that a community
-can form and help extend and improve upon the underlying framework and ensure transparency
-for those using ReSim to determine the maturity of their system
+1. Open Source: The entirety of our metrics framework is open source to ensure transparency
+for those using ReSim to test and evaluate their embodied AI system.
 1. Determine your own aggregations: Rather than the ReSim web app providing fixed, limited 
 aggregations of the results of a set of tests (batch metrics), or fixed longitudinal reports 
 (test suite report metrics), the ReSim metrics framework lets you write code to decide how 
 to aggregate. ReSim also provides some sensible default metrics to get users started.
-1. Open to standard plotting libraries: While ReSim supports a range of customer metrics 
-styles, described below, any Plotly chart can also be used and displayed.
+1. Standard plotting libraries: While ReSim supports a range of custom metrics 
+styles, described in [Metrics Types](./metric_types.md), any Plotly chart can also be wrapped
+with our metrics metadata and displayed using [Plotly.JS](https://github.com/plotly/plotly.js).
 
 To allow you to use this powerful framework, we recommend working through the docs in 
 this order:
