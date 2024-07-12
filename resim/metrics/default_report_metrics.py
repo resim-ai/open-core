@@ -7,7 +7,6 @@
 
 import argparse
 import asyncio
-import itertools
 import json
 import logging
 import pathlib
@@ -49,6 +48,8 @@ DEFAULT_OUTPUT_PATH = pathlib.Path("/tmp/resim/outputs/metrics.binproto")
 
 
 async def dict_gather(coroutine_dict: dict) -> dict:
+    """A simple helper function that enables asyncio.gather to be called on dictionaries."""
+
     async def tag(key: Hashable, coroutine: Awaitable) -> tuple:
         return key, await coroutine
 
@@ -59,34 +60,25 @@ async def dict_gather(coroutine_dict: dict) -> dict:
     )
 
 
-async def main() -> None:
-    logging.basicConfig()
-    logger.setLevel(logging.INFO)
-
-    parser = argparse.ArgumentParser(
-        prog="default_report_metrics",
-        description="Compute a basic set of report metrics.",
-    )
-    parser.add_argument("--report-config", default=str(DEFAULT_CONFIG_PATH))
-    parser.add_argument("--output-path", default=str(DEFAULT_OUTPUT_PATH))
-
-    args = parser.parse_args()
-
-    with open(args.report_config, "r", encoding="utf-8") as f:
-        report_config = json.load(f)
-
-    await compute_metrics(
-        token=report_config["authToken"],
-        api_url=report_config["apiURL"],
-        project_id=uuid.UUID(report_config["projectID"]),
-        report_id=uuid.UUID(report_config["reportID"]),
-        output_path=args.output_path,
-    )
+################################################################################
+# FETCHERS
+################################################################################
 
 
 async def _fetch_job_metrics_for_job(
     client: AuthenticatedClient, *, project_id: str, batch_id: str, job_id: str
-) -> tuple[str, list[JobMetric]]:
+) -> list[JobMetric]:
+    """Fetch job metrics for a given job.
+
+    Args:
+        client: A client for performing these queries.
+        project_id: The id for the project for this job.
+        batch_id: The id for the batch of this job.
+        job_id: This job's id
+
+    Returns:
+        A list of this job's Metrics.
+    """
     job_metrics = await async_fetch_all_pages(
         list_metrics_for_job.asyncio,
         project_id=project_id,
@@ -94,22 +86,7 @@ async def _fetch_job_metrics_for_job(
         job_id=job_id,
         client=client,
     )
-    return job_id, [j for page in job_metrics for j in page.metrics]
-
-
-async def _fetch_job_metrics_for_batch(
-    client: AuthenticatedClient, *, project_id: str, batch_id: str, jobs: list[Job]
-) -> list[tuple[str, list[JobMetric]]]:
-    return list(
-        await asyncio.gather(
-            *[
-                _fetch_job_metrics_for_job(
-                    client, project_id=project_id, batch_id=batch_id, job_id=job.job_id
-                )
-                for job in jobs
-            ]
-        )
-    )
+    return [j for page in job_metrics for j in page.metrics]
 
 
 async def fetch_job_metrics(
@@ -118,30 +95,47 @@ async def fetch_job_metrics(
     project_id: uuid.UUID,
     batch_to_jobs_map: dict[str, list[Job]],
 ) -> dict[str, list[JobMetric]]:
-    all_metrics = list(
-        await asyncio.gather(
-            *[
-                _fetch_job_metrics_for_batch(
-                    client, project_id=str(project_id), batch_id=batch_id, jobs=jobs
-                )
-                for (batch_id, jobs) in batch_to_jobs_map.items()
-            ]
-        )
-    )
+    """Fetch job metrics for all of our batches.
 
-    return dict(itertools.chain.from_iterable(all_metrics))
+    Args:
+        client: A client for performing these queries.
+        project_id: The id for the project for this job.
+        batch_to_job_map: A map containing the Jobs for each batch.
+
+    Returns:
+        A dictionary of job_ids to a list of metrics for all batch's jobs.
+    """
+    return await dict_gather(
+        {
+            job.job_id: _fetch_job_metrics_for_job(
+                client, project_id=str(project_id), batch_id=batch_id, job_id=job.job_id
+            )
+            for batch_id, jobs in batch_to_jobs_map.items()
+            for job in jobs
+        }
+    )
 
 
 async def _fetch_batch_metrics_for_batch(
     client: AuthenticatedClient, *, project_id: str, batch_id: str
-) -> tuple[str, list[BatchMetric]]:
+) -> list[BatchMetric]:
+    """Fetch batch metrics for a single batch.
+
+    Args:
+        client: A client for performing these queries.
+        project_id: The id for the project for this job.
+        batch_id: The id for the batch whose metrics we want to fetch.
+
+    Returns:
+        A list of batches metrics for this batch.
+    """
     batch_metrics = await async_fetch_all_pages(
         list_batch_metrics.asyncio,
         project_id=project_id,
         batch_id=batch_id,
         client=client,
     )
-    return batch_id, [b for page in batch_metrics for b in page.batch_metrics]
+    return [b for page in batch_metrics for b in page.batch_metrics]
 
 
 async def fetch_batch_metrics(
@@ -150,22 +144,42 @@ async def fetch_batch_metrics(
     project_id: uuid.UUID,
     batch_ids: list[str],
 ) -> dict[str, list[BatchMetric]]:
-    all_metrics = list(
-        await asyncio.gather(
-            *[
-                _fetch_batch_metrics_for_batch(
-                    client, project_id=str(project_id), batch_id=batch_id
-                )
-                for batch_id in batch_ids
-            ]
-        )
+    """Fetch batch metrics for all of our batches.
+
+    Args:
+        client: A client for performing these queries.
+        project_id: The id for the project for this job.
+        batch_ids: THe ids for all the batches we need metrics for.
+
+    Returns:
+        A dictionary of batch_ids to batch metrics for all of our batches.
+    """
+    return await dict_gather(
+        {
+            batch_id: _fetch_batch_metrics_for_batch(
+                client, project_id=str(project_id), batch_id=batch_id
+            )
+            for batch_id in batch_ids
+        }
     )
-    return dict(all_metrics)
 
 
 async def fetch_scalar_batch_metrics(
     *, batch_to_metrics_map: dict[str, list[BatchMetric]]
 ) -> dict[str, dict[str, MetricProto]]:
+    """Fetch all scalar metric protos for all of our batches.
+
+    Scalar metrics for each batch are very useful to display in reports and we
+    need to fetch and unpack the protos to get the units from them. This
+    function does this.
+
+    Args:
+        batch_to_metrics_map: A map containing all of the batch metrics for each
+                              batch. Keyed by batch id.
+    Returns:
+        A dictionary of batch_id to dict of batch metric name to metric proto
+        object.
+    """
     client = httpx.AsyncClient()
     tasks = {}
 
@@ -185,70 +199,80 @@ async def fetch_scalar_batch_metrics(
     return responses
 
 
-async def compute_metrics(
-    *,
-    token: str,
-    api_url: str,
-    project_id: uuid.UUID,
-    report_id: uuid.UUID,
-    output_path: str,
-) -> None:
-    client = AuthenticatedClient(base_url=api_url, token=token)
+def _count_job_statuses(jobs: list[Job]) -> list[int]:
+    """Count the different output statuses in a given job list.
 
-    batches = await fetch_batches_for_report(
-        client=client, report_id=report_id, project_id=project_id
-    )
-    logger.info("Fetched %d batches for report.", len(batches))
+    Count job statuses into the following categories in order:
 
-    batch_ids = [b.batch_id for b in batches]
-    batch_to_jobs_map = await fetch_jobs_for_batches(
-        client=client, batch_ids=batch_ids, project_id=project_id
-    )
+    PASSED
+    FAIL_WARN
+    FAIL_BLOCK
+    ERROR
+    CANCELLED
+    UNKNOWN
 
-    for batch_id, jobs in batch_to_jobs_map.items():
-        logger.info("Fetched %d jobs for batch %s", len(jobs), batch_id)
+    Args:
+        jobs: The jobs whose statuses we care about.
 
-    job_to_metrics_map, batch_to_metrics_map = await asyncio.gather(
-        fetch_job_metrics(
-            client=client, project_id=project_id, batch_to_jobs_map=batch_to_jobs_map
-        ),
-        fetch_batch_metrics(client=client, project_id=project_id, batch_ids=batch_ids),
-    )
+    Returns:
+        A list of counts in the aforementioned order.
+    """
+    counts: dict[JobStatus, MetricStatus] = defaultdict(int)
+    for job in jobs:
+        counts[(job.job_status, job.job_metrics_status)] += 1
 
-    scalar_batch_metrics_map = await fetch_scalar_batch_metrics(
-        batch_to_metrics_map=batch_to_metrics_map
-    )
+    passed_count = counts[(JobStatus.SUCCEEDED, MetricStatus.PASSED)]
+    fail_warn_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_WARN)]
+    fail_block_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_BLOCK)]
+    error_count = sum(counts[JobStatus.ERROR, ms] for ms in MetricStatus)
+    cancelled_count = sum(counts[JobStatus.CANCELLED, ms] for ms in MetricStatus)
 
-    logger.info(
-        "Fetched metrics for %d jobs and %d batches",
-        len(job_to_metrics_map),
-        len(batch_to_metrics_map),
-    )
-
-    if len(batches) == 0:
-        return
-
-    writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
-
-    all_metrics = [
-        job_status_categories_metric,
-        flaky_experiences_metric,
-        batch_metrics_scalars_over_time_metric,
+    categorized_counts = [
+        passed_count,
+        fail_warn_count,
+        fail_block_count,
+        error_count,
+        cancelled_count,
     ]
+    # Add unknown column
+    categorized_counts.append(len(jobs) - sum(categorized_counts))
 
-    for metric in all_metrics:
-        metric(
-            writer,
-            batches=batches,
-            batch_to_jobs_map=batch_to_jobs_map,
-            job_to_metrics_map=job_to_metrics_map,
-            batch_to_metrics_map=batch_to_metrics_map,
-            scalar_batch_metrics_map=scalar_batch_metrics_map,
-        )
+    return categorized_counts
 
-    metrics_proto = writer.write()
-    with open(output_path, "wb") as f:
-        f.write(metrics_proto.metrics_msg.SerializeToString())
+
+def _count_batch_statuses(
+    batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
+) -> pd.DataFrame:
+    """Count the different output statuses of jobs for each batch.
+
+    Returns a pandas dataframe where each row is a batch in order and each
+    column is a status like so:
+
+           PASSED  FAIL_WARN  FAIL_BLOCK  ERROR  CANCELLED  UNKNOWN
+        0      22         10          18      0          0        0
+        1      23         10          17      0          0        0
+        2      23         10          17      0          0        0
+        3      22         10          18      0          0        0
+        4      21         10          19      0          0        0
+
+    Args:
+        batch_ids: The batches whose statuses we care about.
+        batch_to_jobs_map: All of the jobs per batch.
+
+    Returns:
+        A dataframe containing status counts where each row is a batch in order
+        and each column is a status.
+    """
+    status_counts = []
+    for batch_id in batch_ids:
+        status_counts.append(_count_job_statuses(batch_to_jobs_map[batch_id]))
+
+    status_counts = pd.DataFrame(
+        data=np.array(status_counts),
+        columns=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
+        index=range(len(batch_ids)),
+    )
+    return status_counts
 
 
 def job_status_categories_metric(
@@ -261,6 +285,24 @@ def job_status_categories_metric(
     scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
     # pylint: disable=unused-argument
+    """Create a variety of job status metrics.
+
+    Includes a filled line plot of statuses alongside aggregate metrics on:
+     - Number of batches
+     - Number of jobs
+     - Number of passing batches
+     - Number of failing batches
+     - Failed jobs on most recent batch
+     - etc.
+
+    Args:
+        writer: A metrics writer to write these metrics to.
+        batches: All batches for this report.
+        batch_to_jobs_map: All jobs for each batch.
+        job_to_metrics_map: All job metrics for each job.
+        batch_to_metrics_map: All batch metrics for each batch.
+        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
+    """
     status_counts = _count_batch_statuses(
         list(batch_to_jobs_map.keys()), batch_to_jobs_map
     )
@@ -371,7 +413,19 @@ def flaky_experiences_metric(
     scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
     # pylint: disable=unused-argument
+    """Creates metrics listing flaky experiences and metrics
 
+    Creates a plotly table describing the experiences that failed most in this
+    report, job metrics that failed most, and batch metrics that failed most.
+
+    Args:
+        writer: A metrics writer to write these metrics to.
+        batches: All batches for this report.
+        batch_to_jobs_map: All jobs for each batch.
+        job_to_metrics_map: All job metrics for each job.
+        batch_to_metrics_map: All batch metrics for each batch.
+        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
+    """
     fail_statuses = (MetricStatus.FAIL_BLOCK, MetricStatus.FAIL_WARN)
 
     def job_is_failure(job: Job) -> bool:
@@ -511,6 +565,19 @@ def batch_metrics_scalars_over_time_metric(
     scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
 ) -> None:
     # pylint: disable=unused-argument
+    """Creates metrics plotting batch metric scalars over time.
+
+    Creates a line plot showing the value over time for each scalar batch metric
+    defined by this report's test suite's metrics build.
+
+    Args:
+        writer: A metrics writer to write these metrics to.
+        batches: All batches for this report.
+        batch_to_jobs_map: All jobs for each batch.
+        job_to_metrics_map: All job metrics for each job.
+        batch_to_metrics_map: All batch metrics for each batch.
+        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
+    """
     values: dict[str, list] = defaultdict(list)
     units: dict[str, str] = {}
 
@@ -556,52 +623,106 @@ def batch_metrics_scalars_over_time_metric(
         )
 
 
-def _count_batch_statuses(
-    batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
-) -> pd.DataFrame:
-    status_counts = []
-    for batch_id in batch_ids:
-        status_counts.append(_count_job_statuses(batch_to_jobs_map[batch_id]))
+async def compute_metrics(
+    *,
+    token: str,
+    api_url: str,
+    project_id: uuid.UUID,
+    report_id: uuid.UUID,
+    output_path: str,
+) -> None:
+    """Compute all default report metrics for this report id.
 
-    status_counts = pd.DataFrame(
-        data=np.array(status_counts),
-        columns=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
-        index=range(len(batch_ids)),
+    Args:
+        token: An auth token used to compute metrics.
+        api_url: The api url to fetch data from.
+        project_id: The project for this report.
+        report_id: The id of this report.
+        output_path: The place to save the metrics binary proto blob.
+    """
+    client = AuthenticatedClient(base_url=api_url, token=token)
+
+    batches = await fetch_batches_for_report(
+        client=client, report_id=report_id, project_id=project_id
+    )
+    logger.info("Fetched %d batches for report.", len(batches))
+
+    batch_ids = [b.batch_id for b in batches]
+    batch_to_jobs_map = await fetch_jobs_for_batches(
+        client=client, batch_ids=batch_ids, project_id=project_id
     )
 
-    return status_counts
+    for batch_id, jobs in batch_to_jobs_map.items():
+        logger.info("Fetched %d jobs for batch %s", len(jobs), batch_id)
 
+    job_to_metrics_map, batch_to_metrics_map = await asyncio.gather(
+        fetch_job_metrics(
+            client=client, project_id=project_id, batch_to_jobs_map=batch_to_jobs_map
+        ),
+        fetch_batch_metrics(client=client, project_id=project_id, batch_ids=batch_ids),
+    )
 
-def _count_job_statuses(jobs: list[Job]) -> list[int]:
-    counts: dict[JobStatus, MetricStatus] = defaultdict(int)
-    for job in jobs:
-        counts[(job.job_status, job.job_metrics_status)] += 1
+    scalar_batch_metrics_map = await fetch_scalar_batch_metrics(
+        batch_to_metrics_map=batch_to_metrics_map
+    )
 
-    passed_count = counts[(JobStatus.SUCCEEDED, MetricStatus.PASSED)]
-    fail_warn_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_WARN)]
-    fail_block_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_BLOCK)]
-    error_count = sum(counts[JobStatus.ERROR, ms] for ms in MetricStatus)
-    cancelled_count = sum(counts[JobStatus.CANCELLED, ms] for ms in MetricStatus)
+    logger.info(
+        "Fetched metrics for %d jobs and %d batches",
+        len(job_to_metrics_map),
+        len(batch_to_metrics_map),
+    )
 
-    categorized_counts = [
-        passed_count,
-        fail_warn_count,
-        fail_block_count,
-        error_count,
-        cancelled_count,
+    if len(batches) == 0:
+        return
+
+    writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
+
+    all_metrics = [
+        job_status_categories_metric,
+        flaky_experiences_metric,
+        batch_metrics_scalars_over_time_metric,
     ]
-    # Add unknown column
-    categorized_counts.append(len(jobs) - sum(categorized_counts))
 
-    return categorized_counts
+    for metric in all_metrics:
+        metric(
+            writer,
+            batches=batches,
+            batch_to_jobs_map=batch_to_jobs_map,
+            job_to_metrics_map=job_to_metrics_map,
+            batch_to_metrics_map=batch_to_metrics_map,
+            scalar_batch_metrics_map=scalar_batch_metrics_map,
+        )
 
-
-def _write_proto(writer: ResimMetricsWriter) -> None:
     metrics_proto = writer.write()
     validate_job_metrics(metrics_proto.metrics_msg)
-    # Known location where the runner looks for metrics
-    with open("/tmp/resim/outputs/metrics.binproto", "wb") as f:
+    with open(output_path, "wb") as f:
         f.write(metrics_proto.metrics_msg.SerializeToString())
+
+
+async def main() -> None:
+    """Compute all default report metrics based on the report config path passed in."""
+    logging.basicConfig()
+    logger.setLevel(logging.INFO)
+
+    parser = argparse.ArgumentParser(
+        prog="default_report_metrics",
+        description="Compute a basic set of report metrics.",
+    )
+    parser.add_argument("--report-config", default=str(DEFAULT_CONFIG_PATH))
+    parser.add_argument("--output-path", default=str(DEFAULT_OUTPUT_PATH))
+
+    args = parser.parse_args()
+
+    with open(args.report_config, "r", encoding="utf-8") as f:
+        report_config = json.load(f)
+
+    await compute_metrics(
+        token=report_config["authToken"],
+        api_url=report_config["apiURL"],
+        project_id=uuid.UUID(report_config["projectID"]),
+        report_id=uuid.UUID(report_config["reportID"]),
+        output_path=args.output_path,
+    )
 
 
 if __name__ == "__main__":
