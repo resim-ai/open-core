@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  REPO_NAME: customer-test-images
+  REPO_NAME: open-metrics-builds
   REGISTRY_NAME: 909785973729.dkr.ecr.us-east-1.amazonaws.com
 
 jobs:
