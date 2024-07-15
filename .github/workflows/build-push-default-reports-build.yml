@@ -10,7 +10,7 @@ permissions:
 
 env:
   REPO_NAME: open-metrics-builds
-  REGISTRY_NAME: 909785973729.dkr.ecr.us-east-1.amazonaws.com
+  REGISTRY_NAME: public.ecr.aws/resim
 
 jobs:
   build:
