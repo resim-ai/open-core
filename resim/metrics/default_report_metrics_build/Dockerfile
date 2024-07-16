@@ -9,5 +9,3 @@ RUN pip3 install -r requirements.txt
 COPY src/ /workspaces/
 
 WORKDIR /usr/bin
-
-ENTRYPOINT /workspaces/entrypoint.py
