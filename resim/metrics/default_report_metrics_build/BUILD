@@ -31,5 +31,5 @@ oci_tarball(
 oci_push(
     name = "default_report_metrics_build_push",
     image = ":default_report_metrics_build",
-    repository = "public.ecr.aws/resim/open-metrics-builds",
+    repository = "public.ecr.aws/resim/open-metrics-builds/default-reports-build",
 )
