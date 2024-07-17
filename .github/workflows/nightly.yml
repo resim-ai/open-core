@@ -1,6 +1,5 @@
 name: Nightly Checks
 on:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
@@ -34,5 +33,4 @@ jobs:
         uses: trunk-io/trunk-action@v1
         with:
           # This should be redundant on a nightly job but we'll be explicit
-          # check-mode: all
-          arguments: --filter=-mypy
+          check-mode: all
