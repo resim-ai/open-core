@@ -34,4 +34,4 @@ jobs:
         uses: trunk-io/trunk-action@v1
         with:
           # This should be redundant on a nightly job but we'll be explicit
-          check-mode:all
+          check-mode: all
