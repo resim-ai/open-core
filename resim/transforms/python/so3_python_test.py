@@ -12,8 +12,9 @@ Unit tests for SO3 pybinding
 import unittest
 
 import numpy as np
-import resim.transforms.python.so3_python as so3
+
 import resim.transforms.python.quaternion as quat
+import resim.transforms.python.so3_python as so3
 
 
 class SO3PythonTest(unittest.TestCase):
@@ -51,8 +52,9 @@ class SO3PythonTest(unittest.TestCase):
 
         # Confirm that the quaternion matches up with the SO3
         angle_rad = 2.0 * np.arccos(quaternion.w())
-        axis = np.array([quaternion.x(), quaternion.y(),
-                        quaternion.z()]) / np.sin(0.5 * angle_rad)
+        axis = np.array([quaternion.x(), quaternion.y(), quaternion.z()]) / np.sin(
+            0.5 * angle_rad
+        )
         self.assertTrue(np.allclose(axis * angle_rad, rotation.log()))
 
     def test_inverse(self) -> None:
@@ -64,9 +66,8 @@ class SO3PythonTest(unittest.TestCase):
 
             # ACTION / VERIFICATION
             self.assertTrue(
-                (rotation *
-                 rotation.inverse()).is_approx(
-                    so3.SO3.identity()))
+                (rotation * rotation.inverse()).is_approx(so3.SO3.identity())
+            )
 
     def test_interp(self) -> None:
         """Check that interpolation works"""
@@ -78,11 +79,7 @@ class SO3PythonTest(unittest.TestCase):
             # ACTION / VERIFICATION
             scale = np.random.random()
             interped = rotation.interp(scale)
-            self.assertTrue(
-                interped.is_approx(
-                    so3.SO3.exp(
-                        scale *
-                        rotation.log())))
+            self.assertTrue(interped.is_approx(so3.SO3.exp(scale * rotation.log())))
 
     def test_exp_log(self) -> None:
         """Test that exponential ang log are correct."""
@@ -94,12 +91,12 @@ class SO3PythonTest(unittest.TestCase):
             # This is needed because we might otherwise exit the subset of the
             # domain where exp is invertible.
             epsilon = 1e-3
-            arg = (1. - epsilon) * arg * (np.pi / max(1., np.linalg.norm(arg)))
+            arg = (1.0 - epsilon) * arg * (np.pi / max(1.0, np.linalg.norm(arg)))
 
             # ACTION / VERIFICATION
             test_so3 = so3.SO3.exp(arg)
             self.assertTrue(np.allclose(test_so3.log(), arg))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
