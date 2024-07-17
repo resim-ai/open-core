@@ -35,4 +35,4 @@ jobs:
         with:
           # This should be redundant on a nightly job but we'll be explicit
           # check-mode: all
-	  arguments: --filter=-mypy
+          arguments: --filter=-mypy
