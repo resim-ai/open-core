@@ -12,6 +12,7 @@ Unit tests for Quaternion pybinding
 import unittest
 
 import numpy as np
+
 import resim.transforms.python.quaternion as quat
 
 
@@ -31,11 +32,7 @@ class QuaternionTest(unittest.TestCase):
         vec = vec / np.linalg.norm(vec)
 
         # ACTION
-        quaternion = quat.Quaternion(
-            x=vec[0],
-            y=vec[1],
-            z=vec[2],
-            w=vec[3])
+        quaternion = quat.Quaternion(x=vec[0], y=vec[1], z=vec[2], w=vec[3])
 
         # VERIFICATION
         self.assertEqual(quaternion.x(), vec[0])
@@ -44,7 +41,5 @@ class QuaternionTest(unittest.TestCase):
         self.assertEqual(quaternion.w(), vec[3])
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
