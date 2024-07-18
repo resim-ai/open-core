@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import pathlib
+import sys
 import uuid
 from collections import defaultdict
 from typing import Awaitable, Hashable
@@ -830,16 +831,23 @@ async def main() -> None:
 
     args = parser.parse_args()
 
-    with open(args.report_config, "r", encoding="utf-8") as f:
-        report_config = json.load(f)
+    report_metrics_config_path = pathlib.Path(args.report_config)
+    is_report_metrics_mode = report_metrics_config_path.is_file()
+    if is_report_metrics_mode:
+        with open(args.report_config, "r", encoding="utf-8") as f:
+            report_config = json.load(f)
 
-    await compute_metrics(
-        token=report_config["authToken"],
-        api_url=report_config["apiURL"],
-        project_id=uuid.UUID(report_config["projectID"]),
-        report_id=uuid.UUID(report_config["reportID"]),
-        output_path=args.output_path,
-    )
+        await compute_metrics(
+            token=report_config["authToken"],
+            api_url=report_config["apiURL"],
+            project_id=uuid.UUID(report_config["projectID"]),
+            report_id=uuid.UUID(report_config["reportID"]),
+            output_path=args.output_path,
+        )
+    else:
+        # Otherwise, we can't do anything: exit 1
+        print("Report config does not exist. Are you sure you're in report mode?")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

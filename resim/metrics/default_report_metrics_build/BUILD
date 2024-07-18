@@ -1,20 +1,16 @@
-load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+# Copyright 2023 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
 
-py_binary(
-    name = "entrypoint",
-    srcs = ["entrypoint.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//resim/metrics:default_report_metrics",
-    ],
-)
+load("@aspect_bazel_lib//lib:tar.bzl", "tar")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
 
 tar(
     name = "entrypoint_layer",
     srcs = [
-        ":entrypoint",
+        "//resim/metrics:default_report_metrics",
     ],
 )
 
@@ -23,7 +19,7 @@ oci_image(
     base = "@python_image",
     entrypoint = ["resim/metrics/default_report_metrics"],
     tars = [":entrypoint_layer"],
-    workdir = "/resim/metrics/default-report-metrics/entrypoint.runfiles/_main",
+    workdir = "/resim/metrics/default_report_metrics.runfiles/_main",
 )
 
 oci_tarball(
@@ -35,5 +31,5 @@ oci_tarball(
 oci_push(
     name = "default_report_metrics_build_push",
     image = ":default_report_metrics_build",
-    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images",  # Test!!
+    repository = "public.ecr.aws/resim/open-metrics-builds/default-reports-build",
 )
