@@ -8,12 +8,13 @@
 Unit test for pybinding of resim_log_from_ros2
 """
 
-import unittest
 import os
 import tempfile
+import unittest
 
 import resim.ros2.resim_log_from_ros2_python as rfr2
 import resim.ros2.resim_log_from_ros2_test_helpers_python as rfr2_test
+
 
 class ResimLogFromRos2PythonTest(unittest.TestCase):
     """
@@ -22,7 +23,9 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up the test case by setting necessary env variables"""
-        os.environ["AMENT_PREFIX_PATH"] = "resim/ros2/resim_log_from_ros2_python_test_ament/"
+        os.environ["AMENT_PREFIX_PATH"] = (
+            "resim/ros2/resim_log_from_ros2_python_test_ament/"
+        )
 
     def test_resim_log_from_ros2_python(self) -> None:
         """Test that we can correctly convert logs to the ReSim format."""
@@ -33,9 +36,10 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
             rfr2.resim_log_from_ros2(
                 "resim/ros2/testing/resim_log_from_ros2_test_converter_plugin.so",
                 in_path,
-                out_path)
+                out_path,
+            )
             rfr2_test.verify_log_contents(out_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

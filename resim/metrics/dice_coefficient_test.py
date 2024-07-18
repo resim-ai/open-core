@@ -12,6 +12,7 @@ import copy
 import unittest
 
 import resim.msg.detection_pb2 as Detection
+
 import resim.metrics.dice_coefficient as dc
 
 
@@ -25,39 +26,45 @@ class DiceCoefficientTest(unittest.TestCase):
         Test that we get the right dice coefficient for a variety of setups.
         """
         box_a = Detection.BoundingBox2D()
-        box_a.center_x = 0.
-        box_a.center_y = 0.
-        box_a.size_x = 1.
-        box_a.size_y = 1.
+        box_a.center_x = 0.0
+        box_a.center_y = 0.0
+        box_a.size_x = 1.0
+        box_a.size_y = 1.0
 
         num_sliding_samples = 11
-        box_b_samples = [
-            Detection.BoundingBox2D(
-                center_x=1.,
-                center_y=1.,
-                size_x=1.,
-                size_y=1.),
-            Detection.BoundingBox2D(
-                center_x=0.5,
-                center_y=0.5,
-                size_x=1.,
-                size_y=1.),
-        ] + [
-            Detection.BoundingBox2D(
-                center_x=i / (num_sliding_samples - 1),
-                center_y=0.,
-                size_x=1.,
-                size_y=1.) for i in range(num_sliding_samples)
-        ] + [
-            Detection.BoundingBox2D(
-                center_x=0.,
-                center_y=i / (num_sliding_samples - 1),
-                size_x=1.,
-                size_y=1.) for i in range(num_sliding_samples)]
+        box_b_samples = (
+            [
+                Detection.BoundingBox2D(
+                    center_x=1.0, center_y=1.0, size_x=1.0, size_y=1.0
+                ),
+                Detection.BoundingBox2D(
+                    center_x=0.5, center_y=0.5, size_x=1.0, size_y=1.0
+                ),
+            ]
+            + [
+                Detection.BoundingBox2D(
+                    center_x=i / (num_sliding_samples - 1),
+                    center_y=0.0,
+                    size_x=1.0,
+                    size_y=1.0,
+                )
+                for i in range(num_sliding_samples)
+            ]
+            + [
+                Detection.BoundingBox2D(
+                    center_x=0.0,
+                    center_y=i / (num_sliding_samples - 1),
+                    size_x=1.0,
+                    size_y=1.0,
+                )
+                for i in range(num_sliding_samples)
+            ]
+        )
 
-        expected_sliding_sample_dice = (
-            [1. - i / (num_sliding_samples - 1) for i in range(num_sliding_samples)])
-        expected_dice = [0., 0.25] + 2 * expected_sliding_sample_dice
+        expected_sliding_sample_dice = [
+            1.0 - i / (num_sliding_samples - 1) for i in range(num_sliding_samples)
+        ]
+        expected_dice = [0.0, 0.25] + 2 * expected_sliding_sample_dice
 
         for i, box_b in enumerate(box_b_samples):
             dice = dc.compute_dice_coefficient(box_a, box_b)
@@ -71,10 +78,10 @@ class DiceCoefficientTest(unittest.TestCase):
         test should be removed.
         """
         box = Detection.BoundingBox2D()
-        box.center_x = 0.
-        box.center_y = 0.
-        box.size_x = 1.
-        box.size_y = 1.
+        box.center_x = 0.0
+        box.center_y = 0.0
+        box.size_x = 1.0
+        box.size_y = 1.0
 
         spun_box = copy.copy(box)
         spun_box.theta_rad = 1e-5
@@ -85,5 +92,5 @@ class DiceCoefficientTest(unittest.TestCase):
             dc.compute_dice_coefficient(spun_box, box)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
