@@ -7,7 +7,7 @@
 load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -195,6 +195,20 @@ py_test(
     deps = [
         ":fetch_report_metrics",
         "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_binary(
+    name = "default_report_metrics",
+    srcs = ["default_report_metrics.py"],
+    deps = [
+        ":fetch_report_metrics",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/metrics/python:metrics_utils",
+        "//resim/metrics/python:metrics_writer",
+        requirement("pandas"),
+        requirement("httpx"),
+        requirement("plotly"),
     ],
 )
 

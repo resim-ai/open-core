@@ -524,7 +524,7 @@ def _validate_metric_values(
 
 def _validate_metric_used_in_event(
     metric_id: mp.MetricId, events_list: list[mp.Event]
-) -> None:
+) -> bool:
     """
     Check that the metric_id is valid and used in an event.
 
@@ -829,14 +829,16 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
-    # Use a set to check for duplicated names
-    event_names = set()
-    # Validate that all events per-job use the same timestamp type:
-    timestamp_type = job_metrics.events[0].timestamp_type
-    for event in job_metrics.events:
-        _metrics_assert(event.name not in event_names)
-        _metrics_assert(event.timestamp_type == timestamp_type)
-        event_names.add(event.name)
-        _validate_event(event, metrics_map)
+    if job_metrics.events:
+        # Use a set to check for duplicated names
+        event_names = set()
+
+        # Validate that all events per-job use the same timestamp type:
+        timestamp_type = job_metrics.events[0].timestamp_type
+        for event in job_metrics.events:
+            _metrics_assert(event.name not in event_names)
+            _metrics_assert(event.timestamp_type == timestamp_type)
+            event_names.add(event.name)
+            _validate_event(event, metrics_map)
 
     _validate_statuses(job_metrics)
