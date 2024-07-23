@@ -849,5 +849,6 @@ async def main() -> None:
         print("Report config does not exist. Are you sure you're in report mode?")
         sys.exit(1)
 
+
 if __name__ == "__main__":
     asyncio.run(main())
