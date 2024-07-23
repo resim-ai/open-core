@@ -1,0 +1,60 @@
+name: Report Builds
+on:
+  push:
+    branches: 
+    - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  REPO_NAME: open-metrics-builds/default-reports-build
+  REGISTRY_NAME: public.ecr.aws/resim
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ECR_RW_ROLE }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR Public
+        uses: docker/login-action@v2
+        with:
+          registry: public.ecr.aws
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            
+      - name: Build
+        env:
+          REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: bazel build //resim/metrics/default_report_metrics_build:default_report_metrics_build
+
+      - name: Push
+        if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: bazel run //resim/metrics/default_report_metrics:default_report_metrics_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"
