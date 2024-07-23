@@ -1,0 +1,36 @@
+name: Nightly Checks
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  nightly:
+    name: Nightly Checks
+    runs-on: ubuntu-20.04
+    container:
+      image: public.ecr.aws/resim/core:latest 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Workaround for Custom Docker Image
+        # Trunk makes use of git and we will get permissions issues (i.e.
+        # detected dubious ownership) if we don't make the repo a safe
+        # directory.
+        run: git config --global --add safe.directory /__w/open-core/open-core
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+        with:
+          # This should be redundant on a nightly job but we'll be explicit
+          check-mode: all
