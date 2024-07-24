@@ -57,4 +57,4 @@ jobs:
           REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
           IMAGE_VERSION: ${{ steps.meta.outputs.version }}
           SHA: ${{ github.sha }}
-        run: bazel run //resim/metrics/default_report_metrics:default_report_metrics_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"
+        run: bazel run //resim/metrics/default_report_metrics_build:default_report_metrics_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"
