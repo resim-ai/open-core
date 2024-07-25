@@ -3,6 +3,8 @@ module(
     version = "0.0.13",
 )
 
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.8")
+bazel_dep(name = "aspect_rules_py", version = "0.7.3")
 bazel_dep(name = "au", version = "0.3.4")
 bazel_dep(name = "bazel_skylib", version = "1.6.1")
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
@@ -30,6 +32,7 @@ bazel_dep(name = "ros2_rclcpp", version = "16.0.8")
 bazel_dep(name = "ros2_rcpputils", version = "2.4.1")
 bazel_dep(name = "ros2_rosbag2", version = "0.15.9")
 bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_oci", version = "1.7.6")
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_proto", version = "6.0.0")
 bazel_dep(name = "rules_python", version = "0.31.0")
@@ -56,3 +59,14 @@ register_toolchains(
 
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")
 use_repo(resim_version_extension, "resim_version")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+oci.pull(
+    name = "python_image",
+    image = "python",
+    platforms = ["linux/amd64"],
+    tag = "3.11-slim",
+)
+
+use_repo(oci, "python_image")
