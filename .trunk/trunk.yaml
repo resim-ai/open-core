@@ -45,6 +45,10 @@ lint:
     - clang-format@16.0.3
     - pylint@3.2.6
     - mypy@1.11.0
+  ignore:
+    - linters: [ALL]
+      paths:
+        - bazel_registry/**
 runtimes:
 # These runtimes do not influence anything running in our development
 # docker container, or our bazel environment. These runtimes set the 
