@@ -8,11 +8,11 @@ bazel_dep(name = "bazel_skylib", version = "1.6.1")
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
 bazel_dep(name = "cpr", version = "1.10.5")
 bazel_dep(name = "cxxopts", version = "3.2.1")
-bazel_dep(name = "eigen", repo_name = "libeigen", version = "3.4.0")
+bazel_dep(name = "eigen", version = "3.4.0", repo_name = "libeigen")
 bazel_dep(name = "fmt", version = "10.2.1")
 bazel_dep(name = "foxglove_schemas", version = "0.7.1")
-bazel_dep(name = "glog", repo_name = "com_github_google_glog", version = "0.7.0")
-bazel_dep(name = "googletest", repo_name = "com_google_googletest", version = "1.14.0")
+bazel_dep(name = "glog", version = "0.7.0", repo_name = "com_github_google_glog")
+bazel_dep(name = "googletest", version = "1.14.0", repo_name = "com_google_googletest")
 bazel_dep(name = "hedron_compile_commands", version = "a14ad3a64e7bf398ab48105aaa0348e032ac87f8")
 bazel_dep(name = "httplib", version = "0.15.3")
 bazel_dep(name = "indicators", version = "2.3.0")
@@ -20,7 +20,7 @@ bazel_dep(name = "libuuid", version = "2.39.3")
 bazel_dep(name = "mcap", version = "1.2.1")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "protobuf", repo_name = "com_google_protobuf", version = "26.0")
+bazel_dep(name = "protobuf", version = "26.0", repo_name = "com_google_protobuf")
 bazel_dep(name = "pybind11_bazel", version = "2.12.0")
 bazel_dep(name = "resim-python-client", version = "6c485d1450e93be66cbee85f02077ff0c2b65198")
 bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")
@@ -36,7 +36,6 @@ bazel_dep(name = "rules_python", version = "0.31.0")
 bazel_dep(name = "vision_msgs", version = "4.1.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-
 python.toolchain(
     configure_coverage_tool = True,
     ignore_root_user_error = True,
@@ -44,13 +43,11 @@ python.toolchain(
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 pip.parse(
     hub_name = "resim_python_deps",
     python_version = "3.10",
     requirements_lock = "@resim_open_core//:requirements_lock.txt",
 )
-
 use_repo(pip, "resim_python_deps")
 
 register_toolchains(
@@ -58,5 +55,4 @@ register_toolchains(
 )
 
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")
-
 use_repo(resim_version_extension, "resim_version")
