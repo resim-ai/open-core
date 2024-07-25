@@ -61,12 +61,10 @@ resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim
 use_repo(resim_version_extension, "resim_version")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
-
 oci.pull(
     name = "python_image",
     image = "python",
     platforms = ["linux/amd64"],
     tag = "3.11-slim",
 )
-
 use_repo(oci, "python_image")

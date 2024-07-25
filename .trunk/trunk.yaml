@@ -9,7 +9,7 @@ plugins:
 lint:
   definitions:
     - name: mypy
-      # Copied from https://www.githubstatus.com/ and overridden with types-requests
+      # Copied from https://github.com/trunk-io/plugins/blob/main/linters/mypy/plugin.yaml and overridden with types-requests
       files: [python]
       commands:
         - name: lint
