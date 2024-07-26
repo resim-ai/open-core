@@ -58,6 +58,7 @@ class DeviceCodeClient:
             assert (
                 self._cache_location.is_file()
             ), "Directory detected in cache location!"
+            self._cache_location.parent.mkdir(parents=True, exist_ok=True)
             with open(self._cache_location, "r", encoding="utf-8") as cache:
                 self._token = json.load(cache)
         elif self._token is None:
