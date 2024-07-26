@@ -37,7 +37,7 @@ REFRESH_TOKEN = (
 class MockServer:
     """A mock server to be patched into our DeviceCodeClient unit test below"""
 
-    def __init__(self, *, testcase: unittest.TestCase, expires_in=7200):
+    def __init__(self, *, testcase: unittest.TestCase, expires_in: int = 7200):
         self._device_code = self._generate_device_code()
         self._user_code = self._generate_user_code()
         self._authenticated = False

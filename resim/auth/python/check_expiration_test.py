@@ -10,7 +10,8 @@ Unit test for our client token expiration logic.
 
 import unittest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import resim.auth.python.check_expiration as check_exp
 
@@ -23,12 +24,13 @@ class CheckExpirationTest(unittest.TestCase):
     NOW_MOCK = datetime(1918, 11, 11, hour=11, minute=11, tzinfo=timezone.utc)
 
     @patch("__main__.check_exp.datetime")
-    def test_add_expiration_time(self, mock_now) -> None:
+    def test_add_expiration_time(self, mock_now: MagicMock) -> None:
+        print(f"TYPE:{type(mock_now)}")
         # SETUP
         mock_now.now.return_value = self.NOW_MOCK
 
         lifetime_s = 34
-        token_data = {"expires_in": lifetime_s}
+        token_data: dict[str, Any] = {"expires_in": lifetime_s}
 
         # ACTION
         check_exp.add_expiration_time(token_data=token_data)
@@ -46,7 +48,7 @@ class CheckExpirationTest(unittest.TestCase):
             check_exp.add_expiration_time(token_data={})
 
     @patch("__main__.check_exp.datetime")
-    def test_is_expired(self, mock_now) -> None:
+    def test_is_expired(self, mock_now: MagicMock) -> None:
         # SETUP
         mock_now.now.return_value = self.NOW_MOCK
         mock_now.fromisoformat.side_effect = datetime.fromisoformat

@@ -18,9 +18,7 @@ def add_expiration_time(*, token_data: dict) -> None:
     Args:
       token_data: A token data dict, as returned upon successful
                   resolution of the device code flow.
-
     """
-
     DURATION_KEY = "expires_in"
     if not DURATION_KEY in token_data:
         raise ValueError("No expiration lifetime in token data")
@@ -39,9 +37,7 @@ def is_expired(*, token_data: dict) -> bool:
     Args:
       token_data: A token data dict, as returned upon successful
                   resolution of the device code flow.
-
     """
-
     if not _KEY in token_data:
         return True
     return datetime.now(timezone.utc) + timedelta(hours=1) > datetime.fromisoformat(
