@@ -94,7 +94,7 @@ class MockServer:
             "device_code": self._device_code,
             "user_code": self._user_code,
             "verification_uri": verification_uri,
-            "expires_in": self._expires_in,
+            "expires_in": 900,
             "interval": 0,  # Since this is a unit test
             "verification_uri_complete": f"{verification_uri}?user_code={self._user_code}",
         }
