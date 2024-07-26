@@ -188,6 +188,9 @@ class DeviceCodeClientTest(unittest.TestCase):
             self.assertEqual(server.num_token_requests, 2)
 
             # Test expiration
+            # We expect two separate requests for two separate
+            # "get_jwt()" calls because the token expires
+            # instantly due to the one hour buffer.
             server = MockServer(testcase=self, expires_in=3599)
             client.refresh()
             token = client.get_jwt()
