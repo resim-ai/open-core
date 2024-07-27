@@ -22,3 +22,4 @@ cp -r $BAZEL_BIN/resim/metrics/proto/metrics_proto_go_/github.com/resim-ai/open-
 git checkout -b "go/$RELEASE_TAG"
 git add uuid_proto
 git add metrics_proto
+git commit -m "go/$RELEASE_TAG"
