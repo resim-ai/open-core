@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+CURRENT_BRANCH=$(git branch --show-current)
 
 # TODO(michael) Consider replacing some of this with some starklark
 # code rather than hard coding everyting
