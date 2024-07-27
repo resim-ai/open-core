@@ -37,7 +37,10 @@ jobs:
         if: "${{ github.event.inputs.tag != '' }}"      
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
-        run: ./.github/workflows/add_go_bindings.sh
+        run: |
+          git config --global user.name 'Michael Bauer'
+          git config --global user.email 'michael@resim.ai'
+          ./.github/workflows/add_go_bindings.sh
         
       - name: Draft Go Release
         if: "${{ github.event.inputs.tag != '' }}"
