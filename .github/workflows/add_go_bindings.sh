@@ -20,10 +20,10 @@ ls ${BAZEL_BIN}/resim/utils/proto
 cp -r $BAZEL_BIN/resim/utils/proto/uuid_proto_go_/github.com/resim-ai/open-core/* .
 cp -r $BAZEL_BIN/resim/metrics/proto/metrics_proto_go_/github.com/resim-ai/open-core/* .
 
-git checkout -b "go/$RESIM_VERSION-branch"
+git checkout -b "prod/go/$RESIM_VERSION"
 git add uuid_proto
 git add metrics_proto
-git commit -m "go/$RESIM_VERSION-branch"
-git push --force origin
+git commit -m "prod/go/$RESIM_VERSION"
+git push --set-upstream origin "prod/go/$RESIM_VERSION" --force
 
 git checkout $CURRENT_BRANCH
