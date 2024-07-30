@@ -1,12 +1,11 @@
 # Batch Metrics
 
-Batch metrics are very similar to test metrics, but are computed after all the test metrics are computed, using the test-level metrics and metrics data as the "input."
+Batch metrics are very similar to test metrics, but are computed after all the test metrics for a given batch are computed, using the test-level metrics and metrics data as the "input."
 
 > Example Batch Metric 1: a weighted average of a test-level scalar metric, across all the tests present.
 
 > Example Batch Metric 2: a histogram of a single series that is computed by all tests, after merging these series into one by appending.
 
-Batch metrics can also be used to gate whether batches pass or fail, though this feature is currently still a WIP.
 
 ## Batch metrics mode
 
