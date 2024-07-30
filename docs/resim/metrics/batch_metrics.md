@@ -11,7 +11,7 @@ Batch metrics are very similar to test metrics, but are computed after all the t
 
 As mentioned in [the Metrics Builds docs](./metrics_builds.md), batch metrics use the same single Docker image as test metrics. 
 
-This image can differentiate whether it's computing in `test mode` or `batch mode`, based off whether the file `/tmp/resim/inputs/batch_metrics_config.json` is present. If it is present, it should be computing batch metrics.
+This image can differentiate whether it's computing in `test mode` or `batch mode`, based off whether the file `/tmp/resim/inputs/batch_metrics_config.json` is present. The app's interface guarantees that this file will be present whenever it expects the metrics build to compute batch metrics. Note that the metrics build *must* generally handle the batch metrics case (even if it does nothing in such a case) since the normal test outputs will not be present and a failure will therefore usually result if normal test metric logic is employed.
 
 ## Computing batch metrics
 
@@ -25,7 +25,7 @@ The batch metrics config (as provided to the batch metrics run on launch) is a s
 }
 ```
 
-These fields should be used to retrieve the test-level metrics and metrics data associated with a batch, and use these to compute batch-level metrics. We provide code to do this in [open-core](https://github.com/resim-ai/open-core), in combination with some code snippets below.
+These fields should be used to retrieve the test-level metrics and metrics data associated with a batch, and these should be used to compute batch-level metrics. We provide code to do this in [open-core](https://github.com/resim-ai/open-core/tree/main/resim/metrics), in combination with some code snippets below.
 
 First you can read the config in using the following snippet:
 

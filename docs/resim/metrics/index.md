@@ -3,14 +3,14 @@
 One of ReSim's core products is a comprehensive and growing **metrics framework** 
 for evaluating the performance of Embodied AI applications, such as robots.
 The purpose of this product is to allow users to display information from their simulation
-runs of their embodied AI system in an online dashboard, in a way such that judgments can 
-be rendered about its performance that can be compared between different versions of the
-system on different branches, and tracked over time. 
+runs of their embodied AI system in an online dashboard such that judgments can 
+be rendered about its performance. To this end, such information can be compared between different versions of the
+system on different software branches or longitudinally along a single software branch.
 
 Metrics exist at three levels:
 
 1. Test Metrics: Metrics are computed per-test (i.e. per simulation), based off outputs from
-the simulation (such as log data and artifacts) - an example would be a *precision-recall* 
+the simulation (such as log data and other artifacts) - an example would be a *precision-recall* 
 curve across a set of input data.
 1. Batch Metrics: Multiple test metrics are aggregated to result in batch metrics. For example, 
 an *average accuracy* across all the tests in your batch. 
@@ -22,7 +22,7 @@ These metrics are written using the same system, which is the
 although the "input data" is of course different between the three. 
 
 The basic mechanism in the ReSim app is a `metrics build`, which is a docker image that
-wraps any metrics code you write. The image is run by the ReSim app after every simulation. 
+wraps any metrics code you write. The image is run by the ReSim app after every simulation, every batch, and on demand as part of report generation.
 
 It is ReSim's core philosophy to allow maximum flexibility for engineers to display
 the analysis that is most relevant to them. We aim to achieve this in three ways:

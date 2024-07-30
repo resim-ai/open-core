@@ -4,9 +4,9 @@
 
 Metrics builds are code which is run *after* your test runs, taking experience and log data, and writing it to a format that the ReSim app is able to plot in app dashboard. Our current supported language for metrics is **Python**.
 
-## How to register Metrics Builds
+## How to Register Metrics Builds
 
-Just like regular system builds, you need to make a docker image and register metrics builds with the ReSim CLI before you can run them. When registered, they should appear in the ReSim app when creating test suites or running ad hoc tests. For more on registering metrics builds, see [Run batches with metrics](https://docs.resim.ai/metrics-builds/) in the ReRun docs. For the purpose of this doc, we'll assume you have such a docker image registered, and just talk about what it should do.
+Just like regular system builds, you need to make a docker image and register metrics builds with the ReSim CLI before you can run them. When registered, they should appear in the ReSim app when creating test suites or running ad hoc tests. For more on registering metrics builds, see [Run batches with metrics](https://docs.resim.ai/setup/metrics-builds/) in the ReRun docs. For the purpose of this doc, we'll assume you have such a docker image registered, and just talk about what it should do.
 
 ## Test Mode vs Batch Mode
 
@@ -18,7 +18,7 @@ Metrics Builds have three modes, two of which *must implemented within the same 
 Whether we are in `test mode` or `batch mode` is determined by the files present in `/tmp/resim/inputs/` when the metrics build container runs.
 
 - If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in batch mode, and our build should compute batch metrics using this config.
-- If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in test mode, and our build should compute test metrics. In this case, `/tmp/resim/inputs/` will instead contain an `experience` and `logs` directory respectively containing the input and output of the test, based off of which we can compute our metrics.
+- If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in test mode, and our build should compute test metrics. In this case, `/tmp/resim/inputs/` will instead contain an `experience` and `logs` directory respectively containing the input and output of the test which we can use to compute our metrics.
 
 ## Test Suite Report Mode
 
