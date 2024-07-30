@@ -1,4 +1,4 @@
-# Test Suite Metrics
+# Test Suite Report Metrics
 
 Test suite report metrics are quite distinct from test and batch-level metrics in the sense that they
 are designed to offer a longitudinal perspective on a test suite.
@@ -18,19 +18,19 @@ report metrics.
 
 ## Computing report metrics
 
-The report metrics config (as provided to the report metrics run on launch) is a simple json with three fields: an auth token, an API URL, and a report ID.
+The report metrics config (as provided to the report metrics run on launch) is a simple json with four fields: an auth token, an API URL, a project ID, and a report ID.
 
 ```
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
-  "projectID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
-  "reportID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
+  "projectID" : "7579affb-3e5b-4f02-871b-bf275aef67ee",
+  "reportID" : "9328c806-4f2a-41ca-abbc-7e28e1741384"
 }
 ```
 
 These fields should be used to retrieve the report and therefore the list of batches to be used to compute the report.
-We provide code to do this in [open-core](https://github.com/resim-ai/open-core), in combination with some code snippets below.
+We provide code to do this in [open-core](https://github.com/resim-ai/open-core/tree/main/resim/metrics/default_report_metrics.py), in combination with some code snippets below.
 
 First you can read the config in using the following snippet:
 
@@ -50,9 +50,15 @@ Once these are loaded, you can download the batches associated with the report
 using our `fetch_report_metrics` Python package.
 
 ```
+import asyncio
+
 from resim_python_client.client import AuthenticatedClient
 import resim.metrics.fetch_report_metrics as frm
 
-client = AuthenticatedClient(base_url=api_url, token=token)
-batches = await frm.fetch_batches_for_report(client, report_id, project_id)
+async def main():
+    client = AuthenticatedClient(base_url=api_url, token=token)
+    batches = await frm.fetch_batches_for_report(client, report_id, project_id)
+
+if __name__ == '__main__':
+    asyncio.run(main())
 ```
