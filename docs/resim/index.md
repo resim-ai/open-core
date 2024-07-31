@@ -16,7 +16,7 @@ These instructions vary by host platform:
 
 ### Get the Code
 
-```
+```bash
 git clone git@github.com:resim-ai/open-core.git
 ```
 

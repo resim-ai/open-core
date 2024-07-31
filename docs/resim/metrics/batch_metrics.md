@@ -17,7 +17,7 @@ This image can differentiate whether it's computing in `test mode` or `batch mod
 
 The batch metrics config (as provided to the batch metrics run on launch) is a simple json with three fields: an auth token, an API URL, and a batch ID.
 
-```
+```json
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
@@ -29,7 +29,7 @@ These fields should be used to retrieve the test-level metrics and metrics data 
 
 First you can read the config in using the following snippet:
 
-```
+```python
 import json 
 
 with open(BATCH_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
@@ -42,9 +42,7 @@ batch_id=metrics_config["batchID"],
 
 Once these are loaded, you can download the metrics using our `fetch_job_metrics` Python package.
 
-> Note: A test is called a `job` in the raw API, so the functions are named in this way for consistency with the API.
-
-```
+```python
 import resim.metrics.fetch_job_metrics as fjm
 
 job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token, api_url, uuid.UUID(batchID))

@@ -34,7 +34,7 @@ motion along a `DCurve` are not continuous when switching from one segment to
 the next. Furthermore, they do not work well if they have zero-length segments.
 Here's an example of how to construct and use a `DCurve`:
 
-```
+```cpp
 #include "resim/assert/assert.hh"
 #include "resim/curves/d_curve.hh" 
 #include "resim/transforms/se3.hh"
@@ -116,7 +116,7 @@ higher-level wrapper for `TCurve` in such cases. Note that the control points
 must be monotonically increasing in time for the curve to be valid. Here's an
 example of how we can create one:
 
-```
+```cpp
 #include "resim/actor/state/rigid_body_state.hh"
 #include "resim/assert/assert.hh"
 #include "resim/curves/t_curve.hh"
