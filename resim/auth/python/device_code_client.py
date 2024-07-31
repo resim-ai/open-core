@@ -18,6 +18,8 @@ from http import HTTPStatus
 import polling2
 import requests
 
+import resim.auth.python.check_expiration as check_exp
+
 DEFAULT_SCOPE = "offline_access"
 DEFAULT_AUDIENCE = "https://api.resim.ai"
 DEFAULT_CACHE_LOCATION = pathlib.Path.home() / ".resim" / "token.json"
@@ -60,13 +62,15 @@ class DeviceCodeClient:
             ), "Directory detected in cache location!"
             with open(self._cache_location, "r", encoding="utf-8") as cache:
                 self._token = json.load(cache)
-        elif self._token is None:
+
+        if self._token is None or check_exp.is_expired(token_data=self._token):
             self._token = _get_new_token(
                 domain=self._domain,
                 client_id=self._client_id,
                 scope=self._scope,
                 audience=self._audience,
             )
+            self._cache_location.parent.mkdir(parents=True, exist_ok=True)
             with open(self._cache_location, "w", encoding="utf-8") as cache:
                 cache.write(json.dumps(self._token, indent=4))
         return self._token
@@ -111,5 +115,7 @@ Please navigate to: {device_code_data["verification_uri_complete"]}
     token_response = polling2.poll(poll_once, step=polling_interval, timeout=timeout)
 
     token_data: dict[str, typing.Any] = token_response.json()
+
+    check_exp.add_expiration_time(token_data=token_data)
 
     return token_data

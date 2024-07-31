@@ -37,12 +37,13 @@ REFRESH_TOKEN = (
 class MockServer:
     """A mock server to be patched into our DeviceCodeClient unit test below"""
 
-    def __init__(self, *, testcase: unittest.TestCase):
+    def __init__(self, *, testcase: unittest.TestCase, expires_in: int = 7200):
         self._device_code = self._generate_device_code()
         self._user_code = self._generate_user_code()
         self._authenticated = False
         self._testcase = testcase
         self._scope = ""
+        self._expires_in = expires_in
 
         self.num_device_code_requests = 0
         self.num_token_requests = 0
@@ -125,7 +126,7 @@ class MockServer:
                 "access_token": TOKEN,
                 "refresh_token": REFRESH_TOKEN,
                 "scope": self._scope,
-                "expires_in": 86400,
+                "expires_in": self._expires_in,
                 "token_type": "Bearer",
             }
 
@@ -185,6 +186,17 @@ class DeviceCodeClientTest(unittest.TestCase):
             self.assertEqual(token["access_token"], TOKEN)
             self.assertEqual(server.num_device_code_requests, 1)
             self.assertEqual(server.num_token_requests, 2)
+
+            # Test expiration
+            # We expect two separate requests for two separate
+            # "get_jwt()" calls because the token expires
+            # instantly due to the one hour buffer.
+            server = MockServer(testcase=self, expires_in=3599)
+            client.refresh()
+            token = client.get_jwt()
+            self.assertEqual(token["access_token"], TOKEN)
+            self.assertEqual(client.get_jwt()["access_token"], TOKEN)
+            self.assertEqual(server.num_device_code_requests, 2)
 
     def test_fail_on_404(self) -> None:
         """

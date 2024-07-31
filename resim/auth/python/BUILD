@@ -14,6 +14,7 @@ py_library(
     deps = [
         requirement("polling2"),
         requirement("requests"),
+        ":check_expiration",
     ],
 )
 
@@ -22,5 +23,21 @@ py_test(
     srcs = ["device_code_client_test.py"],
     deps = [
         ":device_code_client",
+    ],
+)
+
+py_library(
+    name = "check_expiration",
+    srcs = ["check_expiration.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+py_test(
+    name = "check_expiration_test",
+    srcs = ["check_expiration_test.py"],
+    deps = [
+        ":check_expiration",
     ],
 )
