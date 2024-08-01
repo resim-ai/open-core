@@ -1,6 +1,6 @@
 # Metrics Builds
 
-## What are Metrics Builds
+## What are Metrics Builds?
 
 Metrics builds are code which is run *after* your test runs, taking experience and log data, and writing it to a format that the ReSim app is able to plot in app dashboard. Our current supported language for metrics is **Python**.
 
