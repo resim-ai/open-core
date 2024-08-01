@@ -28,7 +28,7 @@ For a metrics build to determine that it is in `report mode`, it must check that
 
 # Output
 
-Regardless of the mode, your metrics build is required to write to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto). This protobuf should validate with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide.
+Regardless of the mode, in order to have metrics show up your metrics build is required to write to `/tmp/resim/outputs/metrics.binproto`, in a format complying with the [JobMetrics object](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/metrics.proto). This protobuf should validate with the [Python validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) we provide.
 
 > WARNING:
 > It is highly recommended you do not interact with this proto directly, and instead use the metrics SDK documented in [Metrics Data](./metrics_data.md), [Metrics Writer](./metrics_writer.md), [Metric Types](./metric_types.md), and [Events](./events.md). We reserve the right to modify this proto at any point, and do not guarantee substantial backwards compatibiliity support (such as field names remaining the same).
