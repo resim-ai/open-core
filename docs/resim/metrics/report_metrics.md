@@ -20,7 +20,7 @@ report metrics.
 
 The report metrics config (as provided to the report metrics run on launch) is a simple json with four fields: an auth token, an API URL, a project ID, and a report ID.
 
-```
+```json
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
@@ -34,7 +34,7 @@ We provide code to do this in [open-core](https://github.com/resim-ai/open-core/
 
 First you can read the config in using the following snippet:
 
-```
+```python
 import json 
 
 with open(REPORT_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
@@ -49,7 +49,7 @@ report_id=metrics_config["reportID"],
 Once these are loaded, you can download the batches associated with the report 
 using our `fetch_report_metrics` Python package.
 
-```
+```python
 import asyncio
 
 from resim_python_client.client import AuthenticatedClient

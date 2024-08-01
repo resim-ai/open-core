@@ -59,18 +59,19 @@ If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in 
 
 These four things will be used to retrieve the metrics data associated from tests with the API. This is made easier by various tooling we provide in this repo. We then compute metrics based off this, just as we'd do for test metrics. See [Batch Metrics](./batch_metrics.md) for more on this.
 
-> NOTE:
-> The ReSim API is generic and supports other cloud workloads, so the raw API endpoint for fetching test data is called the `jobs` endpoint. We will use the term test in this documentation unless referencing the API.
+!!! Note
+
+    The ReSim API is generic and supports other cloud workloads, so the raw API endpoint for fetching test data is called the `jobs` endpoint. We will use the term test in this documentation unless referencing the API.
 
 
 ## Report Mode Computation
 
-> WARNING:
-> The information here represents the current status of the report metrics worker which is not final. We will improve the system by making it more generic and automated in the future
+!!! Warning
+    The information here represents the current status of the report metrics worker which is not final. We will improve the system by making it more generic and automated in the future
 
 If the file `/tmp/resim/inputs/report_config.json` is present, we are in `report mode`! This file should look something like this:
 
-```
+```json
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
