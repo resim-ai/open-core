@@ -76,7 +76,7 @@ class Metric(ABC, Generic[MetricT]):
 
     event_metric: Optional[bool]
 
-    tags: Optional[List[Tag]]
+    kv_tags: Optional[List[Tag]]
 
     @abstractmethod
     def __init__(
@@ -103,7 +103,7 @@ class Metric(ABC, Generic[MetricT]):
         self.parent_job_id = parent_job_id
         self.order = order
         self.event_metric = event_metric
-        self.tags = tags
+        self.kv_tags = tags
 
     def __eq__(self: MetricT, __value: object) -> bool:
         if not isinstance(__value, type(self)):
@@ -136,9 +136,9 @@ class Metric(ABC, Generic[MetricT]):
         return self
 
     def with_tag(self: MetricT, key: str, value: str) -> MetricT:
-        if self.tags is None:
-            self.tags = []
-        self.tags.append(Tag(key, value))
+        if self.kv_tags is None:
+            self.kv_tags = []
+        self.kv_tags.append(Tag(key, value))
         return self
 
     def is_event_metric(self: MetricT) -> MetricT:
@@ -173,8 +173,8 @@ class Metric(ABC, Generic[MetricT]):
         if self.order is not None:
             msg.order = self.order
 
-        if self.tags is not None:
-            for tag in self.tags:
+        if self.kv_tags is not None:
+            for tag in self.kv_tags:
                 msg.tags.append(tag.pack())
 
         if self.event_metric is not None:
@@ -232,11 +232,11 @@ class Metric(ABC, Generic[MetricT]):
             unpacked.order = None
 
         if len(msg.tags) > 0:
-            unpacked.tags = []
+            unpacked.kv_tags = []
             for tag in msg.tags:
-                unpacked.tags.append(Tag.unpack(tag))
+                unpacked.kv_tags.append(Tag.unpack(tag))
         else:
-            unpacked.tags = None
+            unpacked.kv_tags = None
 
         if msg.HasField("event_metric"):
             unpacked.event_metric = msg.event_metric
@@ -1802,7 +1802,7 @@ class Event:
         return self
 
     def with_tags(self: MetricT, tags: List[str]) -> MetricT:
-        self.tags = tags
+        self.kv_tags = tags
         return self
 
     def with_absolute_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
