@@ -22,8 +22,8 @@ from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import (
     MetricImportance,
     MetricStatus,
-    TimestampType,
     Tag,
+    TimestampType,
 )
 
 # pylint: disable=too-many-public-methods
