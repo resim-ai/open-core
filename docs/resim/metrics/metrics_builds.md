@@ -49,7 +49,7 @@ We would read these in, and as always, we'd output any metrics we want to `/tmp/
 
 If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in `batch mode`! This file should look something like this:
 
-```
+```json
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",

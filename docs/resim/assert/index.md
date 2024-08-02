@@ -26,7 +26,7 @@ types outlined below.
 
 For unrecoverable errors we use the `REASSERT()` macro. Using this macro is very simple:
 
-```
+```cpp
 #include "resim/assert/assert.hh"
 
 // ...
@@ -70,7 +70,7 @@ it always terminates the program. The reason we use an exception at all is so
 that we can verify in unit tests that the assertion would terminate the program
 when it should do so. We use Google Test's `EXPECT_THROW()` macro for this:
 
-```
+```cpp
 // my_library.cc
 // ...
 void my_failing_subroutine() { REASSERT(false); }
@@ -103,7 +103,7 @@ caller. This is a well-trodden path with languages like
 even adding language features to make this sort of error handling syntactically
 nice. At ReSim we use `resim::Status` for this. For example:
 
-```
+```cpp
 #include "resim/assert/assert.hh"
 #include "resim/utils/status.hh"
 
@@ -157,7 +157,7 @@ It's commonly the case that a function may want to handle bad statuses by
 returns a status, we can utilize the `RETURN_IF_NOT_OK()` macro to make this
 easy:
 
-```
+```cpp
 Status my_wrapping_subroutine(const Arg arg) {
   // This is equivalent to:
   // Status s = my_subroutine(arg);
@@ -190,7 +190,7 @@ the "buck-passing" behavior that `Status` does via the `RETURN_OR_ASSIGN()`
 macro which works in functions returning `Status` or `StatusValue<T>` for any
 `T`. Here's an example of `StatusValue<T>` in action:
 
-```
+```cpp
 #include "resim/utils/status.hh"
 #include "resim/utils/status_value.hh"
 
