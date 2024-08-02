@@ -90,10 +90,11 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.is_event_metric())
         self.assertTrue(metric.event_metric)
 
-        self.assertIsNone(metric.tags)
+        self.assertIsNone(metric.kv_tags)
         self.assertEqual(metric, metric.with_tag("k", "v"))
-        self.assertEqual(1, len(metric.tags))
-        self.assertEqual(Tag("k", "v"), metric.tags[0])
+        self.assertEqual(
+            Tag("k", "v"), metric.kv_tags[0] if metric.kv_tags is not None else None
+        )
 
     def assert_common_fields_match(
         self, *, msg: mp.Metric, metric: metrics.Metric
@@ -107,8 +108,11 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.blocking, metric.blocking)
         self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
         self.assertEqual(msg.order, metric.order)
-        for i in range(0, len(msg.tags)):
-            self.assertEqual(Tag(msg.tags[i].key, msg.tags[i].value), metric.tags[i])
+        for i, _ in enumerate(msg.tags):
+            self.assertEqual(
+                Tag(msg.tags[i].key, msg.tags[i].value),
+                metric.kv_tags[i] if metric.kv_tags is not None else None,
+            )
 
     def test_metric_pack(self) -> None:
         # SETUP
