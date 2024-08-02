@@ -23,6 +23,7 @@ from resim.metrics.python.metrics_utils import (
     MetricImportance,
     MetricStatus,
     TimestampType,
+    Tag,
 )
 
 # pylint: disable=too-many-public-methods
@@ -89,6 +90,11 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.is_event_metric())
         self.assertTrue(metric.event_metric)
 
+        self.assertIsNone(metric.tags)
+        self.assertEqual(metric, metric.with_tag("k", "v"))
+        self.assertEqual(1, len(metric.tags))
+        self.assertEqual(Tag("k", "v"), metric.tags[0])
+
     def assert_common_fields_match(
         self, *, msg: mp.Metric, metric: metrics.Metric
     ) -> None:
@@ -101,6 +107,8 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.blocking, metric.blocking)
         self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
         self.assertEqual(msg.order, metric.order)
+        for i in range(0, len(msg.tags)):
+            self.assertEqual(Tag(msg.tags[i].key, msg.tags[i].value), metric.tags[i])
 
     def test_metric_pack(self) -> None:
         # SETUP
@@ -157,6 +165,11 @@ class MetricsTest(unittest.TestCase):
         msg.importance = mp.MetricImportance.Value("ZERO_IMPORTANCE")
         msg.job_id.id.data = str(uuid.uuid4())
         msg.order = 0.5
+
+        tag = mp.Tag()
+        tag.key = "key"
+        tag.value = "value"
+        msg.tags.append(tag)
 
         unpacked = metrics.Metric.unpack_common_fields(msg)
         self.assert_common_fields_match(msg=msg, metric=unpacked)

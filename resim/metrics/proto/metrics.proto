@@ -240,8 +240,8 @@ message Metric {
 }
 
 message Tag {
-    string key   = 0;
-    string value = 1;
+    string key   = 1;
+    string value = 2;
 }
 
 enum TimestampType {
