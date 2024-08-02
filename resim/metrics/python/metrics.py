@@ -184,29 +184,7 @@ class Metric(ABC, Generic[MetricT]):
 
     @classmethod
     def unpack_common_fields(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
-        if msg.type == metrics_pb2.MetricType.Value("NO_METRIC_TYPE"):
-            raise ValueError("Cannot unpack with no metric type")
-        if msg.type == metrics_pb2.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"):
-            unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"):
-            unpacked = DoubleOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("LINE_PLOT_METRIC_TYPE"):
-            unpacked = LinePlotMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("BAR_CHART_METRIC_TYPE"):
-            unpacked = BarChartMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"):
-            unpacked = StatesOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("HISTOGRAM_METRIC_TYPE"):
-            unpacked = HistogramMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("SCALAR_METRIC_TYPE"):
-            unpacked = ScalarMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("PLOTLY_METRIC_TYPE"):
-            unpacked = PlotlyMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("IMAGE_METRIC_TYPE"):
-            unpacked = ImageMetric(name=msg.name)
-        else:
-            raise ValueError("Invalid metric type")
-
+        unpacked = cls._unpacked_metric_type(msg)
         unpacked.id = uuid.UUID(msg.metric_id.id.data)
         unpacked.description = msg.description
         unpacked.status = MetricStatus(msg.status)
@@ -242,6 +220,33 @@ class Metric(ABC, Generic[MetricT]):
             unpacked.event_metric = msg.event_metric
         else:
             unpacked.event_metric = None
+
+        return unpacked
+
+    @classmethod
+    def _unpacked_metric_type(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
+        if msg.type == metrics_pb2.MetricType.Value("NO_METRIC_TYPE"):
+            raise ValueError("Cannot unpack with no metric type")
+        if msg.type == metrics_pb2.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"):
+            unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"):
+            unpacked = DoubleOverTimeMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("LINE_PLOT_METRIC_TYPE"):
+            unpacked = LinePlotMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("BAR_CHART_METRIC_TYPE"):
+            unpacked = BarChartMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"):
+            unpacked = StatesOverTimeMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("HISTOGRAM_METRIC_TYPE"):
+            unpacked = HistogramMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("SCALAR_METRIC_TYPE"):
+            unpacked = ScalarMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("PLOTLY_METRIC_TYPE"):
+            unpacked = PlotlyMetric(name=msg.name)
+        elif msg.type == metrics_pb2.MetricType.Value("IMAGE_METRIC_TYPE"):
+            unpacked = ImageMetric(name=msg.name)
+        else:
+            raise ValueError("Invalid metric type")
 
         return unpacked
 
