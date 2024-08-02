@@ -108,11 +108,13 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.blocking, metric.blocking)
         self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
         self.assertEqual(msg.order, metric.order)
-        for i, _ in enumerate(msg.tags):
-            self.assertEqual(
-                Tag(msg.tags[i].key, msg.tags[i].value),
-                metric.kv_tags[i] if metric.kv_tags is not None else None,
-            )
+        if metric.kv_tags is not None:
+            self.assertEqual(len(msg.tags), len(metric.kv_tags))
+            for i, _ in enumerate(metric.kv_tags):
+                self.assertEqual(
+                    Tag(msg.tags[i].key, msg.tags[i].value),
+                    metric.kv_tags[i] if metric.kv_tags is not None else None,
+                )
 
     def test_metric_pack(self) -> None:
         # SETUP
@@ -129,6 +131,7 @@ class MetricsTest(unittest.TestCase):
             value=24.0,
             failure_definition=None,
             unit="",
+            tags=[Tag("key", "value")],
         )
 
         msg = metric.pack()
