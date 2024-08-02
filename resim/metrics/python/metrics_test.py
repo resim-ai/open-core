@@ -165,11 +165,7 @@ class MetricsTest(unittest.TestCase):
         msg.importance = mp.MetricImportance.Value("ZERO_IMPORTANCE")
         msg.job_id.id.data = str(uuid.uuid4())
         msg.order = 0.5
-
-        tag = mp.Tag()
-        tag.key = "key"
-        tag.value = "value"
-        msg.tags.append(tag)
+        msg.tags.add(key="key", value="value")
 
         unpacked = metrics.Metric.unpack_common_fields(msg)
         self.assert_common_fields_match(msg=msg, metric=unpacked)
