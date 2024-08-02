@@ -1802,7 +1802,7 @@ class Event:
         return self
 
     def with_tags(self: MetricT, tags: List[str]) -> MetricT:
-        self.kv_tags = tags
+        self.tags = tags
         return self
 
     def with_absolute_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:

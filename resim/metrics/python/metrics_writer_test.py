@@ -91,6 +91,8 @@ class TestMetricsWriter(unittest.TestCase):
         METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
         METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
         METRIC_VALUE = 5.0
+        TAG_KEY = "key"
+        TAG_VALUE = "value"
 
         (
             self.writer.add_scalar_metric(METRIC_NAME)
@@ -102,6 +104,7 @@ class TestMetricsWriter(unittest.TestCase):
             .with_should_display(METRIC_DISPLAY)
             .with_importance(METRIC_IMPORTANCE)
             .with_status(METRIC_STATUS)
+            .with_tag(TAG_KEY, TAG_VALUE)
             .is_event_metric()
         )
 
@@ -116,6 +119,9 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
         self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
         self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(len(metric_base.tags), 1)
+        self.assertEqual(metric_base.tags[0].key, TAG_KEY)
+        self.assertEqual(metric_base.tags[0].value, TAG_VALUE)
         self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
         self.assertEqual(metric_base.status, METRIC_STATUS.value)
         self.assertEqual(metric_base.name, METRIC_NAME)
