@@ -309,16 +309,17 @@ def job_status_categories_metric(
         [b.batch_id for b in batches], batch_to_jobs_map
     )
 
-    status_counts["Time"] = list(range(len(batch_to_jobs_map)))
+    status_counts["Batch Number"] = list(range(len(batch_to_jobs_map)))
 
     fig = px.area(
         status_counts,
-        x="Time",
+        x="Batch Number",
         y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
     )
     fig.update_layout(
         template="plotly_dark",
         plot_bgcolor="rgba(0, 0, 0, 0)",
+        yaxis_title="Number of Tests",
         paper_bgcolor="rgba(0, 0, 0, 0)",
     )
 
