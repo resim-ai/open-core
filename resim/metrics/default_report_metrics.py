@@ -306,12 +306,14 @@ def job_status_categories_metric(
         scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
     """
     status_counts = _count_batch_statuses(
-        list(batch_to_jobs_map.keys()), batch_to_jobs_map
+        [b.batch_id for b in batches], batch_to_jobs_map
     )
+
+    status_counts["Time"] = list(range(len(batch_to_jobs_map)))
 
     fig = px.area(
         status_counts,
-        x=range(len(batch_to_jobs_map)),
+        x="Time",
         y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
     )
     fig.update_layout(
