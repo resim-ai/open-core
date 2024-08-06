@@ -67,6 +67,12 @@ def _validate_job_id(job_id: mp.JobId) -> None:
     _validate_uuid(job_id.id)
 
 
+def _validate_tags(tags: mp.Tag) -> None:
+    for tag in tags:
+        if len(tag.key) == 0 or len(tag.value) == 0:
+            raise InvalidMetricsException()
+
+
 def _validate_metric_id(metric_id: mp.MetricId) -> None:
     _validate_uuid(metric_id.id)
 
@@ -563,6 +569,7 @@ def _validate_metric(
 
     _metrics_assert(metric.HasField("job_id"))
     _validate_job_id(metric.job_id)
+    _validate_tags(metric.tags)
 
     if metric.event_metric:
         _validate_metric_used_in_event(metric.metric_id, events_list)

@@ -234,6 +234,14 @@ message Metric {
     // An optional boolean to be set to true in the case that this metric
     // should not be displayed outside the context of the event.
     optional bool event_metric = 12;
+
+    // Key value tags
+    repeated Tag tags = 13;
+}
+
+message Tag {
+    string key   = 1;
+    string value = 2;
 }
 
 enum TimestampType {
