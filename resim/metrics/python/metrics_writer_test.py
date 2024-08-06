@@ -15,6 +15,8 @@ from resim.metrics.python.metrics import (
     SeriesMetricsData,
 )
 from resim.metrics.python.metrics_utils import (
+    Timestamp,
+    TimestampType,
     DoubleFailureDefinition,
     HistogramBucket,
     MetricImportance,

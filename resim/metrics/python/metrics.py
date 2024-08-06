@@ -36,6 +36,9 @@ from google.protobuf.struct_pb2 import Struct
 
 from resim.metrics.proto import metrics_pb2
 from resim.metrics.python.metrics_utils import (
+    ResimMetricsOutput,
+    Timestamp,
+    TimestampType,
     DoubleFailureDefinition,
     HistogramBucket,
     MetricImportance,

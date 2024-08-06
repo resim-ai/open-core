@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 import "resim/utils/proto/uuid.proto";
 
 package resim.metrics.proto;
-
+option  go_package = "github.com/resim-ai/open-core/metrics_proto";
 // -------------------
 // Data Representation
 // -------------------
@@ -242,6 +242,15 @@ message Metric {
 message Tag {
     string key   = 1;
     string value = 2;
+}
+
+enum TimestampType {
+    NO_TYPE = 0;
+    // An absolute timestamp refers to a date-time
+    ABSOLUTE_TIMESTAMP = 1;
+    // A relative timestamp refers to the duration into an experience the event
+    // occurred
+    RELATIVE_TIMESTAMP = 2;
 }
 
 enum TimestampType {

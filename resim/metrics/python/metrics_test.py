@@ -17,6 +17,9 @@ from typing import Any, cast
 import numpy as np
 from google.protobuf.json_format import MessageToDict
 
+from google.protobuf.struct_pb2 import Struct
+from resim.metrics.python import metrics, metrics_utils
+from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance, TimestampType
 import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python import metrics, metrics_utils
 from resim.metrics.python.metrics_utils import (
