@@ -96,6 +96,32 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(basic_job_proto)
 
+    def test_invalid_key_value_tags(self) -> None:
+        """
+        Test empty key/value tags are rejected
+        """
+        metrics = gtm.generate_test_metrics(True)
+
+        # key empty
+        metrics.job_level_metrics.metrics[0].tags.add(key="", value="value")
+
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(metrics)
+
+        # value empty
+        metrics.job_level_metrics.metrics[0].tags[0].key = "key"
+        metrics.job_level_metrics.metrics[0].tags[0].value = ""
+
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(metrics)
+
+        # both empty
+        metrics.job_level_metrics.metrics[0].tags[0].key = ""
+        metrics.job_level_metrics.metrics[0].tags[0].value = ""
+
+        with self.assertRaises(vmp.InvalidMetricsException):
+            vmp.validate_job_metrics(metrics)
+
 
 if __name__ == "__main__":
     unittest.main()
