@@ -1,15 +1,15 @@
 version: 0.1
 cli:
-  version: 1.17.2
+  version: 1.22.2
 plugins:
   sources:
     - id: trunk
-      ref: v0.0.16
+      ref: v1.6.1
       uri: https://github.com/trunk-io/plugins
 lint:
   definitions:
     - name: mypy
-      # Copied from https://www.githubstatus.com/ and overridden with types-requests
+      # Copied from https://github.com/trunk-io/plugins/blob/main/linters/mypy/plugin.yaml and overridden with types-requests
       files: [python]
       commands:
         - name: lint
@@ -40,21 +40,25 @@ lint:
   enabled:
     - isort@5.13.2
     - black@24.4.2
-    - buildifier@6.1.0
-    - clang-tidy@15.0.6
-    - clang-format@14.0.0
-    - pylint@2.17.5
-    - mypy@1.5.1
+    - buildifier@7.1.2
+    - clang-tidy@16.0.3
+    - clang-format@16.0.3
+    - pylint@3.2.6
+    - mypy@1.11.0
+  ignore:
+    - linters: [ALL]
+      paths:
+        - bazel_registry/**
 runtimes:
 # These runtimes do not influence anything running in our development
 # docker container, or our bazel environment. These runtimes set the 
 # version of a language which will be used by trunk while they execute
 # their tools. The defaults recommended by Trunk are used for this reason.
   enabled:
-    - go@1.19.5
+    - go@1.21.0
     - node@18.12.1
     - python@3.10.8
-    - ruby@3.1.0
+    - ruby@3.1.4
 actions:
   enabled:
     - trunk-announce
