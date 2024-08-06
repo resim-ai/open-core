@@ -5,9 +5,9 @@
 # https://opensource.org/licenses/MIT.
 
 import copy
-from itertools import product
 import unittest
 import uuid
+from itertools import product
 from random import Random
 
 import numpy as np
@@ -43,8 +43,8 @@ class MetricsUtilsTest(unittest.TestCase):
     def test_histogram_bucket_pack(self) -> None:
         # SETUP
         test_bucket = mu.HistogramBucket(
-            lower=self._random.uniform(-10., -5.),
-            upper=self._random.uniform(5., 10.),
+            lower=self._random.uniform(-10.0, -5.0),
+            upper=self._random.uniform(5.0, 10.0),
         )
 
         # ACTION
@@ -57,28 +57,20 @@ class MetricsUtilsTest(unittest.TestCase):
     def test_double_failure_definition_pack(self) -> None:
         # SETUP
         test_failure_definition = mu.DoubleFailureDefinition(
-            fails_above=self._random.uniform(-10., -5.),
-            fails_below=self._random.uniform(5., 10.),
+            fails_above=self._random.uniform(-10.0, -5.0),
+            fails_below=self._random.uniform(5.0, 10.0),
         )
 
         # ACTION
         packed = test_failure_definition.pack()
 
         # VERIFICATION
-        self.assertEqual(
-            test_failure_definition.fails_above,
-            packed.fails_above
-        )
-        self.assertEqual(
-            test_failure_definition.fails_below,
-            packed.fails_below
-        )
+        self.assertEqual(test_failure_definition.fails_above, packed.fails_above)
+        self.assertEqual(test_failure_definition.fails_below, packed.fails_below)
 
         # None branches
-        for attr in ('fails_above', 'fails_below'):
-            modified_failure_definition = copy.copy(
-                test_failure_definition
-            )
+        for attr in ("fails_above", "fails_below"):
+            modified_failure_definition = copy.copy(test_failure_definition)
             setattr(modified_failure_definition, attr, None)
             modified_packed = modified_failure_definition.pack()
             self.assertFalse(modified_packed.HasField(attr))
@@ -107,45 +99,44 @@ class MetricsUtilsTest(unittest.TestCase):
         # SETUP
         inputs = {
             "empty": np.array([]),
-            "float": np.array([1., 2., 3.]),
-            "timestamp": np.array([mu.Timestamp(secs=i, nanos=3 * i) for i in range(3)]),
+            "float": np.array([1.0, 2.0, 3.0]),
+            "timestamp": np.array(
+                [mu.Timestamp(secs=i, nanos=3 * i) for i in range(3)]
+            ),
             "uuid": np.array([uuid.uuid4() for _ in range(3)]),
             "string": np.array([str(i) for i in range(3)]),
-            "status": np.array([mu.MetricStatus.PASSED_METRIC_STATUS,
-                                mu.MetricStatus.FAIL_WARN_METRIC_STATUS,
-                                mu.MetricStatus.PASSED_METRIC_STATUS]),
+            "status": np.array(
+                [
+                    mu.MetricStatus.PASSED_METRIC_STATUS,
+                    mu.MetricStatus.FAIL_WARN_METRIC_STATUS,
+                    mu.MetricStatus.PASSED_METRIC_STATUS,
+                ]
+            ),
             "class": np.array([mp.JobMetrics()]),
         }
 
         # Empty
-        array_type, packed = (
-            mu.pack_series_to_proto(
-                inputs['empty'],
-                indexed=False))
-        self.assertEqual(array_type,
-                         mp.MetricsDataType.Value('NO_DATA_TYPE'))
+        array_type, packed = mu.pack_series_to_proto(inputs["empty"], indexed=False)
+        self.assertEqual(array_type, mp.MetricsDataType.Value("NO_DATA_TYPE"))
         self.assertEqual(packed, mp.Series())
 
         expected_types = {
-            "float": 'DOUBLE_SERIES_DATA_TYPE',
-            "timestamp": 'TIMESTAMP_SERIES_DATA_TYPE',
-            "uuid": 'UUID_SERIES_DATA_TYPE',
-            "string": 'STRING_SERIES_DATA_TYPE',
-            "status": 'METRIC_STATUS_SERIES_DATA_TYPE',
+            "float": "DOUBLE_SERIES_DATA_TYPE",
+            "timestamp": "TIMESTAMP_SERIES_DATA_TYPE",
+            "uuid": "UUID_SERIES_DATA_TYPE",
+            "string": "STRING_SERIES_DATA_TYPE",
+            "status": "METRIC_STATUS_SERIES_DATA_TYPE",
         }
 
         for (name, series_type), is_indexed in product(
-                expected_types.items(),
-                [False, True]):
-            array_type, packed = (
-                mu.pack_series_to_proto(
-                    inputs[name],
-                    indexed=is_indexed))
+            expected_types.items(), [False, True]
+        ):
+            array_type, packed = mu.pack_series_to_proto(
+                inputs[name], indexed=is_indexed
+            )
             prefix = "INDEXED_" if is_indexed else ""
-            self.assertEqual(array_type,
-                             mp.MetricsDataType.Value(prefix + series_type))
-            for packed_val, unpacked_val in zip(
-                    packed.doubles.series, inputs[name]):
+            self.assertEqual(array_type, mp.MetricsDataType.Value(prefix + series_type))
+            for packed_val, unpacked_val in zip(packed.doubles.series, inputs[name]):
                 self.assertEqual(packed_val, unpacked_val)
 
         with self.assertRaises(ValueError):
@@ -162,5 +153,18 @@ class MetricsUtilsTest(unittest.TestCase):
         )
         self.assertLess(t1, t2)
 
-if __name__ == '__main__':
+    def test_pack_tags(self) -> None:
+        # SETUP
+        test_tag = mu.Tag("key", "value")
+
+        # ACTION
+        packed = test_tag.pack()
+
+        # VERIFICATION
+        self.assertEqual(packed.key, test_tag.key)
+        self.assertEqual(packed.value, test_tag.value)
+        self.assertEqual(mu.Tag.unpack(packed), test_tag)
+
+
+if __name__ == "__main__":
     unittest.main()

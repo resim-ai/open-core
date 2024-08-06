@@ -11,7 +11,7 @@ function and making a custom struct to return them all is inconvenient).
 Typically one could do this using pass-by-reference. Consider the following
 simple example:
 
-```
+```cpp
 #include <iostream>
 
 void set_to_three(int &x) {
@@ -32,7 +32,7 @@ will modify its arguments. To improve code clarity, we therefore prefer the use
 of our `InOut` wrapper when passing in arguments that may be modified by a
 function. Using it works like so:
 
-```
+```cpp
 void set_to_three(resim::InOut<int> x) { 
   *x = 3; 
 }
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 In this case, the reader immediately knows that `val` may be changed by
 `set_to_three()`. Note that you can also use the arrow operator with `InOut`:
 
-```
+```cpp
 #include <iostream>
 
 #include "resim/utils/inout.hh"
@@ -81,7 +81,7 @@ Sometimes we only want a function to use an output parameter conditionally.
 Normally, one could use a raw pointer to do this. If the pointer is not
 `nullptr`, the function populates it, but otherwise leaves it alone:
 
-```
+```cpp
 #include <iostream>
 
 void maybe_set_to_three(int *x) {
@@ -105,7 +105,7 @@ want to make it clear that the pointer is being used as a nullable reference
 and that no memory ownership is being passed from the caller to the function.
 To do this, we use the `NullableReference` template:
 
-```
+```cpp
 #include <iostream>
 
 #include "resim/utils/nullable_reference.hh"

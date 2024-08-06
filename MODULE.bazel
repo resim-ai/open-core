@@ -1,8 +1,10 @@
 module(
     name = "resim_open_core",
-    version = "0.0.11",
+    version = "0.0.13",
 )
 
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.8")
+bazel_dep(name = "aspect_rules_py", version = "0.7.3")
 bazel_dep(name = "au", version = "0.3.4")
 bazel_dep(name = "bazel_skylib", version = "1.6.1")
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
@@ -22,7 +24,7 @@ bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "protobuf", repo_name = "com_google_protobuf", version = "26.0")
 bazel_dep(name = "pybind11_bazel", version = "2.12.0")
-bazel_dep(name = "resim-python-client", version = "a28eca31985d175d976b868d38c7f3adc315155b")
+bazel_dep(name = "resim-python-client", version = "6c485d1450e93be66cbee85f02077ff0c2b65198")
 bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")
 bazel_dep(name = "ros2_geometry2", version = "0.25.5")
 bazel_dep(name = "ros2_rcl_interfaces", version = "1.2.1")
@@ -30,6 +32,7 @@ bazel_dep(name = "ros2_rclcpp", version = "16.0.8")
 bazel_dep(name = "ros2_rcpputils", version = "2.4.1")
 bazel_dep(name = "ros2_rosbag2", version = "0.15.9")
 bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_oci", version = "1.7.6")
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_proto", version = "6.0.0")
 bazel_dep(name = "rules_python", version = "0.31.0")
@@ -60,3 +63,14 @@ register_toolchains(
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")
 
 use_repo(resim_version_extension, "resim_version")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+oci.pull(
+    name = "python_image",
+    image = "python",
+    platforms = ["linux/amd64"],
+    tag = "3.11-slim",
+)
+
+use_repo(oci, "python_image")

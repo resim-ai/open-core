@@ -90,4 +90,5 @@ rlr2.resim_log_from_ros2(
     my_custom_converter_plugin_path,
     input_log_path,
     converted_log_path,
+)
 ```

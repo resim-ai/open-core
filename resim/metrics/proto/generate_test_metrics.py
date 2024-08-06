@@ -20,12 +20,13 @@ import uuid
 from typing import Any
 
 from google.protobuf.struct_pb2 import Struct
+
 import resim.metrics.proto.metrics_pb2 as mp
 
 
 def _get_uuid_str() -> str:
     """Helper to get a valid UUID as a hex str"""
-    return '{' + str(uuid.uuid4()) + '}'
+    return "{" + str(uuid.uuid4()) + "}"
 
 
 def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
@@ -47,7 +48,7 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
     data.name = "Ad-hoc speed metric"
     data.unit = "m/s"
     data.is_per_category = False
-    data.series.doubles.series.append(27.)
+    data.series.doubles.series.append(27.0)
 
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
@@ -60,7 +61,7 @@ def _add_double_summary_metric(job_metrics: mp.JobMetrics) -> None:
     double_summary_values = metric.metric_values.double_metric_values
     double_summary_values.value_data_id.CopyFrom(data.metrics_data_id)
     double_summary_values.status_data_id.CopyFrom(status_data.metrics_data_id)
-    double_summary_values.failure_definition.fails_below = 0.
+    double_summary_values.failure_definition.fails_below = 0.0
     double_summary_values.failure_definition.fails_above = 29.0576
 
 
@@ -70,12 +71,15 @@ def _add_event_counts(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     metric.name = "Event counts " + ("blocking" if block_fail else "warning")
     metric.type = mp.DOUBLE_SUMMARY_METRIC_TYPE
     metric.description = "Counts for various events"
-    metric.status = mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    metric.status = (
+        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    )
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
     metric.order = 2.0
     metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.tags.add(key="key", value="value")
 
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
@@ -85,23 +89,27 @@ def _add_event_counts(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     data.is_per_category = True
     data.category_names.append("Engage")
     data.category_names.append("Disengage")
-    data.series_per_category.category_to_series["Engage"].doubles.series.append(
-        4.)
-    data.series_per_category.category_to_series["Disengage"].doubles.series.append(
-        3.)
+    data.series_per_category.category_to_series["Engage"].doubles.series.append(4.0)
+    data.series_per_category.category_to_series["Disengage"].doubles.series.append(3.0)
 
     status_data = job_metrics.metrics_data.add()
     status_data.metrics_data_id.id.data = _get_uuid_str()
     status_data.data_type = mp.METRIC_STATUS_SERIES_DATA_TYPE
-    status_data.name = "Event counts status " + ("blocking" if block_fail else "warning")
+    status_data.name = "Event counts status " + (
+        "blocking" if block_fail else "warning"
+    )
     status_data.unit = ""
     status_data.is_per_category = True
     status_data.category_names.append("Engage")
     status_data.category_names.append("Disengage")
     status_data.series_per_category.category_to_series["Engage"].statuses.series.append(
-        mp.PASSED_METRIC_STATUS)
-    status_data.series_per_category.category_to_series["Disengage"].statuses.series.append(
-        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS)
+        mp.PASSED_METRIC_STATUS
+    )
+    status_data.series_per_category.category_to_series[
+        "Disengage"
+    ].statuses.series.append(
+        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    )
 
     double_summary_values = metric.metric_values.double_metric_values
     double_summary_values.value_data_id.CopyFrom(data.metrics_data_id)
@@ -135,12 +143,14 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
         planner_arr.timestamps.series.add().seconds = i
         localization_arr.timestamps.series.add().seconds = i
 
-    def create_data_series(*,
-                          data_type: mp.MetricsDataType,
-                          name: str,
-                          series_getter: str,
-                          planner_data: list[Any],
-                          localization_data: list[Any]) -> mp.MetricsDataId:
+    def create_data_series(
+        *,
+        data_type: mp.MetricsDataType,
+        name: str,
+        series_getter: str,
+        planner_data: list[Any],
+        localization_data: list[Any],
+    ) -> mp.MetricsDataId:
         data = job_metrics.metrics_data.add()
         data.metrics_data_id.id.data = _get_uuid_str()
         data.data_type = data_type
@@ -163,23 +173,23 @@ def _add_subsystem_states(job_metrics: mp.JobMetrics) -> None:
         name="Subsystem states data",
         series_getter="strings",
         planner_data=[
-            "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(series_length)],
-        localization_data=series_length *
-        ["ENGAGED"])
+            "ENGAGED" if (3 <= i < 7) else "DISENGAGED" for i in range(series_length)
+        ],
+        localization_data=series_length * ["ENGAGED"],
+    )
 
     status_id = create_data_series(
         data_type=mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE,
         name="Subsystem states status",
         series_getter="statuses",
         planner_data=series_length * [mp.PASSED_METRIC_STATUS],
-        localization_data=series_length * [mp.PASSED_METRIC_STATUS])
+        localization_data=series_length * [mp.PASSED_METRIC_STATUS],
+    )
 
     states_over_time = metric.metric_values.states_over_time_metric_values
     states_over_time.states_over_time_data_id.add().CopyFrom(value_id)
-    states_over_time.statuses_over_time_data_id.add().CopyFrom(
-        status_id)
-    states_over_time.states_set.extend(
-        ["ENGAGED", "DISENGAGED", "FAULTED"])
+    states_over_time.statuses_over_time_data_id.add().CopyFrom(status_id)
+    states_over_time.states_set.extend(["ENGAGED", "DISENGAGED", "FAULTED"])
     states_over_time.failure_states.extend(["FAULTED"])
 
 
@@ -214,7 +224,8 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
         {
             "name": "Actor 2",
             "doubles": [3.0, 2.9, 2.5, 2.0, 1.5, 1.6, 1.2, 0.9, 0.8, 1.1],
-        }]
+        },
+    ]
 
     double_over_time_values = metric.metric_values.double_over_time_metric_values
     fails_below = 1.0
@@ -262,9 +273,11 @@ def _add_double_over_time_metric(job_metrics: mp.JobMetrics) -> None:
                 ttc_statuses.series.append(mp.PASSED_METRIC_STATUS)
 
         double_over_time_values.doubles_over_time_data_id.add().CopyFrom(
-            ttc.metrics_data_id)
+            ttc.metrics_data_id
+        )
         double_over_time_values.statuses_over_time_data_id.add().CopyFrom(
-            ttc_status.metrics_data_id)
+            ttc_status.metrics_data_id
+        )
     # Add some summary metrics too
     summary_metric = job_metrics.job_level_metrics.metrics.add()
     summary_metric.metric_id.id.data = _get_uuid_str()
@@ -304,8 +317,10 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Distance prediction accuracy"
     metric.type = mp.LINE_PLOT_METRIC_TYPE
-    metric.description = ("Plot of actual minimum distance of non-ego actors"
-        "against predicted minimum distance")
+    metric.description = (
+        "Plot of actual minimum distance of non-ego actors"
+        "against predicted minimum distance"
+    )
     metric.status = mp.PASSED_METRIC_STATUS
     metric.should_display = True
     metric.blocking = False
@@ -317,10 +332,12 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
         {
             "name": "Min d",
             "data": [21.0, 2.0, 25.0, 15.5],
-        }, {
+        },
+        {
             "name": "Min d predicted",
             "data": [19.2, 1.9, 26.7, 10.0],
-        }]
+        },
+    ]
 
     metrics_data_ids = []
     for series in data_series:
@@ -340,13 +357,15 @@ def _add_line_plot_metric(job_metrics: mp.JobMetrics) -> None:
     line_plot_data_statuses.unit = ""
     line_plot_data_statuses.is_indexed = False
     line_plot_data_statuses.series.statuses.series.extend(
-        len(data_series[0]["data"]) * [mp.PASSED_METRIC_STATUS])
+        len(data_series[0]["data"]) * [mp.PASSED_METRIC_STATUS]
+    )
 
     line_plot_values = metric.metric_values.line_plot_metric_values
     line_plot_values.x_doubles_data_id.add().CopyFrom(metrics_data_ids[0])
     line_plot_values.y_doubles_data_id.add().CopyFrom(metrics_data_ids[1])
     line_plot_values.statuses_data_id.add().CopyFrom(
-        line_plot_data_statuses.metrics_data_id)
+        line_plot_data_statuses.metrics_data_id
+    )
     line_plot_values.x_axis_name = "Actual minimum distance"
     line_plot_values.x_axis_name = "Predicted minimum distance"
 
@@ -357,7 +376,9 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     metric.name = "Detection latency"
     metric.type = mp.BAR_CHART_METRIC_TYPE
     metric.description = "Average latency on computing detections from images"
-    metric.status = mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    metric.status = (
+        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    )
     metric.should_display = True
     metric.blocking = False
     metric.importance = mp.MEDIUM_IMPORTANCE
@@ -369,21 +390,31 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     labels.metrics_data_id.id.data = _get_uuid_str()
     labels.data_type = mp.STRING_SERIES_DATA_TYPE
     labels.is_indexed = False
-    labels.series.strings.series.extend(
-        [f"camera_{i}" for i in range(3)])
+    labels.series.strings.series.extend([f"camera_{i}" for i in range(3)])
 
-    data_series: list[dict[str, Any]] = [{
-        "name": "Camera timings",
-        "data": [1.5, 2.6, 1.8],
-        "statuses": [mp.PASSED_METRIC_STATUS, mp.FAIL_WARN_METRIC_STATUS,
-                     mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS],
-    },
+    data_series: list[dict[str, Any]] = [
         {
-        "name": "Pytorch timings",
-        "data": [10.1, 9.2, 12.3],
-        "statuses": [mp.FAIL_WARN_METRIC_STATUS, mp.FAIL_WARN_METRIC_STATUS,
-                     mp.FAIL_BLOCK_METRIC_STATUS],
-    }
+            "name": "Camera timings",
+            "data": [1.5, 2.6, 1.8],
+            "statuses": [
+                mp.PASSED_METRIC_STATUS,
+                mp.FAIL_WARN_METRIC_STATUS,
+                (
+                    mp.FAIL_BLOCK_METRIC_STATUS
+                    if block_fail
+                    else mp.FAIL_WARN_METRIC_STATUS
+                ),
+            ],
+        },
+        {
+            "name": "Pytorch timings",
+            "data": [10.1, 9.2, 12.3],
+            "statuses": [
+                mp.FAIL_WARN_METRIC_STATUS,
+                mp.FAIL_WARN_METRIC_STATUS,
+                mp.FAIL_BLOCK_METRIC_STATUS,
+            ],
+        },
     ]
 
     bar_chart_values = metric.metric_values.bar_chart_metric_values
@@ -410,10 +441,10 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
         metrics_data_statuses.series.statuses.series.extend(series["statuses"])
         bar_chart_values.values_data_id.add().CopyFrom(metrics_data.metrics_data_id)
         bar_chart_values.statuses_data_id.add().CopyFrom(
-            metrics_data_statuses.metrics_data_id)
+            metrics_data_statuses.metrics_data_id
+        )
 
-    bar_chart_values.legend_series_names.extend(
-        ["Camera timings", "Pytorch timings"])
+    bar_chart_values.legend_series_names.extend(["Camera timings", "Pytorch timings"])
     bar_chart_values.x_axis_name = "Component"
     bar_chart_values.y_axis_name = "Mean Latency"
 
@@ -425,7 +456,8 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_probe_locations.name = "Temperature probe locations"
     temperature_probe_locations.unit = ""
     temperature_probe_locations.series.strings.series.extend(
-        ["Lower Chassis", "Upper Chassis", "Sensors"])
+        ["Lower Chassis", "Upper Chassis", "Sensors"]
+    )
 
     temperature_data = job_metrics.metrics_data.add()
     temperature_data.metrics_data_id.id.data = _get_uuid_str()
@@ -433,10 +465,9 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_data.name = "Temperatures"
     temperature_data.unit = "C"
     temperature_data.is_indexed = True
-    temperature_data.index_data_id.CopyFrom(
-        temperature_probe_locations.metrics_data_id)
+    temperature_data.index_data_id.CopyFrom(temperature_probe_locations.metrics_data_id)
     temperature_data.index_data_type = mp.STRING_SERIES_DATA_TYPE
-    temperature_data.series.doubles.series.extend([24., 25., 24.])
+    temperature_data.series.doubles.series.extend([24.0, 25.0, 24.0])
 
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
@@ -445,10 +476,10 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
-        temperature_probe_locations.metrics_data_id)
+        temperature_probe_locations.metrics_data_id
+    )
     temperature_status.index_data_type = mp.STRING_SERIES_DATA_TYPE
-    temperature_status.series.statuses.series.extend(
-        3 * [mp.PASSED_METRIC_STATUS])
+    temperature_status.series.statuses.series.extend(3 * [mp.PASSED_METRIC_STATUS])
 
     temperature_metric = job_metrics.job_level_metrics.metrics.add()
     temperature_metric.metric_id.id.data = _get_uuid_str()
@@ -472,10 +503,9 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_data.name = "Temperatures 2"
     temperature_data.unit = "C"
     temperature_data.is_indexed = True
-    temperature_data.index_data_id.CopyFrom(
-        temperature_probe_locations.metrics_data_id)
+    temperature_data.index_data_id.CopyFrom(temperature_probe_locations.metrics_data_id)
     temperature_data.index_data_type = mp.STRING_SERIES_DATA_TYPE
-    temperature_data.series.doubles.series.extend([24., 25., 24.])
+    temperature_data.series.doubles.series.extend([24.0, 25.0, 24.0])
 
     temperature_status = job_metrics.metrics_data.add()
     temperature_status.metrics_data_id.id.data = _get_uuid_str()
@@ -484,10 +514,10 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_status.unit = ""
     temperature_status.is_indexed = True
     temperature_status.index_data_id.CopyFrom(
-        temperature_probe_locations.metrics_data_id)
+        temperature_probe_locations.metrics_data_id
+    )
     temperature_status.index_data_type = mp.STRING_SERIES_DATA_TYPE
-    temperature_status.series.statuses.series.extend(
-        3 * [mp.PASSED_METRIC_STATUS])
+    temperature_status.series.statuses.series.extend(3 * [mp.PASSED_METRIC_STATUS])
 
     temperature_metric = job_metrics.job_level_metrics.metrics.add()
     temperature_metric.metric_id.id.data = _get_uuid_str()
@@ -521,7 +551,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     distance_to_waypoints.is_indexed = True
     distance_to_waypoints.index_data_id.CopyFrom(waypoints.metrics_data_id)
     distance_to_waypoints.index_data_type = mp.UUID_SERIES_DATA_TYPE
-    distance_to_waypoints.series.doubles.series.extend([10., 20., 15.])
+    distance_to_waypoints.series.doubles.series.extend([10.0, 20.0, 15.0])
 
     distance_to_waypoints_status = job_metrics.metrics_data.add()
     distance_to_waypoints_status.metrics_data_id.id.data = _get_uuid_str()
@@ -529,11 +559,11 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     distance_to_waypoints_status.name = "Distance to mapped waypoints status"
     distance_to_waypoints_status.unit = ""
     distance_to_waypoints_status.is_indexed = True
-    distance_to_waypoints_status.index_data_id.CopyFrom(
-        waypoints.metrics_data_id)
+    distance_to_waypoints_status.index_data_id.CopyFrom(waypoints.metrics_data_id)
     distance_to_waypoints_status.index_data_type = mp.UUID_SERIES_DATA_TYPE
     distance_to_waypoints_status.series.statuses.series.extend(
-        3 * [mp.PASSED_METRIC_STATUS])
+        3 * [mp.PASSED_METRIC_STATUS]
+    )
 
     waypoint_distance_metric = job_metrics.job_level_metrics.metrics.add()
     waypoint_distance_metric.metric_id.id.data = _get_uuid_str()
@@ -548,8 +578,7 @@ def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     waypoint_distance_metric.job_id.CopyFrom(job_metrics.job_id)
     values = waypoint_distance_metric.metric_values.double_metric_values
     values.value_data_id.CopyFrom(distance_to_waypoints.metrics_data_id)
-    values.status_data_id.CopyFrom(
-        distance_to_waypoints_status.metrics_data_id)
+    values.status_data_id.CopyFrom(distance_to_waypoints_status.metrics_data_id)
     values.uuid_index.CopyFrom(waypoints.series.uuids.series[0])
 
 
@@ -582,8 +611,9 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     states.is_indexed = True
     states.index_data_id.CopyFrom(times.metrics_data_id)
     states.index_data_type = mp.TIMESTAMP_SERIES_DATA_TYPE
-    states.series.strings.series.extend([
-        "LANE_CHANGE" if (3 <= i < 7) else "LANE_FOLLOW" for i in range(10)])
+    states.series.strings.series.extend(
+        ["LANE_CHANGE" if (3 <= i < 7) else "LANE_FOLLOW" for i in range(10)]
+    )
 
     states_status = job_metrics.metrics_data.add()
     states_status.metrics_data_id.id.data = _get_uuid_str()
@@ -598,9 +628,11 @@ def _add_states_over_time_metric(job_metrics: mp.JobMetrics) -> None:
     states_over_time = metric.metric_values.states_over_time_metric_values
     states_over_time.states_over_time_data_id.add().CopyFrom(states.metrics_data_id)
     states_over_time.statuses_over_time_data_id.add().CopyFrom(
-        states_status.metrics_data_id)
+        states_status.metrics_data_id
+    )
     states_over_time.states_set.extend(
-        ["LANE_CHANGE", "LANE_FOLLOW", "COLLISION", "NO_STATE"])
+        ["LANE_CHANGE", "LANE_FOLLOW", "COLLISION", "NO_STATE"]
+    )
     states_over_time.failure_states.extend(["COLLISION"])
 
 
@@ -623,6 +655,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
     data.name = "Number of detections data"
     data.unit = ""
     data.is_indexed = True
+    # fmt: off
     data_values = [84, 58, 31, 17, 54, 19, 78, 38, 40, 58, 47, 44, 55, 4, 33,
                    32, 6, 65, 32, 10, 28, 35, 40, 80, 63, 61, 27, 50, 69, 27, 1,
                    40, 34, 53, 55, 66, 47, 30, 63, 46, 76, 65, 91, 64, 18, 38,
@@ -630,6 +663,7 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
                    58, 43, 46, 54, 66, 47, 55, 24, 71, 18, 31, 22, 56, 12, 62,
                    52, 56, 21, 70, 44, 52, 58, 60, 31, 53, 28, 50, 61, 72, 46,
                    65, 53, 21, 44, 55, 91, 92, 27, 23]
+    # fmt: on
     data.series.doubles.series.extend(data_values)
 
     index = job_metrics.metrics_data.add()
@@ -653,7 +687,8 @@ def _add_histogram_metric(job_metrics: mp.JobMetrics) -> None:
     data_status.index_data_id.CopyFrom(index.metrics_data_id)
     data_status.index_data_type = mp.UUID_SERIES_DATA_TYPE
     data_status.series.statuses.series.extend(
-        len(data_values) * [mp.NOT_APPLICABLE_METRIC_STATUS])
+        len(data_values) * [mp.NOT_APPLICABLE_METRIC_STATUS]
+    )
 
     histogram_values = metric.metric_values.histogram_metric_values
     histogram_values.values_data_id.CopyFrom(data.metrics_data_id)
@@ -713,12 +748,14 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     metrics_data.metrics_data_id.id.data = _get_uuid_str()
     metrics_data.data_type = mp.EXTERNAL_FILE_DATA_TYPE
     metrics_data.name = "The image name"
-    metrics_data.external_file.path ="my_tree.gif"
+    metrics_data.external_file.path = "my_tree.gif"
     image_metric_values = metric.metric_values.image_metric_values
     image_metric_values.image_data_id.CopyFrom(metrics_data.metrics_data_id)
 
 
-def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
+def _add_event_scalar_metric(
+    job_metrics: mp.JobMetrics, tag_as_event: bool
+) -> mp.MetricId:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "Scalar for an event"
@@ -734,7 +771,10 @@ def _add_event_scalar_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     metric.event_metric = tag_as_event
     return metric.metric_id
 
-def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> mp.MetricId:
+
+def _add_event_plotly_metric(
+    job_metrics: mp.JobMetrics, tag_as_event: bool
+) -> mp.MetricId:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
     metric.name = "A plotly chart for an event"
@@ -751,7 +791,9 @@ def _add_event_plotly_metric(job_metrics: mp.JobMetrics, tag_as_event: bool) -> 
     return metric.metric_id
 
 
-def _add_event(job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.MetricId]) -> None:
+def _add_event(
+    job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.MetricId]
+) -> None:
     event = job_metrics.events.add()
     event.event_id.id.data = _get_uuid_str()
     event.name = event_name
@@ -762,6 +804,7 @@ def _add_event(job_metrics: mp.JobMetrics, event_name: str, metric_ids: list[mp.
     event.timestamp.seconds = 42
     event.timestamp_type = mp.RELATIVE_TIMESTAMP
     event.metrics.extend(metric_ids)
+
 
 def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     collection = job_metrics.job_level_metrics
@@ -778,7 +821,7 @@ def _populate_metrics_statuses(job_metrics: mp.JobMetrics) -> None:
     job_metrics.job_level_metrics.metrics_status = job_metrics_status
 
 
-def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
+def generate_test_metrics(block_fail: bool = False) -> mp.JobMetrics:
     """
     Generate a set of test metrics containing representative examples for each
     of our metric types.
@@ -802,10 +845,15 @@ def generate_test_metrics(block_fail: bool=False) -> mp.JobMetrics:
     # Test events:
     scalar_event_metric_id = _add_event_scalar_metric(job_metrics, True)
     plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
-    _add_event(job_metrics, "first event", [scalar_event_metric_id,plotly_event_metric_id])
-    _add_event(job_metrics, "second event", [scalar_event_metric_id,plotly_event_metric_id])
+    _add_event(
+        job_metrics, "first event", [scalar_event_metric_id, plotly_event_metric_id]
+    )
+    _add_event(
+        job_metrics, "second event", [scalar_event_metric_id, plotly_event_metric_id]
+    )
 
     return job_metrics
+
 
 def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     """
@@ -816,10 +864,12 @@ def generate_bad_events(expect_event: bool) -> mp.JobMetrics:
     scalar_event_metric_id = _add_event_scalar_metric(job_metrics, False)
     plotly_event_metric_id = _add_event_plotly_metric(job_metrics, True)
     if expect_event:
-        _add_event(job_metrics, "event", [scalar_event_metric_id,plotly_event_metric_id])
+        _add_event(
+            job_metrics, "event", [scalar_event_metric_id, plotly_event_metric_id]
+        )
     else:
         random_id = mp.MetricId()
-        random_id.id.data =  _get_uuid_str()
+        random_id.id.data = _get_uuid_str()
         _add_event(job_metrics, "event", [random_id])
 
     return job_metrics
