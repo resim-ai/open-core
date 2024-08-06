@@ -37,7 +37,7 @@ $$
 
 To sample from this distribution, we could do the following:
 
-```
+```cpp
 #include <fmt/core.h>
 
 #include <Eigen/Dense>

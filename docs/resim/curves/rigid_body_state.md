@@ -26,7 +26,7 @@ the hood, so the interpolation is performed in exactly the same way (i.e. using
 quintic Hermite splines). As an example of how to use these objects, lets make
 a unit circle trajectory:
 
-```
+```cpp
 #include <Eigen/Dense>
 #include <chrono>
 

@@ -38,7 +38,7 @@ frame expressed in scene coordinates. Since rotation matrices are a
 *representation* of $\text{SO(3)}$, we can use this equation to compute an
 `SO3` for our robot pose like so:
 
-```
+```cpp
 #include <cmath>
 
 #include "resim/transforms/so3.hh"
@@ -66,7 +66,7 @@ angles. If we use the exponential map on `SO3` (which converts angle/axis
 representations of an orientation into an `SO3` object) with a vector of the
 angles, we will get a different result:
 
-```
+```cpp
 const SO3 scene_from_robot_rotation_wrong = SO3::exp({phi, theta, psi});
 
 // The following assertion will not fail except in the degenerate case of two of
@@ -80,7 +80,7 @@ as it reflects the fact that the SO3 is a transformation from robot coordinates
 into scene coordinates. In fact, one can use the `SO3` to directly transform
 vectors.
 
-```
+```cpp
 using Vec3 = Eigen::Vector3d;
 
 const Vec3 robot_forward_in_robot_coordinates{1.0, 0.0, 0.0};
@@ -96,7 +96,7 @@ Quaternions are also often used to represent orientations, and have many
 benefits over Euler angles. Fortunately, `SO3` objects can also be converted
 to and from quaternions:
 
-```
+```cpp
 const Eigen::Quaterniond scene_from_robot_quat{
     scene_from_robot_rotation.quaternion()};
 REASSERT(SO3(scene_from_robot_quat).is_approx(scene_from_robot_rotation));
@@ -105,7 +105,7 @@ REASSERT(SO3(scene_from_robot_quat).is_approx(scene_from_robot_rotation));
 Furthermore, like quaternions, SO3 affords smooth interpolation without
 wrap-around issues. To do this, we use the `SO3::interp()` member function:
 
-```
+```cpp
 constexpr double EPSILON = 1e-2;
 const Vec3 axis = Vec3(0.1, 0.2, 0.3).normalized();
 const SO3 scene_from_a(M_PI - EPSILON, axis);
@@ -124,7 +124,7 @@ REASSERT(scene_from_interped_rotation.is_approx(expected));
 
 Now, if we want to express the robot's whole pose, most of the work is already
 done:
-```
+```cpp
 #include "resim/transforms/se3.hh"
 // ...
 const Vec3 scene_from_robot_translation{x, y, z};
@@ -136,7 +136,7 @@ const SE3 scene_from_robot{
 This can still be used to transform points as above, but as one might expect,
 the translation is now included:
 
-```
+```cpp
 const Vec3 point_in_robot_coordinates{Vec3::Random()};
 const Vec3 point_in_scene_coordinates{
     scene_from_robot * point_in_robot_coordinates};
@@ -149,7 +149,7 @@ REASSERT(
 Sometimes, we don't want to transform a point, but instead we want to transform
 a vector (e.g. robot velocity). In this case, we instead use:
 
-```
+```cpp
 const Vec3 vector_in_robot_coordinates{Vec3::Random()};
 const Vec3 vector_in_scene_coordinates{
     scene_from_robot.rotate(vector_in_robot_coordinates)};
@@ -164,7 +164,7 @@ Note that the `rotate()` member function is different than `operator*()` for
 Like `SO3`, `SE3` also has an `interp()` member function which can be used to
 interpolate elements of the group:
 
-```
+```cpp
 const SE3 scene_from_interped{scene_from_robot.interp(0.5)};
 REASSERT(
     scene_from_robot.is_approx(scene_from_interped * scene_from_interped));
@@ -267,7 +267,7 @@ then we need to rotate them to get them into scene coordinates. The variable
 derivative (e.g. $g^{-1}\dot g$ if $g$ represents `scene_from_robot`). `SE3` is
 equipped with helpers to get these components from a tangent vector:
 
-```
+```cpp
 const SE3::TangentVector d_scene_from_robot = SE3::TangentVector::Random();
 
 const Vec3 robot_angular_velocity_in_robot_coordinates{
@@ -285,7 +285,7 @@ const Vec3 robot_velocity_in_scene_coordinates{
 
 If we want to go in the opposite direcion, we can also do that:
 
-```
+```cpp
 REASSERT(
     d_scene_from_robot == SE3::tangent_vector_from_parts(
                               robot_angular_velocity_in_robot_coordinates,
@@ -358,7 +358,7 @@ other words, it gives the constant velocity needed to arrive at the given
 element from the identity in one time unit. For their complex definitions,
 using these in code is quite simple:
 
-```
+```cpp
   REASSERT(my_tangent_vector.isApprox(SE3::exp(my_tangent_vector).log()));
 ```
 
@@ -372,7 +372,7 @@ into the constructor or into the exponential or identity member functions. When
 assigned, these objects ensure that frame consistency is maintained when
 composing Lie groups. Here's an example:
 
-```
+```cpp
 #include "resim/assert/assert.hh"
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/se3.hh"
