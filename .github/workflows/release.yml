@@ -1,5 +1,5 @@
 name: Draft Release
-on: 
+on:
   workflow_dispatch:
     inputs:
       tag:
@@ -10,7 +10,7 @@ jobs:
     name: Draft Release
     runs-on: ubuntu-20.04
     container:
-      image: public.ecr.aws/resim/core:latest 
+      image: public.ecr.aws/resim/core:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,51 +33,36 @@ jobs:
         # directory.
         run: git config --global --add safe.directory /__w/open-core/open-core
 
+      - name: Check tag availability
+        if: "${{ github.event.inputs.tag != '' }}"
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: ./.github/workflows/check_tags_available.sh
+
       - name: Build Go Bindings
-        if: "${{ github.event.inputs.tag != '' }}"      
+        if: "${{ github.event.inputs.tag != '' }}"
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: |
           git config --global user.name 'Michael Bauer'
           git config --global user.email 'michael@resim.ai'
           ./.github/workflows/add_go_bindings.sh
-        
-      - name: Draft Go Release
+
+      - name: Clean Old Artifacts
+        run: rm -rf ./bazel-bin/pkg/*
+
+      - name: Build Metrics Tools
+        run: bazel build //resim/metrics:resim_metrics_tools
+
+      - name: Build Wheels
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+
+      - name: Draft Release
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
-          draft: true
-          tag: "go/${{ github.event.inputs.tag }}"
-          commit: "prod/go/${{ github.event.inputs.tag }}"
-
-#      - name: Generate Coverage Report
-#        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
-#
-#      - uses: codecov/codecov-action@v3
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#
-#      - name: Trunk Check
-#        uses: trunk-io/trunk-action@v1
-#        with:
-#          arguments: --filter=-mypy
-#
-#      - name: Clean Old Artifacts
-#        run: rm -rf ./bazel-bin/pkg/*
-#
-#      - name: Build Metrics Tools
-#        run: bazel build //resim/metrics:resim_metrics_tools
-#   
-#      - name: Build Wheels
-#        env:
-#          RESIM_VERSION: ${{ github.event.inputs.tag }}
-#        run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
-#
-#      - name: Draft Release 
-#        if: "${{ github.event.inputs.tag != '' }}"
-#        uses: ncipollo/release-action@v1
-#        with:
-#          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
-#          draft: true
-#          tag: ${{ github.event.inputs.tag }}
-#
+          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
+          generateReleaseNotes: true
+          tag: ${{ github.event.inputs.tag }}
