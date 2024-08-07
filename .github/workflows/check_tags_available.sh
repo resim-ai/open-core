@@ -2,9 +2,6 @@
 
 set -e
 
-git remote -v
-ls -ltha .
-
 MAIN_RELEASE_TAG=$(git ls-remote origin refs/tags/$RESIM_VERSION)
 GO_RELEASE_TAG=$(git ls-remote origin refs/tags/$RESIM_VERSION-go)
 
