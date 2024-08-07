@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
+load("@rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_python//python:proto.bzl", "py_proto_library")
 
@@ -50,6 +51,13 @@ py_proto_library(
     name = "uuid_proto_py",
     visibility = ["//visibility:public"],
     deps = [":uuid_proto"],
+)
+
+go_proto_library(
+    name = "uuid_proto_go",
+    importpath = "github.com/resim-ai/open-core/uuid_proto",
+    protos = [":uuid_proto"],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
