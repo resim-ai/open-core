@@ -153,6 +153,18 @@ class MetricsUtilsTest(unittest.TestCase):
         )
         self.assertLess(t1, t2)
 
+    def test_pack_tags(self) -> None:
+        # SETUP
+        test_tag = mu.Tag("key", "value")
+
+        # ACTION
+        packed = test_tag.pack()
+
+        # VERIFICATION
+        self.assertEqual(packed.key, test_tag.key)
+        self.assertEqual(packed.value, test_tag.value)
+        self.assertEqual(mu.Tag.unpack(packed), test_tag)
+
 
 if __name__ == "__main__":
     unittest.main()

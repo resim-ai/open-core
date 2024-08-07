@@ -20,7 +20,7 @@ computations. If the values are sufficiently small (e.g. elapsed time in a
 sim), this can be done with no loss of accuracy. To facilitate, this, we have
 convenience converters:
 
-```
+```cpp
 #include "resim/time/timestamp.hh"
 #include "resim/assert/assert.hh"
 
@@ -53,7 +53,7 @@ for the seconds and nanoseconds to be stored as separate integer counts.
 For `google::protobuf::Timestamp`, we provide standard packers and 
 unpackers:
 
-```
+```cpp
 const time::Timestamp time{};
 google::protobuf::Timestamp time_msg{};
 
@@ -65,7 +65,7 @@ const time::Timestamp unpacked_time = unpack(time_msg);
 To facilitate other conversions to and from such serialization types, we have a time
 representation called `SecsAndNanos`:
 
-```
+```cpp
 struct SecsAndNanos {
   int64_t secs = 0;
   int32_t nanos = 0;
@@ -74,7 +74,7 @@ struct SecsAndNanos {
 
 And converters to and from it:
 
-```
+```cpp
 const SecsAndNanos my_secs_and_nanos = to_seconds_and_nanos(my_duration);
 REASSERT(from_seconds_and_nanos(my_secs_and_nanos) == my_duration);
 ```
@@ -94,7 +94,7 @@ this functionality, we define the `EventSchedule` class template which can
 store a time-ordered queue of events with arbitrary payloads. Here's a simple
 example of how to use it:
 
-```
+```cpp
 #include <iostream>
 
 #include "resim/time/event_schedule.hh"
@@ -136,7 +136,7 @@ they could pick a maximum rectangle width (dt) that they are willing to accept
 `resim::time::sample_interval()` and the associated
 `resim::time::num_samples()` function like so:
 
-```
+```cpp
 #include <cmath>
 
 #include "resim/time/sample_interval.hh"

@@ -72,6 +72,22 @@ class Timestamp:
 
 
 @dataclass(repr=True)
+class Tag:
+    key: str
+    value: str
+
+    def pack(self: Tag) -> metrics_pb2.Tag:
+        tag = metrics_pb2.Tag()
+        tag.key = self.key
+        tag.value = self.value
+        return tag
+
+    @classmethod
+    def unpack(cls, msg: metrics_pb2.Tag) -> Tag:
+        return Tag(key=msg.key, value=msg.value)
+
+
+@dataclass(repr=True)
 class HistogramBucket:
     lower: float
     upper: float

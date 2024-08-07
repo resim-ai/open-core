@@ -79,6 +79,7 @@ def _add_event_counts(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     metric.importance = mp.MEDIUM_IMPORTANCE
     metric.order = 2.0
     metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.tags.add(key="key", value="value")
 
     data = job_metrics.metrics_data.add()
     data.metrics_data_id.id.data = _get_uuid_str()
