@@ -15,6 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Check tag availability
+        if: "${{ github.event.inputs.tag != '' }}"
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: ./.github/workflows/check_tags_available.sh
+
       - name: Cache Bazel
         uses: actions/cache@v3
         with:
@@ -33,11 +39,17 @@ jobs:
         # directory.
         run: git config --global --add safe.directory /__w/open-core/open-core
 
-      - name: Check tag availability
-        if: "${{ github.event.inputs.tag != '' }}"
-        env:
-          RESIM_VERSION: ${{ github.event.inputs.tag }}
-        run: ./.github/workflows/check_tags_available.sh
+      - name: Generate Coverage Report
+        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
+
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+        with:
+          arguments: --filter=-mypy
 
       - name: Build Go Bindings
         if: "${{ github.event.inputs.tag != '' }}"

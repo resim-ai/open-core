@@ -5,7 +5,7 @@ set -e
 CURRENT_BRANCH=$(git branch --show-current)
 
 # TODO(michael) Consider replacing some of this with some starklark
-# code rather than hard coding everyting
+# code rather than hard coding everything
 
 if [[ -z $RESIM_VERSION ]]
 then
