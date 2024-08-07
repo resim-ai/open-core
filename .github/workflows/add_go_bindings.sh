@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 CURRENT_BRANCH=$(git branch --show-current)
 
 # TODO(michael) Consider replacing some of this with some starklark
@@ -25,6 +27,6 @@ git add uuid_proto
 git add metrics_proto
 git commit -m "Generate go bindings for go/$RESIM_VERSION"
 git tag "go/$RESIM_VERSION"
-git push upstream tag "go/$RESIM_VERSION"
+git push origin tag "go/$RESIM_VERSION"
 
 git checkout $CURRENT_BRANCH
