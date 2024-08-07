@@ -13,15 +13,10 @@ jobs:
       image: public.ecr.aws/resim/core:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Workaround for Custom Docker Image
-        # Trunk makes use of git and we will get permissions issues (i.e.
-        # detected dubious ownership) if we don't make the repo a safe
-        # directory.
-        run: git config --global --add safe.directory /__w/open-core/open-core
+          set-safe-directory: true
 
       - name: Check tag availability
         if: "${{ github.event.inputs.tag != '' }}"
