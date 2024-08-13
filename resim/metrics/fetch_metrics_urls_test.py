@@ -46,6 +46,7 @@ class MockMetricsData:
     """
 
     metrics_data_url: str
+    metrics_data_type: str
 
 
 @dataclass
@@ -146,8 +147,9 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                     metrics_data=[
                         MockMetricsData(
                             metrics_data_url=f"https://www.test_url.com/metrics_{i}_{j}.binproto",
+                            metrics_data_type="STANDARD" if i % 2 else "EXTERNAL_FILE",
                         )
-                        for i in range(3)
+                        for i in range(5)
                     ]
                 )
                 for j in range(3)
@@ -155,7 +157,7 @@ class FetchMetricsUrlsTest(unittest.TestCase):
 
         with patch(
             "resim.metrics.fetch_metrics_urls.fetch_all_pages", new=mock_fetch_all_pages
-        ) as _:
+        ):
             metrics_data_urls = fetch_metrics_urls.fetch_metrics_data_urls(
                 project_id=test_project_id,
                 batch_id=test_batch_id,
@@ -167,7 +169,8 @@ class FetchMetricsUrlsTest(unittest.TestCase):
                 [
                     f"https://www.test_url.com/metrics_{i}_{j}.binproto"
                     for j in range(3)
-                    for i in range(3)
+                    for i in range(5)
+                    if i % 2
                 ],
             )
 
