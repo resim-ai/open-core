@@ -54,7 +54,8 @@ def fetch_metrics_data_urls(
     """Fetch all metrics data urls for a given job_id."""
 
     def is_standard(data: MetricsData) -> bool:
-        return data.metrics_data_type == MetricsDataType.STANDARD
+        result: bool = data.metrics_data_type == MetricsDataType.STANDARD
+        return result
 
     return [
         metrics_data.metrics_data_url
