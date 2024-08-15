@@ -9,7 +9,6 @@ permissions:
   contents: read
 
 env:
-  IMAGE_NAME: sim-build
   ECR_REGISTRY: "909785973729.dkr.ecr.us-east-1.amazonaws.com"
   ECR_REPOSITORY: "drone-simulator"
 
