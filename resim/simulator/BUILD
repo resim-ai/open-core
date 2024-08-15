@@ -269,12 +269,12 @@ oci_image(
 
 oci_tarball(
     name = "sim_build_tarball",
-    image = ":sim_build",
+    image = ":sim-build",
     repo_tags = ["sim-build:latest"],
 )
 
 oci_push(
     name = "sim_build_push",
-    image = ":sim_build",
+    image = ":sim-build",
     repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/core-sim-run",
 )
