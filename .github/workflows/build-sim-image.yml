@@ -11,7 +11,8 @@ permissions:
 
 env:
   IMAGE_NAME: sim-build
-  ECR_REPOSITORY: "909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images"
+  ECR_REGISTRY: "909785973729.dkr.ecr.us-east-1.amazonaws.com"
+  ECR_REPOSITORY: "customer-test-images"
 
 jobs:
   build:
@@ -38,10 +39,15 @@ jobs:
           role-to-assume: ${{ secrets.ECR_RW_ROLE }}
           aws-region: us-east-1
 
-      - name: Log in to ECR Public
+      - name: Log in to ECR
         uses: docker/login-action@v2
         with:
-          registry: public.ecr.aws
+          registry: ${{ env.ECR_REGISTRY }}
 
       - name: Build and Push
-        run: bazel run //resim/simulator:sim_build_push -- --repository ${{ env.ECR_REPOSITORY }} --tag ${{ env.GITHUB_SHA }}
+        env:
+          REPO: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+        run: |
+          bazel run //resim/simulator:sim_build_push -- \
+            --repository ${{ env.REPO }} \
+            --tag ${{ env.GITHUB_SHA }}
