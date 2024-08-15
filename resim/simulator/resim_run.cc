@@ -18,12 +18,17 @@
 #include <indicators/progress_spinner.hpp>
 #include <iostream>
 #include <thread>
+#include <unordered_set>
 
 #include "resim/assert/assert.hh"
+#include "resim/experiences/actor.hh"
 #include "resim/experiences/experience.hh"
+#include "resim/experiences/ilqr_drone.hh"
 #include "resim/experiences/proto/experience.pb.h"
 #include "resim/experiences/proto/experience_to_proto.hh"
 #include "resim/simulator/simulate.hh"
+#include "resim/utils/inout.hh"
+#include "resim/utils/uuid.hh"
 
 namespace resim::simulator {
 
@@ -103,6 +108,30 @@ SimpleSpinner::~SimpleSpinner() {
   indicators::show_console_cursor(true);
 }
 
+// Apply the overrided velocity cost to all actors that are SYSTEM_UNDER_TEST
+void apply_velocity_cost_override(
+    const double cost,
+    InOut<experiences::Experience> experience) {
+  std::unordered_set<UUID> relevant_actor_ids;
+  for (const auto &actor : experience->dynamic_behavior.actors) {
+    if (actor.actor_type == experiences::ActorType::SYSTEM_UNDER_TEST) {
+      relevant_actor_ids.emplace(actor.id);
+    }
+  }
+
+  for (auto &movement_model :
+       experience->dynamic_behavior.storyboard.movement_models) {
+    if (relevant_actor_ids.contains(movement_model.actor_reference)) {
+      auto *const maybe_drone_model =
+          std::get_if<experiences::ILQRDrone>(&movement_model.model);
+      if (maybe_drone_model != nullptr) {
+        auto &drone_model = *maybe_drone_model;
+        drone_model.velocity_cost = cost;
+      }
+    }
+  }
+}
+
 }  // namespace
 
 void run_sim(int argc, char **argv) {
@@ -111,6 +140,9 @@ void run_sim(int argc, char **argv) {
   options.add_options()
     ("l,log", "Log location (required)", cxxopts::value<std::string>())
     ("c,config", "Config location (required)", cxxopts::value<std::string>())
+    ("velocity_cost_override",
+         "Override for the velocity cost coefficient for the ego. (optional)",
+         cxxopts::value<double>())    
     ("h,help", "Print usage")
   ;
   // clang-format on
@@ -131,6 +163,11 @@ void run_sim(int argc, char **argv) {
     SimpleSpinner spinner{"Loading Experience...", "Experience Loaded!"};
     return load_experience(experience_path);
   }();
+  if (options_result.count("velocity_cost_override") > 0) {
+    apply_velocity_cost_override(
+        options_result["velocity_cost_override"].as<double>(),
+        InOut{experience});
+  }
   {
     SimpleSpinner spinner{"Running Simulation...", "Simulation Complete!"};
     simulate(experience, mcap_path);
