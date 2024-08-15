@@ -62,13 +62,13 @@ register_toolchains(
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
 oci.pull(
-    name = "distroless_cc",
-    image = "gcr.io/distroless/cc",
+    name = "debian_slim",
+    image = "debian",
     platforms = [
         "linux/amd64",
     ],
-    tag = "latest-amd64",
+    tag = "bookworm-slim",
 )
 
 # For each oci.pull call, repeat the "name" here to expose them as dependencies.
-use_repo(oci, "distroless_cc")
+use_repo(oci, "debian_slim")
