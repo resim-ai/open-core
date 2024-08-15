@@ -1,6 +1,5 @@
 name: Build & Push Sim Image
 on:
-  pull_request:
   push:
     branches:
       - 'main'
