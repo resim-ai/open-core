@@ -4,7 +4,7 @@ set -e
 
 # Run the simulation with the experience and return result.mcap:
 echo "Running the simulation..."
-./resim/simulator/resim_run -c /tmp/resim/inputs/experience.sim -l /tmp/resim/outputs/resim_log.mcap
+./resim/simulator/resim_run -c /tmp/resim/inputs/experience.sim -l /tmp/resim/outputs/resim_log.mcap "$@"
 
 # Add visualization content
 echo "Adding Visualizations..."

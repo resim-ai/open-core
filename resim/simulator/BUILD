@@ -232,9 +232,13 @@ cc_binary(
     deps = [
         ":simulate",
         "//resim/assert",
+        "//resim/experiences:actor",
         "//resim/experiences:experience",
+        "//resim/experiences:ilqr_drone",
         "//resim/experiences/proto:experience_proto_cc",
         "//resim/experiences/proto:experience_to_proto",
+        "//resim/utils:inout",
+        "//resim/utils:uuid",
         "@com_google_protobuf//:protobuf",
         "@cxxopts",
         "@indicators",
