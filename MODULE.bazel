@@ -62,11 +62,13 @@ register_toolchains(
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
 oci.pull(
-    name = "ubuntu",
-    image = "ubuntu",
-    platforms = ["linux/amd64"],
-    tag = "jammy",
+    name = "distroless_cc",
+    image = "gcr.io/distroless/cc",
+    platforms = [
+        "linux/amd64",
+    ],
+    tag = "latest-amd64",
 )
 
 # For each oci.pull call, repeat the "name" here to expose them as dependencies.
-use_repo(oci, "ubuntu")
+use_repo(oci, "distroless_cc")

@@ -241,9 +241,9 @@ cc_binary(
     ],
 )
 
-sh_binary(
+cc_binary(
     name = "sim_container_entrypoint",
-    srcs = ["sim_container_entrypoint.sh"],
+    srcs = ["sim_container_entrypoint.cc"],
     data = [
         ":resim_run",
         "//resim/visualization/log:make_visualization_log",
@@ -261,10 +261,9 @@ pkg_tar(
 
 oci_image(
     name = "sim_build",
-    base = "@ubuntu",
-    entrypoint = ["resim/simulator/sim_container_entrypoint"],
+    base = "@distroless_cc",
+    entrypoint = ["/sim_container_entrypoint"],
     tars = [":entrypoint_layer"],
-    workdir = "/sim_container_entrypoint.runfiles",
 )
 
 oci_tarball(
