@@ -13,6 +13,7 @@ import unittest
 from dataclasses import dataclass
 from http import HTTPStatus
 from unittest.mock import patch
+
 from google.protobuf.message import Message
 
 from resim.metrics import get_metrics_proto
@@ -23,6 +24,7 @@ class MockMessage(Message):
     """
     A simple mock of a protobuf message.
     """
+
     data: str = ""
 
     # pylint: disable-next=invalid-name
@@ -36,6 +38,7 @@ class MockResponse:
     """
     A mock of a response from requests.get()
     """
+
     status_code: HTTPStatus
     content: str
 
@@ -64,6 +67,7 @@ class GetMetricsProtoTest(unittest.TestCase):
     """
     The unit test case.
     """
+
     @patch("requests.Session")
     def test_get_metrics_proto(self, session: unittest.mock.MagicMock) -> None:
         """
@@ -75,10 +79,10 @@ class GetMetricsProtoTest(unittest.TestCase):
         for url, data in _RESPONSE_MAP.items():
             self.assertEqual(
                 get_metrics_proto.get_metrics_proto(
-                    message_type=message_type,
-                    session=session,
-                    url=url).data,
-                data)
+                    message_type=message_type, session=session, url=url
+                ).data,
+                data,
+            )
 
 
 if __name__ == "__main__":

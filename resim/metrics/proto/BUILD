@@ -60,6 +60,7 @@ proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/utils/proto:uuid_proto",
+        "@com_google_protobuf//:struct_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
 )
@@ -92,6 +93,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 

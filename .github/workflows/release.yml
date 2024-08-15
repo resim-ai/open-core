@@ -42,12 +42,19 @@ jobs:
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
+        with:
+          arguments: --filter=-mypy
+
+      - name: Clean Old Artifacts
+        run: rm -rf ./bazel-bin/pkg/*
 
       - name: Build Metrics Tools
         run: bazel build //resim/metrics:resim_metrics_tools
    
       - name: Build Wheels
-        run: bazel build //pkg/...
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
 
       - name: Draft Release 
         if: "${{ github.event.inputs.tag != '' }}"

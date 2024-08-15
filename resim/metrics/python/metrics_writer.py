@@ -6,26 +6,31 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import uuid
+from dataclasses import dataclass
 from typing import Dict, Set
 
 from resim.metrics.proto.metrics_pb2 import MetricStatus
-from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 from resim.metrics.python.metrics import (
-    ScalarMetric,
     BarChartMetric,
-    LinePlotMetric,
-    DoubleSummaryMetric,
     DoubleOverTimeMetric,
-    HistogramMetric,
-    StatesOverTimeMetric,
+    DoubleSummaryMetric,
+    Event,
+    ExternalFileMetricsData,
     GroupedMetricsData,
-    SeriesMetricsData,
+    HistogramMetric,
+    ImageMetric,
+    LinePlotMetric,
     Metric,
     MetricsData,
     MetricsDataT,
-    MetricT)
+    MetricT,
+    PlotlyMetric,
+    ScalarMetric,
+    SeriesMetricsData,
+    StatesOverTimeMetric,
+)
+from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 
 
 @dataclass(init=False, repr=True, kw_only=True)
@@ -33,6 +38,7 @@ class ResimMetricsWriter:
     job_id: uuid.UUID
     metrics: Dict[uuid.UUID, Metric]
     metrics_data: Dict[uuid.UUID, MetricsData]
+    events: Dict[uuid.UUID, Event]
 
     names: Set[str]
 
@@ -40,6 +46,7 @@ class ResimMetricsWriter:
         self.job_id = job_id
         self.metrics = {}
         self.metrics_data = {}
+        self.events = {}
         self.names = set()
 
     def add_metrics_data(self, data: MetricsDataT) -> MetricsDataT:
@@ -53,6 +60,32 @@ class ResimMetricsWriter:
         self.names.add(metric.name)
         self.metrics[metric.id] = metric
         return metric
+
+    def base_add_event(self, event: Event) -> Event:
+        """Given an existent event, add to the writer.
+
+        Args:
+            event (Event): the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
+        assert event.name not in self.names
+        self.names.add(event.name)
+        self.events[event.id] = event
+        return event
+
+    def add_event(self, name: str) -> Event:
+        """Create an add an event with the given name.
+
+        Args:
+            name (str): the name of the event to add
+
+        Returns:
+            Event: the added event, for chaining
+        """
+        event = Event(name=name)
+        return self.base_add_event(event)
 
     def add_series_metrics_data(self, name: str) -> SeriesMetricsData:
         metrics_data = SeriesMetricsData(name=name)
@@ -99,6 +132,21 @@ class ResimMetricsWriter:
         self.add_metric(metric)
         return metric
 
+    def add_plotly_metric(self, name: str) -> PlotlyMetric:
+        metric = PlotlyMetric(name=name, parent_job_id=self.job_id)
+        self.add_metric(metric)
+        return metric
+
+    def add_image_metric(self, name: str) -> ImageMetric:
+        metric = ImageMetric(name=name, parent_job_id=self.job_id)
+        self.add_metric(metric)
+        return metric
+
+    def add_external_file_metrics_data(self, name: str) -> ExternalFileMetricsData:
+        metrics_data = ExternalFileMetricsData(name=name)
+        self.add_metrics_data(metrics_data)
+        return metrics_data
+
     def write(self) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
@@ -110,14 +158,21 @@ class ResimMetricsWriter:
         for metric_data in self.metrics_data.values():
             metric_data.recursively_pack_into(output)
 
+        for event in self.events.values():
+            event.recursively_pack_into(output)
+
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        fail_block = any(metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
-                      for metric in output.metrics_msg.job_level_metrics.metrics)
+        fail_block = any(
+            metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
+            for metric in output.metrics_msg.job_level_metrics.metrics
+        )
 
-        fail_warn = any(metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
-                      for metric in output.metrics_msg.job_level_metrics.metrics)
+        fail_warn = any(
+            metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+            for metric in output.metrics_msg.job_level_metrics.metrics
+        )
 
         if fail_block:
             metrics_status = MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")

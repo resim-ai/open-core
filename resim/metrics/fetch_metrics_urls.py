@@ -12,38 +12,52 @@ metrics data.
 
 import uuid
 
-from resim_python_client.client import AuthenticatedClient
 from resim_python_client.api.batches import (
-    list_metrics_for_job, list_metrics_data_for_job)
+    list_metrics_data_for_job,
+    list_metrics_for_job,
+)
+from resim_python_client.client import AuthenticatedClient
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
 
 
-def fetch_metrics_urls(*,
-                       project_id: uuid.UUID,
-                       batch_id: uuid.UUID,
-                       job_id: uuid.UUID,
-                       client: AuthenticatedClient) -> list[str]:
+def fetch_metrics_urls(
+    *,
+    project_id: uuid.UUID,
+    batch_id: uuid.UUID,
+    job_id: uuid.UUID,
+    client: AuthenticatedClient
+) -> list[str]:
     """Fetch all metrics urls for a given job_id."""
     return [
-        metric.metric_url for metrics_response in fetch_all_pages(
+        metric.metric_url
+        for metrics_response in fetch_all_pages(
             list_metrics_for_job.sync,
             str(project_id),
             str(batch_id),
             str(job_id),
-            client=client) for metric in metrics_response.metrics]
+            client=client,
+        )
+        for metric in metrics_response.metrics
+    ]
 
 
-def fetch_metrics_data_urls(*,
-                            project_id: uuid.UUID,
-                            batch_id: uuid.UUID,
-                            job_id: uuid.UUID,
-                            client: AuthenticatedClient) -> list[str]:
-    """Fetch all metrics data urls for a given job_id."""    
+def fetch_metrics_data_urls(
+    *,
+    project_id: uuid.UUID,
+    batch_id: uuid.UUID,
+    job_id: uuid.UUID,
+    client: AuthenticatedClient
+) -> list[str]:
+    """Fetch all metrics data urls for a given job_id."""
     return [
-        metrics_data.metrics_data_url for metrics_data_response in fetch_all_pages(
+        metrics_data.metrics_data_url
+        for metrics_data_response in fetch_all_pages(
             list_metrics_data_for_job.sync,
             str(project_id),
             str(batch_id),
             str(job_id),
-            client=client) for metrics_data in metrics_data_response.metrics_data]
+            client=client,
+        )
+        for metrics_data in metrics_data_response.metrics_data
+    ]

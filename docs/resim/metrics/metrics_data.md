@@ -15,7 +15,7 @@ Attempts to write any other types will fail.
 
 Here is an example of code making a `SeriesMetricsData`
 
-```
+```python
 from resim.metrics.python.metrics import SeriesMetricsData
 from resim.metrics.python.metrics_utils import Timestamp
 
@@ -34,7 +34,7 @@ timestamps_data = SeriesMetricsData(
 
 We also support a "fluent API" style for declaring `MetricsData`, which becomes more useful when trying to make new metrics and data and write them at the same time. The above would be equivalent to:
 
-```
+```python
 timestamps_data = (
   SeriesMetricsData(name = "Log timestamps")
     .with_series(timestamps)
@@ -48,7 +48,7 @@ In order to provide a "table-like" functionality, we support the idea of one arr
 
 As an example, we could add the following code to the above:
 
-```
+```python
 floats = np.array([random.random() for i in range(100)])
 
 floats_data = SeriesMetricsData(
@@ -61,7 +61,7 @@ floats_data = SeriesMetricsData(
 
 This is now an array "indexed" by the timestamps we made earlier, so can be thought of as a "dictionary" of the form:
 
-```
+```python
 {
   timestamps[0]: floats[0],
   timestamps[1]: floats[1],
@@ -83,7 +83,7 @@ We support the notion of `grouped` metrics data, which is effectively the output
 
 For example:
 
-```
+```python
 state_set = ['ACCELERATING', 'BRAKING', 'STOPPED']
 
 states = np.array(
@@ -102,7 +102,7 @@ grouped_floats_data = floats_data.group_by(states_data)
 
 The output of this can be thought of as dictionary of the form:
 
-```
+```python
 grouped_floats_data = {
   "ACCELERATING": [floats],
   "BRAKING": [floats],

@@ -7,7 +7,7 @@
 load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 cc_library(
     name = "simple_metric",
@@ -107,6 +107,7 @@ py_test(
 py_library(
     name = "fetch_all_pages",
     srcs = ["fetch_all_pages.py"],
+    visibility = ["//visibility:public"],
     deps = [
     ],
 )
@@ -175,6 +176,40 @@ py_test(
     srcs = ["fetch_job_metrics_test.py"],
     deps = [
         ":fetch_job_metrics",
+    ],
+)
+
+py_library(
+    name = "fetch_report_metrics",
+    srcs = ["fetch_report_metrics.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fetch_all_pages",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_test(
+    name = "fetch_report_metrics_test",
+    srcs = ["fetch_report_metrics_test.py"],
+    deps = [
+        ":fetch_report_metrics",
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
+py_binary(
+    name = "default_report_metrics",
+    srcs = ["default_report_metrics.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fetch_report_metrics",
+        "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/metrics/python:metrics_utils",
+        "//resim/metrics/python:metrics_writer",
+        requirement("pandas"),
+        requirement("httpx"),
+        requirement("plotly"),
     ],
 )
 

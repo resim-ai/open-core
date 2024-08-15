@@ -54,18 +54,18 @@ COPY requirements.txt /tmp/
 RUN pip install --requirement /tmp/requirements.txt
 
 # Install Go
-RUN wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
-RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
 ENV PATH "${PATH}:/usr/local/go/bin:/root/go/bin"
 
 # Install go tools
-RUN go install -v golang.org/x/tools/gopls@v0.10.1
-RUN go install -v github.com/go-delve/delve/cmd/dlv@v1.9.1
+RUN go install -v golang.org/x/tools/gopls@v0.15.3
+RUN go install -v github.com/go-delve/delve/cmd/dlv@v1.22.1
 RUN go install -v github.com/haya14busa/goplay/cmd/goplay@v1.0.0
 RUN go install -v github.com/fatih/gomodifytags@v1.16.0
-RUN go install -v github.com/josharian/impl@v1.1.0
+RUN go install -v github.com/josharian/impl@v1.3.0
 RUN go install -v github.com/cweill/gotests/gotests@v1.6.0
-RUN go install -v honnef.co/go/tools/cmd/staticcheck@v0.3.3
+RUN go install -v honnef.co/go/tools/cmd/staticcheck@v0.4.7
 
 # Add live-server (https://github.com/tapio/live-server)
 RUN apt -y install npm

@@ -18,6 +18,7 @@ class TestPythonVersion(unittest.TestCase):
     """
     A simple test that our python distribution is set up correctly.
     """
+
     def test_python_version(self) -> None:
         """
         Test that the python version is what we expect.
@@ -28,5 +29,5 @@ class TestPythonVersion(unittest.TestCase):
         self.assertEqual(version_info[2], 13)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

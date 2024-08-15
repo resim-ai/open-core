@@ -12,6 +12,7 @@ Unit tests for SE3 pybinding
 import unittest
 
 import numpy as np
+
 import resim.transforms.python.se3_python as se3
 import resim.transforms.python.so3_python as so3
 
@@ -41,9 +42,8 @@ class SE3PythonTest(unittest.TestCase):
 
             # ACTION / VERIFICATION
             self.assertTrue(
-                (rotation *
-                 rotation.inverse()).is_approx(
-                    se3.SE3.identity()))
+                (rotation * rotation.inverse()).is_approx(se3.SE3.identity())
+            )
 
     def test_interp(self) -> None:
         """Check that interpolation works"""
@@ -55,11 +55,7 @@ class SE3PythonTest(unittest.TestCase):
             # ACTION / VERIFICATION
             scale = np.random.random()
             interped = rotation.interp(scale)
-            self.assertTrue(
-                interped.is_approx(
-                    se3.SE3.exp(
-                        scale *
-                        rotation.log())))
+            self.assertTrue(interped.is_approx(se3.SE3.exp(scale * rotation.log())))
 
     def test_exp_log(self) -> None:
         """Test that exponential ang log are correct."""
@@ -71,7 +67,7 @@ class SE3PythonTest(unittest.TestCase):
             # This is needed because we might otherwise exit the subset of the
             # domain where exp is invertible.
             epsilon = 1e-3
-            arg = (1. - epsilon) * arg * (np.pi / max(1., np.linalg.norm(arg)))
+            arg = (1.0 - epsilon) * arg * (np.pi / max(1.0, np.linalg.norm(arg)))
 
             # ACTION / VERIFICATION
             test_se3 = se3.SE3.exp(arg)
@@ -92,5 +88,5 @@ class SE3PythonTest(unittest.TestCase):
             self.assertTrue(np.allclose(translation, pose.translation()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

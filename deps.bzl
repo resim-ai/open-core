@@ -330,9 +330,9 @@ def resim_core_dependencies():
     maybe(
         http_archive,
         name = "resim-python-client",
-        sha256 = "aca1518c2dcf29406b5ce64e18c4b2b0af27716eaa07e79d5c7d2c6cecc6fb34",
-        strip_prefix = "resim-python-client-a28eca31985d175d976b868d38c7f3adc315155b",
-        url = "https://github.com/resim-ai/resim-python-client/archive/a28eca31985d175d976b868d38c7f3adc315155b.zip",
+        sha256 = "87af6d8e8ca652c95ca97526144d4540f9331a1832ffdbc2ef7f67004607efe9",
+        strip_prefix = "resim-python-client-6c485d1450e93be66cbee85f02077ff0c2b65198",
+        url = "https://github.com/resim-ai/resim-python-client/archive/6c485d1450e93be66cbee85f02077ff0c2b65198.zip",
     )
 
     # Protobuf schemas for communications with foxglove

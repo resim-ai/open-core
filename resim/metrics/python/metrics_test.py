@@ -9,15 +9,22 @@ Unit tests for metrics.py.
 """
 
 import copy
-import uuid
+import json
 import unittest
-from typing import cast, Any
+import uuid
+from typing import Any, cast
 
 import numpy as np
+from google.protobuf.json_format import MessageToDict
 
-from resim.metrics.python import metrics, metrics_utils
-from resim.metrics.python.metrics_utils import MetricStatus, MetricImportance
 import resim.metrics.proto.metrics_pb2 as mp
+from resim.metrics.python import metrics, metrics_utils
+from resim.metrics.python.metrics_utils import (
+    MetricImportance,
+    MetricStatus,
+    Tag,
+    TimestampType,
+)
 
 # pylint: disable=too-many-public-methods
 
@@ -37,7 +44,8 @@ class MetricsTest(unittest.TestCase):
             order=None,
             value=24.0,
             failure_definition=None,
-            unit="")
+            unit="",
+        )
 
         # Test equality
         self.assertEqual(metric, metric)
@@ -68,7 +76,9 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.with_status(MetricStatus.PASSED_METRIC_STATUS))
         self.assertEqual(metric.status, MetricStatus.PASSED_METRIC_STATUS)
 
-        self.assertEqual(metric, metric.with_importance(MetricImportance.ZERO_IMPORTANCE))
+        self.assertEqual(
+            metric, metric.with_importance(MetricImportance.ZERO_IMPORTANCE)
+        )
         self.assertEqual(metric.importance, MetricImportance.ZERO_IMPORTANCE)
 
         self.assertEqual(metric, metric.with_should_display(True))
@@ -77,10 +87,18 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.with_blocking(True))
         self.assertTrue(metric.blocking)
 
+        self.assertEqual(metric, metric.is_event_metric())
+        self.assertTrue(metric.event_metric)
 
-    def assert_common_fields_match(self, *,
-                                   msg: mp.Metric,
-                                   metric: metrics.Metric) -> None:
+        self.assertIsNone(metric.kv_tags)
+        self.assertEqual(metric, metric.with_tag("k", "v"))
+        self.assertEqual(
+            Tag("k", "v"), metric.kv_tags[0] if metric.kv_tags is not None else None
+        )
+
+    def assert_common_fields_match(
+        self, *, msg: mp.Metric, metric: metrics.Metric
+    ) -> None:
         self.assertEqual(uuid.UUID(msg.metric_id.id.data), metric.id)
         self.assertEqual(msg.name, metric.name)
         self.assertEqual(msg.description, metric.description)
@@ -90,6 +108,13 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(msg.blocking, metric.blocking)
         self.assertEqual(uuid.UUID(msg.job_id.id.data), metric.parent_job_id)
         self.assertEqual(msg.order, metric.order)
+        if metric.kv_tags is not None:
+            self.assertEqual(len(msg.tags), len(metric.kv_tags))
+            for i, _ in enumerate(metric.kv_tags):
+                self.assertEqual(
+                    Tag(msg.tags[i].key, msg.tags[i].value),
+                    metric.kv_tags[i] if metric.kv_tags is not None else None,
+                )
 
     def test_metric_pack(self) -> None:
         # SETUP
@@ -105,7 +130,9 @@ class MetricsTest(unittest.TestCase):
             order=1.5,
             value=24.0,
             failure_definition=None,
-            unit="")
+            unit="",
+            tags=[Tag("key", "value")],
+        )
 
         msg = metric.pack()
         self.assert_common_fields_match(msg=msg, metric=metric)
@@ -117,7 +144,8 @@ class MetricsTest(unittest.TestCase):
             ("should_display", "should_display"),
             ("blocking", "blocking"),
             ("parent_job_id", "job_id"),
-            ("order", "order")]
+            ("order", "order"),
+        ]
 
         default_values = mp.Metric()
         for unpacked_attr, packed_attr in optional_attr_list:
@@ -125,9 +153,8 @@ class MetricsTest(unittest.TestCase):
             setattr(modified_metric, unpacked_attr, None)
             msg = modified_metric.pack()
             self.assertEqual(
-                getattr(
-                    msg, packed_attr), getattr(
-                    default_values, packed_attr))
+                getattr(msg, packed_attr), getattr(default_values, packed_attr)
+            )
 
         with self.assertRaises(NotImplementedError):
             output = metrics_utils.ResimMetricsOutput()
@@ -137,14 +164,15 @@ class MetricsTest(unittest.TestCase):
         msg = mp.Metric()
         msg.metric_id.id.data = str(uuid.uuid4())
         msg.name = "test metric"
-        msg.type = mp.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE')
+        msg.type = mp.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE")
         msg.description = "This is a test metric"
-        msg.status = mp.MetricStatus.Value('PASSED_METRIC_STATUS')
+        msg.status = mp.MetricStatus.Value("PASSED_METRIC_STATUS")
         msg.should_display = True
         msg.blocking = False
-        msg.importance = mp.MetricImportance.Value('ZERO_IMPORTANCE')
+        msg.importance = mp.MetricImportance.Value("ZERO_IMPORTANCE")
         msg.job_id.id.data = str(uuid.uuid4())
         msg.order = 0.5
+        msg.tags.add(key="key", value="value")
 
         unpacked = metrics.Metric.unpack_common_fields(msg)
         self.assert_common_fields_match(msg=msg, metric=unpacked)
@@ -152,7 +180,8 @@ class MetricsTest(unittest.TestCase):
             ("should_display", "should_display"),
             ("blocking", "blocking"),
             ("parent_job_id", "job_id"),
-            ("order", "order")]
+            ("order", "order"),
+        ]
 
         for unpacked_attr, packed_attr in optional_attr_list:
             modified_msg = copy.copy(msg)
@@ -161,13 +190,25 @@ class MetricsTest(unittest.TestCase):
             self.assertIs(getattr(unpacked, unpacked_attr), None)
 
         metric_type_list = [
-            (mp.MetricType.Value('DOUBLE_OVER_TIME_METRIC_TYPE'), metrics.DoubleOverTimeMetric),
-            (mp.MetricType.Value('LINE_PLOT_METRIC_TYPE'), metrics.LinePlotMetric),
-            (mp.MetricType.Value('BAR_CHART_METRIC_TYPE'), metrics.BarChartMetric),
-            (mp.MetricType.Value('STATES_OVER_TIME_METRIC_TYPE'), metrics.StatesOverTimeMetric),
-            (mp.MetricType.Value('HISTOGRAM_METRIC_TYPE'), metrics.HistogramMetric),
-            (mp.MetricType.Value('DOUBLE_SUMMARY_METRIC_TYPE'), metrics.DoubleSummaryMetric),
-            (mp.MetricType.Value('SCALAR_METRIC_TYPE'), metrics.ScalarMetric)]
+            (
+                mp.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"),
+                metrics.DoubleOverTimeMetric,
+            ),
+            (mp.MetricType.Value("LINE_PLOT_METRIC_TYPE"), metrics.LinePlotMetric),
+            (mp.MetricType.Value("BAR_CHART_METRIC_TYPE"), metrics.BarChartMetric),
+            (
+                mp.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"),
+                metrics.StatesOverTimeMetric,
+            ),
+            (mp.MetricType.Value("HISTOGRAM_METRIC_TYPE"), metrics.HistogramMetric),
+            (
+                mp.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"),
+                metrics.DoubleSummaryMetric,
+            ),
+            (mp.MetricType.Value("SCALAR_METRIC_TYPE"), metrics.ScalarMetric),
+            (mp.MetricType.Value("PLOTLY_METRIC_TYPE"), metrics.PlotlyMetric),
+            (mp.MetricType.Value("IMAGE_METRIC_TYPE"), metrics.ImageMetric),
+        ]
 
         for metric_type, metric_class in metric_type_list:
             modified_msg = copy.copy(msg)
@@ -176,9 +217,7 @@ class MetricsTest(unittest.TestCase):
             self.assertEqual(type(unpacked), metric_class)
 
         INVALID_TYPE = -1
-        for metric_type in (
-                mp.MetricType.Value('NO_METRIC_TYPE'),
-                INVALID_TYPE):
+        for metric_type in (mp.MetricType.Value("NO_METRIC_TYPE"), INVALID_TYPE):
             with self.assertRaises(ValueError):
                 modified_msg = copy.copy(msg)
                 modified_msg.type = metric_type
@@ -198,14 +237,15 @@ class MetricsTest(unittest.TestCase):
             order=None,
             value=24.0,
             failure_definition=None,
-            unit="")
+            unit="",
+        )
 
         # SETTING
         test_value = 3
         self.assertIs(metric, metric.with_value(test_value))
         self.assertEqual(metric.value, test_value)
 
-        test_unit = 'm'
+        test_unit = "m"
         self.assertIs(metric, metric.with_unit(test_unit))
         self.assertEqual(metric.unit, test_unit)
 
@@ -213,21 +253,17 @@ class MetricsTest(unittest.TestCase):
             fails_above=1.0,
             fails_below=0.0,
         )
-        self.assertIs(
-            metric,
-            metric.with_failure_definition(test_failure_definition))
+        self.assertIs(metric, metric.with_failure_definition(test_failure_definition))
         self.assertEqual(metric.failure_definition, test_failure_definition)
 
         # PACKING
         msg = metric.pack()
         self.assertEqual(msg.type, mp.MetricType.Value("SCALAR_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField('scalar_metric_values'))
+        self.assertTrue(msg.metric_values.HasField("scalar_metric_values"))
         values = msg.metric_values.scalar_metric_values
         self.assertEqual(values.value, metric.value)
         assert metric.failure_definition is not None
-        self.assertEqual(
-            values.failure_definition,
-            metric.failure_definition.pack())
+        self.assertEqual(values.failure_definition, metric.failure_definition.pack())
         self.assertEqual(values.unit, metric.unit)
 
         optional_attr_list = ["value", "failure_definition", "unit"]
@@ -253,19 +289,23 @@ class MetricsTest(unittest.TestCase):
 
         time_data = metrics.SeriesMetricsData(
             name="times",
-            series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)]),
-            unit='m')
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=0, nanos=0),
+                    metrics_utils.Timestamp(secs=5, nanos=0),
+                ]
+            ),
+            unit="m",
+        )
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m',
-            index_data=time_data)
+            name="values", series=np.array([0.5, 0.6]), unit="m", index_data=time_data
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         failure_definition = metrics_utils.DoubleFailureDefinition(
             fails_above=1.0,
             fails_below=0.0,
@@ -273,8 +313,8 @@ class MetricsTest(unittest.TestCase):
         series_name = "test data"
 
         metric = metrics.DoubleOverTimeMetric(
-            name='test metric',
-            description='a test double over time metric',
+            name="test metric",
+            description="a test double over time metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -292,18 +332,15 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric.legend_series_names, [])
 
         self.assertEqual(
-            metric, metric.append_doubles_over_time_data(
-                value_data, series_name))
+            metric, metric.append_doubles_over_time_data(value_data, series_name)
+        )
         self.assertEqual(metric.doubles_over_time_data, [value_data])
         self.assertEqual(metric.legend_series_names, [series_name])
 
-        self.assertEqual(
-            metric, metric.append_statuses_over_time_data(status_data))
+        self.assertEqual(metric, metric.append_statuses_over_time_data(status_data))
         self.assertEqual(metric.statuses_over_time_data, [status_data])
 
-        self.assertEqual(
-            metric, metric.with_failure_definitions(
-                [failure_definition]))
+        self.assertEqual(metric, metric.with_failure_definitions([failure_definition]))
         self.assertEqual(metric.failure_definitions, [failure_definition])
 
         self.assertEqual(metric, metric.with_doubles_over_time_data([]))
@@ -330,19 +367,23 @@ class MetricsTest(unittest.TestCase):
 
         time_data = metrics.SeriesMetricsData(
             name="times",
-            series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)]),
-            unit='m')
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=0, nanos=0),
+                    metrics_utils.Timestamp(secs=5, nanos=0),
+                ]
+            ),
+            unit="m",
+        )
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m',
-            index_data=time_data)
+            name="values", series=np.array([0.5, 0.6]), unit="m", index_data=time_data
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         failure_definition = metrics_utils.DoubleFailureDefinition(
             fails_above=1.0,
             fails_below=0.0,
@@ -352,8 +393,8 @@ class MetricsTest(unittest.TestCase):
         # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.DoubleOverTimeMetric(
-            name='test metric',
-            description='a test double over time metric',
+            name="test metric",
+            description="a test double over time metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -372,21 +413,19 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
 
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "DOUBLE_OVER_TIME_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "double_over_time_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("double_over_time_metric_values"))
         values = msg.metric_values.double_over_time_metric_values
         self.assertEqual(len(values.doubles_over_time_data_id), 1)
         self.assertEqual(
             values.doubles_over_time_data_id[0].id,
-            metrics_utils.pack_uuid_to_proto(
-                value_data.id))
+            metrics_utils.pack_uuid_to_proto(value_data.id),
+        )
         self.assertEqual(len(values.statuses_over_time_data_id), 1)
         self.assertEqual(
             values.statuses_over_time_data_id[0].id,
-            metrics_utils.pack_uuid_to_proto(
-                status_data.id))
+            metrics_utils.pack_uuid_to_proto(status_data.id),
+        )
         self.assertEqual(len(values.legend_series_names), 1)
         self.assertEqual(values.legend_series_names[0], series_name)
         assert metric.start_time is not None
@@ -401,7 +440,7 @@ class MetricsTest(unittest.TestCase):
         def get_values(msg: Any) -> Any:
             return msg.metric_values.double_over_time_metric_values
 
-        for attr in ('start_time', 'end_time', 'y_axis_name'):
+        for attr in ("start_time", "end_time", "y_axis_name"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -418,8 +457,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertIn(time_data.id, ids)
@@ -435,26 +476,33 @@ class MetricsTest(unittest.TestCase):
 
         time_data = metrics.SeriesMetricsData(
             name="times",
-            series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)]),
-            unit='m')
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=0, nanos=0),
+                    metrics_utils.Timestamp(secs=5, nanos=0),
+                ]
+            ),
+            unit="m",
+        )
         value_data = metrics.SeriesMetricsData(
             name="values",
             series=np.array(["good state", "good state"]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         states_set = {"good state", "bad state"}
         failure_states = {"bad state"}
         series_name = "test data"
 
         metric = metrics.StatesOverTimeMetric(
-            name='test metric',
-            description='a test states over time metric',
+            name="test metric",
+            description="a test states over time metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -468,13 +516,12 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric.legend_series_names, [])
 
         self.assertEqual(
-            metric, metric.append_states_over_time_data(
-                value_data, series_name))
+            metric, metric.append_states_over_time_data(value_data, series_name)
+        )
         self.assertEqual(metric.states_over_time_data, [value_data])
         self.assertEqual(metric.legend_series_names, [series_name])
 
-        self.assertEqual(
-            metric, metric.append_statuses_over_time_data(status_data))
+        self.assertEqual(metric, metric.append_statuses_over_time_data(status_data))
         self.assertEqual(metric.statuses_over_time_data, [status_data])
 
         self.assertEqual(metric, metric.with_states_over_time_data([]))
@@ -495,19 +542,26 @@ class MetricsTest(unittest.TestCase):
 
         time_data = metrics.SeriesMetricsData(
             name="times",
-            series=np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)]),
-            unit='m')
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=0, nanos=0),
+                    metrics_utils.Timestamp(secs=5, nanos=0),
+                ]
+            ),
+            unit="m",
+        )
         value_data = metrics.SeriesMetricsData(
             name="values",
             series=np.array(["good state", "good state"]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='',
-            index_data=time_data)
+            unit="",
+            index_data=time_data,
+        )
         states_set = {"good state", "bad state"}
         failure_states = {"bad state"}
         series_name = "test data"
@@ -515,8 +569,8 @@ class MetricsTest(unittest.TestCase):
         # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.StatesOverTimeMetric(
-            name='test metric',
-            description='a test states over time metric',
+            name="test metric",
+            description="a test states over time metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -533,21 +587,19 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
 
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "STATES_OVER_TIME_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "states_over_time_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("states_over_time_metric_values"))
         values = msg.metric_values.states_over_time_metric_values
         self.assertEqual(len(values.states_over_time_data_id), 1)
         self.assertEqual(
             values.states_over_time_data_id[0].id,
-            metrics_utils.pack_uuid_to_proto(
-                value_data.id))
+            metrics_utils.pack_uuid_to_proto(value_data.id),
+        )
         self.assertEqual(len(values.statuses_over_time_data_id), 1)
         self.assertEqual(
             values.statuses_over_time_data_id[0].id,
-            metrics_utils.pack_uuid_to_proto(
-                status_data.id))
+            metrics_utils.pack_uuid_to_proto(status_data.id),
+        )
         self.assertEqual(len(values.legend_series_names), 1)
         self.assertEqual(values.legend_series_names[0], series_name)
         self.assertEqual(set(values.states_set), metric.states_set)
@@ -557,7 +609,7 @@ class MetricsTest(unittest.TestCase):
         def get_values(msg: Any) -> Any:
             return msg.metric_values.states_over_time_metric_values
 
-        for attr in ('states_set', 'failure_states'):
+        for attr in ("states_set", "failure_states"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -575,8 +627,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertIn(time_data.id, ids)
@@ -590,37 +644,43 @@ class MetricsTest(unittest.TestCase):
     def test_states_over_time_with_states_over_time_series(self) -> None:
         """A special unit test for StatesOverTimeMetric.with_states_over_time_series()"""
 
-        value_data = np.array(['good', 'bad'])
-        time_data = np.array([metrics_utils.Timestamp(secs=0, nanos=0),
-                             metrics_utils.Timestamp(secs=5, nanos=0)])
+        value_data = np.array(["good", "bad"])
+        time_data = np.array(
+            [
+                metrics_utils.Timestamp(secs=0, nanos=0),
+                metrics_utils.Timestamp(secs=5, nanos=0),
+            ]
+        )
 
         metric = metrics.StatesOverTimeMetric(
-            name='test metric',
+            name="test metric",
         )
         metric.with_states_over_time_series(
-            states_over_time_series={'a_states': value_data},
-            units={'a_states': 'dabloons'},
-            indices={'a_states': time_data},
-            legend_series_names={'a_states': 'My A States'})
+            states_over_time_series={"a_states": value_data},
+            units={"a_states": "dabloons"},
+            indices={"a_states": time_data},
+            legend_series_names={"a_states": "My A States"},
+        )
 
         self.assertEqual(len(metric.states_over_time_data), 1)
 
         data = metric.states_over_time_data[0]
         assert isinstance(data, metrics.SeriesMetricsData)
-        self.assertEqual(data.name, 'a_states')
+        self.assertEqual(data.name, "a_states")
         self.assertTrue((data.series == value_data).all())
-        self.assertEqual(data.unit, 'dabloons')
+        self.assertEqual(data.unit, "dabloons")
         assert isinstance(data.index_data, metrics.SeriesMetricsData)
         self.assertTrue((data.index_data.series == time_data).all())
 
         metric = metrics.StatesOverTimeMetric(
-            name='test metric',
+            name="test metric",
         )
         metric.with_states_over_time_series(
-            states_over_time_series={'a_states': value_data})
+            states_over_time_series={"a_states": value_data}
+        )
         self.assertEqual(len(metric.states_over_time_data), 1)
         data = metric.states_over_time_data[0]
-        self.assertEqual(data.name, 'a_states')
+        self.assertEqual(data.name, "a_states")
         self.assertIs(data.unit, None)
         self.assertEqual(metric.legend_series_names, [None])
 
@@ -628,24 +688,23 @@ class MetricsTest(unittest.TestCase):
         job_id = uuid.uuid4()
 
         x_value_data = metrics.SeriesMetricsData(
-            name="x values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="x values", series=np.array([0.5, 0.6]), unit="m"
+        )
 
         y_value_data = metrics.SeriesMetricsData(
-            name="y values",
-            series=np.array([0.1, 0.2]),
-            unit='m')
+            name="y values", series=np.array([0.1, 0.2]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
 
         series_name = "test data"
 
         metric = metrics.LinePlotMetric(
-            name='test metric',
-            description='a test line plot  metric',
+            name="test metric",
+            description="a test line plot  metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -660,17 +719,18 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric.legend_series_names, [])
 
         self.assertEqual(
-            metric, metric.append_series_data(
+            metric,
+            metric.append_series_data(
                 x_value_data,
                 y_value_data,
                 series_name,
-            ))
+            ),
+        )
         self.assertEqual(metric.x_doubles_data, [x_value_data])
         self.assertEqual(metric.y_doubles_data, [y_value_data])
         self.assertEqual(metric.legend_series_names, [series_name])
 
-        self.assertEqual(
-            metric, metric.append_statuses_data(status_data))
+        self.assertEqual(metric, metric.append_statuses_data(status_data))
         self.assertEqual(metric.statuses_data, [status_data])
 
         self.assertEqual(metric, metric.with_legend_series_names([]))
@@ -688,26 +748,25 @@ class MetricsTest(unittest.TestCase):
         job_id = uuid.uuid4()
 
         x_value_data = metrics.SeriesMetricsData(
-            name="x values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="x values", series=np.array([0.5, 0.6]), unit="m"
+        )
 
         y_value_data = metrics.SeriesMetricsData(
-            name="y values",
-            series=np.array([0.1, 0.2]),
-            unit='m')
+            name="y values", series=np.array([0.1, 0.2]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
 
         series_name = "test data"
 
         # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.LinePlotMetric(
-            name='test metric',
-            description='a test line plot  metric',
+            name="test metric",
+            description="a test line plot  metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -723,19 +782,22 @@ class MetricsTest(unittest.TestCase):
         )
         msg = metric.pack()
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "LINE_PLOT_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "line_plot_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("LINE_PLOT_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("line_plot_metric_values"))
         values = msg.metric_values.line_plot_metric_values
-        self.assertEqual({data_id.id.data for data_id in values.x_doubles_data_id},
-                         {str(x_value_data.id)})
-        self.assertEqual({data_id.id.data for data_id in values.y_doubles_data_id},
-                         {str(y_value_data.id)})
-        self.assertEqual({data_id.id.data for data_id in values.statuses_data_id},
-                         {str(status_data.id)})
-        self.assertEqual(set(values.legend_series_names),
-                         {series_name})
+        self.assertEqual(
+            {data_id.id.data for data_id in values.x_doubles_data_id},
+            {str(x_value_data.id)},
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in values.y_doubles_data_id},
+            {str(y_value_data.id)},
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in values.statuses_data_id},
+            {str(status_data.id)},
+        )
+        self.assertEqual(set(values.legend_series_names), {series_name})
         for attr in ("x_axis_name", "y_axis_name"):
             self.assertEqual(getattr(values, attr), getattr(metric, attr))
 
@@ -743,7 +805,7 @@ class MetricsTest(unittest.TestCase):
         def get_values(msg: Any) -> Any:
             return msg.metric_values.line_plot_metric_values
 
-        for attr in ('x_axis_name', 'y_axis_name'):
+        for attr in ("x_axis_name", "y_axis_name"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -761,8 +823,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 3)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(x_value_data.id, ids)
         self.assertIn(y_value_data.id, ids)
         self.assertIn(status_data.id, ids)
@@ -776,18 +840,18 @@ class MetricsTest(unittest.TestCase):
     def test_bar_chart_metric(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="values", series=np.array([0.5, 0.6]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
         series_name = "test data"
 
         metric = metrics.BarChartMetric(
-            name='test metric',
-            description='a test bar chart metric',
+            name="test metric",
+            description="a test bar chart metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -800,14 +864,11 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric.statuses_data, [])
         self.assertEqual(metric.legend_series_names, [])
 
-        self.assertEqual(
-            metric, metric.append_values_data(
-                value_data, series_name))
+        self.assertEqual(metric, metric.append_values_data(value_data, series_name))
         self.assertEqual(metric.values_data, [value_data])
         self.assertEqual(metric.legend_series_names, [series_name])
 
-        self.assertEqual(
-            metric, metric.append_statuses_data(status_data))
+        self.assertEqual(metric, metric.append_statuses_data(status_data))
         self.assertEqual(metric.statuses_data, [status_data])
 
         self.assertEqual(metric, metric.with_legend_series_names([]))
@@ -828,20 +889,20 @@ class MetricsTest(unittest.TestCase):
     def test_bar_chart_metric_pack(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="values", series=np.array([0.5, 0.6]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
         series_name = "test data"
 
         # Use the constructor to initialize the data this time, in contrast with
         # the above test.
         metric = metrics.BarChartMetric(
-            name='test metric',
-            description='a test bar chart metric',
+            name="test metric",
+            description="a test bar chart metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -858,17 +919,17 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
 
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "BAR_CHART_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "bar_chart_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("BAR_CHART_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("bar_chart_metric_values"))
         values = msg.metric_values.bar_chart_metric_values
-        self.assertEqual({data_id.id.data for data_id in values.values_data_id},
-                         {str(value_data.id)})
-        self.assertEqual({data_id.id.data for data_id in values.statuses_data_id},
-                         {str(status_data.id)})
-        self.assertEqual(set(values.legend_series_names),
-                         {series_name})
+        self.assertEqual(
+            {data_id.id.data for data_id in values.values_data_id}, {str(value_data.id)}
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in values.statuses_data_id},
+            {str(status_data.id)},
+        )
+        self.assertEqual(set(values.legend_series_names), {series_name})
 
         for attr in ("x_axis_name", "y_axis_name", "stack_bars"):
             self.assertEqual(getattr(values, attr), getattr(metric, attr))
@@ -877,7 +938,7 @@ class MetricsTest(unittest.TestCase):
         def get_values(msg: Any) -> Any:
             return msg.metric_values.bar_chart_metric_values
 
-        for attr in ('x_axis_name', 'y_axis_name', 'stack_bars'):
+        for attr in ("x_axis_name", "y_axis_name", "stack_bars"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -894,8 +955,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
@@ -908,22 +971,22 @@ class MetricsTest(unittest.TestCase):
     def test_histogram_metric(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="values", series=np.array([0.5, 0.6]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
 
-        buckets = [metrics_utils.HistogramBucket(lower=0.0,
-                                                 upper=0.5),
-                   metrics_utils.HistogramBucket(lower=0.5,
-                                                 upper=1.0)]
+        buckets = [
+            metrics_utils.HistogramBucket(lower=0.0, upper=0.5),
+            metrics_utils.HistogramBucket(lower=0.5, upper=1.0),
+        ]
 
         metric = metrics.HistogramMetric(
-            name='test metric',
-            description='a test histogram metric',
+            name="test metric",
+            description="a test histogram metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -939,24 +1002,19 @@ class MetricsTest(unittest.TestCase):
         self.assertIs(metric.upper_bound, None)
         self.assertIs(metric.x_axis_name, None)
 
-        self.assertEqual(
-            metric, metric.with_values_data(value_data))
+        self.assertEqual(metric, metric.with_values_data(value_data))
         self.assertEqual(metric.values_data, value_data)
 
-        self.assertEqual(
-            metric, metric.with_statuses_data(status_data))
+        self.assertEqual(metric, metric.with_statuses_data(status_data))
         self.assertEqual(metric.statuses_data, status_data)
 
-        self.assertEqual(
-            metric, metric.with_buckets(buckets))
+        self.assertEqual(metric, metric.with_buckets(buckets))
         self.assertEqual(metric.buckets, buckets)
 
-        self.assertEqual(
-            metric, metric.with_lower_bound(buckets[0].lower))
+        self.assertEqual(metric, metric.with_lower_bound(buckets[0].lower))
         self.assertEqual(metric.lower_bound, buckets[0].lower)
 
-        self.assertEqual(
-            metric, metric.with_upper_bound(buckets[-1].upper))
+        self.assertEqual(metric, metric.with_upper_bound(buckets[-1].upper))
         self.assertEqual(metric.upper_bound, buckets[-1].upper)
 
         new_x_axis_name = "my x axis"
@@ -966,22 +1024,22 @@ class MetricsTest(unittest.TestCase):
     def test_histogram_metric_pack(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5, 0.6]),
-            unit='m')
+            name="values", series=np.array([0.5, 0.6]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
 
-        buckets = [metrics_utils.HistogramBucket(lower=0.0,
-                                                 upper=0.5),
-                   metrics_utils.HistogramBucket(lower=0.5,
-                                                 upper=1.0)]
+        buckets = [
+            metrics_utils.HistogramBucket(lower=0.0, upper=0.5),
+            metrics_utils.HistogramBucket(lower=0.5, upper=1.0),
+        ]
 
         metric = metrics.HistogramMetric(
-            name='test metric',
-            description='a test histogram metric',
+            name="test metric",
+            description="a test histogram metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -999,15 +1057,15 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
 
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "HISTOGRAM_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "histogram_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("HISTOGRAM_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("histogram_metric_values"))
         values = msg.metric_values.histogram_metric_values
-        self.assertEqual(values.values_data_id.id,
-                         metrics_utils.pack_uuid_to_proto(value_data.id))
-        self.assertEqual(values.statuses_data_id.id,
-                         metrics_utils.pack_uuid_to_proto(status_data.id))
+        self.assertEqual(
+            values.values_data_id.id, metrics_utils.pack_uuid_to_proto(value_data.id)
+        )
+        self.assertEqual(
+            values.statuses_data_id.id, metrics_utils.pack_uuid_to_proto(status_data.id)
+        )
         self.assertEqual(values.lower_bound, metric.lower_bound)
         self.assertEqual(values.upper_bound, metric.upper_bound)
         self.assertEqual(values.x_axis_name, metric.x_axis_name)
@@ -1020,13 +1078,13 @@ class MetricsTest(unittest.TestCase):
         def get_values(msg: Any) -> Any:
             return msg.metric_values.histogram_metric_values
 
-        for attr in ('values_data', 'statuses_data'):
+        for attr in ("values_data", "statuses_data"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
             self.assertFalse(get_values(modified_msg).HasField(attr + "_id"))
 
-        for attr in ('x_axis_name', 'lower_bound', 'upper_bound'):
+        for attr in ("x_axis_name", "lower_bound", "upper_bound"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -1042,8 +1100,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
@@ -1062,21 +1122,21 @@ class MetricsTest(unittest.TestCase):
     def test_double_summary_metric(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5]),
-            unit='m')
+            name="values", series=np.array([0.5]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
         index = 0
         failure_definition = metrics_utils.DoubleFailureDefinition(
             fails_above=1.0,
             fails_below=0.0,
         )
         metric = metrics.DoubleSummaryMetric(
-            name='test metric',
-            description='a test histogram metric',
+            name="test metric",
+            description="a test histogram metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -1090,40 +1150,36 @@ class MetricsTest(unittest.TestCase):
         self.assertIs(metric.index, None)
         self.assertIs(metric.failure_definition, None)
 
-        self.assertEqual(
-            metric, metric.with_value_data(value_data))
+        self.assertEqual(metric, metric.with_value_data(value_data))
         self.assertEqual(metric.value_data, value_data)
 
-        self.assertEqual(
-            metric, metric.with_status_data(status_data))
+        self.assertEqual(metric, metric.with_status_data(status_data))
         self.assertEqual(metric.status_data, status_data)
 
-        self.assertEqual(
-            metric, metric.with_index(index))
+        self.assertEqual(metric, metric.with_index(index))
         self.assertEqual(metric.index, index)
 
-        self.assertEqual(
-            metric, metric.with_failure_definition(failure_definition))
+        self.assertEqual(metric, metric.with_failure_definition(failure_definition))
         self.assertEqual(metric.failure_definition, failure_definition)
 
     def test_double_summary_metric_pack(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5]),
-            unit='m')
+            name="values", series=np.array([0.5]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
         index = 0
         failure_definition = metrics_utils.DoubleFailureDefinition(
             fails_above=1.0,
             fails_below=0.0,
         )
         metric = metrics.DoubleSummaryMetric(
-            name='test metric',
-            description='a test histogram metric',
+            name="test metric",
+            description="a test histogram metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -1139,27 +1195,25 @@ class MetricsTest(unittest.TestCase):
         msg = metric.pack()
 
         self.assert_common_fields_match(msg=msg, metric=metric)
-        self.assertEqual(msg.type, mp.MetricType.Value(
-            "DOUBLE_SUMMARY_METRIC_TYPE"))
-        self.assertTrue(msg.metric_values.HasField(
-            "double_metric_values"))
+        self.assertEqual(msg.type, mp.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("double_metric_values"))
         values = msg.metric_values.double_metric_values
-        self.assertEqual(values.value_data_id.id,
-                         metrics_utils.pack_uuid_to_proto(value_data.id))
-        self.assertEqual(values.status_data_id.id,
-                         metrics_utils.pack_uuid_to_proto(status_data.id))
-        self.assertTrue(values.HasField('series_index'))
+        self.assertEqual(
+            values.value_data_id.id, metrics_utils.pack_uuid_to_proto(value_data.id)
+        )
+        self.assertEqual(
+            values.status_data_id.id, metrics_utils.pack_uuid_to_proto(status_data.id)
+        )
+        self.assertTrue(values.HasField("series_index"))
         self.assertEqual(values.series_index, metric.index)
         assert metric.failure_definition is not None
-        self.assertEqual(
-            values.failure_definition,
-            metric.failure_definition.pack())
+        self.assertEqual(values.failure_definition, metric.failure_definition.pack())
 
         # Now set things to None:
         def get_values(msg: Any) -> Any:
             return msg.metric_values.double_metric_values
 
-        for attr in ('value_data', 'status_data'):
+        for attr in ("value_data", "status_data"):
             modified_metric = copy.copy(metric)
             setattr(modified_metric, attr, None)
             modified_msg = modified_metric.pack()
@@ -1168,12 +1222,12 @@ class MetricsTest(unittest.TestCase):
         modified_metric = copy.copy(metric)
         modified_metric.index = None
         modified_msg = modified_metric.pack()
-        self.assertIs(get_values(modified_msg).WhichOneof('index'), None)
+        self.assertIs(get_values(modified_msg).WhichOneof("index"), None)
 
         modified_metric = copy.copy(metric)
-        modified_metric.index = 'string key'
+        modified_metric.index = "string key"
         modified_msg = modified_metric.pack()
-        self.assertEqual(get_values(modified_msg).string_index, 'string key')
+        self.assertEqual(get_values(modified_msg).string_index, "string key")
 
         uuid_key = uuid.uuid4()
         modified_metric = copy.copy(metric)
@@ -1181,15 +1235,14 @@ class MetricsTest(unittest.TestCase):
         modified_msg = modified_metric.pack()
         self.assertEqual(
             get_values(modified_msg).uuid_index,
-            metrics_utils.pack_uuid_to_proto(uuid_key))
+            metrics_utils.pack_uuid_to_proto(uuid_key),
+        )
 
         time_key = metrics_utils.Timestamp(secs=1, nanos=3)
         modified_metric = copy.copy(metric)
         modified_metric.index = time_key
         modified_msg = modified_metric.pack()
-        self.assertEqual(
-            get_values(modified_msg).timestamp_index,
-            time_key.pack())
+        self.assertEqual(get_values(modified_msg).timestamp_index, time_key.pack())
 
         bad_type_key = cast(None, metrics.SeriesMetricsData(name="whoops"))
         modified_metric = copy.copy(metric)
@@ -1200,27 +1253,26 @@ class MetricsTest(unittest.TestCase):
         modified_metric = copy.copy(metric)
         modified_metric.failure_definition = None
         modified_msg = modified_metric.pack()
-        self.assertFalse(
-            get_values(modified_msg).HasField('failure_definition'))
+        self.assertFalse(get_values(modified_msg).HasField("failure_definition"))
 
     def test_double_summary_metric_recursive_pack(self) -> None:
         job_id = uuid.uuid4()
         value_data = metrics.SeriesMetricsData(
-            name="values",
-            series=np.array([0.5]),
-            unit='m')
+            name="values", series=np.array([0.5]), unit="m"
+        )
         status_data = metrics.SeriesMetricsData(
             name="statuses",
             series=np.array([MetricStatus.PASSED_METRIC_STATUS]),
-            unit='')
+            unit="",
+        )
         index = 0
         failure_definition = metrics_utils.DoubleFailureDefinition(
             fails_above=1.0,
             fails_below=0.0,
         )
         metric = metrics.DoubleSummaryMetric(
-            name='test metric',
-            description='a test histogram metric',
+            name="test metric",
+            description="a test histogram metric",
             status=MetricStatus.PASSED_METRIC_STATUS,
             importance=MetricImportance.ZERO_IMPORTANCE,
             blocking=False,
@@ -1239,8 +1291,10 @@ class MetricsTest(unittest.TestCase):
         self.assertIn(metric.id, output.packed_ids)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
-        ids = [uuid.UUID(data.metrics_data_id.id.data)
-               for data in output.metrics_msg.metrics_data]
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
         self.assertIn(value_data.id, ids)
         self.assertIn(status_data.id, ids)
         self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
@@ -1256,23 +1310,129 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 2)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
 
+    def test_plotly_metric(self) -> None:
+        # CONSTRUCTION
+        job_id = uuid.uuid4()
+        metric = metrics.PlotlyMetric(
+            "test_metric",
+            "A metric for testing",
+            MetricStatus.PASSED_METRIC_STATUS,
+            MetricImportance.ZERO_IMPORTANCE,
+            should_display=True,
+            blocking=False,
+            parent_job_id=job_id,
+            order=None,
+            plotly_data=None,
+        )
+
+        # SETTING
+        test_data = '{"test": "test"}'
+        self.assertIs(metric, metric.with_plotly_data(test_data))
+        self.assertEqual(metric.plotly_data, test_data)
+
+        # PACKING
+        msg = metric.pack()
+        self.assertEqual(msg.type, mp.MetricType.Value("PLOTLY_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("plotly_metric_values"))
+        values = msg.metric_values.plotly_metric_values
+        # validate that as dicts, they are the same
+        self.assertEqual(MessageToDict(values.json), json.loads(test_data))
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+
+    def test_image_metric(self) -> None:
+        job_id = uuid.uuid4()
+
+        file_data = metrics.ExternalFileMetricsData(
+            name="an external image", filename="test.gif"
+        )
+
+        metric = metrics.ImageMetric(
+            name="test metric",
+            description="a test image metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
+
+        self.assertEqual(metric.image_data, None)
+
+        self.assertEqual(metric, metric.with_image_data(file_data))
+
+    def test_image_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
+
+        image_data = metrics.ExternalFileMetricsData(
+            name="an external image", filename="test.gif"
+        )
+
+        # Use the constructor to initialize the data this time, in contrast with
+        # the above test.
+        metric = metrics.ImageMetric(
+            name="test metric",
+            description="a test image metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            image_data=image_data,
+        )
+
+        msg = metric.pack()
+
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(msg.type, mp.MetricType.Value("IMAGE_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("image_metric_values"))
+        values = msg.metric_values.image_metric_values
+        self.assertEqual(
+            values.image_data_id.id, metrics_utils.pack_uuid_to_proto(image_data.id)
+        )
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
+        self.assertIn(image_data.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 1)
+
     def test_metrics_data(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
-            series=np.array([1., 2., 3.]),
+            series=np.array([1.0, 2.0, 3.0]),
         )
         metrics_data = metrics.SeriesMetricsData(
             name="metrics data",
-            series=np.array([1., 2., 3.]),
+            series=np.array([1.0, 2.0, 3.0]),
         )
-        unit = 'm'
+        unit = "m"
 
         self.assertEqual(metrics_data, metrics_data.with_unit(unit))
         self.assertEqual(metrics_data.unit, unit)
 
-        self.assertEqual(
-            metrics_data,
-            metrics_data.with_index_data(index_data))
+        self.assertEqual(metrics_data, metrics_data.with_index_data(index_data))
         self.assertEqual(metrics_data.index_data, index_data)
 
         self.assertEqual(metrics_data, metrics_data)
@@ -1280,7 +1440,7 @@ class MetricsTest(unittest.TestCase):
         self.assertNotEqual(metrics_data, index_data)
 
         with self.assertRaises(NotImplementedError):
-            metrics.MetricsData.map(metrics_data, lambda *_: _, '')
+            metrics.MetricsData.map(metrics_data, lambda *_: _, "")
         with self.assertRaises(NotImplementedError):
             metrics.MetricsData.group_by(metrics_data, index_data)
         with self.assertRaises(NotImplementedError):
@@ -1289,78 +1449,86 @@ class MetricsTest(unittest.TestCase):
         output = metrics_utils.ResimMetricsOutput()
         metrics_data.recursively_pack_into(output)
         self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
-        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
-                         for md in output.metrics_msg.metrics_data},
-                         {index_data.id, metrics_data.id})
+        self.assertEqual(
+            {
+                uuid.UUID(md.metrics_data_id.id.data)
+                for md in output.metrics_msg.metrics_data
+            },
+            {index_data.id, metrics_data.id},
+        )
         metrics_data.recursively_pack_into(output)
         self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
-        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
-                         for md in output.metrics_msg.metrics_data},
-                         {index_data.id, metrics_data.id})
+        self.assertEqual(
+            {
+                uuid.UUID(md.metrics_data_id.id.data)
+                for md in output.metrics_msg.metrics_data
+            },
+            {index_data.id, metrics_data.id},
+        )
 
     def test_series_metrics_data(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
-            series=np.array([1., 2., 3.]),
+            series=np.array([1.0, 2.0, 3.0]),
         )
-        series = np.array([4., 5., 6.])
+        series = np.array([4.0, 5.0, 6.0])
         metrics_data = metrics.SeriesMetricsData(
             name="metrics data",
-            unit='m',
+            unit="m",
             index_data=index_data,
         )
         self.assertEqual(metrics_data, metrics_data.with_series(series))
         self.assertTrue((metrics_data.series == series).all())
 
-        negated_metrics_data = metrics_data.map(lambda arr, i: -arr[i],
-                                                'negated metrics data',
-                                                'm')
+        negated_metrics_data = metrics_data.map(
+            lambda arr, i: -arr[i], "negated metrics data", "m"
+        )
 
-        for normal, negated in zip(metrics_data.series,
-                                   negated_metrics_data.series):
+        for normal, negated in zip(metrics_data.series, negated_metrics_data.series):
             self.assertEqual(normal, -negated)
 
         grouping_data = metrics.SeriesMetricsData(
-            name="grouping data",
-            series=np.array(["yes", "no", "yes"])
+            name="grouping data", series=np.array(["yes", "no", "yes"])
         )
 
-        grouped_data = metrics_data.group_by(grouping_data,
-                                             'grouped data',
-                                             'grouped data index')
+        grouped_data = metrics_data.group_by(
+            grouping_data, "grouped data", "grouped data index"
+        )
 
-        expected = {"yes": np.array([4., 6.]),
-                    "no": np.array([5.])}
-        expected_index = {"yes": np.array([1., 3.]),
-                          "no": np.array([2.])}
+        expected = {"yes": np.array([4.0, 6.0]), "no": np.array([5.0])}
+        expected_index = {"yes": np.array([1.0, 3.0]), "no": np.array([2.0])}
 
         assert grouped_data is not None
         assert grouped_data.index_data is not None
         for key, val in expected.items():
+            self.assertTrue((val == grouped_data.category_to_series[key]).all())
             self.assertTrue(
-                (val == grouped_data.category_to_series[key]).all())
-            self.assertTrue(
-                (expected_index[key] == grouped_data.index_data.category_to_series[key]).all())
+                (
+                    expected_index[key]
+                    == grouped_data.index_data.category_to_series[key]
+                ).all()
+            )
 
-        self.assertEqual(grouped_data.name, 'grouped data')
-        self.assertEqual(grouped_data.index_data.name, 'grouped data index')
+        self.assertEqual(grouped_data.name, "grouped data")
+        self.assertEqual(grouped_data.index_data.name, "grouped data index")
 
         # Cover the override case:
-        regrouped_index = index_data.group_by(grouping_data,
-                                              'regrouped data',
-                                              'regrouped data index',
-                                              grouped_data.index_data)
+        regrouped_index = index_data.group_by(
+            grouping_data,
+            "regrouped data",
+            "regrouped data index",
+            grouped_data.index_data,
+        )
 
         for key, val in expected_index.items():
-            self.assertTrue(
-                (val == regrouped_index.category_to_series[key]).all())
+            self.assertTrue((val == regrouped_index.category_to_series[key]).all())
         self.assertEqual(regrouped_index.index_data, grouped_data.index_data)
 
         assert regrouped_index is not None
         assert regrouped_index.index_data is not None
 
-        self.assertEqual(regrouped_index.name, 'regrouped data')
-        self.assertEqual(regrouped_index.index_data.name, 'grouped data index')
+        self.assertEqual(regrouped_index.name, "regrouped data")
+        self.assertEqual(regrouped_index.index_data.name, "grouped data index")
 
         # Check the auto naming:
         autonamed_grouped_data = metrics_data.group_by(grouping_data)
@@ -1368,40 +1536,41 @@ class MetricsTest(unittest.TestCase):
         assert autonamed_grouped_data.index_data is not None
 
         self.assertEqual(
-            autonamed_grouped_data.name,
-            "metrics data-grouped-by-grouping data")
+            autonamed_grouped_data.name, "metrics data-grouped-by-grouping data"
+        )
         self.assertEqual(
             autonamed_grouped_data.index_data.name,
-            "index data-grouped-by-grouping data")
+            "index data-grouped-by-grouping data",
+        )
 
         autonamed_grouped_index = index_data.group_by(grouping_data)
         assert autonamed_grouped_index is not None
         assert autonamed_grouped_index.index_data is None
 
         self.assertEqual(
-            autonamed_grouped_index.name,
-            "index data-grouped-by-grouping data")
+            autonamed_grouped_index.name, "index data-grouped-by-grouping data"
+        )
 
     def test_series_metrics_data_pack(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
-            series=np.array([1., 2., 3.]),
+            series=np.array([1.0, 2.0, 3.0]),
         )
-        series = np.array([4., 5., 6.])
+        series = np.array([4.0, 5.0, 6.0])
         metrics_data = metrics.SeriesMetricsData(
             name="metrics data",
             series=series,
-            unit='m',
+            unit="m",
             index_data=index_data,
         )
 
         msg = metrics_data.pack()
         self.assertEqual(
-            msg.metrics_data_id.id,
-            metrics_utils.pack_uuid_to_proto(
-                metrics_data.id))
-        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
-            'INDEXED_DOUBLE_SERIES_DATA_TYPE'))
+            msg.metrics_data_id.id, metrics_utils.pack_uuid_to_proto(metrics_data.id)
+        )
+        self.assertEqual(
+            msg.data_type, mp.MetricsDataType.Value("INDEXED_DOUBLE_SERIES_DATA_TYPE")
+        )
 
         self.assertEqual(msg.name, metrics_data.name)
         self.assertEqual(msg.unit, metrics_data.unit)
@@ -1409,26 +1578,22 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(msg.category_names), 0)
         self.assertTrue(msg.is_indexed)
         self.assertEqual(
-            msg.index_data_id.id,
-            metrics_utils.pack_uuid_to_proto(
-                index_data.id))
+            msg.index_data_id.id, metrics_utils.pack_uuid_to_proto(index_data.id)
+        )
         self.assertEqual(
-            msg.index_data_type,
-            mp.MetricsDataType.Value('DOUBLE_SERIES_DATA_TYPE'))
+            msg.index_data_type, mp.MetricsDataType.Value("DOUBLE_SERIES_DATA_TYPE")
+        )
         for packed_val, val in zip(msg.series.doubles.series, series):
             self.assertEqual(packed_val, val)
 
     def test_grouped_metrics_data(self) -> None:
-        category_to_series = {"yes": np.array([4., 6.]),
-                              "no": np.array([5.])}
+        category_to_series = {"yes": np.array([4.0, 6.0]), "no": np.array([5.0])}
 
-        metrics_data = metrics.GroupedMetricsData(
-            name="grouped metrics data",
-            unit='m')
+        metrics_data = metrics.GroupedMetricsData(name="grouped metrics data", unit="m")
 
         self.assertEqual(
-            metrics_data,
-            metrics_data.with_category_to_series(category_to_series))
+            metrics_data, metrics_data.with_category_to_series(category_to_series)
+        )
 
         # Check the case where the category_to_series is passed into the
         # constructor
@@ -1441,30 +1606,26 @@ class MetricsTest(unittest.TestCase):
         for key, val in category_to_series.items():
             self.assertTrue((other_data.category_to_series[key] == val).all())
 
-        negated_data = metrics_data.map(lambda arr, i, cat: -arr[i],
-                                        'negated data',
-                                        'm')
+        negated_data = metrics_data.map(
+            lambda arr, i, cat: -arr[i], "negated data", "m"
+        )
 
-        self.assertEqual(negated_data.name, 'negated data')
-        self.assertEqual(negated_data.unit, 'm')
+        self.assertEqual(negated_data.name, "negated data")
+        self.assertEqual(negated_data.unit, "m")
         for key, val in category_to_series.items():
-            self.assertTrue(
-                (negated_data.category_to_series[key] == -val).all())
+            self.assertTrue((negated_data.category_to_series[key] == -val).all())
 
         with self.assertRaises(NotImplementedError):
             metrics_data.group_by(metrics_data)
 
         new_series = np.array([5.0, 6.0])
-        metrics_data.add_category('maybe', new_series)
-        self.assertIn('maybe', metrics_data.category_to_series)
-        self.assertTrue(
-            (metrics_data.category_to_series['maybe'] == new_series).all())
+        metrics_data.add_category("maybe", new_series)
+        self.assertIn("maybe", metrics_data.category_to_series)
+        self.assertTrue((metrics_data.category_to_series["maybe"] == new_series).all())
 
     def test_grouped_metrics_data_pack(self) -> None:
-        index_category_to_series = {"yes": np.array([1., 2.]),
-                                    "no": np.array([3.])}
-        category_to_series = {"yes": np.array([4., 6.]),
-                              "no": np.array([5.])}
+        index_category_to_series = {"yes": np.array([1.0, 2.0]), "no": np.array([3.0])}
+        category_to_series = {"yes": np.array([4.0, 6.0]), "no": np.array([5.0])}
 
         index_data = metrics.GroupedMetricsData(
             name="index metrics data",
@@ -1474,17 +1635,17 @@ class MetricsTest(unittest.TestCase):
         metrics_data = metrics.GroupedMetricsData(
             name="metrics data",
             category_to_series=category_to_series,
-            unit='m',
+            unit="m",
             index_data=index_data,
         )
 
         msg = metrics_data.pack()
         self.assertEqual(
-            msg.metrics_data_id.id,
-            metrics_utils.pack_uuid_to_proto(
-                metrics_data.id))
-        self.assertEqual(msg.data_type, mp.MetricsDataType.Value(
-            'INDEXED_DOUBLE_SERIES_DATA_TYPE'))
+            msg.metrics_data_id.id, metrics_utils.pack_uuid_to_proto(metrics_data.id)
+        )
+        self.assertEqual(
+            msg.data_type, mp.MetricsDataType.Value("INDEXED_DOUBLE_SERIES_DATA_TYPE")
+        )
 
         self.assertEqual(msg.name, metrics_data.name)
         self.assertEqual(msg.unit, metrics_data.unit)
@@ -1492,29 +1653,195 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(set(msg.category_names), {"yes", "no"})
         self.assertTrue(msg.is_indexed)
         self.assertEqual(
-            msg.index_data_id.id,
-            metrics_utils.pack_uuid_to_proto(
-                index_data.id))
+            msg.index_data_id.id, metrics_utils.pack_uuid_to_proto(index_data.id)
+        )
         self.assertEqual(
-            msg.index_data_type,
-            mp.MetricsDataType.Value('DOUBLE_SERIES_DATA_TYPE'))
+            msg.index_data_type, mp.MetricsDataType.Value("DOUBLE_SERIES_DATA_TYPE")
+        )
 
         for key, packed_series in msg.series_per_category.category_to_series.items():
             for packed_val, val in zip(
-                    packed_series.doubles.series, category_to_series[key]):
+                packed_series.doubles.series, category_to_series[key]
+            ):
                 self.assertEqual(packed_val, val)
 
         output = metrics_utils.ResimMetricsOutput()
         metrics_data.recursively_pack_into(output)
         self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
-        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
-                         for md in output.metrics_msg.metrics_data},
-                         {index_data.id, metrics_data.id})
+        self.assertEqual(
+            {
+                uuid.UUID(md.metrics_data_id.id.data)
+                for md in output.metrics_msg.metrics_data
+            },
+            {index_data.id, metrics_data.id},
+        )
         metrics_data.recursively_pack_into(output)
         self.assertEqual(output.packed_ids, {index_data.id, metrics_data.id})
-        self.assertEqual({uuid.UUID(md.metrics_data_id.id.data)
-                         for md in output.metrics_msg.metrics_data},
-                         {index_data.id, metrics_data.id})
+        self.assertEqual(
+            {
+                uuid.UUID(md.metrics_data_id.id.data)
+                for md in output.metrics_msg.metrics_data
+            },
+            {index_data.id, metrics_data.id},
+        )
+
+    def test_external_file_metrics_data(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="file data",
+        )
+        self.assertEqual(metrics_data, metrics_data.with_filename(filename))
+        self.assertTrue(metrics_data.filename == filename)
+
+    def test_external_file_metrics_data_pack(self) -> None:
+        filename = "my_file.gif"
+        metrics_data = metrics.ExternalFileMetricsData(
+            name="metrics data",
+            filename=filename,
+        )
+
+        msg = metrics_data.pack()
+        self.assertEqual(
+            msg.metrics_data_id.id, metrics_utils.pack_uuid_to_proto(metrics_data.id)
+        )
+        self.assertEqual(
+            msg.data_type, mp.MetricsDataType.Value("EXTERNAL_FILE_DATA_TYPE")
+        )
+
+        self.assertEqual(msg.name, metrics_data.name)
+        self.assertEqual(msg.external_file.path, filename)
+
+    def test_event_eq(self) -> None:
+        # SETUP
+        metric_1 = metrics.ScalarMetric(name="test_metric_1", value=24.0)
+        metric_2 = metrics.ScalarMetric(name="test_metric_2", value=48.0)
+
+        event = metrics.Event(
+            name="my_event",
+            description="event description",
+            tags=["a tag", "another tag"],
+            timestamp=metrics_utils.Timestamp(secs=1, nanos=2),
+            timestamp_type=TimestampType.RELATIVE_TIMESTAMP,
+            importance=MetricImportance.CRITICAL_IMPORTANCE,
+            status=MetricStatus.FAIL_BLOCK_METRIC_STATUS,
+            metrics=[metric_1, metric_2],
+        )
+
+        # Test equality
+        self.assertEqual(event, event)
+
+        # Different type
+        self.assertNotEqual(event, 3)
+
+        # Non-existent id
+        event_with_none_id = copy.copy(event)
+        event_with_none_id.id = cast(uuid.UUID, None)
+        with self.assertRaises(AssertionError):
+            _ = event_with_none_id == event
+        with self.assertRaises(AssertionError):
+            _ = event == event_with_none_id
+
+        # Different id
+        event_with_diff_id = copy.copy(event)
+        event_with_diff_id.id = uuid.uuid4()
+        self.assertNotEqual(event_with_diff_id, event)
+        self.assertNotEqual(event, event_with_diff_id)
+
+    def generate_event_metrics(self) -> list[metrics.Metric]:
+        metric_1 = metrics.ScalarMetric(name="test_metric_1", value=24.0)
+        metric_2 = metrics.ScalarMetric(name="test_metric_2", value=24.0)
+        return [metric_1, metric_2]
+
+    def test_event(self) -> None:
+        name = "my_event"
+        description = "event description"
+        tags = ["a tag", "another tag"]
+        timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        timestamp_type = TimestampType.RELATIVE_TIMESTAMP
+        importance = MetricImportance.CRITICAL_IMPORTANCE
+        status = MetricStatus.FAIL_WARN_METRIC_STATUS
+        event_metrics = self.generate_event_metrics()
+
+        event = metrics.Event(
+            name=name,
+            description=description,
+            tags=tags,
+            timestamp=timestamp,
+            timestamp_type=timestamp_type,
+            importance=importance,
+            status=status,
+            metrics=event_metrics,
+        )
+
+        self.assertEqual(event, event.with_description(description))
+        self.assertEqual(event, event.with_tags(tags))
+        self.assertEqual(event, event.with_relative_timestamp(timestamp))
+        self.assertEqual(event, event.with_importance(importance))
+        self.assertEqual(event, event.with_status(status))
+        self.assertEqual(event, event.with_metrics(event_metrics))
+
+        self.assertTrue(event.name == name)
+        self.assertTrue(event.description == description)
+        self.assertTrue(event.tags == tags)
+        self.assertTrue(event.timestamp == timestamp)
+        self.assertTrue(event.timestamp_type == timestamp_type)
+        self.assertTrue(event.importance == importance)
+        self.assertTrue(event.status == status)
+        self.assertTrue(event.metrics == event_metrics)
+
+        event.timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
+        self.assertEqual(event, event.with_absolute_timestamp(timestamp))
+        self.assertTrue(event.timestamp == timestamp)
+        self.assertTrue(event.timestamp_type == TimestampType.ABSOLUTE_TIMESTAMP)
+
+    def test_event_pack(self) -> None:
+        name = "my_event"
+        description = "event description"
+        tags = ["a tag", "another tag"]
+        timestamp = metrics_utils.Timestamp(secs=1, nanos=2)
+        timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
+        importance = MetricImportance.CRITICAL_IMPORTANCE
+        status = MetricStatus.FAIL_WARN_METRIC_STATUS
+        event_metrics = self.generate_event_metrics()
+        event = metrics.Event(
+            name=name,
+            description=description,
+            tags=tags,
+            timestamp=timestamp,
+            timestamp_type=timestamp_type,
+            importance=importance,
+            status=status,
+            metrics=event_metrics,
+        )
+
+        msg = event.pack()
+        self.assertEqual(msg.event_id.id, metrics_utils.pack_uuid_to_proto(event.id))
+        self.assertEqual(msg.name, event.name)
+        self.assertTrue(msg.description == event.description)
+        self.assertTrue(msg.tags == event.tags)
+        assert event.timestamp is not None
+        self.assertEqual(msg.timestamp, event.timestamp.pack())
+        self.assertTrue(msg.timestamp_type == getattr(event.timestamp_type, "value"))
+        self.assertTrue(msg.importance == getattr(event.importance, "value"))
+        self.assertTrue(msg.status == getattr(event.status, "value"))
+
+        metric_id_uuids = list(map(lambda m: m.id, msg.metrics))
+        for metric in event_metrics:
+            self.assertIn(metrics_utils.pack_uuid_to_proto(metric.id), metric_id_uuids)
+
+        output = metrics_utils.ResimMetricsOutput()
+        event.recursively_pack_into(output)
+        self.assertIn(event.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.events), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 0)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+        self.assertEqual(output.metrics_msg.events[0], msg)
+
+        # Check no duplication
+        event.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.events), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 0)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
 
 
 if __name__ == "__main__":

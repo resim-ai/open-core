@@ -30,7 +30,7 @@ it much easier when viewing many different objects at once. This is done with
 the `<<` operator to pipe a name into the view statment. Here's an example of
 how one might visualize a transform with named coordinate frames:
 
-```
+```cpp
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"
@@ -88,7 +88,7 @@ settings and set its display frame to one of the frames in your scene (e.g.
 Foxglove Studio will automatically build a scene graph for you from
 the frames you provide. Consider the following example:
 
-```
+```cpp
 #include "resim/transforms/frame.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"

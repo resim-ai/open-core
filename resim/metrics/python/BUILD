@@ -14,6 +14,7 @@ py_library(
     deps = [
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -24,6 +25,7 @@ py_test(
         ":metrics",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -36,7 +38,6 @@ py_library(
         ":metrics",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
-        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -49,12 +50,14 @@ py_test(
         ":metrics_writer",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/utils/proto:uuid_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
 py_library(
     name = "metrics_utils",
     srcs = ["metrics_utils.py"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
         "//resim/metrics/proto:metrics_proto_py",
@@ -80,6 +83,7 @@ py_library(
     deps = [
         ":metrics",
         "//resim/metrics/proto:metrics_proto_py",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
