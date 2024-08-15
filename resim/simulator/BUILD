@@ -260,7 +260,7 @@ pkg_tar(
 )
 
 oci_image(
-    name = "sim_build",
+    name = "sim-build",
     base = "@debian_slim",
     entrypoint = ["resim/simulator/sim_container_entrypoint"],
     tars = [":entrypoint_layer"],
