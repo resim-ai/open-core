@@ -8,4 +8,4 @@ echo "Running the simulation..."
 
 # Add visualization content
 echo "Adding Visualizations..."
-./resim/visualization/log/make_visualization_log -l /tmp/resim/outputs/resim_log.mcap -o /tmp/resim/outputs/vis.mcap
+./resim/visualization/log/make_visualization_log -l /tmp/resim/outputs/resim_log.mcap -o /tmp/resim/outputs/vis.mcap --world_glb /tmp/resim/inputs/world.glb
