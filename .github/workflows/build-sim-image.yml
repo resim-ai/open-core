@@ -50,4 +50,4 @@ jobs:
         run: |
           bazel run //resim/simulator:sim_build_push -- \
             --repository ${{ env.REPO }} \
-            --tag ${{ env.GITHUB_SHA }}
+            --tag ${{ github.sha }}
