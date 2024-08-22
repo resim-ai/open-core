@@ -65,8 +65,11 @@ auto make_parser(const Getters &getters) {
 }
 
 // Defines a getter for a field in a POD data structure
+// Note we use parentheses to avoid case one from
+// https://en.cppreference.com/w/cpp/language/decltype since we want
+// the lvalue reference.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define POD_GETTER(field) [](auto &s) -> decltype(auto) { return s.field; }
+#define POD_GETTER(field) [](auto &s) -> decltype(auto) { return (s.field); }
 
 // Defines a getter for a non-primitive field in a generated protobuf C++
 // object.

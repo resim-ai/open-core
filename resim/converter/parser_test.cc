@@ -45,18 +45,29 @@ TEST(ParserTest, TestParserPOD) {
   // SETUP
   constexpr int X_VAL = 5;
   constexpr int Y_VAL = 6;
+  constexpr int NEW_X_VAL = 5;
+  constexpr int NEW_Y_VAL = 6;
 
   const test_namespace::CppStruct my_struct{
       .x = X_VAL,
       .y = Y_VAL,
   };
 
+  test_namespace::CppStruct my_mutable_struct{
+      .x = X_VAL,
+      .y = Y_VAL,
+  };
+
   // ACTION
   auto parser = get_parser(TypeTag<test_namespace::CppStruct>());
+  parser.get<0>(my_mutable_struct) = NEW_X_VAL;
+  parser.get<1>(my_mutable_struct) = NEW_Y_VAL;
 
   // VERIFICATION
-  EXPECT_EQ(parser.get<0>(my_struct), my_struct.x);
-  EXPECT_EQ(parser.get<1>(my_struct), my_struct.y);
+  EXPECT_EQ(&parser.get<0>(my_struct), &my_struct.x);
+  EXPECT_EQ(&parser.get<1>(my_struct), &my_struct.y);
+  EXPECT_EQ(parser.get<0>(my_mutable_struct), NEW_X_VAL);
+  EXPECT_EQ(parser.get<1>(my_mutable_struct), NEW_Y_VAL);
 }
 
 TEST(ParserTest, TestParserProto) {
