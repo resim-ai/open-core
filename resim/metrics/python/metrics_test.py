@@ -1774,7 +1774,7 @@ class MetricsTest(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            event.with_tags("only_a_single_tag")
+            event.with_tags("only_a_single_tag")  # type: ignore
 
         self.assertEqual(event, event.with_description(description))
         self.assertEqual(event, event.with_tags(tags))

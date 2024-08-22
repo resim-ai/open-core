@@ -1763,7 +1763,7 @@ class Event:
     metrics: Optional[List[Metric]]
 
     def __init__(
-        self: Metric[MetricT],
+        self: Event,
         name: str,
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
@@ -1784,7 +1784,7 @@ class Event:
         self.timestamp_type = timestamp_type
         self.metrics = metrics
 
-    def __eq__(self: MetricT, __value: object) -> bool:
+    def __eq__(self: Event, __value: object) -> bool:
         if not isinstance(__value, type(self)):
             return False
 
@@ -1794,35 +1794,37 @@ class Event:
 
         return self.id == __value.id
 
-    def with_description(self: MetricT, description: str) -> MetricT:
+    def with_description(self: Event, description: str) -> Event:
         self.description = description
         return self
 
-    def with_status(self: MetricT, status: MetricStatus) -> MetricT:
+    def with_status(self: Event, status: MetricStatus) -> Event:
         self.status = status
         return self
 
-    def with_importance(self: MetricT, importance: MetricImportance) -> MetricT:
+    def with_importance(self: Event, importance: MetricImportance) -> Event:
         self.importance = importance
         return self
 
-    def with_tags(self: MetricT, tags: List[str]) -> MetricT:
+    def with_tags(self: Event, tags: List[str]) -> Event:
         if isinstance(tags, str):
-            raise ValueError("`tags` must be a list and not a string. This is almost certainly a bug.")
+            raise ValueError(
+                "`tags` must be a list and not a string. This is almost certainly a bug."
+            )
         self.tags = tags
         return self
 
-    def with_absolute_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+    def with_absolute_timestamp(self: Event, timestamp: Timestamp) -> Event:
         self.timestamp = timestamp
         self.timestamp_type = TimestampType.ABSOLUTE_TIMESTAMP
         return self
 
-    def with_relative_timestamp(self: MetricT, timestamp: Timestamp) -> MetricT:
+    def with_relative_timestamp(self: Event, timestamp: Timestamp) -> Event:
         self.timestamp = timestamp
         self.timestamp_type = TimestampType.RELATIVE_TIMESTAMP
         return self
 
-    def with_metrics(self: MetricT, metrics: List[Metric]) -> MetricT:
+    def with_metrics(self: Event, metrics: List[Metric]) -> Event:
         self.metrics = metrics
         return self
 
@@ -1855,7 +1857,7 @@ class Event:
 
         return msg
 
-    def recursively_pack_into(self, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(self: Event, metrics_output: ResimMetricsOutput) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
