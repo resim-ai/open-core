@@ -1807,6 +1807,8 @@ class Event:
         return self
 
     def with_tags(self: MetricT, tags: List[str]) -> MetricT:
+        if isinstance(tags, str):
+            raise ValueError("`tags` must be a list and not a string. This is almost certainly a bug.")
         self.tags = tags
         return self
 

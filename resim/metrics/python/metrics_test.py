@@ -1773,6 +1773,9 @@ class MetricsTest(unittest.TestCase):
             metrics=event_metrics,
         )
 
+        with self.assertRaises(ValueError):
+            event.with_tags("only_a_single_tag")
+
         self.assertEqual(event, event.with_description(description))
         self.assertEqual(event, event.with_tags(tags))
         self.assertEqual(event, event.with_relative_timestamp(timestamp))
