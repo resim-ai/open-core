@@ -39,6 +39,7 @@ using Types = ::testing::Types<
     std::array<double, TEST_ARRAY_LENGTH>,
     std::unordered_map<std::string, int>,
     std::string,
+    std::variant<int, double, std::string, std::string>,
     testing::TestMessage>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(

@@ -13,7 +13,6 @@
 #include <concepts>
 #include <random>
 #include <string>
-#include <variant>
 
 #include "resim/converter/parser.hh"
 #include "resim/converter/tags.hh"
@@ -380,3 +379,5 @@ template <Parsable T>
 }
 
 }  // namespace resim::converter
+
+#include "resim/converter/variant_fuzz_helpers.hh"

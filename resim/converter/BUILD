@@ -12,11 +12,13 @@ cc_library(
     srcs = ["fuzz_helpers.cc"],
     hdrs = [
         "fuzz_helpers.hh",
+        "variant_fuzz_helpers.hh",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":parser",
         ":tags",
+        "//resim/assert",
         "//resim/math:is_approx",
         "//resim/testing:random_matrix",
         "//resim/time:timestamp",
@@ -29,6 +31,7 @@ cc_library(
     name = "fuzz_helpers_test_template",
     testonly = True,
     hdrs = ["fuzz_helpers_test_template.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":fuzz_helpers",
     ],
