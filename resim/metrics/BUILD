@@ -123,6 +123,7 @@ py_test(
 py_library(
     name = "fetch_metrics_urls",
     srcs = ["fetch_metrics_urls.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
         "@resim-python-client//:resim_python_client",
@@ -142,6 +143,7 @@ py_test(
 py_library(
     name = "get_metrics_proto",
     srcs = ["get_metrics_proto.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_protobuf//:protobuf_python",
         requirement("requests"),
