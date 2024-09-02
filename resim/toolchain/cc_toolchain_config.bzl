@@ -31,7 +31,19 @@ all_cpp_actions = [
     ACTION_NAMES.cpp_module_compile,
 ]
 
-def _impl(ctx):
+all_target_actions = [
+    ACTION_NAMES.cpp_compile,
+    ACTION_NAMES.c_compile,
+    ACTION_NAMES.cpp_link_executable,
+    ACTION_NAMES.cpp_link_dynamic_library,
+    ACTION_NAMES.cpp_link_nodeps_dynamic_library,
+]
+
+def _toolchain_config_helper(
+        ctx,
+        cxx_builtin_include_directories = [],
+        target_cpu = "k8",
+        target_triple = ""):
     tool_paths = [
         tool_path(
             name = "gcc",
@@ -118,17 +130,33 @@ def _impl(ctx):
             enabled = True,
         ),
     ]
+    if target_triple != "":
+        features.append(
+            feature(
+                name = "aarch_cross",
+                enabled = True,
+                flag_sets = [
+                    flag_set(
+                        actions = all_target_actions,
+                        flag_groups = ([
+                            flag_group(
+                                flags = [
+                                    "--target={}".format(target_triple),
+                                ],
+                            ),
+                        ]),
+                    ),
+                ],
+            ),
+        )
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
-        cxx_builtin_include_directories = [
-            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
-            "/usr/include",
-        ],
+        cxx_builtin_include_directories = cxx_builtin_include_directories,
         features = features,
         toolchain_identifier = "local",
         host_system_name = "local",
         target_system_name = "local",
-        target_cpu = "k8",
+        target_cpu = target_cpu,
         target_libc = "unknown",
         compiler = "clang",
         abi_version = "unknown",
@@ -136,8 +164,34 @@ def _impl(ctx):
         tool_paths = tool_paths,
     )
 
+def _impl(ctx):
+    return _toolchain_config_helper(
+        ctx,
+        [
+            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/include",
+        ],
+    )
+
+def _amd64_aarch64_cross_impl(ctx):
+    return _toolchain_config_helper(
+        ctx,
+        [
+            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/aarch64-linux-gnu/include",
+        ],
+        "aarch64",
+        "aarch64-linux-gnu",
+    )
+
 cc_toolchain_config = rule(
     implementation = _impl,
+    attrs = {},
+    provides = [CcToolchainConfigInfo],
+)
+
+cc_toolchain_config_amd64_aarch64_cross = rule(
+    implementation = _amd64_aarch64_cross_impl,
     attrs = {},
     provides = [CcToolchainConfigInfo],
 )

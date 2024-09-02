@@ -121,7 +121,7 @@ std_msgs::msg::Int64 convert_to_ros2(const msg::Int64 &resim_msg) {
 
 msg::Int8 convert_from_ros2(const std_msgs::msg::Int8 &ros2_msg) {
   msg::Int8 result;
-  result.set_data(std::string{ros2_msg.data});
+  result.set_data(std::string{static_cast<char>(ros2_msg.data)});
   return result;
 }
 

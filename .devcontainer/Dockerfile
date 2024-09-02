@@ -6,6 +6,7 @@ LABEL description="Core development container"
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y ca-certificates curl gnupg lsb-release software-properties-common
 RUN apt-get install -y g++ clang lcov clang-format clang-tidy clangd
+RUN apt-get install -y g++-12-aarch64-linux-gnu qemu-user
 RUN apt-get install -y openssh-server unzip groff man
 RUN apt-get install -y emacs vim zsh tmux
 RUN apt-get install -y cgdb
