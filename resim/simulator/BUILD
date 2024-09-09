@@ -5,6 +5,8 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 cc_library(
     name = "step_executor",
@@ -230,11 +232,53 @@ cc_binary(
     deps = [
         ":simulate",
         "//resim/assert",
+        "//resim/experiences:actor",
         "//resim/experiences:experience",
+        "//resim/experiences:ilqr_drone",
         "//resim/experiences/proto:experience_proto_cc",
         "//resim/experiences/proto:experience_to_proto",
+        "//resim/utils:inout",
+        "//resim/utils:uuid",
         "@com_google_protobuf//:protobuf",
         "@cxxopts",
         "@indicators",
     ],
+)
+
+sh_binary(
+    name = "sim_container_entrypoint",
+    srcs = ["sim_container_entrypoint.sh"],
+    data = [
+        ":resim_run",
+        "//resim/visualization/log:make_visualization_log",
+    ],
+)
+
+pkg_tar(
+    name = "entrypoint_layer",
+    srcs = [
+        ":sim_container_entrypoint",
+    ],
+    include_runfiles = True,
+    strip_prefix = ".",
+)
+
+oci_image(
+    name = "drone-simulator",
+    base = "@debian_slim",
+    entrypoint = ["resim/simulator/sim_container_entrypoint"],
+    tars = [":entrypoint_layer"],
+    workdir = "/sim_container_entrypoint.runfiles",
+)
+
+oci_tarball(
+    name = "sim_build_tarball",
+    image = ":drone-simulator",
+    repo_tags = ["drone-simulator:latest"],
+)
+
+oci_push(
+    name = "sim_build_push",
+    image = ":drone-simulator",
+    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/core-sim-run",
 )

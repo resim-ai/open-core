@@ -51,8 +51,8 @@ jobs:
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
-        with:
-          arguments: --filter=-mypy
+        #with:
+        #  arguments: --filter=-mypy
 
       - name: Build Go Bindings
         if: "${{ github.event.inputs.tag != '' }}"
