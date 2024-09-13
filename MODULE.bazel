@@ -58,6 +58,7 @@ use_repo(pip, "resim_python_deps")
 
 register_toolchains(
     "@resim_open_core//resim/toolchain:cc_toolchain_for_k8",
+    "@resim_open_core//resim/toolchain:aarch64_cross_toolchain_for_amd64",
 )
 
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")

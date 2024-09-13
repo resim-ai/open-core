@@ -8,9 +8,11 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test", "cc_toolchain", "cc_toolchain_suite")
 load("@rules_python//python:defs.bzl", "py_test")
-load(":cc_toolchain_config.bzl", "cc_toolchain_config")
+load(":cc_toolchain_config.bzl", "cc_toolchain_config", "cc_toolchain_config_amd64_aarch64_cross")
 
 cc_toolchain_config(name = "k8_toolchain_config")
+
+cc_toolchain_config_amd64_aarch64_cross(name = "amd64_aarch64_cross_toolchain_config")
 
 cc_toolchain_suite(
     name = "clang_suite",
@@ -36,6 +38,20 @@ cc_toolchain(
     visibility = ["//visibility:public"],
 )
 
+cc_toolchain(
+    name = "amd64_aarch64_cross_toolchain",
+    all_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = 0,
+    toolchain_config = ":amd64_aarch64_cross_toolchain_config",
+    toolchain_identifier = "amd64-aarch64-cross-toolchain",
+    visibility = ["//visibility:public"],
+)
+
 toolchain(
     name = "cc_toolchain_for_k8",
     exec_compatible_with = [
@@ -47,6 +63,20 @@ toolchain(
         "@platforms//os:linux",
     ],
     toolchain = ":k8_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
+toolchain(
+    name = "aarch64_cross_toolchain_for_amd64",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:linux",
+    ],
+    toolchain = ":amd64_aarch64_cross_toolchain",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
