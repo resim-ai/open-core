@@ -6,6 +6,7 @@
 
 load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
 # This "7 spaces and a pipe" format is needed to make the resulting metadata to
 # be parsable by RFC822 parser when using multiple lines. See
@@ -85,6 +86,7 @@ py_wheel(
         "protobuf>=4.24.4",
     ],
     summary = "ReSim Metrics Libraries.",
+    twine = "@resim_pkg_deps//twine",
     version = version,
     deps = [":resim_package"],
 )
@@ -220,4 +222,9 @@ py_wheel(
     summary = "ReSim ROS2 Libraries.",
     version = version,
     deps = ["//resim/ros2:ros2_py_package"],
+)
+
+py_console_script_binary(
+    name = "twine",
+    pkg = "@resim_pkg_deps//twine",
 )
