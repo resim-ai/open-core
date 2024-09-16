@@ -60,10 +60,12 @@ jobs:
           bazel --output_base $OUTPUT_BASE \
             build --platforms //:aarch64_linux //pkg:resim_wheel \
               --repo_env="RESIM_VERSION=$RESIM_VERSION"
-          echo "path=$(bazel --output_base $OUTPUT_BASE \
+          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
             cquery --platforms //:aarch64_linux //pkg:resim_wheel \
               --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-              --output files)" >> $GITHUB_OUTPUT
+              --output files)
+          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
 
       - name: Build Wheels
         id: build_wheel
@@ -71,9 +73,11 @@ jobs:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: |
           bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
-          echo "path=$(bazel cquery //pkg:resim_wheel \
+          OUTPATH=$(bazel info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel cquery //pkg:resim_wheel \
               --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-              --output files)" >> $GITHUB_OUTPUT
+              --output files)
+          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
 
 #      - name: Draft Release
 #        if: "${{ github.event.inputs.tag != '' }}"
@@ -88,7 +92,5 @@ jobs:
           X86_64_WHEEL: ${{ steps.build_wheel.outputs.path }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-           echo $X86_64_WHEEL
-           echo $AARCH64_WHEEL
-#          bazel run //pkg:twine upload $X86_64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
-#          bazel run //pkg:twine upload $AARCH64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
+          bazel run //pkg:twine upload $X86_64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
+          bazel run //pkg:twine upload $AARCH64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
