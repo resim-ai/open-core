@@ -90,5 +90,5 @@ jobs:
         run: |
            echo $X86_64_WHEEL
            echo $AARCH64_WHEEL
-#          bazel run //pkg:twine upload $X86_64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN
-#          bazel run //pkg:twine upload $AARCH64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN
+#          bazel run //pkg:twine upload $X86_64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
+#          bazel run //pkg:twine upload $AARCH64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN --skip-existing
