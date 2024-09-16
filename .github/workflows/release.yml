@@ -75,3 +75,10 @@ jobs:
 #        with:
 #          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
 #          tag: ${{ github.event.inputs.tag }}
+
+      - name: Publish
+        id: build_aarch64_wheel
+        env:
+          AARCH64_WHEEL: ${{ steps.build_aarch64_wheel.outputs.path }}
+        run: |
+          echo $AARCH64_WHEEL
