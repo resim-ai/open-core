@@ -1,6 +1,5 @@
 name: Draft Release
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       tag:
@@ -77,7 +76,6 @@ jobs:
 #          tag: ${{ github.event.inputs.tag }}
 
       - name: Publish
-        id: build_aarch64_wheel
         env:
           AARCH64_WHEEL: ${{ steps.build_aarch64_wheel.outputs.path }}
         run: |
