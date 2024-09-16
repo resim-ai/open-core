@@ -1,5 +1,6 @@
 name: Draft Release
-on: 
+on:
+  pull_request:
   workflow_dispatch:
     inputs:
       tag:
@@ -24,42 +25,53 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-
 
-      - name: Build `compile_commands.json` database
-        run: bazel run @hedron_compile_commands//:refresh_all
-
-      - name: Workaround for Custom Docker Image
-        # Trunk makes use of git and we will get permissions issues (i.e.
-        # detected dubious ownership) if we don't make the repo a safe
-        # directory.
-        run: git config --global --add safe.directory /__w/open-core/open-core
-
-      - name: Generate Coverage Report
-        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
-
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Trunk Check
-        uses: trunk-io/trunk-action@v1
-        #with:
-        #  arguments: --filter=-mypy
+#      - name: Build `compile_commands.json` database
+#        run: bazel run @hedron_compile_commands//:refresh_all
+#
+#      - name: Workaround for Custom Docker Image
+#        # Trunk makes use of git and we will get permissions issues (i.e.
+#        # detected dubious ownership) if we don't make the repo a safe
+#        # directory.
+#        run: git config --global --add safe.directory /__w/open-core/open-core
+#
+#      - name: Generate Coverage Report
+#        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
+#
+#      - uses: codecov/codecov-action@v3
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#
+#      - name: Trunk Check
+#        uses: trunk-io/trunk-action@v1
+#        #with:
+#        #  arguments: --filter=-mypy
 
       - name: Clean Old Artifacts
         run: rm -rf ./bazel-bin/pkg/*
 
-      - name: Build Metrics Tools
-        run: bazel build //resim/metrics:resim_metrics_tools
+#      - name: Build Metrics Tools
+#        run: bazel build //resim/metrics:resim_metrics_tools
    
       - name: Build Wheels
+        id: build_wheel        
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
 
-      - name: Draft Release 
-        if: "${{ github.event.inputs.tag != '' }}"
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
-          draft: true
-          tag: ${{ github.event.inputs.tag }}
+      - name: Build Aarch64 Wheel
+        id: build_aarch64_wheel
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: |
+          OUTPUT_BASE="~/cross_output"
+          bazel --output_base $OUTPUT_BASE \
+            build --platforms //:aarch64_linux //pkg:resim_wheel
+          echo "path=$(bazel --output_base $OUTPUT_BASE \
+            cquery --platforms //:aarch64_linux //pkg:resim_wheel --output files)" >> $GITHUB_OUTPUT
+            
+#      - name: Draft Release 
+#        if: "${{ github.event.inputs.tag != '' }}"
+#        uses: ncipollo/release-action@v1
+#        with:
+#          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
+#          tag: ${{ github.event.inputs.tag }}
