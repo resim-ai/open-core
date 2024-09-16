@@ -55,7 +55,7 @@ jobs:
         id: build_aarch64_wheel
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
-          OUTPUT_BASE: "/cross_output"
+          OUTPUT_BASE: "~/.cache/cross_output"
         run: |
           bazel --output_base $OUTPUT_BASE \
             build --platforms //:aarch64_linux //pkg:resim_wheel \
