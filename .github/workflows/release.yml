@@ -10,7 +10,7 @@ jobs:
     name: Draft Release
     runs-on: ubuntu-20.04
     container:
-      image: public.ecr.aws/resim/core:latest 
+      image: public.ecr.aws/resim/core:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -50,25 +50,32 @@ jobs:
 
 #      - name: Build Metrics Tools
 #        run: bazel build //resim/metrics:resim_metrics_tools
-   
-      - name: Build Wheels
-        id: build_wheel        
-        env:
-          RESIM_VERSION: ${{ github.event.inputs.tag }}
-        run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
 
       - name: Build Aarch64 Wheel
         id: build_aarch64_wheel
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
+          OUTPUT_BASE: "/cross_output"
         run: |
-          OUTPUT_BASE="~/cross_output"
           bazel --output_base $OUTPUT_BASE \
-            build --platforms //:aarch64_linux //pkg:resim_wheel
+            build --platforms //:aarch64_linux //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION"
           echo "path=$(bazel --output_base $OUTPUT_BASE \
-            cquery --platforms //:aarch64_linux //pkg:resim_wheel --output files)" >> $GITHUB_OUTPUT
-            
-#      - name: Draft Release 
+            cquery --platforms //:aarch64_linux //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)" >> $GITHUB_OUTPUT
+
+      - name: Build Wheels
+        id: build_wheel
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: |
+          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          echo "path=$(bazel cquery //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)" >> $GITHUB_OUTPUT
+
+#      - name: Draft Release
 #        if: "${{ github.event.inputs.tag != '' }}"
 #        uses: ncipollo/release-action@v1
 #        with:
@@ -78,5 +85,10 @@ jobs:
       - name: Publish
         env:
           AARCH64_WHEEL: ${{ steps.build_aarch64_wheel.outputs.path }}
+          X86_64_WHEEL: ${{ steps.build_wheel.outputs.path }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          echo $AARCH64_WHEEL
+           echo $X86_64_WHEEL
+           echo $AARCH64_WHEEL
+#          bazel run //pkg:twine upload $X86_64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN
+#          bazel run //pkg:twine upload $AARCH64_WHEEL -- -r testpypi -u __token__ -p $PYPI_TOKEN
