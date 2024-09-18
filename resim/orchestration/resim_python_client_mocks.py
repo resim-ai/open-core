@@ -138,8 +138,6 @@ async def create_report_asyncio(
     body: ReportInput,
 ) -> Optional[Union[Any, Report]]:
     report_id = uuid4()
-    if not UUID(project_id) in client.state.projects:
-        raise ValueError("Project not found!")
     # TODO(michael) Enforce some consistency requirements
     report = Report(
         associated_account="",

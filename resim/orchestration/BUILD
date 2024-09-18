@@ -15,6 +15,12 @@ py_library(
     ],
 )
 
+py_test(
+    name = "resim_python_client_mocks_test",
+    srcs = ["resim_python_client_mocks_test.py"],
+    deps = [":resim_python_client_mocks"],
+)
+
 py_library(
     name = "kickoff_report",
     srcs = ["kickoff_report.py"],

@@ -52,7 +52,7 @@ CREATE_REPORT_FUNCTION = "resim.orchestration.kickoff_report.create_report.async
 @patch(GET_BATCH_FUNCTION, new=mocks.get_batch_asyncio)
 @patch(GET_TEST_SUITE_FUNCTION, new=mocks.get_test_suite_asyncio)
 @patch(CREATE_REPORT_FUNCTION, new=mocks.create_report_asyncio)
-class AsyncFetchAllPagesTest(unittest.IsolatedAsyncioTestCase):
+class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
     async def test_kickoff_report(self) -> None:
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
