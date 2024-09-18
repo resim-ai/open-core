@@ -44,7 +44,7 @@ async def run_report_for_batch(
         project_id=str(project_id), test_suite_id=test_suite_id, client=client
     )
     if test_suite is None:
-        raise RuntimeError("Could not find test suite")
+        raise RuntimeError("Could not find test suite!")
 
     if test_suite_allowlist is not None and test_suite.name not in test_suite_allowlist:
         return None
