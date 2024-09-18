@@ -10,7 +10,7 @@ Test for kickoff_report
 """
 
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import patch
 from uuid import UUID
@@ -57,7 +57,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
         batch: Batch = next(iter(client.state.batches.values()))
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
 
         # ACTION
         report: Report = await kr.run_report_for_batch(
@@ -78,7 +78,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
         batch = next(iter(client.state.batches.values()))
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
 
         # ACTION
         report = await kr.run_report_for_batch(
@@ -92,6 +92,22 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # VERIFICATION
         self.assertIs(report, None)
 
+    async def test_kickoff_report_unlocalized(self) -> None:
+        # SETUP
+        client = mocks.get_mock_client(make_mock_state())
+        batch = next(iter(client.state.batches.values()))
+        start_timestamp = datetime.now()
+
+        # ACTION / VERIFICATION
+        with self.assertRaises(ValueError):
+            await kr.run_report_for_batch(
+                project_id=UUID(batch.project_id),
+                batch_id=UUID(batch.batch_id),
+                client=client,
+                start_timestamp=start_timestamp,
+                test_suite_allowlist=set(),
+            )
+
     async def test_kickoff_report_explicit_metrics_build(self) -> None:
         client = mocks.get_mock_client(make_mock_state())
         batch: Batch = next(iter(client.state.batches.values()))
@@ -103,7 +119,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
             0
         ]  # Get another metrics build
         test_suite = client.state.test_suites[UUID(batch.test_suite_id)]
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
 
         # ACTION
         report: Report = await kr.run_report_for_batch(
@@ -127,7 +143,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
         batch = next(iter(client.state.batches.values()))
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
         test_suite = client.state.test_suites[UUID(batch.test_suite_id)]
         batch.test_suite_id = UNSET
 
@@ -147,7 +163,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
         batch = next(iter(client.state.batches.values()))
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
         test_suite = client.state.test_suites[UUID(batch.test_suite_id)]
 
         async def return_none(*_: Any, **__: Any) -> None:
@@ -169,7 +185,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
         # SETUP
         client = mocks.get_mock_client(make_mock_state())
         batch = next(iter(client.state.batches.values()))
-        start_timestamp = datetime.now()
+        start_timestamp = datetime.now(tz=timezone.utc)
         test_suite = client.state.test_suites[UUID(batch.test_suite_id)]
 
         async def return_none(*_: Any, **__: Any) -> None:

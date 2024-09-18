@@ -6,7 +6,7 @@
 
 import random
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from string import ascii_lowercase
 from typing import Any, Optional, TypeVar, Union
 from unittest.mock import MagicMock
@@ -43,15 +43,19 @@ def _random_dict_value(d: dict[K, V]) -> V:
     return d[k]
 
 
+def _random_string() -> str:
+    return str(random.choice(ascii_lowercase) for _ in range(20))
+
+
 def random_project(state: MockState) -> Project:
     project_id = uuid4()
     return Project(
-        creation_timestamp=datetime.now(),
-        description="unit test project",
-        name=f"project {project_id}",
+        creation_timestamp=datetime.now(tz=timezone.utc),
+        description=_random_string(),
+        name=_random_string(),
         org_id=state.org_id,
         project_id=str(project_id),
-        user_id=f"simbox@{state.org_id}",
+        user_id=f"{_random_string()}@{state.org_id}",
     )
 
 
@@ -74,16 +78,16 @@ def random_test_suite(state: MockState) -> Batch:
     test_suite_id = uuid4()
     metrics_build = _random_dict_value(state.metrics_builds)
     return TestSuite(
-        creation_timestamp=datetime.now(),
-        description="unit test test suite",
+        creation_timestamp=datetime.now(tz=timezone.utc),
+        description=_random_string(),
         experiences=[],
         name=f"test suite {test_suite_id}",
         org_id=state.org_id,
         project_id=metrics_build.project_id,
-        system_id=uuid4(),
+        system_id=str(uuid4()),
         test_suite_id=str(test_suite_id),
         test_suite_revision=random.randint(1, 100),
-        user_id=f"simbox@{state.org_id}",
+        user_id=f"{_random_string()}@{state.org_id}",
         metrics_build_id=metrics_build.metrics_build_id,
     )
 
@@ -92,13 +96,13 @@ def random_metrics_build(state: MockState) -> MetricsBuild:
     project = _random_dict_value(state.projects)
     metrics_build_id = uuid4()
     return MetricsBuild(
-        creation_timestamp=datetime.now(),
-        image_uri=str(random.choice(ascii_lowercase) for _ in range(20)),
+        creation_timestamp=datetime.now(tz=timezone.utc),
+        image_uri=_random_string(),
         metrics_build_id=str(metrics_build_id),
         name=f"metrics build {metrics_build_id}",
-        org_id="simbox.tech",
+        org_id=state.org_id,
         project_id=project.project_id,
-        user_id=f"simbox@{state.org_id}",
+        user_id=f"{_random_string()}@{state.org_id}",
         version=str(uuid4()),
     )
 
@@ -142,9 +146,9 @@ async def create_report_asyncio(
     report = Report(
         associated_account="",
         branch_id=body.branch_id,
-        creation_timestamp=datetime.now(),
+        creation_timestamp=datetime.now(tz=timezone.utc),
         end_timestamp=body.end_timestamp,
-        last_updated_timestamp=datetime.now(),
+        last_updated_timestamp=datetime.now(tz=timezone.utc),
         metrics_build_id=body.metrics_build_id,
         metrics_status=MetricStatus.NO_STATUS_REPORTED,
         name=body.name,

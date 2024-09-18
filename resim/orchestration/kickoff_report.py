@@ -28,6 +28,8 @@ async def run_report_for_batch(
     metrics_build_id: Optional[uuid.UUID] = None,
     **kwargs: Any,
 ) -> Optional[Report]:
+    if start_timestamp.tzinfo is None:
+        raise ValueError("start_timestamp must be localized!")
     batch = await get_batch.asyncio(
         batch_id=str(batch_id), project_id=str(project_id), client=client
     )
