@@ -400,11 +400,10 @@ def _unpack_image_metric(
     id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
 ) -> None:
     image_data = metric.metric_values.image_metric_values
-    data = id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)]
-    if not isinstance(data, ExternalFileMetricsData):
-        raise ValueError(
-            "MetricsData for image metric must be ExternalFileMetricsData!"
-        )
+    data = cast(
+        ExternalFileMetricsData,
+        id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)],
+    )
     unpacked.with_image_data(data)
 
 
