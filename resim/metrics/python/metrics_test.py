@@ -1444,7 +1444,7 @@ class MetricsTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             metrics.MetricsData.group_by(metrics_data, index_data)
         with self.assertRaises(NotImplementedError):
-            metrics.MetricsData.pack(metrics_data)
+            metrics.MetricsData[metrics.SeriesMetricsData].pack(metrics_data)
 
         output = metrics_utils.ResimMetricsOutput()
         metrics_data.recursively_pack_into(output)

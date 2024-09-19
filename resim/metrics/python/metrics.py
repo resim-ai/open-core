@@ -34,7 +34,7 @@ import numpy as np
 from google.protobuf.json_format import Parse
 from google.protobuf.struct_pb2 import Struct
 
-from resim.metrics.proto import metrics_pb2
+import resim.metrics.proto.metrics_pb2 as metrics_proto
 from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
     HistogramBucket,
@@ -146,8 +146,8 @@ class Metric(ABC, Generic[MetricT]):
         return self
 
     @abstractmethod
-    def pack(self: MetricT) -> metrics_pb2.Metric:
-        msg = metrics_pb2.Metric()
+    def pack(self: MetricT) -> metrics_proto.Metric:
+        msg = metrics_proto.Metric()
 
         msg.metric_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
@@ -183,7 +183,7 @@ class Metric(ABC, Generic[MetricT]):
         return msg
 
     @classmethod
-    def unpack_common_fields(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
+    def unpack_common_fields(cls, msg: metrics_proto.Metric) -> Metric[Any]:
         unpacked = cls._unpacked_metric_type(msg)
         unpacked.id = uuid.UUID(msg.metric_id.id.data)
         unpacked.description = msg.description
@@ -224,26 +224,26 @@ class Metric(ABC, Generic[MetricT]):
         return unpacked
 
     @classmethod
-    def _unpacked_metric_type(cls, msg: metrics_pb2.Metric) -> Metric[Any]:
-        if msg.type == metrics_pb2.MetricType.Value("NO_METRIC_TYPE"):
+    def _unpacked_metric_type(cls, msg: metrics_proto.Metric) -> Metric[Any]:
+        if msg.type == metrics_proto.MetricType.Value("NO_METRIC_TYPE"):
             raise ValueError("Cannot unpack with no metric type")
-        if msg.type == metrics_pb2.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"):
+        if msg.type == metrics_proto.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE"):
             unpacked: Metric[Any] = DoubleSummaryMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE"):
             unpacked = DoubleOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("LINE_PLOT_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("LINE_PLOT_METRIC_TYPE"):
             unpacked = LinePlotMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("BAR_CHART_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("BAR_CHART_METRIC_TYPE"):
             unpacked = BarChartMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"):
             unpacked = StatesOverTimeMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("HISTOGRAM_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("HISTOGRAM_METRIC_TYPE"):
             unpacked = HistogramMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("SCALAR_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("SCALAR_METRIC_TYPE"):
             unpacked = ScalarMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("PLOTLY_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("PLOTLY_METRIC_TYPE"):
             unpacked = PlotlyMetric(name=msg.name)
-        elif msg.type == metrics_pb2.MetricType.Value("IMAGE_METRIC_TYPE"):
+        elif msg.type == metrics_proto.MetricType.Value("IMAGE_METRIC_TYPE"):
             unpacked = ImageMetric(name=msg.name)
         else:
             raise ValueError("Invalid metric type")
@@ -307,9 +307,9 @@ class ScalarMetric(Metric["ScalarMetric"]):
         self.failure_definition = failure_definition
         return self
 
-    def pack(self: ScalarMetric) -> metrics_pb2.Metric:
+    def pack(self: ScalarMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("SCALAR_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("SCALAR_METRIC_TYPE")
 
         metric_values = msg.metric_values.scalar_metric_values
         if self.value is not None:
@@ -459,19 +459,19 @@ class DoubleOverTimeMetric(Metric["DoubleOverTimeMetric"]):
         self.legend_series_names = legend_series_names
         return self
 
-    def pack(self: DoubleOverTimeMetric) -> metrics_pb2.Metric:
+    def pack(self: DoubleOverTimeMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("DOUBLE_OVER_TIME_METRIC_TYPE")
 
         metric_values = msg.metric_values.double_over_time_metric_values
 
         for data in self.doubles_over_time_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.doubles_over_time_data_id.extend([id_msg])
 
         for data in self.statuses_over_time_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.statuses_over_time_data_id.extend([id_msg])
 
@@ -644,19 +644,19 @@ class StatesOverTimeMetric(Metric["StatesOverTimeMetric"]):
         self.legend_series_names = legend_series_names
         return self
 
-    def pack(self: StatesOverTimeMetric) -> metrics_pb2.Metric:
+    def pack(self: StatesOverTimeMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE")
 
         metric_values = msg.metric_values.states_over_time_metric_values
 
         for data in self.states_over_time_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.states_over_time_data_id.extend([id_msg])
 
         for data in self.statuses_over_time_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.statuses_over_time_data_id.extend([id_msg])
 
@@ -789,24 +789,24 @@ class LinePlotMetric(Metric["LinePlotMetric"]):
         self.legend_series_names = legend_series_names
         return self
 
-    def pack(self: LinePlotMetric) -> metrics_pb2.Metric:
+    def pack(self: LinePlotMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("LINE_PLOT_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("LINE_PLOT_METRIC_TYPE")
 
         metric_values = msg.metric_values.line_plot_metric_values
 
         for data in self.x_doubles_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.x_doubles_data_id.extend([id_msg])
 
         for data in self.y_doubles_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.y_doubles_data_id.extend([id_msg])
 
         for data in self.statuses_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.statuses_data_id.extend([id_msg])
 
@@ -936,19 +936,19 @@ class BarChartMetric(Metric["BarChartMetric"]):
         self.stack_bars = stack_bars
         return self
 
-    def pack(self: BarChartMetric) -> metrics_pb2.Metric:
+    def pack(self: BarChartMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("BAR_CHART_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("BAR_CHART_METRIC_TYPE")
 
         metric_values = msg.metric_values.bar_chart_metric_values
 
         for data in self.values_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.values_data_id.extend([id_msg])
 
         for data in self.statuses_data:
-            id_msg = metrics_pb2.MetricsDataId()
+            id_msg = metrics_proto.MetricsDataId()
             id_msg.id.CopyFrom(pack_uuid_to_proto(data.id))
             metric_values.statuses_data_id.extend([id_msg])
 
@@ -1062,9 +1062,9 @@ class HistogramMetric(Metric["HistogramMetric"]):
         self.x_axis_name = x_axis_name
         return self
 
-    def pack(self: HistogramMetric) -> metrics_pb2.Metric:
+    def pack(self: HistogramMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("HISTOGRAM_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("HISTOGRAM_METRIC_TYPE")
 
         metric_values = msg.metric_values.histogram_metric_values
 
@@ -1175,9 +1175,9 @@ class DoubleSummaryMetric(Metric["DoubleSummaryMetric"]):
         self.failure_definition = failure_definition
         return self
 
-    def pack(self: DoubleSummaryMetric) -> metrics_pb2.Metric:
+    def pack(self: DoubleSummaryMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("DOUBLE_SUMMARY_METRIC_TYPE")
 
         metric_values = msg.metric_values.double_metric_values
 
@@ -1227,7 +1227,7 @@ class DoubleSummaryMetric(Metric["DoubleSummaryMetric"]):
 
 @metric_dataclass
 class PlotlyMetric(Metric["PlotlyMetric"]):
-    plotly_data: Optional[Struct]
+    plotly_data: Optional[str]
 
     def __init__(
         self: PlotlyMetric,
@@ -1263,9 +1263,9 @@ class PlotlyMetric(Metric["PlotlyMetric"]):
         self.plotly_data = plotly_data
         return self
 
-    def pack(self: PlotlyMetric) -> metrics_pb2.Metric:
+    def pack(self: PlotlyMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("PLOTLY_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("PLOTLY_METRIC_TYPE")
 
         metric_values = msg.metric_values.plotly_metric_values
 
@@ -1319,13 +1319,15 @@ class ImageMetric(Metric["ImageMetric"]):
 
         self.image_data = image_data
 
-    def with_image_data(self: ImageMetric, image_data: BaseMetricsData) -> ImageMetric:
+    def with_image_data(
+        self: ImageMetric, image_data: ExternalFileMetricsData
+    ) -> ImageMetric:
         self.image_data = image_data
         return self
 
-    def pack(self: ImageMetric) -> metrics_pb2.Metric:
+    def pack(self: ImageMetric) -> metrics_proto.Metric:
         msg = super().pack()
-        msg.type = metrics_pb2.MetricType.Value("IMAGE_METRIC_TYPE")
+        msg.type = metrics_proto.MetricType.Value("IMAGE_METRIC_TYPE")
 
         metric_values = msg.metric_values.image_metric_values
 
@@ -1354,16 +1356,16 @@ class ImageMetric(Metric["ImageMetric"]):
 # -------------------
 
 
-MetricsDataT = TypeVar("MetricsDataT", bound="MetricsData")
+BaseMetricsDataT = TypeVar("BaseMetricsDataT", bound="BaseMetricsData")
 
 
 @metric_dataclass
-class BaseMetricsData(ABC, Generic[MetricsDataT]):
+class BaseMetricsData(ABC, Generic[BaseMetricsDataT]):
     id: uuid.UUID
     name: str
 
     @abstractmethod
-    def __init__(self: MetricsDataT, name: str):
+    def __init__(self: BaseMetricsDataT, name: str):
         assert name is not None
         self.id = uuid.uuid4()
         self.name = name
@@ -1379,12 +1381,12 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
         return self.id == __value.id
 
     @abstractmethod
-    def pack(self: MetricsDataT) -> metrics_pb2.MetricsData:
+    def pack(self: BaseMetricsDataT) -> metrics_proto.MetricsData:
         raise NotImplementedError()
 
     @abstractmethod
     def recursively_pack_into(
-        self: MetricsDataT, metrics_output: ResimMetricsOutput
+        self: BaseMetricsDataT, metrics_output: ResimMetricsOutput
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1395,8 +1397,11 @@ class BaseMetricsData(ABC, Generic[MetricsDataT]):
         metrics_output.metrics_msg.metrics_data.extend([output])
 
 
+MetricsDataT = TypeVar("MetricsDataT", bound="MetricsData")
+
+
 @metric_dataclass
-class MetricsData(BaseMetricsData, Generic[MetricsDataT]):
+class MetricsData(BaseMetricsData[MetricsDataT]):
     unit: Optional[str] = None
     index_data: Optional[MetricsDataT]
 
@@ -1559,8 +1564,8 @@ class SeriesMetricsData(MetricsData["SeriesMetricsData"]):
 
         return grouped_data
 
-    def pack(self: SeriesMetricsData) -> metrics_pb2.MetricsData:
-        msg = metrics_pb2.MetricsData()
+    def pack(self: SeriesMetricsData) -> metrics_proto.MetricsData:
+        msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
 
@@ -1651,8 +1656,8 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
         self.category_to_series[category] = series
         return self
 
-    def pack(self: GroupedMetricsData) -> metrics_pb2.MetricsData:
-        msg = metrics_pb2.MetricsData()
+    def pack(self: GroupedMetricsData) -> metrics_proto.MetricsData:
+        msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
 
@@ -1710,9 +1715,7 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
 class ExternalFileMetricsData(BaseMetricsData["ExternalFileMetricsData"]):
     filename: str
 
-    def __init__(
-        self: ExternalFileMetricsData, name: str, filename: Optional[str] = None
-    ):
+    def __init__(self: ExternalFileMetricsData, name: str, filename: str = ""):
         super().__init__(name=name)
         self.filename = filename
 
@@ -1722,16 +1725,16 @@ class ExternalFileMetricsData(BaseMetricsData["ExternalFileMetricsData"]):
         self.filename = filename
         return self
 
-    def pack(self: ExternalFileMetricsData) -> metrics_pb2.MetricsData:
-        msg = metrics_pb2.MetricsData()
+    def pack(self: ExternalFileMetricsData) -> metrics_proto.MetricsData:
+        msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
-        msg.data_type = metrics_pb2.EXTERNAL_FILE_DATA_TYPE
+        msg.data_type = metrics_proto.EXTERNAL_FILE_DATA_TYPE
         msg.is_per_category = False
 
         assert len(self.filename) > 0, "Cannot pack an empty string."
 
-        external_file = metrics_pb2.ExternalFile()
+        external_file = metrics_proto.ExternalFile()
         external_file.path = self.filename
         msg.external_file.CopyFrom(external_file)
 
@@ -1826,8 +1829,8 @@ class Event:
         self.metrics = metrics
         return self
 
-    def pack(self: Event) -> metrics_pb2.Event:
-        msg = metrics_pb2.Event()
+    def pack(self: Event) -> metrics_proto.Event:
+        msg = metrics_proto.Event()
 
         msg.event_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
