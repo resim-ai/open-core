@@ -56,10 +56,12 @@ TEST(StateTest, TestAdd) {
     const SE3 prev_from_next{
         state.reference_from_body.inverse() * sum.reference_from_body};
 
-    EXPECT_TRUE(math::is_approx(prev_from_next.log(), delta.head<SE3::DOF>()));
+    EXPECT_TRUE(math::is_approx(
+        prev_from_next.log(),
+        State::delta_vector_pose_part(delta)));
     EXPECT_TRUE(math::is_approx(
         sum.d_reference_from_body - state.d_reference_from_body,
-        delta.tail<SE3::DOF>()));
+        State::delta_vector_pose_part(delta)));
 
     EXPECT_EQ(state.reference_from_body.into(), sum.reference_from_body.into());
     EXPECT_EQ(state.reference_from_body.from(), sum.reference_from_body.from());

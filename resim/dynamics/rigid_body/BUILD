@@ -12,6 +12,7 @@ cc_library(
     hdrs = ["state.hh"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim/math:vector_partition",
         "//resim/transforms:se3",
     ],
 )
@@ -59,6 +60,7 @@ cc_library(
         ":state",
         "//resim/assert",
         "//resim/dynamics",
+        "//resim/math:vector_partition",
         "//resim/time:timestamp",
         "//resim/transforms:se3",
         "@libeigen//:eigen",
