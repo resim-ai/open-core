@@ -4,6 +4,10 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+"""
+Mocks for the resim python client so we don't have to hit the actual API.
+"""
+
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -26,6 +30,8 @@ from resim_python_client.models import (
 
 @dataclass
 class MockState:
+    """The state of the mock (i.e. mocking the internal state of the app)."""
+
     org_id: str = "simbox.tech"
     projects: dict[UUID, Project] = field(default_factory=dict)
     metrics_builds: dict[UUID, MetricsBuild] = field(default_factory=dict)
@@ -48,6 +54,7 @@ def _random_string() -> str:
 
 
 def random_project(state: MockState) -> Project:
+    """Get a random project consistent with the current state."""
     project_id = uuid4()
     return Project(
         creation_timestamp=datetime.now(tz=timezone.utc),
@@ -60,6 +67,7 @@ def random_project(state: MockState) -> Project:
 
 
 def random_batch(state: MockState) -> Batch:
+    """Get a random batch consistent with the current state."""
     batch_id = uuid4()
     branch_id = uuid4()  # TODO(michael) Once we add builds, get this from there.
     test_suite = _random_dict_value(state.test_suites)
@@ -75,6 +83,7 @@ def random_batch(state: MockState) -> Batch:
 
 
 def random_test_suite(state: MockState) -> Batch:
+    """Get a random test suite consistent with the current state."""
     test_suite_id = uuid4()
     metrics_build = _random_dict_value(state.metrics_builds)
     return TestSuite(
@@ -93,6 +102,7 @@ def random_test_suite(state: MockState) -> Batch:
 
 
 def random_metrics_build(state: MockState) -> MetricsBuild:
+    """Get a random metrics build consistent with the current state."""
     project = _random_dict_value(state.projects)
     metrics_build_id = uuid4()
     return MetricsBuild(
@@ -109,6 +119,11 @@ def random_metrics_build(state: MockState) -> MetricsBuild:
 
 def get_mock_client(state: MockState) -> MagicMock:
     return MagicMock(state=state)
+
+
+################################################################################
+# ENDPOINT MOCKS:
+################################################################################
 
 
 async def get_batch_asyncio(

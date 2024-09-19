@@ -28,6 +28,23 @@ async def run_report_for_batch(
     metrics_build_id: Optional[uuid.UUID] = None,
     **kwargs: Any,
 ) -> Optional[Report]:
+    """Run a report based on a given batch_id and start_timetamp.
+
+    Run a report using the same metrics build as the given batch, or one optionally provided. Also,
+    allow for a specific set of allowed test suite names to be provided (e.g. nightly test
+    suites). This function is useful for triggering a report as the final step of a batch on the
+    same test suite to ensure that the current batch gets included in the report.
+
+    Args:
+      project_id - The ID of this project,
+      batch_id - The ID of the batch to get the test suite and metrics build id from.
+      client - The client to use when querying the API.
+      start_timestamp - The time to start the report from.
+      test_suite_allowlist - The test suites to allow reports to be spawned for. If omitted, all are
+                             allowed
+      metrics_build_id - An optional metrics build override to use for the report.
+      kwargs - Keyword arguments forwarded to create_report.asyncio
+    """
     if start_timestamp.tzinfo is None:
         raise ValueError("start_timestamp must be localized!")
     batch = await get_batch.asyncio(

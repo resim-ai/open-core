@@ -23,6 +23,7 @@ import resim.orchestration.resim_python_client_mocks as mocks
 
 
 def make_mock_state() -> mocks.MockState:
+    """Helper to create a MockState containing what we need for this test."""
     state = mocks.MockState()
 
     for _ in range(5):
