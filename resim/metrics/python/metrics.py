@@ -1319,9 +1319,7 @@ class ImageMetric(Metric["ImageMetric"]):
 
         self.image_data = image_data
 
-    def with_image_data(
-        self: ImageMetric, image_data: ExternalFileMetricsData
-    ) -> ImageMetric:
+    def with_image_data(self: ImageMetric, image_data: BaseMetricsData) -> ImageMetric:
         self.image_data = image_data
         return self
 
