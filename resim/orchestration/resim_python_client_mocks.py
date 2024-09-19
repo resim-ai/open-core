@@ -181,3 +181,26 @@ async def create_report_asyncio(
     )
     client.state.reports[report_id] = report
     return report
+
+
+def make_mock_state() -> MockState:
+    """Helper to create a MockState containing what we need for our tests."""
+    state = MockState()
+
+    for _ in range(5):
+        p = random_project(state)
+        state.projects[UUID(p.project_id)] = p
+
+    for _ in range(5):
+        mb = random_metrics_build(state)
+        state.metrics_builds[UUID(mb.metrics_build_id)] = mb
+
+    for _ in range(5):
+        ts = random_test_suite(state)
+        state.test_suites[UUID(ts.test_suite_id)] = ts
+
+    for _ in range(5):
+        b = random_batch(state)
+        state.batches[UUID(b.batch_id)] = b
+
+    return state

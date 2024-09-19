@@ -18,33 +18,10 @@ from resim_python_client.models import Batch, Report, ReportInput, TestSuite
 import resim.orchestration.resim_python_client_mocks as mocks
 
 
-def make_mock_state() -> mocks.MockState:
-    """Helper to create a MockState containing what we need for this test."""
-    state = mocks.MockState()
-
-    for _ in range(5):
-        p = mocks.random_project(state)
-        state.projects[UUID(p.project_id)] = p
-
-    for _ in range(5):
-        mb = mocks.random_metrics_build(state)
-        state.metrics_builds[UUID(mb.metrics_build_id)] = mb
-
-    for _ in range(5):
-        ts = mocks.random_test_suite(state)
-        state.test_suites[UUID(ts.test_suite_id)] = ts
-
-    for _ in range(5):
-        b = mocks.random_batch(state)
-        state.batches[UUID(b.batch_id)] = b
-
-    return state
-
-
 class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
     async def test_get_batch(self) -> None:
         # SETUP
-        client = mocks.get_mock_client(make_mock_state())
+        client = mocks.get_mock_client(mocks.make_mock_state())
         batch: Batch = next(iter(client.state.batches.values()))
 
         # ACTION
@@ -63,7 +40,7 @@ class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_test_suite(self) -> None:
         # SETUP
-        client = mocks.get_mock_client(make_mock_state())
+        client = mocks.get_mock_client(mocks.make_mock_state())
         test_suite: TestSuite = next(iter(client.state.test_suites.values()))
 
         # ACTION
@@ -86,7 +63,7 @@ class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_create_report(self) -> None:
         # SETUP
-        client = mocks.get_mock_client(make_mock_state())
+        client = mocks.get_mock_client(mocks.make_mock_state())
         batch: Batch = next(iter(client.state.batches.values()))
         start_timestamp = datetime.now()
 
