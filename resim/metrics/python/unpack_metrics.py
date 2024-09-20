@@ -22,6 +22,7 @@ import resim.utils.proto.uuid_pb2 as uuid_proto
 import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python.metrics import (
     BarChartMetric,
+    BaseMetricsData,
     DoubleOverTimeMetric,
     DoubleSummaryMetric,
     Event,
@@ -51,7 +52,7 @@ class UnpackedMetrics:
     """A class representing unpacked metrics."""
 
     metrics: list[Metric]
-    metrics_data: list[MetricsData]
+    metrics_data: list[BaseMetricsData]
     events: list[Event]
     names: set[str]
 
@@ -73,7 +74,7 @@ def unpack_metrics(
         _unpack_uuid(md.metrics_data_id.id): md for md in metrics_data
     }
 
-    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData] = {}
+    id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData] = {}
 
     id_to_unpacked_metrics: dict[uuid.UUID, Metric] = {}
 
@@ -152,11 +153,12 @@ def _unpack_series(series_proto: mp.Series) -> np.ndarray:
 
 def _unpack_metrics_data(
     metrics_data: mp.MetricsData,
-    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData],
+    id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
 ) -> None:
     data_id = _unpack_uuid(metrics_data.metrics_data_id.id)
+    unpacked: BaseMetricsData
     if metrics_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE:
-        unpacked: MetricsData = ExternalFileMetricsData(
+        unpacked = ExternalFileMetricsData(
             name=metrics_data.name, filename=metrics_data.external_file.path
         )
     elif metrics_data.is_per_category:
@@ -175,7 +177,7 @@ def _unpack_metrics_data(
             else None
         )
         index = cast(Optional[GroupedMetricsData], index)
-        unpacked: MetricsData = GroupedMetricsData(
+        unpacked = GroupedMetricsData(
             name=metrics_data.name,
             category_to_series=category_to_series,
             unit=metrics_data.unit,
@@ -203,7 +205,7 @@ def _unpack_metrics_data(
 
 def _unpack_metric(
     metric: mp.Metric,
-    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData],
+    id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
     id_to_unpacked_metrics: dict[uuid.UUID, Metric],
 ) -> Metric:
 
@@ -395,10 +397,13 @@ def _unpack_plotly_metric(
 def _unpack_image_metric(
     metric: mp.Metric,
     unpacked: ImageMetric,
-    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData],
+    id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
 ) -> None:
     image_data = metric.metric_values.image_metric_values
-    data = id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)]
+    data = cast(
+        ExternalFileMetricsData,
+        id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)],
+    )
     unpacked.with_image_data(data)
 
 
