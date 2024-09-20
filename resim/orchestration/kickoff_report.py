@@ -69,7 +69,7 @@ async def run_report_for_batch(
     report = await create_report.asyncio(
         client=client,
         project_id=str(project_id),
-        body=ReportInput(
+        json_body=ReportInput(
             branch_id=branch_id,
             metrics_build_id=str(metrics_build_id),
             start_timestamp=start_timestamp,

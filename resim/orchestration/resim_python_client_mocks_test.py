@@ -11,14 +11,68 @@ Test for resim_python_client_mocks
 
 import unittest
 from datetime import datetime
+from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
+from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models import Batch, Report, ReportInput, TestSuite
 
 import resim.orchestration.resim_python_client_mocks as mocks
 
 
 class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
+    async def test_mock_decorator(self) -> None:
+        # pylint: disable=disallowed-name, unused-argument
+        def subject(foo: int, bar: str, client: AuthenticatedClient) -> dict:
+            return {}
+
+        def bad_client_type_subject(foo: int, bar: str, client: int) -> dict:
+            return {}
+
+        @mocks.mocks_endpoint(subject)
+        def good_mock(foo: int, bar: str, client: MagicMock) -> dict:
+            return {}
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(subject)
+            def extra_argument_mock(
+                foo: int, bar: str, baz: set, client: MagicMock
+            ) -> dict:
+                return {}
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(subject)
+            def missing_argument_mock(foo: int, client: MagicMock) -> dict:
+                return {}
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(subject)
+            def bad_return_type_mock(foo: int, bar: str, client: MagicMock) -> set:
+                return set()
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(subject)
+            def bad_arg_type_mock(foo: int, bar: int, client: MagicMock) -> dict:
+                return {}
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(subject)
+            def bad_client_type_mock(
+                foo: int, bar: str, client: AuthenticatedClient
+            ) -> dict:
+                return {}
+
+        with self.assertRaises(ValueError):
+
+            @mocks.mocks_endpoint(bad_client_type_subject)
+            def another_good_mock(foo: int, bar: str, client: MagicMock) -> dict:
+                return {}
+
     async def test_get_batch(self) -> None:
         # SETUP
         client = mocks.get_mock_client(mocks.make_mock_state())
@@ -77,7 +131,7 @@ class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
         # ACTION
         report: Report = await mocks.create_report_asyncio(
             project_id=batch.project_id,
-            body=body,
+            json_body=body,
             client=client,
         )
 
