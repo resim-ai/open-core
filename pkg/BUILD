@@ -58,6 +58,7 @@ py_package(
         "//resim/msg:pose_proto_py",
         "//resim/msg:primitives_proto_py",
         "//resim/msg:transform_proto_py",
+        "//resim/orchestration:kickoff_report",
         "//resim/transforms/proto:framed_vector_3_proto_py",
         "//resim/transforms/python:geodetic_python.so",
         "//resim/transforms/python:quaternion.so",
