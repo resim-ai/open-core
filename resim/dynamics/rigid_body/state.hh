@@ -8,6 +8,7 @@
 
 #include <Eigen/Dense>
 
+#include "resim/math/vector_partition.hh"
 #include "resim/transforms/se3.hh"
 
 namespace resim::dynamics::rigid_body {
@@ -20,11 +21,33 @@ namespace resim::dynamics::rigid_body {
 // dynamics::Dynamics, dynamics::Controller, and dynamics::Integrator.
 //
 struct State {
-  // Double the group DOF because we have position and velocity
-  static constexpr int DOF = 2 * transforms::SE3::DOF;
+  enum DeltaBlockIndices : std::size_t {
+    POSE = 0,
+    VELOCITY,
+  };
+  using DeltaPartition =
+      math::VectorPartition<transforms::SE3::DOF, transforms::SE3::DOF>;
+
+  static constexpr int DOF = math::VectorPartitionDim<DeltaPartition>::value;
 
   // A vector type representing the difference between two rigid_body::State's
   using Delta = Eigen::Matrix<double, DOF, 1>;
+
+  // Getter for the part of the delta corresponding to the pose (i.e.
+  // reference_from_body).
+  static Eigen::VectorBlock<Delta, transforms::SE3::DOF> delta_vector_pose_part(
+      Delta &delta);
+
+  static Eigen::VectorBlock<const Delta, transforms::SE3::DOF>
+  delta_vector_pose_part(const Delta &delta);
+
+  // Getter for the part of the delta corresponding to the velocity (i.e.
+  // d_reference_from_body).
+  static Eigen::VectorBlock<Delta, transforms::SE3::DOF>
+  delta_vector_velocity_part(Delta &delta);
+
+  static Eigen::VectorBlock<const Delta, transforms::SE3::DOF>
+  delta_vector_velocity_part(const Delta &delta);
 
   transforms::SE3 reference_from_body;
   transforms::SE3::TangentVector d_reference_from_body{

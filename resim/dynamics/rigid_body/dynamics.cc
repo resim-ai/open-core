@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "resim/assert/assert.hh"
+#include "resim/math/vector_partition.hh"
 
 namespace resim::dynamics::rigid_body {
 
@@ -50,6 +51,8 @@ Eigen::Matrix<double, SE3::DOF, SE3::DOF> d_adVT_dV(const TangentVector &x) {
   return result;
 }
 
+using ControlPartition = math::VectorPartition<transforms::SE3::DOF>;
+
 }  // namespace
 
 Dynamics::Dynamics(Inertia inertia)
@@ -70,13 +73,25 @@ Dynamics::Delta Dynamics::operator()(
      &Iinv = inertia_inv_,
      &V = state.d_reference_from_body]() {
       f_x = MatXX::Zero();
-      f_x.block<SE3::DOF, SE3::DOF>(SE3::DOF, SE3::DOF) =
+      math::get_block<
+          State::DeltaPartition,
+          State::VELOCITY,
+          State::DeltaPartition,
+          State::VELOCITY>(f_x) =
           Iinv * (SE3::adjoint(V).transpose() * I + d_adVT_dV(I * V));
-      f_x.block<SE3::DOF, SE3::DOF>(0, SE3::DOF) =
-          SE3::TangentMapping::Identity();
+
+      math::get_block<
+          State::DeltaPartition,
+          State::POSE,
+          State::DeltaPartition,
+          State::VELOCITY>(f_x) = SE3::TangentMapping::Identity();
 
       f_u = MatXU::Zero();
-      f_u.block<SE3::DOF, SE3::DOF>(SE3::DOF, 0) = Iinv;
+      math::get_block<
+          State::DeltaPartition,
+          State::VELOCITY,
+          ControlPartition,
+          0>(f_u) = Iinv;
     }();
   }
 
@@ -94,7 +109,10 @@ Dynamics::Delta Dynamics::operator()(
     // form a 6x6 matrix. That almost 2x's performance in the unit test.
     return Iinv * (F + SE3::adjoint(V).transpose() * I * V);
   }();
-  return (Delta() << state.d_reference_from_body, acceleration).finished();
+  Delta result;
+  State::delta_vector_pose_part(result) = state.d_reference_from_body;
+  State::delta_vector_velocity_part(result) = acceleration;
+  return result;
 }
 
 }  // namespace resim::dynamics::rigid_body
