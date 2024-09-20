@@ -4,6 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+exports_files(["requirements_lock.txt"])
+
 platform(
     name = "aarch64_linux",
     constraint_values = [
