@@ -26,7 +26,7 @@ class TestPythonVersion(unittest.TestCase):
         version_info = sys.version_info
         self.assertEqual(version_info[0], 3)
         self.assertEqual(version_info[1], 10)
-        self.assertEqual(version_info[2], 13)
+        self.assertEqual(version_info[2], 14)
 
 
 if __name__ == "__main__":
