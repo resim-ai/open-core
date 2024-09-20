@@ -61,7 +61,7 @@ TEST(StateTest, TestAdd) {
         State::delta_vector_pose_part(delta)));
     EXPECT_TRUE(math::is_approx(
         sum.d_reference_from_body - state.d_reference_from_body,
-        State::delta_vector_pose_part(delta)));
+        State::delta_vector_velocity_part(delta)));
 
     EXPECT_EQ(state.reference_from_body.into(), sum.reference_from_body.into());
     EXPECT_EQ(state.reference_from_body.from(), sum.reference_from_body.from());
