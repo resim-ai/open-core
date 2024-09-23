@@ -11,11 +11,16 @@ Mocks for the resim python client so we don't have to hit the actual API.
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from inspect import Signature, signature
 from string import ascii_lowercase
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
+from resim_python_client.api.batches import get_batch
+from resim_python_client.api.reports import create_report
+from resim_python_client.api.test_suites import get_test_suite
+from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models import (
     Batch,
     MetricsBuild,
@@ -126,6 +131,49 @@ def get_mock_client(state: MockState) -> MagicMock:
 ################################################################################
 
 
+def _signature_parameters_match(subject: Signature, mock: Signature) -> bool:
+    """Helper to check that two signatures match."""
+
+    for p in mock.parameters:
+        if p not in subject.parameters:
+            return False
+
+    for name, param in subject.parameters.items():
+        if name not in mock.parameters:
+            return False
+        mock_param = mock.parameters[name]
+
+        # Special case for clients
+        if name == "client":
+            if (
+                param.annotation is not AuthenticatedClient
+                or mock_param.annotation is not MagicMock
+            ):
+                return False
+        elif param.annotation is not mock_param.annotation:
+            return False
+    return subject.return_annotation is mock.return_annotation
+
+
+def mocks_endpoint(subject: Callable) -> Callable:
+    """Decorator factory to make sure that mocks match the subject signature.
+
+    In practice, this guarantees that the parameters of each function match and their type
+    annotations match (except for client which is enforced to be a MagicMock in the mock case and
+    AuthenticatedClient in the endpoint case).
+    """
+    subject_sig = signature(subject)
+
+    def impl(f: Callable) -> Callable:
+        sig = signature(f)
+        if not _signature_parameters_match(subject_sig, sig):
+            raise ValueError("Mock signature mismatch!")
+        return f
+
+    return impl
+
+
+@mocks_endpoint(get_batch.asyncio)
 async def get_batch_asyncio(
     project_id: str,
     batch_id: str,
@@ -138,6 +186,7 @@ async def get_batch_asyncio(
     return batch
 
 
+@mocks_endpoint(get_test_suite.asyncio)
 async def get_test_suite_asyncio(
     project_id: str,
     test_suite_id: str,
@@ -150,6 +199,7 @@ async def get_test_suite_asyncio(
     return test_suite
 
 
+@mocks_endpoint(create_report.asyncio)
 async def create_report_asyncio(
     project_id: str,
     *,
