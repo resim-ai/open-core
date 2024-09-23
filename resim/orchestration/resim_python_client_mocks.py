@@ -204,29 +204,29 @@ async def create_report_asyncio(
     project_id: str,
     *,
     client: MagicMock,
-    json_body: ReportInput,
+    body: ReportInput,
 ) -> Optional[Union[Any, Report]]:
     report_id = uuid4()
     # TODO(michael) Enforce some consistency requirements
     report = Report(
         associated_account="",
-        branch_id=json_body.branch_id,
+        branch_id=body.branch_id,
         creation_timestamp=datetime.now(tz=timezone.utc),
-        end_timestamp=json_body.end_timestamp,
+        end_timestamp=body.end_timestamp,
         last_updated_timestamp=datetime.now(tz=timezone.utc),
-        metrics_build_id=json_body.metrics_build_id,
+        metrics_build_id=body.metrics_build_id,
         metrics_status=MetricStatus.NO_STATUS_REPORTED,
-        name=json_body.name,
+        name=body.name,
         org_id=client.state.org_id,
         output_location="",
         project_id=project_id,
         report_id=str(report_id),
-        respect_revision_boundary=json_body.respect_revision_boundary,
-        start_timestamp=json_body.start_timestamp,
+        respect_revision_boundary=body.respect_revision_boundary,
+        start_timestamp=body.start_timestamp,
         status=ReportStatus.SUBMITTED,
         status_history=[],
-        test_suite_id=json_body.test_suite_id,
-        test_suite_revision=json_body.test_suite_revision,
+        test_suite_id=body.test_suite_id,
+        test_suite_revision=body.test_suite_revision,
         user_id=f"simbox@{client.state.org_id}",
     )
     client.state.reports[report_id] = report

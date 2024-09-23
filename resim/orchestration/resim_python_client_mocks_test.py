@@ -131,7 +131,7 @@ class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
         # ACTION
         report: Report = await mocks.create_report_asyncio(
             project_id=batch.project_id,
-            json_body=body,
+            body=body,
             client=client,
         )
 
