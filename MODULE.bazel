@@ -24,7 +24,7 @@ bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "protobuf", repo_name = "com_google_protobuf", version = "26.0")
 bazel_dep(name = "pybind11_bazel", version = "2.12.0")
-bazel_dep(name = "resim-python-client", version = "6c485d1450e93be66cbee85f02077ff0c2b65198")
+bazel_dep(name = "resim-python-client", version = "185d9c00b3d7903150a3149fd7e258d9ceae12f5")
 bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")
 bazel_dep(name = "ros2_geometry2", version = "0.25.5")
 bazel_dep(name = "ros2_rcl_interfaces", version = "1.2.1")
@@ -36,7 +36,7 @@ bazel_dep(name = "rules_go", version = "0.49.0")
 bazel_dep(name = "rules_oci", version = "1.7.6")
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_proto", version = "6.0.0")
-bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "rules_python", version = "0.35.0")
 bazel_dep(name = "vision_msgs", version = "4.1.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
@@ -57,8 +57,17 @@ pip.parse(
 
 use_repo(pip, "resim_python_deps")
 
+pip.parse(
+    hub_name = "resim_pkg_deps",
+    python_version = "3.10",
+    requirements_lock = "@resim_open_core//pkg:requirements_lock.txt",
+)
+
+use_repo(pip, "resim_pkg_deps")
+
 register_toolchains(
     "@resim_open_core//resim/toolchain:cc_toolchain_for_k8",
+    "@resim_open_core//resim/toolchain:aarch64_cross_toolchain_for_amd64",
 )
 
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")

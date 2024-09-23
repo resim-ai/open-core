@@ -11,11 +11,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Set, Tuple
 
+import google.protobuf.timestamp_pb2 as timestamp_proto
 import numpy as np
-from google.protobuf import timestamp_pb2
+import resim.utils.proto.uuid_pb2 as uuid_proto
 
-from resim.metrics.proto import metrics_pb2
-from resim.utils.proto import uuid_pb2
+import resim.metrics.proto.metrics_pb2 as metrics_proto
 
 
 class MetricStatus(Enum):
@@ -44,11 +44,11 @@ class TimestampType(Enum):
 
 @dataclass(init=False, repr=True)
 class ResimMetricsOutput:
-    metrics_msg: metrics_pb2.JobMetrics
+    metrics_msg: metrics_proto.JobMetrics
     packed_ids: Set[uuid.UUID]
 
     def __init__(self) -> None:
-        self.metrics_msg = metrics_pb2.JobMetrics()
+        self.metrics_msg = metrics_proto.JobMetrics()
         self.packed_ids = set()
 
 
@@ -57,14 +57,14 @@ class Timestamp:
     secs: int
     nanos: int
 
-    def pack(self: Timestamp) -> timestamp_pb2.Timestamp:
-        msg = timestamp_pb2.Timestamp()
+    def pack(self: Timestamp) -> timestamp_proto.Timestamp:
+        msg = timestamp_proto.Timestamp()
         msg.seconds = self.secs
         msg.nanos = self.nanos
         return msg
 
     @classmethod
-    def unpack(cls, msg: timestamp_pb2.Timestamp) -> Timestamp:
+    def unpack(cls, msg: timestamp_proto.Timestamp) -> Timestamp:
         return Timestamp(
             secs=msg.seconds,
             nanos=msg.nanos,
@@ -76,14 +76,14 @@ class Tag:
     key: str
     value: str
 
-    def pack(self: Tag) -> metrics_pb2.Tag:
-        tag = metrics_pb2.Tag()
+    def pack(self: Tag) -> metrics_proto.Tag:
+        tag = metrics_proto.Tag()
         tag.key = self.key
         tag.value = self.value
         return tag
 
     @classmethod
-    def unpack(cls, msg: metrics_pb2.Tag) -> Tag:
+    def unpack(cls, msg: metrics_proto.Tag) -> Tag:
         return Tag(key=msg.key, value=msg.value)
 
 
@@ -92,8 +92,8 @@ class HistogramBucket:
     lower: float
     upper: float
 
-    def pack(self: HistogramBucket) -> metrics_pb2.HistogramMetricValues.Bucket:
-        msg = metrics_pb2.HistogramMetricValues.Bucket()
+    def pack(self: HistogramBucket) -> metrics_proto.HistogramMetricValues.Bucket:
+        msg = metrics_proto.HistogramMetricValues.Bucket()
         msg.lower = self.lower
         msg.upper = self.upper
         return msg
@@ -104,8 +104,8 @@ class DoubleFailureDefinition:
     fails_above: Optional[float]
     fails_below: Optional[float]
 
-    def pack(self: DoubleFailureDefinition) -> metrics_pb2.DoubleFailureDefinition:
-        msg = metrics_pb2.DoubleFailureDefinition()
+    def pack(self: DoubleFailureDefinition) -> metrics_proto.DoubleFailureDefinition:
+        msg = metrics_proto.DoubleFailureDefinition()
         if self.fails_above is not None:
             msg.fails_above = self.fails_above
 
@@ -114,67 +114,69 @@ class DoubleFailureDefinition:
         return msg
 
 
-def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_pb2.UUID:
-    uuid_msg = uuid_pb2.UUID()
+def pack_uuid_to_proto(uuid_obj: uuid.UUID) -> uuid_proto.UUID:
+    uuid_msg = uuid_proto.UUID()
     uuid_msg.data = str(uuid_obj)
     return uuid_msg
 
 
-def pack_uuid_to_metric_id(uuid_obj: uuid.UUID) -> metrics_pb2.MetricID:
-    metric_id = metrics_pb2.MetricId()
+def pack_uuid_to_metric_id(uuid_obj: uuid.UUID) -> metrics_proto.MetricID:
+    metric_id = metrics_proto.MetricId()
     metric_id.id.CopyFrom(pack_uuid_to_proto(uuid_obj))
     return metric_id
 
 
 def pack_series_to_proto(
     series: np.ndarray, indexed: bool
-) -> Tuple[metrics_pb2.MetricsDataType, metrics_pb2.Series]:
+) -> Tuple[metrics_proto.MetricsDataType, metrics_proto.Series]:
     data_type, series_msg = (
-        metrics_pb2.MetricsDataType.Value("NO_DATA_TYPE"),
-        metrics_pb2.Series(),
+        metrics_proto.MetricsDataType.Value("NO_DATA_TYPE"),
+        metrics_proto.Series(),
     )
 
     if len(series) == 0:
-        data_type = metrics_pb2.MetricsDataType.Value("NO_DATA_TYPE")
+        data_type = metrics_proto.MetricsDataType.Value("NO_DATA_TYPE")
     elif isinstance(series[0], float):
         if not indexed:
-            data_type = metrics_pb2.MetricsDataType.Value("DOUBLE_SERIES_DATA_TYPE")
+            data_type = metrics_proto.MetricsDataType.Value("DOUBLE_SERIES_DATA_TYPE")
         else:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "INDEXED_DOUBLE_SERIES_DATA_TYPE"
             )
         series_msg.doubles.series.extend(list(series))
     elif isinstance(series[0], Timestamp):
         if not indexed:
-            data_type = metrics_pb2.MetricsDataType.Value("TIMESTAMP_SERIES_DATA_TYPE")
+            data_type = metrics_proto.MetricsDataType.Value(
+                "TIMESTAMP_SERIES_DATA_TYPE"
+            )
         else:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "INDEXED_TIMESTAMP_SERIES_DATA_TYPE"
             )
         series_msg.timestamps.series.extend([t.pack() for t in series])
     elif isinstance(series[0], uuid.UUID):
         if not indexed:
-            data_type = metrics_pb2.MetricsDataType.Value("UUID_SERIES_DATA_TYPE")
+            data_type = metrics_proto.MetricsDataType.Value("UUID_SERIES_DATA_TYPE")
         else:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "INDEXED_UUID_SERIES_DATA_TYPE"
             )
         series_msg.uuids.series.extend([pack_uuid_to_proto(i) for i in series])
     elif isinstance(series[0], str):
         if not indexed:
-            data_type = metrics_pb2.MetricsDataType.Value("STRING_SERIES_DATA_TYPE")
+            data_type = metrics_proto.MetricsDataType.Value("STRING_SERIES_DATA_TYPE")
         else:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "INDEXED_STRING_SERIES_DATA_TYPE"
             )
         series_msg.strings.series.extend(list(series))
     elif isinstance(series[0], MetricStatus):
         if not indexed:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "METRIC_STATUS_SERIES_DATA_TYPE"
             )
         else:
-            data_type = metrics_pb2.MetricsDataType.Value(
+            data_type = metrics_proto.MetricsDataType.Value(
                 "INDEXED_METRIC_STATUS_SERIES_DATA_TYPE"
             )
         series_msg.statuses.series.extend([s.value for s in series])

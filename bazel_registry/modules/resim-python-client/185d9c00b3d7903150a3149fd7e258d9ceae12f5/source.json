@@ -1,0 +1,7 @@
+{
+    "integrity": "sha256-9RKycgwVVF7MBQWGADaViOZ4cef5woMgmpgjvXBJev8=",
+    "patch_strip": 1,
+    "patches": {},
+    "strip_prefix": "resim-python-client-185d9c00b3d7903150a3149fd7e258d9ceae12f5",
+    "url": "https://github.com/resim-ai/resim-python-client/archive/185d9c00b3d7903150a3149fd7e258d9ceae12f5.zip"
+}

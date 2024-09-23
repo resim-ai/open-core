@@ -13,6 +13,8 @@ from typing import Dict, Set
 from resim.metrics.proto.metrics_pb2 import MetricStatus
 from resim.metrics.python.metrics import (
     BarChartMetric,
+    BaseMetricsData,
+    BaseMetricsDataT,
     DoubleOverTimeMetric,
     DoubleSummaryMetric,
     Event,
@@ -22,8 +24,6 @@ from resim.metrics.python.metrics import (
     ImageMetric,
     LinePlotMetric,
     Metric,
-    MetricsData,
-    MetricsDataT,
     MetricT,
     PlotlyMetric,
     ScalarMetric,
@@ -37,7 +37,7 @@ from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_
 class ResimMetricsWriter:
     job_id: uuid.UUID
     metrics: Dict[uuid.UUID, Metric]
-    metrics_data: Dict[uuid.UUID, MetricsData]
+    metrics_data: Dict[uuid.UUID, BaseMetricsData]
     events: Dict[uuid.UUID, Event]
 
     names: Set[str]
@@ -49,7 +49,7 @@ class ResimMetricsWriter:
         self.events = {}
         self.names = set()
 
-    def add_metrics_data(self, data: MetricsDataT) -> MetricsDataT:
+    def add_metrics_data(self, data: BaseMetricsDataT) -> BaseMetricsDataT:
         assert data.name not in self.names
         self.names.add(data.name)
         self.metrics_data[data.id] = data

@@ -51,8 +51,6 @@ jobs:
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
-        #with:
-        #  arguments: --filter=-mypy
 
       - name: Build Go Bindings
         if: "${{ github.event.inputs.tag != '' }}"
@@ -69,10 +67,33 @@ jobs:
       - name: Build Metrics Tools
         run: bazel build //resim/metrics:resim_metrics_tools
 
-      - name: Build Wheels
+      - name: Build Aarch64 Wheel
+        id: build_aarch64_wheel
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
-        run: bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          OUTPUT_BASE: "~/.cache/cross_output" # Purposefully avoids the cache
+        run: |
+          bazel --output_base $OUTPUT_BASE \
+            build --platforms //:aarch64_linux //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
+            cquery --platforms //:aarch64_linux //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)
+          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+
+      - name: Build Wheels
+        id: build_wheel
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: |
+          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          OUTPATH=$(bazel info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel cquery //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)
+          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
 
       - name: Draft Release
         if: "${{ github.event.inputs.tag != '' }}"
@@ -81,3 +102,14 @@ jobs:
           artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
           generateReleaseNotes: true
           tag: ${{ github.event.inputs.tag }}
+
+        # We manually release the wheels in this way because we are releasing for different
+        # platforms, which is hard to do using the built in publish rules in rules_python
+      - name: Publish Wheels
+        env:
+          AARCH64_WHEEL: ${{ steps.build_aarch64_wheel.outputs.path }}
+          X86_64_WHEEL: ${{ steps.build_wheel.outputs.path }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          bazel run //pkg:twine upload $X86_64_WHEEL -- -u __token__ -p $PYPI_TOKEN --skip-existing
+          bazel run //pkg:twine upload $AARCH64_WHEEL -- -u __token__ -p $PYPI_TOKEN --skip-existing
