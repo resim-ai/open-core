@@ -73,6 +73,7 @@ async def dict_gather(coroutine_dict: dict) -> dict:
 def make_metrics(
     *,
     writer: ResimMetricsWriter,
+    batches_frame: pd.DataFrame,
     tests_frame: pd.DataFrame,
     builds_frame: pd.DataFrame,
     tags_frame: pd.DataFrame,
@@ -99,7 +100,7 @@ def make_metrics(
             continue
         fig.add_trace(
             go.Bar(
-                x=status_counts_frame["build_creation_timestamp"],
+                x=status_counts_frame.build_creation_timestamp,
                 y=status_counts_frame[status],
                 name=status,
                 marker_color=resim_status_color_map[status],
@@ -123,7 +124,119 @@ def make_metrics(
         .with_plotly_data(fig.to_json())
     )
 
-    print(job_metrics_frame["name"])
+    batch_status_counts_frame = batches_frame["status"].value_counts()
+    for status in (
+        ConflatedJobStatus.PASSED,
+        ConflatedJobStatus.WARNING,
+        ConflatedJobStatus.BLOCKER,
+        ConflatedJobStatus.ERROR,
+        ConflatedJobStatus.CANCELLED,
+    ):
+        if status in batch_status_counts_frame:
+            continue
+        batch_status_counts_frame[status] = 0
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=["Name", "Value"]),
+                cells=dict(
+                    values=[
+                        [
+                            "Number of batches",
+                            "Number of tests",
+                            "Number of error batches",
+                            "Number of fail block batches",
+                            "Number of fail warn batches",
+                            "Number of passed batches",
+                        ],
+                        [
+                            len(batches_frame),
+                            len(tests_frame),
+                            batch_status_counts_frame[ConflatedJobStatus.ERROR],
+                            batch_status_counts_frame[ConflatedJobStatus.BLOCKER],
+                            batch_status_counts_frame[ConflatedJobStatus.WARNING],
+                            batch_status_counts_frame[ConflatedJobStatus.PASSED],
+                        ],
+                    ]
+                ),
+            )
+        ]
+    )
+
+    resim_plotly_style(
+        fig,
+    )
+
+    (
+        writer.add_plotly_metric("high_level_totals")
+        .with_description("High-level totals")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    experience_names_frame = (
+        tests_frame[["experience_id", "experience_name"]]
+        .drop_duplicates()
+        .set_index("experience_id")
+    )
+
+    experience_status_counts_frame = (
+        tests_frame.groupby("experience_id")["status"]
+        .value_counts()
+        .unstack(fill_value=0)
+        .join(experience_names_frame)
+        .set_index("experience_name")
+    )
+
+    for status in (
+        ConflatedJobStatus.PASSED,
+        ConflatedJobStatus.WARNING,
+        ConflatedJobStatus.BLOCKER,
+        ConflatedJobStatus.ERROR,
+        ConflatedJobStatus.CANCELLED,
+    ):
+        if status in experience_status_counts_frame.columns:
+            continue
+        experience_status_counts_frame[status] = 0
+
+    experience_status_counts_frame.sort_values(
+        by=[
+            ConflatedJobStatus.ERROR,
+            ConflatedJobStatus.BLOCKER,
+            ConflatedJobStatus.WARNING,
+            ConflatedJobStatus.CANCELLED,
+            ConflatedJobStatus.PASSED,
+        ],
+        ascending=False,
+        inplace=True,
+    )
+    experience_status_counts_frame.reset_index(inplace=True)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=list(experience_status_counts_frame.columns)),
+                cells=dict(
+                    values=experience_status_counts_frame.transpose().values.tolist()
+                ),
+            )
+        ]
+    )
+    resim_plotly_style(fig)
+
+    (
+        writer.add_plotly_metric("experience_status_counts")
+        .with_description("Experience Status Counts")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
 
     for i in range(20):
         (
@@ -872,6 +985,48 @@ async def compute_metrics(
     if len(batches) == 0:
         return
 
+    batches_frame = pd.DataFrame(
+        [
+            (b.batch_id, b.batch_metrics_status, b.jobs_metrics_status, b.status)
+            for b in batches
+        ],
+        columns=[
+            "batch_id",
+            "batch_metrics_status",
+            "jobs_metrics_status",
+            "batch_status",
+        ],
+    )
+    batches_frame.set_index("batch_id", inplace=True)
+
+    def batch_conflated_status(batch: pd.DataFrame):
+        if batch.batch_status in (
+            BatchStatus.BATCH_METRICS_QUEUED,
+            BatchStatus.BATCH_METRICS_RUNNING,
+            BatchStatus.EXPERIENCES_RUNNING,
+        ):
+            return ConflatedJobStatus.RUNNING
+        if batch.batch_status == BatchStatus.CANCELLED:
+            return ConflatedJobStatus.CANCELLED
+        if batch.batch_status == BatchStatus.ERROR:
+            return ConflatedJobStatus.ERROR
+        if batch.batch_status == BatchStatus.SUBMITTED:
+            return ConflatedJobStatus.QUEUED
+        if batch.batch_status == BatchStatus.SUCCEEDED:
+            if (
+                MetricStatus.FAIL_BLOCK
+                in batch[["batch_metrics_status", "jobs_metrics_status"]].to_list()
+            ):
+                return ConflatedJobStatus.BLOCKER
+            elif (
+                MetricStatus.FAIL_WARN
+                in batch[["batch_metrics_status", "jobs_metrics_status"]].to_list()
+            ):
+                return ConflatedJobStatus.WARNING
+            return ConflatedJobStatus.PASSED
+
+    batches_frame["status"] = batches_frame.apply(batch_conflated_status, axis=1)
+
     tests_frame = pd.DataFrame(
         [
             (
@@ -953,6 +1108,7 @@ async def compute_metrics(
 
     make_metrics(
         writer=writer,
+        batches_frame=batches_frame,
         tests_frame=tests_frame,
         builds_frame=builds_frame,
         tags_frame=tags_frame,
