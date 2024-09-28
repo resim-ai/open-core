@@ -9,3 +9,4 @@ coverage --combined_report=lcov --experimental_generate_llvm_lcov --experimental
 
 common --registry=https://raw.githubusercontent.com/resim-ai/open-core/main/bazel_registry/
 common --registry=https://bcr.bazel.build
+common --incompatible_strict_action_env
