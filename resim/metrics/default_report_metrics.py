@@ -238,16 +238,158 @@ def make_metrics(
         .with_plotly_data(fig.to_json())
     )
 
-    for i in range(20):
+    job_metric_status_counts_frame = (
+        job_metrics_frame.groupby("name")["status"].value_counts().unstack(fill_value=0)
+    )
+
+    for status in (
+        MetricStatus.FAIL_BLOCK,
+        MetricStatus.FAIL_WARN,
+        MetricStatus.PASSED,
+    ):
+        if status not in job_metric_status_counts_frame:
+            job_metric_status_counts_frame[status] = 0
+
+    job_metric_status_counts_frame.sort_values(
+        by=[
+            MetricStatus.FAIL_BLOCK,
+            MetricStatus.FAIL_WARN,
+            MetricStatus.PASSED,
+        ],
+        ascending=False,
+        inplace=True,
+    )
+    job_metric_status_counts_frame.reset_index(inplace=True)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=list(job_metric_status_counts_frame.columns)),
+                cells=dict(
+                    values=job_metric_status_counts_frame.transpose().values.tolist()
+                ),
+            )
+        ]
+    )
+    resim_plotly_style(fig)
+    (
+        writer.add_plotly_metric("job_metric_status_counts")
+        .with_description("Job Metric Status Counts")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    batch_metric_status_counts_frame = (
+        batch_metrics_frame.groupby("name")["status"]
+        .value_counts()
+        .unstack(fill_value=0)
+    )
+
+    for status in (
+        MetricStatus.FAIL_BLOCK,
+        MetricStatus.FAIL_WARN,
+        MetricStatus.PASSED,
+    ):
+        if status not in batch_metric_status_counts_frame:
+            batch_metric_status_counts_frame[status] = 0
+
+    batch_metric_status_counts_frame.sort_values(
+        by=[
+            MetricStatus.FAIL_BLOCK,
+            MetricStatus.FAIL_WARN,
+            MetricStatus.PASSED,
+        ],
+        ascending=False,
+        inplace=True,
+    )
+    batch_metric_status_counts_frame.reset_index(inplace=True)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=list(batch_metric_status_counts_frame.columns)),
+                cells=dict(
+                    values=batch_metric_status_counts_frame.transpose().values.tolist()
+                ),
+            )
+        ]
+    )
+    resim_plotly_style(fig)
+    (
+        writer.add_plotly_metric("batch_metric_status_counts")
+        .with_description("Batch Metric Status Counts")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    scalar_job_metrics_frame = (
+        job_metrics_frame[job_metrics_frame.type == MetricType.SCALAR]
+        .reset_index()
+        .merge(tests_frame["build_id"], on="job_id")
+        .merge(builds_frame["build_creation_timestamp"], on="build_id")
+    )
+
+    def add_scalar_job_metric_histogram(df: pd.DataFrame):
+
+        fig = go.Figure(
+            data=[
+                go.Box(
+                    x=df.build_creation_timestamp,
+                    y=df.value,
+                    boxpoints="all",
+                )
+            ]
+        )
+        resim_plotly_style(fig)
+        name = df["name"].iloc[0]
         (
-            writer.add_scalar_metric(f"metric_{i}")
-            .with_description("")
+            writer.add_plotly_metric(f"{name}_distribution")
+            .with_description(f"{name} distribution over time")
             .with_blocking(False)
             .with_should_display(True)
             .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
             .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-            .with_value(0.0)
+            .with_plotly_data(fig.to_json())
         )
+
+    scalar_job_metrics_frame.groupby("name").apply(add_scalar_job_metric_histogram)
+
+    scalar_batch_metrics_frame = (
+        batch_metrics_frame[batch_metrics_frame.type == MetricType.SCALAR]
+        .reset_index()
+        .merge(batches_frame["build_id"], on="batch_id")
+        .merge(builds_frame["build_creation_timestamp"], on="build_id")
+        .sort_values(by="build_creation_timestamp")
+    )
+
+    def add_scalar_batch_metric_histogram(df: pd.DataFrame):
+        fig = go.Figure(
+            data=[
+                go.Scatter(
+                    x=df.build_creation_timestamp,
+                    y=df.value,
+                )
+            ]
+        )
+        resim_plotly_style(fig)
+        name = df["name"].iloc[0]
+        (
+            writer.add_plotly_metric(f"{name}_over_time")
+            .with_description(f"{name} over time")
+            .with_blocking(False)
+            .with_should_display(True)
+            .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+            .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+            .with_plotly_data(fig.to_json())
+        )
+
+    scalar_batch_metrics_frame.groupby("name").apply(add_scalar_batch_metric_histogram)
 
 
 ################################################################################
@@ -389,550 +531,6 @@ async def fetch_scalar_batch_metrics(
     return responses
 
 
-def _count_job_statuses(jobs: list[Job]) -> list[int]:
-    """Count the different output statuses in a given job list.
-
-    Count job statuses into the following categories in order:
-
-    PASSED
-    FAIL_WARN
-    FAIL_BLOCK
-    ERROR
-    CANCELLED
-    UNKNOWN
-
-    Args:
-        jobs: The jobs whose statuses we care about.
-
-    Returns:
-        A list of counts in the aforementioned order.
-    """
-    counts: dict[JobStatus, MetricStatus] = defaultdict(int)
-    for job in jobs:
-        counts[(job.job_status, job.job_metrics_status)] += 1
-
-    passed_count = counts[(JobStatus.SUCCEEDED, MetricStatus.PASSED)]
-    fail_warn_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_WARN)]
-    fail_block_count = counts[(JobStatus.SUCCEEDED, MetricStatus.FAIL_BLOCK)]
-    error_count = sum(counts[JobStatus.ERROR, ms] for ms in MetricStatus)
-    cancelled_count = sum(counts[JobStatus.CANCELLED, ms] for ms in MetricStatus)
-
-    categorized_counts = [
-        passed_count,
-        fail_warn_count,
-        fail_block_count,
-        error_count,
-        cancelled_count,
-    ]
-    # Add unknown column
-    categorized_counts.append(len(jobs) - sum(categorized_counts))
-
-    return categorized_counts
-
-
-def _count_batch_statuses(
-    batch_ids: list[str], batch_to_jobs_map: dict[str, list[Job]]
-) -> pd.DataFrame:
-    """Count the different output statuses of jobs for each batch.
-
-    Returns a pandas dataframe where each row is a batch in order of timestamp
-    and each column is a status like so:
-
-           PASSED  FAIL_WARN  FAIL_BLOCK  ERROR  CANCELLED  UNKNOWN
-        0      22         10          18      0          0        0
-        1      23         10          17      0          0        0
-        2      23         10          17      0          0        0
-        3      22         10          18      0          0        0
-        4      21         10          19      0          0        0
-
-    Args:
-        batch_ids: The batches whose statuses we care about.
-        batch_to_jobs_map: All of the jobs per batch.
-
-    Returns:
-        A dataframe containing status counts where each row is a batch in order
-        and each column is a status.
-
-    """
-    status_counts = []
-    for batch_id in batch_ids:
-        status_counts.append(_count_job_statuses(batch_to_jobs_map[batch_id]))
-
-    status_counts = pd.DataFrame(
-        data=np.array(status_counts),
-        columns=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
-        index=range(len(batch_ids)),
-    )
-    return status_counts
-
-
-def job_status_categories_metric(
-    writer: ResimMetricsWriter,
-    *,
-    batches: list[Batch],
-    batch_to_jobs_map: dict[str, list[Job]],
-    job_to_metrics_map: dict[str, list[JobMetric]],
-    batch_to_metrics_map: dict[str, list[BatchMetric]],
-    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
-) -> None:
-    # pylint: disable=unused-argument
-    """Create a variety of job status metrics.
-
-    Includes a filled line plot of statuses alongside aggregate metrics on:
-     - Number of batches
-     - Number of jobs
-     - Number of passing batches
-     - Number of failing batches
-     - Failed jobs on most recent batch
-     - etc.
-
-    Args:
-        writer: A metrics writer to write these metrics to.
-        batches: All batches for this report.
-        batch_to_jobs_map: All jobs for each batch.
-        job_to_metrics_map: All job metrics for each job.
-        batch_to_metrics_map: All batch metrics for each batch.
-        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
-    """
-    status_counts = _count_batch_statuses(
-        [b.batch_id for b in batches], batch_to_jobs_map
-    )
-
-    status_counts["Batch Number"] = list(range(len(batch_to_jobs_map)))
-
-    fig = px.area(
-        status_counts,
-        x="Batch Number",
-        y=["PASSED", "FAIL_WARN", "FAIL_BLOCK", "ERROR", "CANCELLED", "UNKNOWN"],
-    )
-    fig.update_layout(
-        template="plotly_dark",
-        plot_bgcolor="rgba(0, 0, 0, 0)",
-        yaxis_title="Number of Tests",
-        paper_bgcolor="rgba(0, 0, 0, 0)",
-    )
-
-    (
-        writer.add_plotly_metric("Job Statuses Over Time")
-        .with_description("Job Statuses Over Sequential Batches")
-        .with_blocking(False)
-        .with_should_display(True)
-        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
-        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_plotly_data(fig.to_json())
-    )
-
-    fail_statuses = (MetricStatus.FAIL_BLOCK, MetricStatus.FAIL_WARN)
-
-    def batch_is_fail_block(batch: Batch) -> bool:
-        if batch.status != BatchStatus.SUCCEEDED:
-            return False
-
-        return MetricStatus.FAIL_BLOCK in (
-            batch.batch_metrics_status,
-            batch.jobs_metrics_status,
-        )
-
-    def batch_is_fail_warn(batch: Batch) -> bool:
-        if batch.status != BatchStatus.SUCCEEDED:
-            return False
-
-        result: bool = not batch_is_fail_block(batch) and (
-            batch.batch_metrics_status in fail_statuses
-            or batch.jobs_metrics_status in fail_statuses
-        )
-        return result
-
-    def batch_is_error(batch: Batch) -> bool:
-        result: bool = batch.status == BatchStatus.ERROR
-        return result
-
-    def batch_is_success(batch: Batch) -> bool:
-        if batch.status != BatchStatus.SUCCEEDED:
-            return False
-
-        return (
-            batch.batch_metrics_status not in fail_statuses
-            and batch.jobs_metrics_status not in fail_statuses
-        )
-
-    if len(batches) == 0:
-        raise ValueError("Can't compute totals on zero batches!")
-
-    batches_sorted = all(
-        batches[i].creation_timestamp < batches[i + 1].creation_timestamp
-        for i in range(len(batches) - 1)
-    )
-
-    if not batches_sorted:
-        raise ValueError("Batches must be sorted!")
-
-    totals = {
-        "Number of Batches": len(batches),
-        "Number of Jobs": len(job_to_metrics_map),
-        "Number of Passing Batches": sum(batch_is_success(b) for b in batches),
-        "Number of Fail Warn Batches": sum(batch_is_fail_warn(b) for b in batches),
-        "Number of Fail Block Batches": sum(batch_is_fail_block(b) for b in batches),
-        "Number of Error Batches": sum(batch_is_error(b) for b in batches),
-        "Failed Jobs on Most Recent Batch": status_counts.tail(1)[
-            ["FAIL_WARN", "FAIL_BLOCK", "ERROR"]
-        ]
-        .sum(axis=1)
-        .iloc[0],
-        "Passed Jobs on Most Recent Batch": status_counts.tail(1)["PASSED"].iloc[0],
-    }
-
-    totals_status: dict[str, mu.MetricStatus] = {}
-
-    for k, v in totals.items():
-        totals[k] = np.array([v], dtype=np.float64)
-        totals_status[k] = np.array([mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS])
-
-    totals_data = rm.GroupedMetricsData(
-        name="Totals Summary", category_to_series=totals
-    )
-
-    totals_status_data = rm.GroupedMetricsData(
-        name="Totals Summary Statuses", category_to_series=totals_status
-    )
-
-    failure_def = mu.DoubleFailureDefinition(fails_below=None, fails_above=None)
-    (
-        writer.add_double_summary_metric("Totals")
-        .with_description("High-level totals")
-        .with_blocking(False)
-        .with_should_display(True)
-        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_importance(mu.MetricImportance.ZERO_IMPORTANCE)
-        .with_value_data(totals_data)
-        .with_status_data(totals_status_data)
-        .with_failure_definition(failure_def)
-    )
-
-
-def flaky_experiences_metric(
-    writer: ResimMetricsWriter,
-    *,
-    batches: list[Batch],
-    batch_to_jobs_map: dict[str, list[Job]],
-    job_to_metrics_map: dict[str, list[JobMetric]],
-    batch_to_metrics_map: dict[str, list[BatchMetric]],
-    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
-) -> None:
-    # pylint: disable=unused-argument
-    """Creates metrics listing flaky experiences and metrics
-
-    Creates a plotly table describing the experiences that failed most in this
-    report, job metrics that failed most, and batch metrics that failed most.
-
-    Args:
-        writer: A metrics writer to write these metrics to.
-        batches: All batches for this report.
-        batch_to_jobs_map: All jobs for each batch.
-        job_to_metrics_map: All job metrics for each job.
-        batch_to_metrics_map: All batch metrics for each batch.
-        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
-    """
-
-    def job_is_error(job: Job) -> bool:
-        result: bool = job.job_status == JobStatus.ERROR
-        return result
-
-    def job_is_fail_block(job: Job) -> bool:
-        if job.job_status != JobStatus.SUCCEEDED:
-            return False
-
-        result: bool = job.job_metrics_status == MetricStatus.FAIL_BLOCK
-        return result
-
-    def job_is_fail_warn(job: Job) -> bool:
-        if job.job_status != JobStatus.SUCCEEDED:
-            return False
-
-        result: bool = job.job_metrics_status == MetricStatus.FAIL_WARN
-        return result
-
-    def metric_is_fail_block(metric: JobMetric) -> bool:
-        result: bool = metric.status == MetricStatus.FAIL_BLOCK
-        return result
-
-    def metric_is_fail_warn(metric: JobMetric) -> bool:
-        result: bool = metric.status == MetricStatus.FAIL_WARN
-        return result
-
-    def batch_metric_is_fail_block(metric: BatchMetric) -> bool:
-        result: bool = metric.status == MetricStatus.FAIL_BLOCK
-        return result
-
-    def batch_metric_is_fail_warn(metric: BatchMetric) -> bool:
-        result: bool = metric.status == MetricStatus.FAIL_WARN
-        return result
-
-    fail_error_counts: dict[str, int] = defaultdict(int)
-    fail_block_counts: dict[str, int] = defaultdict(int)
-    fail_warn_counts: dict[str, int] = defaultdict(int)
-
-    job_metric_fail_block_counts: dict[str, int] = defaultdict(int)
-    job_metric_fail_warn_counts: dict[str, int] = defaultdict(int)
-
-    batch_metric_fail_block_counts: dict[str, int] = defaultdict(int)
-    batch_metric_fail_warn_counts: dict[str, int] = defaultdict(int)
-
-    for jobs in batch_to_jobs_map.values():
-        for job in jobs:
-            fail_error_counts[job.experience_name] += job_is_error(job)
-            fail_block_counts[job.experience_name] += job_is_fail_block(job)
-            fail_warn_counts[job.experience_name] += job_is_fail_warn(job)
-            for metric in job_to_metrics_map[job.job_id]:
-                job_metric_fail_block_counts[metric.name] += metric_is_fail_block(
-                    metric
-                )
-                job_metric_fail_warn_counts[metric.name] += metric_is_fail_warn(metric)
-
-    for batch in batches:
-        for batch_metric in batch_to_metrics_map[batch.batch_id]:
-            batch_metric_fail_block_counts[
-                batch_metric.name
-            ] += batch_metric_is_fail_block(batch_metric)
-            batch_metric_fail_warn_counts[
-                batch_metric.name
-            ] += batch_metric_is_fail_warn(batch_metric)
-
-    fail_counts = {
-        job_name: fail_error_counts[job_name]
-        + fail_warn_counts[job_name]
-        + fail_block_counts[job_name]
-        for job_name in fail_error_counts
-    }
-    fail_counts_list = [
-        (
-            exp_name,
-            count,
-            fail_error_counts[exp_name],
-            fail_block_counts[exp_name],
-            fail_warn_counts[exp_name],
-        )
-        for exp_name, count in fail_counts.items()
-    ]
-    fail_counts_list.sort(key=lambda t: t[1:], reverse=True)
-
-    job_metric_fail_counts = {
-        metric_name: job_metric_fail_block_counts[metric_name]
-        + job_metric_fail_warn_counts[metric_name]
-        for metric_name in job_metric_fail_block_counts
-    }
-    job_metric_fail_counts_list = [
-        (
-            name,
-            count,
-            job_metric_fail_block_counts[name],
-            job_metric_fail_warn_counts[name],
-        )
-        for name, count in job_metric_fail_counts.items()
-    ]
-    job_metric_fail_counts_list.sort(key=lambda t: t[1:], reverse=True)
-
-    batch_metric_fail_counts = {
-        metric_name: batch_metric_fail_block_counts[metric_name]
-        + batch_metric_fail_warn_counts[metric_name]
-        for metric_name in batch_metric_fail_block_counts
-    }
-    batch_metric_fail_counts_list = [
-        (
-            name,
-            count,
-            batch_metric_fail_block_counts[name],
-            batch_metric_fail_warn_counts[name],
-        )
-        for name, count in batch_metric_fail_counts.items()
-    ]
-    batch_metric_fail_counts_list.sort(key=lambda t: t[1:], reverse=True)
-
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header={
-                    "values": [
-                        "Experience Name",
-                        "Fail Count",
-                        "Error Count",
-                        "Fail Block Count",
-                        "Fail Warn Count",
-                    ]
-                },
-                cells={
-                    "values": [
-                        [t[0] for t in fail_counts_list],
-                        [t[1] for t in fail_counts_list],
-                        [t[2] for t in fail_counts_list],
-                        [t[3] for t in fail_counts_list],
-                        [t[4] for t in fail_counts_list],
-                    ]
-                },
-            )
-        ]
-    )
-    fig.update_layout(
-        template="plotly_dark",
-        plot_bgcolor="rgba(0, 0, 0, 0)",
-        paper_bgcolor="rgba(0, 0, 0, 0)",
-    )
-
-    (
-        writer.add_plotly_metric("Failures per Experience")
-        .with_description("Experiences sorted by number of failures.")
-        .with_blocking(False)
-        .with_should_display(True)
-        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
-        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_plotly_data(fig.to_json())
-    )
-
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header={
-                    "values": [
-                        "Metric Name",
-                        "Fail Count",
-                        "Fail Block Count",
-                        "Fail Warn Count",
-                    ]
-                },
-                cells={
-                    "values": [
-                        [t[0] for t in job_metric_fail_counts_list],
-                        [t[1] for t in job_metric_fail_counts_list],
-                        [t[2] for t in job_metric_fail_counts_list],
-                        [t[3] for t in job_metric_fail_counts_list],
-                    ]
-                },
-            )
-        ]
-    )
-    fig.update_layout(
-        template="plotly_dark",
-        plot_bgcolor="rgba(0, 0, 0, 0)",
-        paper_bgcolor="rgba(0, 0, 0, 0)",
-    )
-
-    (
-        writer.add_plotly_metric("Failures per Job Metric")
-        .with_description("Job Metrics sorted by number of failures.")
-        .with_blocking(False)
-        .with_should_display(True)
-        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
-        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_plotly_data(fig.to_json())
-    )
-
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header={
-                    "values": [
-                        "Metric Name",
-                        "Fail Count",
-                        "Fail Block Count",
-                        "Fail Warn Count",
-                    ]
-                },
-                cells={
-                    "values": [
-                        [t[0] for t in batch_metric_fail_counts_list],
-                        [t[1] for t in batch_metric_fail_counts_list],
-                        [t[2] for t in batch_metric_fail_counts_list],
-                        [t[3] for t in batch_metric_fail_counts_list],
-                    ]
-                },
-            )
-        ]
-    )
-    fig.update_layout(
-        template="plotly_dark",
-        plot_bgcolor="rgba(0, 0, 0, 0)",
-        paper_bgcolor="rgba(0, 0, 0, 0)",
-    )
-
-    (
-        writer.add_plotly_metric("Failures per Batch Metric")
-        .with_description("Batch Metrics sorted by number of failures.")
-        .with_blocking(False)
-        .with_should_display(True)
-        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
-        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_plotly_data(fig.to_json())
-    )
-
-
-def batch_metrics_scalars_over_time_metric(
-    writer: ResimMetricsWriter,
-    *,
-    batches: list[Batch],
-    batch_to_jobs_map: dict[str, list[Job]],
-    job_to_metrics_map: dict[str, list[JobMetric]],
-    batch_to_metrics_map: dict[str, list[BatchMetric]],
-    scalar_batch_metrics_map: dict[str, dict[str, MetricProto]],
-) -> None:
-    # pylint: disable=unused-argument
-    """Creates metrics plotting batch metric scalars over time.
-
-    Creates a line plot showing the value over time for each scalar batch metric
-    defined by this report's test suite's metrics build.
-
-    Args:
-        writer: A metrics writer to write these metrics to.
-        batches: All batches for this report.
-        batch_to_jobs_map: All jobs for each batch.
-        job_to_metrics_map: All job metrics for each job.
-        batch_to_metrics_map: All batch metrics for each batch.
-        scalar_batch_metrics_map: All scalar batch metrics for each batch as protos.
-    """
-    values: dict[str, list] = defaultdict(list)
-    units: dict[str, str] = {}
-
-    for i, batch in enumerate(batches):
-        for metric in batch_to_metrics_map[batch.batch_id]:
-            if metric.type == MetricType.SCALAR:
-                values[metric.name].append([i, metric.value])
-                metric = scalar_batch_metrics_map[batch.batch_id][metric.name]
-                unit = metric.metric_values.scalar_metric_values.unit
-                if metric.name in units and unit != units[metric.name]:
-                    logger.warning("Inconsistent units for metric %s", metric.name)
-                else:
-                    units[metric.name] = unit
-
-    array_values = {key: np.array(value) for (key, value) in values.items()}
-
-    for key, value in array_values.items():
-        index_data = rm.SeriesMetricsData(
-            name=f"{key} Batch Index Data", series=value[:, 0]
-        )
-
-        value_data = rm.SeriesMetricsData(
-            name=f"{key} Data", series=value[:, 1], unit=units[key]
-        )
-
-        status_data = rm.SeriesMetricsData(
-            name=f"{key} statuses",
-            series=np.array(
-                [mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS] * len(index_data.series)
-            ),
-        )
-        (
-            writer.add_line_plot_metric(f'"{key}" over time')
-            .with_description(f'"{key}" collected from sequential test suite batches')
-            .with_blocking(False)
-            .with_should_display(True)
-            .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-            .append_series_data(index_data, value_data, "Value over time")
-            .append_statuses_data(status_data)
-            .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
-            .with_x_axis_name("Batch Index Over Time")
-            .with_y_axis_name("Metric Value")
-        )
-
-
 async def compute_metrics(
     *,
     token: str,
@@ -987,11 +585,18 @@ async def compute_metrics(
 
     batches_frame = pd.DataFrame(
         [
-            (b.batch_id, b.batch_metrics_status, b.jobs_metrics_status, b.status)
+            (
+                b.batch_id,
+                b.build_id,
+                b.batch_metrics_status,
+                b.jobs_metrics_status,
+                b.status,
+            )
             for b in batches
         ],
         columns=[
             "batch_id",
+            "build_id",
             "batch_metrics_status",
             "jobs_metrics_status",
             "batch_status",
@@ -1116,21 +721,21 @@ async def compute_metrics(
         batch_metrics_frame=batch_metrics_frame,
     )
 
-    all_metrics = [
-        job_status_categories_metric,
-        flaky_experiences_metric,
-        batch_metrics_scalars_over_time_metric,
-    ]
-
-    for metric in all_metrics:
-        metric(
-            writer,
-            batches=batches,
-            batch_to_jobs_map=batch_to_jobs_map,
-            job_to_metrics_map=job_to_metrics_map,
-            batch_to_metrics_map=batch_to_metrics_map,
-            scalar_batch_metrics_map=scalar_batch_metrics_map,
-        )
+    #    all_metrics = [
+    #        job_status_categories_metric,
+    #        flaky_experiences_metric,
+    #        batch_metrics_scalars_over_time_metric,
+    #    ]
+    #
+    #    for metric in all_metrics:
+    #        metric(
+    #            writer,
+    #            batches=batches,
+    #            batch_to_jobs_map=batch_to_jobs_map,
+    #            job_to_metrics_map=job_to_metrics_map,
+    #            batch_to_metrics_map=batch_to_metrics_map,
+    #            scalar_batch_metrics_map=scalar_batch_metrics_map,
+    #        )
 
     metrics_proto = writer.write()
     validate_job_metrics(metrics_proto.metrics_msg)
