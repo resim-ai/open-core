@@ -227,7 +227,6 @@ def make_metrics(
         ]
     )
     resim_plotly_style(fig)
-
     (
         writer.add_plotly_metric("experience_status_counts")
         .with_description("Experience Status Counts")
@@ -346,8 +345,15 @@ def make_metrics(
                 )
             ]
         )
-        resim_plotly_style(fig)
         name = df["name"].iloc[0]
+        unit = df["unit"].iloc[0]
+        unitsuffix = f" ({unit})" if unit else ""
+        resim_plotly_style(
+            fig,
+            xaxis_title="Time",
+            yaxis_title=name + unitsuffix,
+        )
+
         (
             writer.add_plotly_metric(f"{name}_distribution")
             .with_description(f"{name} distribution over time")
@@ -377,8 +383,14 @@ def make_metrics(
                 )
             ]
         )
-        resim_plotly_style(fig)
         name = df["name"].iloc[0]
+        unit = df["unit"].iloc[0]
+        unitsuffix = f" ({unit})" if unit else ""
+        resim_plotly_style(
+            fig,
+            xaxis_title="Time",
+            yaxis_title=name + unitsuffix,
+        )
         (
             writer.add_plotly_metric(f"{name}_over_time")
             .with_description(f"{name} over time")
