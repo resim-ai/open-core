@@ -21,10 +21,13 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from resim_python_client.api.batches import list_batch_metrics, list_metrics_for_job
+from resim_python_client.api.builds import get_build
+from resim_python_client.api.experiences import list_experience_tags_for_experience
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.batch import Batch
 from resim_python_client.models.batch_metric import BatchMetric
 from resim_python_client.models.batch_status import BatchStatus
+from resim_python_client.models.conflated_job_status import ConflatedJobStatus
 from resim_python_client.models.job import Job
 from resim_python_client.models.job_metric import JobMetric
 from resim_python_client.models.job_status import JobStatus
@@ -41,6 +44,7 @@ from resim.metrics.fetch_report_metrics import (
 from resim.metrics.proto.metrics_pb2 import Metric as MetricProto
 from resim.metrics.proto.validate_metrics_proto import validate_job_metrics
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
+from resim.metrics.resim_style import resim_plotly_style, resim_status_color_map
 
 logger = logging.getLogger("resim")
 
@@ -59,6 +63,78 @@ async def dict_gather(coroutine_dict: dict) -> dict:
             *(tag(key, coroutine) for (key, coroutine) in coroutine_dict.items())
         )
     )
+
+
+################################################################################
+# WIP
+################################################################################
+
+
+def make_metrics(
+    *,
+    writer: ResimMetricsWriter,
+    tests_frame: pd.DataFrame,
+    builds_frame: pd.DataFrame,
+    tags_frame: pd.DataFrame,
+    job_metrics_frame: pd.DataFrame,
+    batch_metrics_frame: pd.DataFrame,
+):
+    fig = go.Figure()
+
+    status_counts_frame = (
+        tests_frame.groupby("build_id")["status"]
+        .value_counts()
+        .unstack(fill_value=0)
+        .join(builds_frame)
+    )
+
+    for status in (
+        ConflatedJobStatus.PASSED,
+        ConflatedJobStatus.WARNING,
+        ConflatedJobStatus.BLOCKER,
+        ConflatedJobStatus.ERROR,
+        ConflatedJobStatus.CANCELLED,
+    ):
+        if status not in status_counts_frame.columns:
+            continue
+        fig.add_trace(
+            go.Bar(
+                x=status_counts_frame["build_creation_timestamp"],
+                y=status_counts_frame[status],
+                name=status,
+                marker_color=resim_status_color_map[status],
+            )
+        )
+
+    resim_plotly_style(
+        fig,
+        barmode="stack",
+        yaxis_title="Number of Tests",
+        xaxis_title="Time",
+    )
+
+    (
+        writer.add_plotly_metric("test_status_over_time")
+        .with_description("Test Statuses Over Sequential Batches")
+        .with_blocking(False)
+        .with_should_display(True)
+        .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+        .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+        .with_plotly_data(fig.to_json())
+    )
+
+    print(job_metrics_frame["name"])
+
+    for i in range(20):
+        (
+            writer.add_scalar_metric(f"metric_{i}")
+            .with_description("")
+            .with_blocking(False)
+            .with_should_display(True)
+            .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
+            .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
+            .with_value(0.0)
+        )
 
 
 ################################################################################
@@ -796,7 +872,93 @@ async def compute_metrics(
     if len(batches) == 0:
         return
 
+    tests_frame = pd.DataFrame(
+        [
+            (
+                t.job_id,
+                t.batch_id,
+                t.build_id,
+                t.experience_id,
+                t.experience_name,
+                t.conflated_status,
+            )
+            for tests in batch_to_jobs_map.values()
+            for t in tests
+        ],
+        columns=[
+            "job_id",
+            "batch_id",
+            "build_id",
+            "experience_id",
+            "experience_name",
+            "status",
+        ],
+    )
+    tests_frame.set_index("job_id", inplace=True)
+
+    build_ids = set(tests_frame["build_id"])
+
+    async def get_build_row(build_id: str):
+        build = await get_build.asyncio(
+            client=client, project_id=project_id, build_id=build_id
+        )
+        return build_id, build.creation_timestamp
+
+    builds_frame = pd.DataFrame(
+        await asyncio.gather(*[get_build_row(b) for b in build_ids]),
+        columns=["build_id", "build_creation_timestamp"],
+    )
+    builds_frame.set_index("build_id", inplace=True)
+
+    experience_ids = set(tests_frame["experience_id"])
+
+    async def get_tag_row(experience_id: str):
+        pages = await async_fetch_all_pages(
+            list_experience_tags_for_experience.asyncio,
+            client=client,
+            project_id=project_id,
+            experience_id=experience_id,
+        )
+        return experience_id, {e.name for page in pages for e in page.experience_tags}
+
+    tags_frame = pd.DataFrame(
+        await asyncio.gather(*[get_tag_row(e) for e in experience_ids]),
+        columns=["experience_id", "tags"],
+    )
+    tags_frame.set_index("experience_id", inplace=True)
+
+    job_metrics_frame = pd.DataFrame(
+        [
+            (m.job_id, m.name, m.value, m.unit, m.type, m.status)
+            for metrics in job_to_metrics_map.values()
+            for m in metrics
+        ],
+        columns=["job_id", "name", "value", "unit", "type", "status"],
+    )
+    job_metrics_frame.set_index(["name", "job_id"], inplace=True)
+    job_metrics_frame.sort_index(inplace=True)
+
+    batch_metrics_frame = pd.DataFrame(
+        [
+            (m.batch_id, m.name, m.value, m.unit, m.type, m.status)
+            for metrics in batch_to_metrics_map.values()
+            for m in metrics
+        ],
+        columns=["batch_id", "name", "value", "unit", "type", "status"],
+    )
+    batch_metrics_frame.set_index(["name", "batch_id"], inplace=True)
+    batch_metrics_frame.sort_index(inplace=True)
+
     writer = ResimMetricsWriter(uuid.uuid4())  # Make metrics writer!
+
+    make_metrics(
+        writer=writer,
+        tests_frame=tests_frame,
+        builds_frame=builds_frame,
+        tags_frame=tags_frame,
+        job_metrics_frame=job_metrics_frame,
+        batch_metrics_frame=batch_metrics_frame,
+    )
 
     all_metrics = [
         job_status_categories_metric,
@@ -847,6 +1009,7 @@ async def main() -> None:
             report_id=uuid.UUID(report_config["reportID"]),
             output_path=args.output_path,
         )
+
     else:
         # Otherwise, we can't do anything: exit 1
         print("Report config does not exist. Are you sure you're in report mode?")
