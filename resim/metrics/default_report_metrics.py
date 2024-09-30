@@ -565,7 +565,7 @@ def experience_status_counts_metric(
     fig = go.Figure(
         data=[
             go.Table(
-                header={"values": [experience_status_counts_frame.columns]},
+                header={"values": experience_status_counts_frame.columns.tolist()},
                 cells={
                     "values": experience_status_counts_frame.transpose().values.tolist()
                 },
