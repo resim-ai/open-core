@@ -3,7 +3,6 @@ on:
   push:
     branches: 
     - main
-  pull_request: #tmp for testing
 
 permissions:
   id-token: write
