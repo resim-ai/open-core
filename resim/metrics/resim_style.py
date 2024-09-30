@@ -24,12 +24,12 @@ WARNING_ORANGE = "#FFAC70"
 GRIDCOLOR_GRAY = "#3A3A44"
 
 
-def resim_plotly_style(fig: Figure, **kwargs: Any):
+def resim_plotly_style(fig: Figure, **kwargs: Any) -> None:
     fig.update_layout(
         template="plotly_dark",
         plot_bgcolor="rgba(0, 0, 0, 0)",
         paper_bgcolor="rgba(0, 0, 0, 0)",
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin={"l": 0, "r": 0, "t": 0, "b": 0},
         font_family="Foundry Gridnik Medium",
         title_font_family="Foundry Gridnik Medium",
         modebar_orientation="v",
@@ -38,12 +38,18 @@ def resim_plotly_style(fig: Figure, **kwargs: Any):
         yaxis_gridcolor=GRIDCOLOR_GRAY,
         xaxis_gridcolor=GRIDCOLOR_GRAY,
         # Use invisible ticks since ticklabelstandoff doesn't appear to work
-        xaxis=dict(
-            ticks="outside", tickcolor="rgba(0, 0, 0, 0)", ticklen=10, tickwidth=0.1
-        ),
-        yaxis=dict(
-            ticks="outside", tickcolor="rgba(0, 0, 0, 0)", ticklen=10, tickwidth=0.1
-        ),
+        xaxis={
+            "ticks": "outside",
+            "tickcolor": "rgba(0, 0, 0, 0)",
+            "ticklen": 10,
+            "tickwidth": 0.1,
+        },
+        yaxis={
+            "ticks": "outside",
+            "tickcolor": "rgba(0, 0, 0, 0)",
+            "ticklen": 10,
+            "tickwidth": 0.1,
+        },
         **kwargs,
     )
 
