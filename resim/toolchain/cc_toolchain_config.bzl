@@ -173,6 +173,15 @@ def _impl(ctx):
         ],
     )
 
+def _aarch64_impl(ctx):
+    return _toolchain_config_helper(
+        ctx,
+        [
+            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/include",
+        ],
+    )
+
 def _amd64_aarch64_cross_impl(ctx):
     return _toolchain_config_helper(
         ctx,
@@ -186,6 +195,12 @@ def _amd64_aarch64_cross_impl(ctx):
 
 cc_toolchain_config = rule(
     implementation = _impl,
+    attrs = {},
+    provides = [CcToolchainConfigInfo],
+)
+
+cc_toolchain_config_aarch64 = rule(
+    implementation = _aarch64_impl,
     attrs = {},
     provides = [CcToolchainConfigInfo],
 )
