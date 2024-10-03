@@ -52,9 +52,11 @@ DEFAULT_OUTPUT_PATH = pathlib.Path("/tmp/resim/outputs/metrics.binproto")
 
 async def dict_gather(coroutine_dict: dict) -> dict:
     """A simple helper function that enables asyncio.gather to be called on dictionaries."""
+    semaphore = asyncio.Semaphore(24)
 
     async def tag(key: Hashable, coroutine: Awaitable) -> tuple:
-        return key, await coroutine
+        async with semaphore:
+            return key, await coroutine
 
     return dict(
         await asyncio.gather(
