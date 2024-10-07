@@ -191,6 +191,16 @@ py_library(
     ],
 )
 
+py_library(
+    name = "resim_style",
+    srcs = ["resim_style.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("plotly"),
+        "@resim-python-client//:resim_python_client",
+    ],
+)
+
 py_test(
     name = "fetch_report_metrics_test",
     srcs = ["fetch_report_metrics_test.py"],
@@ -206,6 +216,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_report_metrics",
+        ":resim_style",
         "//resim/metrics/proto:validate_metrics_proto",
         "//resim/metrics/python:metrics_utils",
         "//resim/metrics/python:metrics_writer",
