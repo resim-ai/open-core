@@ -432,6 +432,7 @@ pybind_extension(
 pybind_extension(
     name = "resim_log_from_ros2_python",
     srcs = ["resim_log_from_ros2_python.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":resim_log_from_ros2",
     ],
