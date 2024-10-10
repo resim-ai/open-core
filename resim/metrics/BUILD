@@ -126,7 +126,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "@resim-python-client//:resim_python_client",
+        "//resim-python-client",
     ],
 )
 
@@ -136,7 +136,7 @@ py_test(
     deps = [
         ":fetch_all_pages",
         ":fetch_metrics_urls",
-        "@resim-python-client//:resim_python_client",
+        "//resim-python-client",
     ],
 )
 
@@ -167,9 +167,9 @@ py_library(
         ":fetch_all_pages",
         ":fetch_metrics_urls",
         ":get_metrics_proto",
+        "//resim-python-client",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/python:unpack_metrics",
-        "@resim-python-client//:resim_python_client",
     ],
 )
 
@@ -187,7 +187,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "@resim-python-client//:resim_python_client",
+        "//resim-python-client",
     ],
 )
 
@@ -197,7 +197,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("plotly"),
-        "@resim-python-client//:resim_python_client",
+        "//resim-python-client",
     ],
 )
 
@@ -206,7 +206,7 @@ py_test(
     srcs = ["fetch_report_metrics_test.py"],
     deps = [
         ":fetch_report_metrics",
-        "@resim-python-client//:resim_python_client",
+        "//resim-python-client",
     ],
 )
 
