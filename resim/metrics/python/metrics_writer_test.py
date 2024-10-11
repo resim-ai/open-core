@@ -710,7 +710,7 @@ class TestMetricsWriter(unittest.TestCase):
                     .with_value(METRIC_VALUE)
                     .with_status(metric_status)
                 )
-                output = self.writer.write(override_metrics_status=override_status)
+                output = self.writer.write(metrics_status_override=override_status)
                 self.assertEqual(
                     output.metrics_msg.metrics_status, override_status.value
                 )

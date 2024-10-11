@@ -150,7 +150,7 @@ class ResimMetricsWriter:
         return metrics_data
 
     def write(
-        self, override_metrics_status: typing.Optional[MetricStatus] = None
+        self, metrics_status_override: typing.Optional[MetricStatus] = None
     ) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
@@ -168,8 +168,8 @@ class ResimMetricsWriter:
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        if override_metrics_status is not None:
-            metrics_status = override_metrics_status.value
+        if metrics_status_override is not None:
+            metrics_status = metrics_status_override.value
         else:
             fail_block = any(
                 metric.status == ProtoMetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
