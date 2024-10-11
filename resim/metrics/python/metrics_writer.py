@@ -6,11 +6,12 @@
 
 from __future__ import annotations
 
+import typing
 import uuid
 from dataclasses import dataclass
 from typing import Dict, Set
 
-from resim.metrics.proto.metrics_pb2 import MetricStatus
+from resim.metrics.proto.metrics_pb2 import MetricStatus as ProtoMetricStatus
 from resim.metrics.python.metrics import (
     BarChartMetric,
     BaseMetricsData,
@@ -24,6 +25,7 @@ from resim.metrics.python.metrics import (
     ImageMetric,
     LinePlotMetric,
     Metric,
+    MetricStatus,
     MetricT,
     PlotlyMetric,
     ScalarMetric,
@@ -147,7 +149,9 @@ class ResimMetricsWriter:
         self.add_metrics_data(metrics_data)
         return metrics_data
 
-    def write(self) -> ResimMetricsOutput:
+    def write(
+        self, override_metrics_status: typing.Optional[MetricStatus] = None
+    ) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
         for i, metric in enumerate(self.metrics.values()):
@@ -164,22 +168,25 @@ class ResimMetricsWriter:
         packed_job_id = pack_uuid_to_proto(self.job_id)
         output.metrics_msg.job_id.id.CopyFrom(packed_job_id)
 
-        fail_block = any(
-            metric.status == MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
-            for metric in output.metrics_msg.job_level_metrics.metrics
-        )
-
-        fail_warn = any(
-            metric.status == MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
-            for metric in output.metrics_msg.job_level_metrics.metrics
-        )
-
-        if fail_block:
-            metrics_status = MetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
-        elif fail_warn:
-            metrics_status = MetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+        if override_metrics_status is not None:
+            metrics_status = override_metrics_status.value
         else:
-            metrics_status = MetricStatus.Value("PASSED_METRIC_STATUS")
+            fail_block = any(
+                metric.status == ProtoMetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
+                for metric in output.metrics_msg.job_level_metrics.metrics
+            )
+
+            fail_warn = any(
+                metric.status == ProtoMetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+                for metric in output.metrics_msg.job_level_metrics.metrics
+            )
+
+            if fail_block:
+                metrics_status = ProtoMetricStatus.Value("FAIL_BLOCK_METRIC_STATUS")
+            elif fail_warn:
+                metrics_status = ProtoMetricStatus.Value("FAIL_WARN_METRIC_STATUS")
+            else:
+                metrics_status = ProtoMetricStatus.Value("PASSED_METRIC_STATUS")
 
         output.metrics_msg.metrics_status = metrics_status
         output.metrics_msg.job_level_metrics.metrics_status = metrics_status

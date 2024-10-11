@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import json
 import random
 import unittest
@@ -684,6 +685,68 @@ class TestMetricsWriter(unittest.TestCase):
         metric_id_uuids = list(map(lambda m: m.metric_id, metrics))
         for metric_id in event_msg.metrics:
             self.assertIn(metric_id, metric_id_uuids)
+
+    def test_override_status(self) -> None:
+        ALL_STATUSES = [
+            MetricStatus.PASSED_METRIC_STATUS,
+            MetricStatus.FAIL_WARN_METRIC_STATUS,
+            MetricStatus.FAIL_BLOCK_METRIC_STATUS,
+            MetricStatus.NO_METRIC_STATUS,
+            MetricStatus.NOT_APPLICABLE_METRIC_STATUS,
+            MetricStatus.RAW_METRIC_STATUS,
+        ]
+        for metric_status, override_status in itertools.product(
+            ALL_STATUSES, ALL_STATUSES
+        ):
+            if override_status != metric_status:
+                print(metric_status, override_status)
+                self.writer = ResimMetricsWriter(self.job_id)
+                METRIC_NAME = (
+                    "Scalar metric" + str(metric_status) + str(override_status)
+                )
+                METRIC_VALUE = 5.0
+                (
+                    self.writer.add_scalar_metric(METRIC_NAME)
+                    .with_value(METRIC_VALUE)
+                    .with_status(metric_status)
+                )
+                output = self.writer.write(override_metrics_status=override_status)
+                self.assertEqual(
+                    output.metrics_msg.metrics_status, override_status.value
+                )
+                self.assertEqual(len(output.packed_ids), 1)
+                self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+                self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+
+                metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+                self.assertEqual(metric_base.status, metric_status.value)
+
+                self.writer = ResimMetricsWriter(self.job_id)
+                (
+                    self.writer.add_scalar_metric(METRIC_NAME)
+                    .with_value(METRIC_VALUE)
+                    .with_status(metric_status)
+                )
+                output = self.writer.write()
+                self.assertEqual(len(output.packed_ids), 1)
+                self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+                self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+                metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+                self.assertEqual(metric_base.status, metric_status.value)
+                # if override status is not used, we fold non-failing statuses into pass.
+                if metric_status == MetricStatus.FAIL_BLOCK_METRIC_STATUS:
+                    self.assertEqual(
+                        output.metrics_msg.metrics_status, metric_status.value
+                    )
+                elif metric_status == MetricStatus.FAIL_WARN_METRIC_STATUS:
+                    self.assertEqual(
+                        output.metrics_msg.metrics_status, metric_status.value
+                    )
+                else:
+                    self.assertEqual(
+                        output.metrics_msg.metrics_status,
+                        MetricStatus.PASSED_METRIC_STATUS.value,
+                    )
 
     def tearDown(self) -> None:
         pass
