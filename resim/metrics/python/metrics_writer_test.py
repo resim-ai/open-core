@@ -699,7 +699,6 @@ class TestMetricsWriter(unittest.TestCase):
             ALL_STATUSES, ALL_STATUSES
         ):
             if override_status != metric_status:
-                print(metric_status, override_status)
                 self.writer = ResimMetricsWriter(self.job_id)
                 METRIC_NAME = (
                     "Scalar metric" + str(metric_status) + str(override_status)
@@ -721,12 +720,6 @@ class TestMetricsWriter(unittest.TestCase):
                 metric_base = output.metrics_msg.job_level_metrics.metrics[0]
                 self.assertEqual(metric_base.status, metric_status.value)
 
-                self.writer = ResimMetricsWriter(self.job_id)
-                (
-                    self.writer.add_scalar_metric(METRIC_NAME)
-                    .with_value(METRIC_VALUE)
-                    .with_status(metric_status)
-                )
                 output = self.writer.write()
                 self.assertEqual(len(output.packed_ids), 1)
                 self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
