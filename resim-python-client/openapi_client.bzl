@@ -1,4 +1,3 @@
-
 """
 This file contains a single rule which uses the openapi-python-client package to generate an openapi pythonclient based on a given api specification and generator config.
 """
