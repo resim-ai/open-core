@@ -1,3 +1,8 @@
+
+"""
+This file contains a single rule which uses the openapi-python-client package to generate an openapi pythonclient based on a given api specification and generator config.
+"""
+
 def _openapi_client_impl(ctx):
     """Generate an openapi client without the ruff post hook"""
     output_dir = ctx.actions.declare_directory(ctx.attr.name)

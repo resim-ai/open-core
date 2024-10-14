@@ -3,6 +3,8 @@ load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load(":openapi_client.bzl", "openapi_client")
 
+exports_files(["requirements.txt"])
+
 py_console_script_binary(
     name = "openapi-python-client",
     pkg = "@resim_python_client_deps//openapi_python_client",

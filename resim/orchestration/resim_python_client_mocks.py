@@ -54,7 +54,7 @@ def _random_dict_value(d: dict[K, V]) -> V:
     return d[k]
 
 
-def _random_bool():
+def _random_bool() -> bool:
     return random.choice([True, False])
 
 
