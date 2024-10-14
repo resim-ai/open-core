@@ -71,6 +71,17 @@ metrics_writer.add_metrics_data(TIMESTAMPS)
 
 This is useful, because we may want to write data that is not immediately referenced by any metric. Such data may be used by **batch metrics**. The `MetricsData` class also has a simple fluent API to make this easier.
 
+## Overriding the metrics status
+
+By default, the `writer.write()` function constructs a protobuf message that computes an overall job status based on the individual metrics. 
+The logic is fairly simple: 
+- if any metric is a blocking failure (`FAIL_BLOCK_METRIC_STATUS`), the overall job will be considered a blocking failure;
+- otherwise, if any metric is a warning (`FAIL_WARN_METRIC_STATUS`), the overall job will be considered a warning failure;
+- otherwise, the overall job will be considered a pass;
+
+It is, however, possible to override that calculation with `writer.write(metrics_status_override=FAIL_BLOCK_METRIC_STATUS)`, or 
+whatever status you wish. This is particularly useful if you would like to ignore warnings, for example.
+
 ## Validating the metrics writer output
 
 It's important to validate your output, to check it's a valid protobuf message that our system can plot.  We currently provide this through the `validate_job_metrics` function in `resim.metrics.proto.validate_metrics_proto`. Note that this is called on the **output metrics message** of the metrics writer (i.e. `output.metrics_msg`), not the metrics writer itself.
