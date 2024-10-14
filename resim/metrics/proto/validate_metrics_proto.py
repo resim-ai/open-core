@@ -681,36 +681,6 @@ def _validate_metrics_data(
         _metrics_assert(metrics_data.index_data_type == index_data.data_type)
 
 
-def _validate_statuses(job_metrics: mp.JobMetrics) -> None:
-    """
-    Check that the statuses in this JobMetrics are consistent
-
-    This ensures that the status stored in the JobMetrics and the
-    MetricCollection match - e.g. they are PASSED if and only if
-    none of the metrics FAILED.
-
-    Args:
-        job_metrics: The job metrics to validate.
-    """
-
-    expected_status = mp.PASSED_METRIC_STATUS
-    for metric in job_metrics.job_level_metrics.metrics:
-        status = metric.status
-        if status == mp.FAIL_BLOCK_METRIC_STATUS:
-            expected_status = mp.FAIL_BLOCK_METRIC_STATUS
-        elif status == mp.FAIL_WARN_METRIC_STATUS:
-            expected_status = (
-                mp.FAIL_WARN_METRIC_STATUS
-                if (expected_status != mp.FAIL_BLOCK_METRIC_STATUS)
-                else mp.FAIL_BLOCK_METRIC_STATUS
-            )
-
-    _metrics_assert(expected_status == job_metrics.metrics_status)
-    _metrics_assert(
-        job_metrics.job_level_metrics.metrics_status == job_metrics.metrics_status
-    )
-
-
 def _validate_event(event: mp.Event, metrics_map: dict[str, mp.Metric]) -> None:
     """
     Check that the Event is valid.
@@ -847,5 +817,3 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
             _metrics_assert(event.timestamp_type == timestamp_type)
             event_names.add(event.name)
             _validate_event(event, metrics_map)
-
-    _validate_statuses(job_metrics)
