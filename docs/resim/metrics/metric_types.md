@@ -14,7 +14,8 @@ All metrics take a certain set of shared parameters, which are relevant to all m
 - `importance: MetricImportance` - An overall importance (e.g. CRITICAL, HIGH, LOW, ZERO).
 - `should_display: bool` - A bool representing whether this should be displayed in the UI.
 - `blocking: bool` - A bool representing whether this metric failing should block the overall metrics run from passing. NB: This will likely be deprecated shortly.
-- `order: float` - A float representing the order in which this metric should be displayed within the context of any analsis pages on the ReSim app. If explicitly set (even as 0), the implied order semantics are via '<' and alphabetically if '=='. If not explicitly set, it is assumed to be greater than MAX_FLOAT and, therefore, ordered after any set fields.
+- `order: float` - A float representing the order in which this metric should be displayed within the context of any analysis pages on the ReSim app. If explicitly set (even as 0), the implied order semantics are via '<' and alphabetically if '=='. If not explicitly set, it is assumed to be greater than MAX_FLOAT and, therefore, ordered after any set fields.
+- `tags: List[Tag]` - A list of key/value tags to attach to the metric. These will show up in the ReSim app when viewing metrics. e.g. `tags=[Tag("key", "value")]`
 
 ### Grouped data support
 
