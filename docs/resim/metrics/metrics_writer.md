@@ -53,6 +53,7 @@ metrics_writer
       .with_legend_series_names(["Error"])
       .with_status(MetricStatus.PASSED_METRIC_STATUS)
       .with_importance(MetricImportance.HIGH_IMPORTANCE)
+      .with_tag("err_count", "32")
       .with_should_display(True)
       .with_blocking(False)
 ```
