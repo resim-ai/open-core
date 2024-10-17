@@ -54,6 +54,10 @@ def _random_dict_value(d: dict[K, V]) -> V:
     return d[k]
 
 
+def _random_bool() -> bool:
+    return random.choice([True, False])
+
+
 def _random_string() -> str:
     return str(random.choice(ascii_lowercase) for _ in range(20))
 
@@ -103,6 +107,7 @@ def random_test_suite(state: MockState) -> Batch:
         test_suite_revision=random.randint(1, 100),
         user_id=f"{_random_string()}@{state.org_id}",
         metrics_build_id=metrics_build.metrics_build_id,
+        show_on_summary=_random_bool(),
     )
 
 
