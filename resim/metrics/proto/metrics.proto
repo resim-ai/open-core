@@ -366,18 +366,17 @@ message BarChartMetricValues {
                                    // opposed to next to each other
 }
 
-
 message BatchWiseBarChartMetricValues {
-  // This is effectively multi-indexed on (batch id, category)
-    repeated MetricsDataId batch_ids_data_id = 1; // UUID_SERIES_DATA_TYPE
+    // This is effectively multi-indexed on (batch id, category)
+    repeated MetricsDataId batch_ids_data_id  = 1;  // UUID_SERIES_DATA_TYPE
     repeated MetricsDataId categories_data_id = 2;  // STRING_SERIES_DATA_TYPE
-    repeated MetricsDataId batch_times_data_id = 3; // TIMESTAMP_SERIES_DATA_TYPE  
-    repeated MetricsDataId values_data_id =
-        4;  // DOUBLE_SERIES_DATA_TYPE
+    repeated MetricsDataId batch_times_data_id =
+        3;                                      // TIMESTAMP_SERIES_DATA_TYPE
+    repeated MetricsDataId values_data_id = 4;  // DOUBLE_SERIES_DATA_TYPE
     repeated MetricsDataId statuses_data_id =
         5;  // METRIC_STATUS_SERIES_DATA_TYPE
 
-  // Color options? Do we need this?
+    // Color options? Do we need this?
 
     optional string x_axis_name = 6;
     optional string y_axis_name = 7;
@@ -385,7 +384,6 @@ message BatchWiseBarChartMetricValues {
     optional bool stack_bars = 8;  // Whether series should be stacked, as
                                    // opposed to next to each other
 }
-
 
 message StatesOverTimeMetricValues {
     repeated MetricsDataId states_over_time_data_id =
