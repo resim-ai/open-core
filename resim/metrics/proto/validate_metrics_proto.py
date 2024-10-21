@@ -12,7 +12,7 @@ validate that a resim.metrics.proto.JobMetrics protobuf message contains valid
 contents that can be posted to the metrics endpoint.
 """
 
-
+import re
 import uuid
 
 import google.protobuf.timestamp_pb2 as timestamp_proto
@@ -29,6 +29,11 @@ def _metrics_assert(val: bool, msg: str = "") -> None:
     """A function to assert conditions on metrics"""
     if not val:
         raise InvalidMetricsException(msg)
+
+
+def _validate_hex_color(hex_color: str) -> None:
+    # Hex color with 3 or 4 bytes
+    _metrics_assert(re.search(r"^#([0-9a-fA-F]{2}){3,4}$", hex_color) is not None)
 
 
 def _validate_metrics_data_type(metrics_data_type: mp.MetricsDataType) -> None:
@@ -361,6 +366,49 @@ def _validate_bar_chart_metric_values(
         )
 
 
+def _validate_batchwise_bar_chart_metric_values(
+    batchwise_bar_chart_metric_values: mp.BatchwiseBarChartMetricValues,
+    metrics_data_map: dict[str, mp.MetricsData],
+) -> None:
+    """
+    Check that a BatchwiseBarChartMetricValues is valid.
+
+    Args:
+        batchwise_bar_chart_metric_values: The metric values to check.
+        metrics_data_map: A map to find the metrics data in.
+    """
+    values = batchwise_bar_chart_metric_values
+    length = len(values.values_data_id)
+    _metrics_assert(length == len(values.times_data_id))
+    _metrics_assert(length == len(values.statuses_data_id))
+    _metrics_assert(length == len(values.categories))
+
+    for color in values.colors:
+        _validate_hex_color(color)
+
+    for i in range(length):
+        _validate_values_and_statuses(
+            values.values_data_id[i],
+            values.statuses_data_id[i],
+            metrics_data_map,
+            allowed_value_types={mp.INDEXED_DOUBLE_SERIES_DATA_TYPE},
+            allowed_index_types={
+                mp.UUID_SERIES_DATA_TYPE,
+                mp.INDEXED_UUID_SERIES_DATA_TYPE,
+            },
+        )
+        _validate_values_and_statuses(
+            values.times_data_id[i],
+            values.statuses_data_id[i],
+            metrics_data_map,
+            allowed_value_types={mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE},
+            allowed_index_types={
+                mp.UUID_SERIES_DATA_TYPE,
+                mp.INDEXED_UUID_SERIES_DATA_TYPE,
+            },
+        )
+
+
 def _validate_states_over_time_metric_values(
     states_over_time_metric_values: mp.StatesOverTimeMetricValues,
     metrics_data_map: dict[str, mp.MetricsData],
@@ -510,6 +558,10 @@ def _validate_metric_values(
         _validate_bar_chart_metric_values(
             metric_values.bar_chart_metric_values, metrics_data_map
         )
+    elif metric_values.HasField("batchwise_bar_chart_metric_values"):
+        _validate_batchwise_bar_chart_metric_values(
+            metric_values.batchwise_bar_chart_metric_values, metrics_data_map
+        )
     elif metric_values.HasField("states_over_time_metric_values"):
         _validate_states_over_time_metric_values(
             metric_values.states_over_time_metric_values, metrics_data_map
@@ -582,6 +634,10 @@ def _validate_metric(
         _metrics_assert(metric.metric_values.HasField("line_plot_metric_values"))
     elif metric.type == mp.BAR_CHART_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField("bar_chart_metric_values"))
+    elif metric.type == mp.BATCHWISE_BAR_CHART_METRIC_TYPE:
+        _metrics_assert(
+            metric.metric_values.HasField("batchwise_bar_chart_metric_values")
+        )
     elif metric.type == mp.STATES_OVER_TIME_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField("states_over_time_metric_values"))
     elif metric.type == mp.HISTOGRAM_METRIC_TYPE:

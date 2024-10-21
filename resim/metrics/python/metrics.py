@@ -235,6 +235,10 @@ class Metric(ABC, Generic[MetricT]):
             unpacked = LinePlotMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("BAR_CHART_METRIC_TYPE"):
             unpacked = BarChartMetric(name=msg.name)
+        elif msg.type == metrics_proto.MetricType.Value(
+            "BATCHWISE_BAR_CHART_METRIC_TYPE"
+        ):
+            unpacked = BatchwiseBarChartMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"):
             unpacked = StatesOverTimeMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("HISTOGRAM_METRIC_TYPE"):
@@ -983,6 +987,161 @@ class BarChartMetric(Metric["BarChartMetric"]):
 
         for data in self.statuses_data:
             data.recursively_pack_into(metrics_output)
+
+
+# TODO(matt/michael) Implement proper functionality for this metric
+@metric_dataclass
+class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
+    times_data: List[MetricsData] = dataclasses.field(default_factory=list)
+    values_data: List[MetricsData] = dataclasses.field(default_factory=list)
+    statuses_data: List[MetricsData] = dataclasses.field(default_factory=list)
+    categories: List[str] = dataclasses.field(default_factory=list)
+    colors: List[str] = dataclasses.field(default_factory=list)
+    x_axis_name: str
+    y_axis_name: str
+    stack_bars: bool
+
+    def __init__(
+        self: BatchwiseBarChartMetric,
+        name: str,
+        description: Optional[str] = None,
+        status: Optional[MetricStatus] = None,
+        importance: Optional[MetricImportance] = None,
+        blocking: Optional[bool] = None,
+        should_display: Optional[bool] = None,
+        parent_job_id: Optional[uuid.UUID] = None,
+        order: Optional[float] = None,
+        event_metric: Optional[bool] = None,
+        tags: Optional[List[Tag]] = None,
+        times_data: Optional[List[MetricsData]] = None,
+        values_data: Optional[List[MetricsData]] = None,
+        statuses_data: Optional[List[MetricsData]] = None,
+        categories: Optional[List[str]] = None,
+        colors: Optional[List[str]] = None,
+        x_axis_name: str = "",
+        y_axis_name: str = "",
+        stack_bars: bool = False,
+    ):
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order,
+            event_metric=event_metric,
+            tags=tags,
+        )
+        if times_data is not None:
+            self.times_data = times_data
+        else:
+            self.times_data = []
+        if values_data is not None:
+            self.values_data = values_data
+        else:
+            self.values_data = []
+        if statuses_data is not None:
+            self.statuses_data = statuses_data
+        else:
+            self.statuses_data = []
+        if categories is not None:
+            self.categories = categories
+        else:
+            self.categories = []
+        if colors is not None:
+            self.colors = colors
+        else:
+            self.colors = []
+        self.x_axis_name = x_axis_name
+        self.y_axis_name = y_axis_name
+        self.stack_bars = stack_bars
+
+    def append_category_data(
+        self: BatchwiseBarChartMetric,
+        category: str,
+        times_data: MetricsData,
+        values_data: MetricsData,
+        statuses_data: MetricsData,
+    ) -> BatchwiseBarChartMetric:
+        self.categories.append(category)
+        self.times_data.append(times_data)
+        self.values_data.append(values_data)
+        self.statuses_data.append(statuses_data)
+
+        return self
+
+    def with_colors(self: BatchwiseBarChartMetric, colors: List[str]):
+        self.colors = colors
+        return self
+
+    def with_x_axis_name(self: BarChartMetric, x_axis_name: str) -> BarChartMetric:
+        self.x_axis_name = x_axis_name
+        return self
+
+    def with_y_axis_name(self: BarChartMetric, y_axis_name: str) -> BarChartMetric:
+        self.y_axis_name = y_axis_name
+        return self
+
+    def with_stack_bars(self, stack_bars: bool) -> BarChartMetric:
+        self.stack_bars = stack_bars
+        return self
+
+    def pack(self: BatchwiseBarChartMetric) -> metrics_proto.Metric:
+        msg = super().pack()
+        msg.type = metrics_proto.MetricType.Value("BATCHWISE_BAR_CHART_METRIC_TYPE")
+        metric_values = msg.metric_values.batchwise_bar_chart_metric_values
+
+        if self.times_data is not None:
+            for times_data in self.times_data:
+                metric_values.times_data_id.add().id.CopyFrom(
+                    pack_uuid_to_proto(times_data.id)
+                )
+
+        if self.values_data is not None:
+            for values_data in self.values_data:
+                metric_values.values_data_id.add().id.CopyFrom(
+                    pack_uuid_to_proto(values_data.id)
+                )
+
+        if self.statuses_data is not None:
+            for statuses_data in self.statuses_data:
+                metric_values.statuses_data_id.add().id.CopyFrom(
+                    pack_uuid_to_proto(statuses_data.id)
+                )
+
+        if self.categories is not None:
+            metric_values.categories.extend(self.categories)
+
+        if self.colors is not None:
+            metric_values.colors.extend(self.colors)
+
+        metric_values.x_axis_name = self.x_axis_name
+        metric_values.y_axis_name = self.y_axis_name
+        metric_values.stack_bars = self.stack_bars
+
+        return msg
+
+    def recursively_pack_into(
+        self: BatchwiseBarChartMetric, metrics_output: ResimMetricsOutput
+    ) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
+        if self.times_data is not None:
+            for times_data in self.times_data:
+                times_data.recursively_pack_into(metrics_output)
+
+        if self.values_data is not None:
+            for values_data in self.values_data:
+                values_data.recursively_pack_into(metrics_output)
+
+        if self.statuses_data is not None:
+            for statuses_data in self.statuses_data:
+                statuses_data.recursively_pack_into(metrics_output)
 
 
 @metric_dataclass
