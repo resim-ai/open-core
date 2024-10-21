@@ -197,6 +197,10 @@ class MetricsTest(unittest.TestCase):
             (mp.MetricType.Value("LINE_PLOT_METRIC_TYPE"), metrics.LinePlotMetric),
             (mp.MetricType.Value("BAR_CHART_METRIC_TYPE"), metrics.BarChartMetric),
             (
+                mp.MetricType.Value("BATCHWISE_BAR_CHART_METRIC_TYPE"),
+                metrics.BatchwiseBarChartMetric,
+            ),
+            (
                 mp.MetricType.Value("STATES_OVER_TIME_METRIC_TYPE"),
                 metrics.StatesOverTimeMetric,
             ),
@@ -967,6 +971,167 @@ class MetricsTest(unittest.TestCase):
         metric.recursively_pack_into(output)
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+
+    def test_batchwise_bar_chart_metric(self) -> None:
+        job_id = uuid.uuid4()
+
+        index_data = metrics.SeriesMetricsData(
+            name="batch_ids", series=np.array([uuid.uuid4() for _ in range(2)])
+        )
+
+        times_data = metrics.SeriesMetricsData(
+            name="times",
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=1, nanos=0),
+                    metrics_utils.Timestamp(secs=2, nanos=0),
+                ]
+            ),
+            index_data=index_data,
+        )
+
+        value_data = metrics.SeriesMetricsData(
+            name="values", series=np.array([1.0, 2.0]), index_data=index_data
+        )
+
+        status_data = metrics.SeriesMetricsData(
+            name="statuses",
+            series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
+            index_data=index_data,
+        )
+
+        category = "passed"
+
+        metric = metrics.BatchwiseBarChartMetric(
+            name="test metric",
+            description="a test batchwise bar chart metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
+
+        self.assertEqual(metric.times_data, [])
+        self.assertEqual(metric.values_data, [])
+        self.assertEqual(metric.statuses_data, [])
+        self.assertEqual(metric.categories, [])
+
+        self.assertEqual(
+            metric,
+            metric.append_category_data(category, times_data, value_data, status_data),
+        )
+
+        self.assertEqual(metric.times_data, [times_data])
+        self.assertEqual(metric.values_data, [value_data])
+        self.assertEqual(metric.statuses_data, [status_data])
+        self.assertEqual(metric.categories, [category])
+
+        new_x_axis_name = "my x axis"
+        self.assertEqual(metric, metric.with_x_axis_name(new_x_axis_name))
+        self.assertEqual(metric.x_axis_name, new_x_axis_name)
+
+        new_y_axis_name = "my y axis"
+        self.assertEqual(metric, metric.with_y_axis_name(new_y_axis_name))
+        self.assertEqual(metric.y_axis_name, new_y_axis_name)
+
+        new_stack_bars = True
+        self.assertEqual(metric, metric.with_stack_bars(new_stack_bars))
+        self.assertEqual(metric.stack_bars, new_stack_bars)
+
+    def test_batchwise_bar_chart_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
+
+        index_data = metrics.SeriesMetricsData(
+            name="batch_ids", series=np.array([uuid.uuid4() for _ in range(2)])
+        )
+
+        times_data = metrics.SeriesMetricsData(
+            name="times",
+            series=np.array(
+                [
+                    metrics_utils.Timestamp(secs=1, nanos=0),
+                    metrics_utils.Timestamp(secs=2, nanos=0),
+                ]
+            ),
+            index_data=index_data,
+        )
+
+        value_data = metrics.SeriesMetricsData(
+            name="values", series=np.array([1.0, 2.0]), index_data=index_data
+        )
+
+        status_data = metrics.SeriesMetricsData(
+            name="statuses",
+            series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
+            index_data=index_data,
+        )
+
+        category = "passed"
+
+        # Use the constructor to initialize the data this time, in contrast with
+        # the above test.
+        metric = metrics.BatchwiseBarChartMetric(
+            name="test metric",
+            description="a test bar chart metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            times_data=[times_data],
+            values_data=[value_data],
+            statuses_data=[status_data],
+            categories=[category],
+            x_axis_name="my x axis",
+            y_axis_name="my y axis",
+            stack_bars=True,
+        )
+        msg = metric.pack()
+
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(
+            msg.type, mp.MetricType.Value("BATCHWISE_BAR_CHART_METRIC_TYPE")
+        )
+        self.assertTrue(msg.metric_values.HasField("batchwise_bar_chart_metric_values"))
+        values = msg.metric_values.batchwise_bar_chart_metric_values
+        self.assertEqual(
+            {data_id.id.data for data_id in values.times_data_id}, {str(times_data.id)}
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in values.values_data_id}, {str(value_data.id)}
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in values.statuses_data_id},
+            {str(status_data.id)},
+        )
+        self.assertEqual(set(values.categories), {category})
+
+        for attr in ("x_axis_name", "y_axis_name", "stack_bars"):
+            self.assertEqual(getattr(values, attr), getattr(metric, attr))
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        # Three data series that all index a fourth
+        self.assertEqual(len(output.metrics_msg.metrics_data), 4)
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
+        self.assertIn(index_data.id, ids)
+        self.assertIn(times_data.id, ids)
+        self.assertIn(value_data.id, ids)
+        self.assertIn(status_data.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 4)
 
     def test_histogram_metric(self) -> None:
         job_id = uuid.uuid4()
