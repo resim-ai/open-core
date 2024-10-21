@@ -989,7 +989,6 @@ class BarChartMetric(Metric["BarChartMetric"]):
             data.recursively_pack_into(metrics_output)
 
 
-# TODO(matt/michael) Implement proper functionality for this metric
 @metric_dataclass
 class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
     times_data: List[MetricsData] = dataclasses.field(default_factory=list)
