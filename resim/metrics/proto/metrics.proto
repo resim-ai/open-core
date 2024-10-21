@@ -367,7 +367,23 @@ message BarChartMetricValues {
 }
 
 message BatchWiseBarChartMetricValues {
-    // This is effectively multi-indexed on (batch id, category)
+    // This is effectively multi-indexed on (batch id, category). In
+    // other words, these series together approximate a frame like so:
+    //
+    // +-----------+--------------+------------+-------+---------------+
+    // | batch_id  | category     | batch_time | value | metric_status |
+    // +-----------+--------------+------------+-------+---------------+
+    // | 9d5711-...| "PASSED"     | ...        | 3     | ...           |
+    // | 9d5711-...| "FAIL_BLOCK" | ...        | 1     | ...           |
+    // | 9d5711-...| "ERROR"      | ...        | 9     | ...           |
+    // | b2c8ce-...| "PASSED"     | ...        | 4     | ...           |
+    // | b2c8ce-...| "ERROR"      | ...        | 2     | ...           |
+    // | a14421-...| "PASSED"     | ...        | 1     | ...           |
+    // | a14421-...| "FAIL_WARN"  | ...        | 10    | ...           |
+    // | a14421-...| "FAIL_BLOCK" | ...        | 0     | ...           |
+    // | ...       | ...          | ...        | ...   | ...           |
+    // +-----------+--------------+------------+-------+---------------+
+
     repeated MetricsDataId batch_ids_data_id  = 1;  // UUID_SERIES_DATA_TYPE
     repeated MetricsDataId categories_data_id = 2;  // STRING_SERIES_DATA_TYPE
     repeated MetricsDataId batch_times_data_id =
