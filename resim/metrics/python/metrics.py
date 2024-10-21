@@ -1072,19 +1072,25 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
 
         return self
 
-    def with_colors(self: BatchwiseBarChartMetric, colors: List[str]):
+    def with_colors(
+        self: BatchwiseBarChartMetric, colors: List[str]
+    ) -> BatchwiseBarChartMetric:
         self.colors = colors
         return self
 
-    def with_x_axis_name(self: BarChartMetric, x_axis_name: str) -> BarChartMetric:
+    def with_x_axis_name(
+        self: BatchwiseBarChartMetric, x_axis_name: str
+    ) -> BatchwiseBarChartMetric:
         self.x_axis_name = x_axis_name
         return self
 
-    def with_y_axis_name(self: BarChartMetric, y_axis_name: str) -> BarChartMetric:
+    def with_y_axis_name(
+        self: BatchwiseBarChartMetric, y_axis_name: str
+    ) -> BatchwiseBarChartMetric:
         self.y_axis_name = y_axis_name
         return self
 
-    def with_stack_bars(self, stack_bars: bool) -> BarChartMetric:
+    def with_stack_bars(self, stack_bars: bool) -> BatchwiseBarChartMetric:
         self.stack_bars = stack_bars
         return self
 
