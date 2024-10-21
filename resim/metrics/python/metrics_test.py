@@ -1028,6 +1028,11 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric.statuses_data, [status_data])
         self.assertEqual(metric.categories, [category])
 
+        new_color = "#fa8072"
+        self.assertEqual(metric, metric.with_colors([new_color]))
+        self.assertEqual(len(metric.colors), 1)
+        self.assertEqual(metric.colors[0], new_color)
+
         new_x_axis_name = "my x axis"
         self.assertEqual(metric, metric.with_x_axis_name(new_x_axis_name))
         self.assertEqual(metric.x_axis_name, new_x_axis_name)
@@ -1069,9 +1074,11 @@ class MetricsTest(unittest.TestCase):
         )
 
         category = "passed"
+        color = "#fa8072"
 
         # Use the constructor to initialize the data this time, in contrast with
         # the above test.
+
         metric = metrics.BatchwiseBarChartMetric(
             name="test metric",
             description="a test bar chart metric",
@@ -1085,6 +1092,7 @@ class MetricsTest(unittest.TestCase):
             values_data=[value_data],
             statuses_data=[status_data],
             categories=[category],
+            colors=[color],
             x_axis_name="my x axis",
             y_axis_name="my y axis",
             stack_bars=True,
@@ -1108,6 +1116,7 @@ class MetricsTest(unittest.TestCase):
             {str(status_data.id)},
         )
         self.assertEqual(set(values.categories), {category})
+        self.assertEqual(set(values.colors), {color})
 
         for attr in ("x_axis_name", "y_axis_name", "stack_bars"):
             self.assertEqual(getattr(values, attr), getattr(metric, attr))
