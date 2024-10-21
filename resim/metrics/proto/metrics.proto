@@ -383,7 +383,7 @@ message BatchWiseBarChartMetricValues {
     // | a14421-...| "FAIL_BLOCK" | ...        | 0     | ...           |
     // | ...       | ...          | ...        | ...   | ...           |
     // +-----------+--------------+------------+-------+---------------+
-
+    //
     repeated MetricsDataId batch_ids_data_id  = 1;  // UUID_SERIES_DATA_TYPE
     repeated MetricsDataId categories_data_id = 2;  // STRING_SERIES_DATA_TYPE
     repeated MetricsDataId batch_times_data_id =
@@ -392,7 +392,12 @@ message BatchWiseBarChartMetricValues {
     repeated MetricsDataId statuses_data_id =
         5;  // METRIC_STATUS_SERIES_DATA_TYPE
 
-    // Color options? Do we need this?
+    repeated string categories = 6;  // A list of possible categories
+
+    // An optional list of colors in hex format. These colors will be
+    // applied in order to the categories listed above until we run out
+    // of colors, or we run out of categories.
+    repeated string colors = 7;
 
     optional string x_axis_name = 6;
     optional string y_axis_name = 7;
