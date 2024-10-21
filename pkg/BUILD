@@ -69,6 +69,17 @@ py_package(
     ],
 )
 
+genrule(
+    name = "combined_requires",
+    srcs = [
+        "//:requirements.txt",
+        "//resim-python-client:requirements.txt",
+        ":extra_requires.txt",
+    ],
+    outs = ["combined_requirements.txt"],
+    cmd = "cat $(SRCS) > $@",
+)
+
 py_wheel(
     name = "resim_wheel",
     author = "ReSim Developers",
@@ -83,7 +94,8 @@ py_wheel(
         "@platforms//cpu:x86_64": "manylinux2014_x86_64",
     }),
     python_tag = "py3",
-    requires_file = "//:requirements.txt",
+    requires_file = ":combined_requires",
+    strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
     summary = "ReSim Metrics Libraries.",
     twine = "@resim_pkg_deps//twine",
     version = version,

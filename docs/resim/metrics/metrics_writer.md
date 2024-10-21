@@ -53,6 +53,7 @@ metrics_writer
       .with_legend_series_names(["Error"])
       .with_status(MetricStatus.PASSED_METRIC_STATUS)
       .with_importance(MetricImportance.HIGH_IMPORTANCE)
+      .with_tag("err_count", "32")
       .with_should_display(True)
       .with_blocking(False)
 ```
@@ -70,6 +71,17 @@ metrics_writer.add_metrics_data(TIMESTAMPS)
 ```
 
 This is useful, because we may want to write data that is not immediately referenced by any metric. Such data may be used by **batch metrics**. The `MetricsData` class also has a simple fluent API to make this easier.
+
+## Overriding the metrics status
+
+By default, the `writer.write()` function constructs a protobuf message that computes an overall job status based on the individual metrics. 
+The logic is fairly simple: 
+- if any metric is a blocking failure (`FAIL_BLOCK_METRIC_STATUS`), the overall job will be considered a blocking failure;
+- otherwise, if any metric is a warning (`FAIL_WARN_METRIC_STATUS`), the overall job will be considered a warning failure;
+- otherwise, the overall job will be considered a pass;
+
+It is, however, possible to override that calculation with `writer.write(metrics_status_override=FAIL_BLOCK_METRIC_STATUS)`, or 
+whatever status you wish. This is particularly useful if you would like to ignore warnings, for example.
 
 ## Validating the metrics writer output
 
