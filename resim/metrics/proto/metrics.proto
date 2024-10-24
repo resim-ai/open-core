@@ -369,12 +369,14 @@ message BarChartMetricValues {
 }
 
 message BatchwiseBarChartMetricValues {
-    // This is effectively multi-indexed on (batch id, category). We accomplish this by using the
-    // index_data feature in each metrics data to reference a series of batch ids, and by using the
-    // repeated nature of the metrics data fields herein for the category index. Therefore, for each
-    // category, we add a times data Series, a values data Series, and a statuses data Series, all
-    // three of which index into a uuid data Series. Grouped together, these series for a given
-    // category can be interpreted as a frame like so:
+    // This is effectively multi-indexed on (batch id, category). We accomplish
+    // this by using the index_data feature in each metrics data to reference a
+    // series of batch ids, and by using the repeated nature of the metrics data
+    // fields herein for the category index. Therefore, for each category, we
+    // add a times data Series, a values data Series, and a statuses data
+    // Series, all three of which index into a uuid data Series. Grouped
+    // together, these series for a given category can be interpreted as a frame
+    // like so:
     //
     // SeriesDatas for category "FAIL_BLOCK"
     //
