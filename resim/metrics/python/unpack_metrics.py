@@ -23,6 +23,7 @@ import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics.python.metrics import (
     BarChartMetric,
     BaseMetricsData,
+    BatchwiseBarChartMetric,
     DoubleOverTimeMetric,
     DoubleSummaryMetric,
     Event,
@@ -220,6 +221,7 @@ def _unpack_metric(
         ScalarMetric: _unpack_scalar_metric,
         PlotlyMetric: _unpack_plotly_metric,
         ImageMetric: _unpack_image_metric,
+        BatchwiseBarChartMetric: _unpack_batchwise_bar_chart_metric,
     }
     unpacker: Callable = unpackers[type(unpacked)]
     unpacker(metric, unpacked, id_to_unpacked_metrics_data)
@@ -336,6 +338,27 @@ def _unpack_bar_chart_metric(
     unpacked.with_x_axis_name(values.x_axis_name).with_y_axis_name(
         values.y_axis_name
     ).with_stack_bars(values.stack_bars)
+
+
+def _unpack_batchwise_bar_chart_metric(
+    metric: mp.Metric,
+    unpacked: BatchwiseBarChartMetric,
+    id_to_unpacked_metrics_data: dict[uuid.UUID, MetricsData],
+) -> None:
+    values = metric.metric_values.batchwise_bar_chart_metric_values
+
+    for i, (time_id, data_id, status_id) in enumerate(
+        zip(values.times_data_id, values.values_data_id, values.statuses_data_id)
+    ):
+        category = values.categories[i]
+        times = id_to_unpacked_metrics_data[_unpack_uuid(time_id.id)]
+        data = id_to_unpacked_metrics_data[_unpack_uuid(data_id.id)]
+        status = id_to_unpacked_metrics_data[_unpack_uuid(status_id.id)]
+        unpacked.append_category_data(category, times, data, status)
+
+    unpacked.with_x_axis_name(values.x_axis_name).with_y_axis_name(
+        values.y_axis_name
+    ).with_stack_bars(values.stack_bars).with_colors(values.colors)
 
 
 def _unpack_states_over_time_metric(

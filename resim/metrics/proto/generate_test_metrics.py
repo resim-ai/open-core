@@ -16,6 +16,7 @@ in tests only, and not in production code.
 """
 
 
+import random
 import uuid
 from typing import Any
 
@@ -449,6 +450,78 @@ def _add_bar_chart_metric(job_metrics: mp.JobMetrics, block_fail: bool) -> None:
     bar_chart_values.y_axis_name = "Mean Latency"
 
 
+def _add_batchwise_bar_chart_metric(
+    job_metrics: mp.JobMetrics, block_fail: bool
+) -> None:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "Status Counts per Batch"
+    metric.type = mp.BATCHWISE_BAR_CHART_METRIC_TYPE
+    metric.description = "Count of each status per batch"
+    metric.status = (
+        mp.FAIL_BLOCK_METRIC_STATUS if block_fail else mp.FAIL_WARN_METRIC_STATUS
+    )
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.MEDIUM_IMPORTANCE
+    metric.order = 9.0
+    metric.job_id.CopyFrom(job_metrics.job_id)
+
+    values = metric.metric_values.batchwise_bar_chart_metric_values
+    values.categories.extend(["PASSED", "FAILED"])
+    values.colors.extend(["#46ffd4", "#220050"])
+
+    length = 10
+
+    batches = job_metrics.metrics_data.add()
+    batches.name = "Batch Ids"
+    batches.metrics_data_id.id.data = _get_uuid_str()
+    batches.data_type = mp.UUID_SERIES_DATA_TYPE
+    batches.is_indexed = False
+    batches.unit = ""
+    batches.is_per_category = False
+
+    for _ in range(length):
+        batches.series.uuids.series.add().data = _get_uuid_str()
+
+    for category in values.categories:
+        status_counts = job_metrics.metrics_data.add()
+        status_counts.name = f"Status Counts {category}"
+        status_counts.metrics_data_id.id.data = _get_uuid_str()
+        status_counts.data_type = mp.INDEXED_DOUBLE_SERIES_DATA_TYPE
+        status_counts.series.doubles.series.extend(
+            [random.randint(0, 9) for _ in range(length)]
+        )
+
+        batch_times = job_metrics.metrics_data.add()
+        batch_times.name = f"Batch Times: {category}"
+        batch_times.metrics_data_id.id.data = _get_uuid_str()
+        batch_times.data_type = mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE
+        for _ in range(length):
+            batch_times.series.timestamps.series.add().seconds = random.randint(
+                0, 10000
+            )
+
+        statuses = job_metrics.metrics_data.add()
+        statuses.name = f"Status Counts Per Batch Status: {category}"
+        statuses.metrics_data_id.id.data = _get_uuid_str()
+        statuses.data_type = mp.INDEXED_METRIC_STATUS_SERIES_DATA_TYPE
+        statuses.series.statuses.series.extend(
+            [mp.PASSED_METRIC_STATUS for _ in range(length)]
+        )
+
+        for data, target in [
+            (status_counts, values.values_data_id),
+            (batch_times, values.times_data_id),
+            (statuses, values.statuses_data_id),
+        ]:
+            data.is_indexed = True
+            data.index_data_id.CopyFrom(batches.metrics_data_id)
+            data.index_data_type = mp.UUID_SERIES_DATA_TYPE
+
+            target.add().CopyFrom(data.metrics_data_id)
+
+
 def _add_string_and_uuid_summary_metrics(job_metrics: mp.JobMetrics) -> None:
     temperature_probe_locations = job_metrics.metrics_data.add()
     temperature_probe_locations.metrics_data_id.id.data = _get_uuid_str()
@@ -831,6 +904,7 @@ def generate_test_metrics(block_fail: bool = False) -> mp.JobMetrics:
 
     _add_event_counts(job_metrics, block_fail)
     _add_bar_chart_metric(job_metrics, block_fail)
+    _add_batchwise_bar_chart_metric(job_metrics, block_fail)
     _add_double_summary_metric(job_metrics)
     _add_double_over_time_metric(job_metrics)
     _add_line_plot_metric(job_metrics)

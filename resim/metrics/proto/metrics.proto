@@ -145,16 +145,17 @@ enum MetricImportance {
 }
 
 enum MetricType {
-    NO_METRIC_TYPE               = 0;
-    DOUBLE_SUMMARY_METRIC_TYPE   = 1;
-    DOUBLE_OVER_TIME_METRIC_TYPE = 2;
-    LINE_PLOT_METRIC_TYPE        = 3;
-    BAR_CHART_METRIC_TYPE        = 4;
-    STATES_OVER_TIME_METRIC_TYPE = 5;
-    HISTOGRAM_METRIC_TYPE        = 6;
-    SCALAR_METRIC_TYPE           = 7;
-    PLOTLY_METRIC_TYPE           = 8;
-    IMAGE_METRIC_TYPE            = 9;
+    NO_METRIC_TYPE                  = 0;
+    DOUBLE_SUMMARY_METRIC_TYPE      = 1;
+    DOUBLE_OVER_TIME_METRIC_TYPE    = 2;
+    LINE_PLOT_METRIC_TYPE           = 3;
+    BAR_CHART_METRIC_TYPE           = 4;
+    STATES_OVER_TIME_METRIC_TYPE    = 5;
+    HISTOGRAM_METRIC_TYPE           = 6;
+    SCALAR_METRIC_TYPE              = 7;
+    PLOTLY_METRIC_TYPE              = 8;
+    IMAGE_METRIC_TYPE               = 9;
+    BATCHWISE_BAR_CHART_METRIC_TYPE = 10;
 }
 
 message MetricId {
@@ -286,15 +287,16 @@ message Event {
 
 message MetricValues {
     oneof metric_values {
-        DoubleSummaryMetricValues  double_metric_values           = 1;
-        DoubleOverTimeMetricValues double_over_time_metric_values = 2;
-        LinePlotMetricValues       line_plot_metric_values        = 3;
-        BarChartMetricValues       bar_chart_metric_values        = 4;
-        StatesOverTimeMetricValues states_over_time_metric_values = 5;
-        HistogramMetricValues      histogram_metric_values        = 6;
-        ScalarMetricValues         scalar_metric_values           = 7;
-        PlotlyMetricValues         plotly_metric_values           = 8;
-        ImageMetricValues          image_metric_values            = 9;
+        DoubleSummaryMetricValues     double_metric_values              = 1;
+        DoubleOverTimeMetricValues    double_over_time_metric_values    = 2;
+        LinePlotMetricValues          line_plot_metric_values           = 3;
+        BarChartMetricValues          bar_chart_metric_values           = 4;
+        StatesOverTimeMetricValues    states_over_time_metric_values    = 5;
+        HistogramMetricValues         histogram_metric_values           = 6;
+        ScalarMetricValues            scalar_metric_values              = 7;
+        PlotlyMetricValues            plotly_metric_values              = 8;
+        ImageMetricValues             image_metric_values               = 9;
+        BatchwiseBarChartMetricValues batchwise_bar_chart_metric_values = 10;
     }
 }
 
@@ -363,6 +365,50 @@ message BarChartMetricValues {
     optional string y_axis_name = 5;
 
     optional bool stack_bars = 6;  // Whether series should be stacked, as
+                                   // opposed to next to each other
+}
+
+message BatchwiseBarChartMetricValues {
+    // This is effectively multi-indexed on (batch id, category). We accomplish
+    // this by using the index_data feature in each metrics data to reference a
+    // series of batch ids, and by using the repeated nature of the metrics data
+    // fields herein for the category index. Therefore, for each category, we
+    // add a times data Series, a values data Series, and a statuses data
+    // Series, all three of which index into a uuid data Series. Grouped
+    // together, these series for a given category can be interpreted as a frame
+    // like so:
+    //
+    // SeriesDatas for category "FAIL_BLOCK"
+    //
+    // +-----------++------------+-------+---------------+
+    // | batch_id  || batch_time | value | metric_status |
+    // +-----------++------------+-------+---------------+
+    // | 9d5711-...|| ...        | 3     | ...           |
+    // | b2c8ce-...|| ...        | 4     | ...           |
+    // | a14421-...|| ...        | 0     | ...           |
+    // | ...       || ...        | ...   | ...           |
+    // +-----------++------------+-------+---------------+
+    //
+    // Where the first column is the index referred to by the remianing columns.
+    //
+    repeated MetricsDataId times_data_id =
+        1;  // INDEXED_TIMESTAMP_SERIES_DATA_TYPE, indexed by UUID
+    repeated MetricsDataId values_data_id =
+        2;  // INDEXED_DOUBLE_SERIES_DATA_TYPE, indexed by UUID
+    repeated MetricsDataId statuses_data_id =
+        3;  // INDEXED_METRIC_STATUS_SERIES_DATA_TYPE, indexed by UUID
+
+    repeated string categories = 4;  // A list of possible categories
+
+    // An optional list of colors in hex format. These colors will be
+    // applied in order to the categories listed above until we run out
+    // of colors, or we run out of categories.
+    repeated string colors = 5;
+
+    optional string x_axis_name = 6;
+    optional string y_axis_name = 7;
+
+    optional bool stack_bars = 8;  // Whether series should be stacked, as
                                    // opposed to next to each other
 }
 
