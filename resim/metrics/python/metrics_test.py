@@ -1045,6 +1045,10 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metric, metric.with_stack_bars(new_stack_bars))
         self.assertEqual(metric.stack_bars, new_stack_bars)
 
+        new_project_id = uuid.uuid4()
+        self.assertEqual(metric, metric.with_project_id(new_project_id))
+        self.assertEqual(metric.project_id, new_project_id)
+
     def test_batchwise_bar_chart_metric_pack(self) -> None:
         job_id = uuid.uuid4()
 
@@ -1074,6 +1078,7 @@ class MetricsTest(unittest.TestCase):
         )
 
         category = "passed"
+        project_id = uuid.uuid4()
         color = "#fa8072"
 
         # Use the constructor to initialize the data this time, in contrast with
@@ -1093,6 +1098,7 @@ class MetricsTest(unittest.TestCase):
             statuses_data=[status_data],
             categories=[category],
             colors=[color],
+            project_id=project_id,
             x_axis_name="my x axis",
             y_axis_name="my y axis",
             stack_bars=True,
@@ -1117,7 +1123,7 @@ class MetricsTest(unittest.TestCase):
         )
         self.assertEqual(set(values.categories), {category})
         self.assertEqual(set(values.colors), {color})
-
+        self.assertEqual(uuid.UUID(values.project_id.data), metric.project_id)
         for attr in ("x_axis_name", "y_axis_name", "stack_bars"):
             self.assertEqual(getattr(values, attr), getattr(metric, attr))
 

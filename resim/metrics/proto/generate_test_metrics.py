@@ -470,6 +470,7 @@ def _add_batchwise_bar_chart_metric(
     values = metric.metric_values.batchwise_bar_chart_metric_values
     values.categories.extend(["PASSED", "FAILED"])
     values.colors.extend(["#46ffd4", "#220050"])
+    values.project_id.data = _get_uuid_str()
 
     length = 10
 

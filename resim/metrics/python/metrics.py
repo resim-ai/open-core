@@ -996,6 +996,7 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
     statuses_data: List[MetricsData] = dataclasses.field(default_factory=list)
     categories: List[str] = dataclasses.field(default_factory=list)
     colors: List[str] = dataclasses.field(default_factory=list)
+    project_id: Optional[uuid.UUID]
     x_axis_name: str
     y_axis_name: str
     stack_bars: bool
@@ -1017,6 +1018,7 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
         statuses_data: Optional[List[MetricsData]] = None,
         categories: Optional[List[str]] = None,
         colors: Optional[List[str]] = None,
+        project_id: Optional[uuid.UUID] = None,
         x_axis_name: str = "",
         y_axis_name: str = "",
         stack_bars: bool = False,
@@ -1053,6 +1055,7 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
             self.colors = colors
         else:
             self.colors = []
+        self.project_id = project_id
         self.x_axis_name = x_axis_name
         self.y_axis_name = y_axis_name
         self.stack_bars = stack_bars
@@ -1093,10 +1096,16 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
         self.stack_bars = stack_bars
         return self
 
+    def with_project_id(self, project_id: uuid.UUID) -> BatchwiseBarChartMetric:
+        self.project_id = project_id
+        return self
+
     def pack(self: BatchwiseBarChartMetric) -> metrics_proto.Metric:
         msg = super().pack()
         msg.type = metrics_proto.MetricType.Value("BATCHWISE_BAR_CHART_METRIC_TYPE")
         metric_values = msg.metric_values.batchwise_bar_chart_metric_values
+
+        assert self.project_id is not None
 
         if self.times_data is not None:
             for times_data in self.times_data:
@@ -1122,6 +1131,7 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
         if self.colors is not None:
             metric_values.colors.extend(self.colors)
 
+        metric_values.project_id.data = str(self.project_id)
         metric_values.x_axis_name = self.x_axis_name
         metric_values.y_axis_name = self.y_axis_name
         metric_values.stack_bars = self.stack_bars
