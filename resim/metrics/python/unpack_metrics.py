@@ -358,7 +358,9 @@ def _unpack_batchwise_bar_chart_metric(
 
     unpacked.with_x_axis_name(values.x_axis_name).with_y_axis_name(
         values.y_axis_name
-    ).with_stack_bars(values.stack_bars).with_colors(values.colors)
+    ).with_stack_bars(values.stack_bars).with_colors(values.colors).with_project_id(
+        uuid.UUID(values.project_id.data)
+    )
 
 
 def _unpack_states_over_time_metric(

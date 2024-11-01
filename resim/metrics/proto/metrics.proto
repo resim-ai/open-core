@@ -410,6 +410,8 @@ message BatchwiseBarChartMetricValues {
 
     optional bool stack_bars = 8;  // Whether series should be stacked, as
                                    // opposed to next to each other
+
+    optional resim.proto.UUID project_id = 9;  // The project id for the batches
 }
 
 message StatesOverTimeMetricValues {

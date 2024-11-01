@@ -386,6 +386,8 @@ def _validate_batchwise_bar_chart_metric_values(
     for color in values.colors:
         _validate_hex_color(color)
 
+    _validate_uuid(values.project_id)
+
     for i in range(length):
         _validate_values_and_statuses(
             values.values_data_id[i],
