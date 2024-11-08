@@ -422,6 +422,7 @@ def test_status_over_time_metric(
         .value_counts()
         .unstack(fill_value=0)
         .join(builds_frame)
+        .sort_values(by=["build_creation_timestamp"])
     )
 
     for status in (
@@ -435,13 +436,15 @@ def test_status_over_time_metric(
             continue
         fig.add_trace(
             go.Bar(
-                x=status_counts_frame.build_creation_timestamp,
+                x=status_counts_frame.build_creation_timestamp.dt.strftime(
+                    "%Y-%m-%d %H:%M"
+                ),
                 y=status_counts_frame[status],
                 name=status,
                 marker_color=resim_status_color_map[status],
             )
         )
-
+    fig.update_xaxes(type="category")
     resim_plotly_style(
         fig,
         barmode="stack",
