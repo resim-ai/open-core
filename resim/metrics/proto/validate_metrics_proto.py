@@ -513,6 +513,16 @@ def _validate_plotly_metric_values(plotly_metric_values: mp.PlotlyMetricValues) 
     _metrics_assert(plotly_metric_values.HasField("json"))
 
 
+def _validate_text_metric_values(text_metric_values: mp.TextMetricValues) -> None:
+    """
+    Check that a TextMetricValues is valid.
+
+    Args:
+        text_metric_values: The metric values to check.
+    """
+    _metrics_assert(text_metric_values.HasField("text"))
+
+
 def _validate_image_metric_values(
     image_metric_values: mp.ImageMetricValues,
     metrics_data_map: dict[str, mp.MetricsData],
@@ -576,6 +586,8 @@ def _validate_metric_values(
         _validate_scalar_metric_values(metric_values.scalar_metric_values)
     elif metric_values.HasField("plotly_metric_values"):
         _validate_plotly_metric_values(metric_values.plotly_metric_values)
+    elif metric_values.HasField("text_metric_values"):
+        _validate_text_metric_values(metric_values.text_metric_values)
     else:  # metric_values.HasField("image_metric_values")
         _validate_image_metric_values(
             metric_values.image_metric_values, metrics_data_map
@@ -648,6 +660,8 @@ def _validate_metric(
         _metrics_assert(metric.metric_values.HasField("scalar_metric_values"))
     elif metric.type == mp.PLOTLY_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField("plotly_metric_values"))
+    elif metric.type == mp.TEXT_METRIC_TYPE:
+        _metrics_assert(metric.metric_values.HasField("text_metric_values"))
     else:  # mp.IMAGE_METRIC_TYPE
         _metrics_assert(metric.metric_values.HasField("image_metric_values"))
 
