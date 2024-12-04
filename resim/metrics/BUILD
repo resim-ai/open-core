@@ -177,8 +177,8 @@ py_test(
     name = "fetch_job_metrics_test",
     srcs = ["fetch_job_metrics_test.py"],
     deps = [
-        "//resim/metrics/proto:metrics_proto_py",
         ":fetch_job_metrics",
+        "//resim/metrics/proto:metrics_proto_py",
     ],
 )
 
