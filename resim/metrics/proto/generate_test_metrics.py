@@ -930,6 +930,7 @@ def generate_test_metrics(block_fail: bool = False) -> mp.JobMetrics:
     _add_subsystem_states(job_metrics)
     _add_string_and_uuid_summary_metrics(job_metrics)
     _add_plotly_metric(job_metrics)
+    _add_text_metric(job_metrics)
     _add_image_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
     # Test events:
