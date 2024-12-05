@@ -586,6 +586,42 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.name, METRIC_NAME)
         self.assertEqual(MessageToDict(metric_values.json), json.loads(METRIC_DATA))
 
+    def test_text_metric(self) -> None:
+        METRIC_NAME = "Text metric"
+        METRIC_DESCRIPTION = "Description"
+        METRIC_BLOCKING = True
+        METRIC_DISPLAY = True
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
+        METRIC_DATA = "*Hello* **world**"
+
+        (
+            self.writer.add_text_metric(METRIC_NAME)
+            .with_text(METRIC_DATA)
+            .with_description(METRIC_DESCRIPTION)
+            .with_blocking(METRIC_BLOCKING)
+            .with_should_display(METRIC_DISPLAY)
+            .with_importance(METRIC_IMPORTANCE)
+            .with_status(METRIC_STATUS)
+            .is_event_metric()
+        )
+
+        output = self.writer.write()
+        self.assertEqual(len(output.packed_ids), 1)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 0)
+
+        metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = metric_base.metric_values.text_metric_values
+
+        self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
+        self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
+        self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
+        self.assertEqual(metric_base.name, METRIC_NAME)
+        self.assertEqual(metric_values.text, METRIC_DATA)
+
     def test_image_metric(self) -> None:
         METRIC_NAME = "Image metric"
         METRIC_DESCRIPTION = "Description"

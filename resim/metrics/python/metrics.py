@@ -249,6 +249,8 @@ class Metric(ABC, Generic[MetricT]):
             unpacked = PlotlyMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("IMAGE_METRIC_TYPE"):
             unpacked = ImageMetric(name=msg.name)
+        elif msg.type == metrics_proto.MetricType.Value("TEXT_METRIC_TYPE"):
+            unpacked = TextMetric(name=msg.name)
         else:
             raise ValueError("Invalid metric type")
 
@@ -1523,6 +1525,63 @@ class ImageMetric(Metric["ImageMetric"]):
 
         if self.image_data is not None:
             self.image_data.recursively_pack_into(metrics_output)
+
+
+@metric_dataclass
+class TextMetric(Metric["TextMetric"]):
+    text: Optional[str]
+
+    def __init__(
+        self: TextMetric,
+        name: str,
+        description: Optional[str] = None,
+        status: Optional[MetricStatus] = None,
+        importance: Optional[MetricImportance] = None,
+        blocking: Optional[bool] = None,
+        should_display: Optional[bool] = None,
+        parent_job_id: Optional[uuid.UUID] = None,
+        order: Optional[float] = None,
+        event_metric: Optional[bool] = None,
+        tags: Optional[List[Tag]] = None,
+        text: Optional[str] = None,
+    ):
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order,
+            event_metric=event_metric,
+            tags=tags,
+        )
+
+        self.text = text
+
+    def with_text(self: TextMetric, text: str) -> TextMetric:
+        """Add a string of text, which could be markdown."""
+        self.text = text
+        return self
+
+    def pack(self: TextMetric) -> metrics_proto.Metric:
+        msg = super().pack()
+        msg.type = metrics_proto.MetricType.Value("TEXT_METRIC_TYPE")
+
+        metric_values = msg.metric_values.text_metric_values
+        metric_values.text = self.text
+
+        return msg
+
+    def recursively_pack_into(
+        self: TextMetric, metrics_output: ResimMetricsOutput
+    ) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
 
 # -------------------
