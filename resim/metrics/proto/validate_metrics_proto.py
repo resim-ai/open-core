@@ -520,7 +520,7 @@ def _validate_text_metric_values(text_metric_values: mp.TextMetricValues) -> Non
     Args:
         text_metric_values: The metric values to check.
     """
-    _metrics_assert(text_metric_values.HasField("text"))
+    _metrics_assert(text_metric_values.text != "")
 
 
 def _validate_image_metric_values(
