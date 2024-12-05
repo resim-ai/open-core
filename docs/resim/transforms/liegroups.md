@@ -106,7 +106,7 @@ working with the derivatives of functions involving Lie groups, please refer to 
 ## External Links
 For more information, please take a look at the following links:
 
- - [A micro Lie theory for state estimation in robotics](https://drive.google.com/file/d/1UlI1N63o6abyL03VfbYoXu22CcYTdZ6b/view)
+ - [A micro Lie theory for state estimation in robotics](https://arxiv.org/pdf/1812.01537)
  - [ethaneade.com](https://ethaneade.com/)
  - Jakob Schwichtenberg:
      - [Lie Group Theory - A Completely Naive Introduction](https://jakobschwichtenberg.com/naive-introduction-lie-theory/)
