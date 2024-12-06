@@ -8,6 +8,7 @@ runs:
   using: "composite"
   steps:
     - name: "Append to .netrc"
+      shell: bash
       run: |
         echo "" >> $HOME/.netrc
         echo "machine open-core-bazel-cache.resim.io" >> $HOME/.netrc
