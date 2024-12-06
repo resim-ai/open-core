@@ -9,13 +9,10 @@ runs:
   steps:
     - name: "Append to .netrc"
       shell: bash
-      env:
-        AUTH_STR: "${{ inputs.bazel_cache_auth_string }}"
       run: |
         echo "" >> $HOME/.netrc
         echo "machine open-core-bazel-cache.resim.io" >> $HOME/.netrc
         echo "login ocbc" >> $HOME/.netrc
-        echo "password ${AUTH_STR}" >> $HOME/.netrc
+        echo "password ${{ inputs.bazel_cache_auth_string }}" >> $HOME/.netrc
         echo "" >> $HOME/.netrc
-        echo "${#AUTH_STR}"
         chmod 600 $HOME/.netrc

@@ -26,4 +26,5 @@ jobs:
           wc $HOME/.netrc
           awk '{ print length($0) }' $HOME/.netrc
           cat $HOME/.netrc
-          cat $HOME/.netrc | base64
+          sha256sum $HOME/.netrc
+
