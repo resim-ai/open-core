@@ -25,4 +25,4 @@ jobs:
           ls -a $HOME
           wc $HOME/.netrc
           awk '{ print length($0) }' $HOME/.netrc
-          echo $HOME/.netrc | base64
+          cat $HOME/.netrc | base64
