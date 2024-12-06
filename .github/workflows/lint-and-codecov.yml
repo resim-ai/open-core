@@ -24,4 +24,4 @@ jobs:
         run: |
           ls -a $HOME
           wc $HOME/.netrc
-	  awk "{ print length($0) }" $HOME/.netrc
+          awk "{ print length($0) }" $HOME/.netrc
