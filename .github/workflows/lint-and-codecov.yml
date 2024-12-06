@@ -24,6 +24,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bazel-
 
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
       - name: Build `compile_commands.json` database
         run: bazel run @hedron_compile_commands//:refresh_all
 
