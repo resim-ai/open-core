@@ -182,3 +182,14 @@ The ReSim metrics framework also supports attaching an arbitrary image as a metr
 ### Parameters
 
 - `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
+
+## Text Metric
+
+ReSim supports displaying arbitrary Markdown as a metric. This metric also has no `MetricsData`
+associated. In this way, one can provide textual output from any system, evaluated with metric data. 
+This is commonly used in non-autonomy applications of the ReSim app.
+
+
+### Parameters
+
+- `text: str` - the metric's text.
