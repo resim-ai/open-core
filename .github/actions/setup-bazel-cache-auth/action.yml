@@ -16,5 +16,5 @@ runs:
         echo "machine open-core-bazel-cache.resim.io" >> $HOME/.netrc
         echo "login ocbc" >> $HOME/.netrc
         echo "password ${AUTH_STR}" >> $HOME/.netrc
-	echo "${#AUTH_STR}"
+        echo "${#AUTH_STR}"
         chmod 600 $HOME/.netrc
