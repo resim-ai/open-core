@@ -31,6 +31,7 @@ from resim.metrics.python.metrics import (
     ScalarMetric,
     SeriesMetricsData,
     StatesOverTimeMetric,
+    TextMetric,
 )
 from resim.metrics.python.metrics_utils import ResimMetricsOutput, pack_uuid_to_proto
 
@@ -141,6 +142,11 @@ class ResimMetricsWriter:
 
     def add_image_metric(self, name: str) -> ImageMetric:
         metric = ImageMetric(name=name, parent_job_id=self.job_id)
+        self.add_metric(metric)
+        return metric
+
+    def add_text_metric(self, name: str) -> TextMetric:
+        metric = TextMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
 

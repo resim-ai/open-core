@@ -212,6 +212,7 @@ class MetricsTest(unittest.TestCase):
             (mp.MetricType.Value("SCALAR_METRIC_TYPE"), metrics.ScalarMetric),
             (mp.MetricType.Value("PLOTLY_METRIC_TYPE"), metrics.PlotlyMetric),
             (mp.MetricType.Value("IMAGE_METRIC_TYPE"), metrics.ImageMetric),
+            (mp.MetricType.Value("TEXT_METRIC_TYPE"), metrics.TextMetric),
         ]
 
         for metric_type, metric_class in metric_type_list:
@@ -1517,6 +1518,44 @@ class MetricsTest(unittest.TestCase):
         values = msg.metric_values.plotly_metric_values
         # validate that as dicts, they are the same
         self.assertEqual(MessageToDict(values.json), json.loads(test_data))
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+
+    def test_text_metric(self) -> None:
+        # CONSTRUCTION
+        job_id = uuid.uuid4()
+        metric = metrics.TextMetric(
+            "test_metric",
+            "A metric for testing",
+            MetricStatus.PASSED_METRIC_STATUS,
+            MetricImportance.ZERO_IMPORTANCE,
+            should_display=True,
+            blocking=False,
+            parent_job_id=job_id,
+            order=None,
+            text=None,
+        )
+
+        # SETTING
+        test_data = "*Hello*, **world**!"
+        self.assertIs(metric, metric.with_text(test_data))
+        self.assertEqual(metric.text, test_data)
+
+        # PACKING
+        msg = metric.pack()
+        self.assertEqual(msg.type, mp.MetricType.Value("TEXT_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("text_metric_values"))
+        values = msg.metric_values.text_metric_values
+        # validate that as dicts, they are the same
+        self.assertEqual(values.text, test_data)
 
         output = metrics_utils.ResimMetricsOutput()
         metric.recursively_pack_into(output)

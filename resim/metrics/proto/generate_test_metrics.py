@@ -827,6 +827,21 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     image_metric_values.image_data_id.CopyFrom(metrics_data.metrics_data_id)
 
 
+def _add_text_metric(job_metrics: mp.JobMetrics) -> None:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "A text metric"
+    metric.type = mp.TEXT_METRIC_TYPE
+    metric.description = "A textual metric, using markdown"
+    metric.status = mp.NOT_APPLICABLE_METRIC_STATUS
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.ZERO_IMPORTANCE
+    metric.order = 13.0
+    metric.job_id.CopyFrom(job_metrics.job_id)
+    metric.metric_values.text_metric_values.text = "Hello, world!"
+
+
 def _add_event_scalar_metric(
     job_metrics: mp.JobMetrics, tag_as_event: bool
 ) -> mp.MetricId:
@@ -915,6 +930,7 @@ def generate_test_metrics(block_fail: bool = False) -> mp.JobMetrics:
     _add_subsystem_states(job_metrics)
     _add_string_and_uuid_summary_metrics(job_metrics)
     _add_plotly_metric(job_metrics)
+    _add_text_metric(job_metrics)
     _add_image_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
     # Test events:

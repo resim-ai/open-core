@@ -178,6 +178,7 @@ py_test(
     srcs = ["fetch_job_metrics_test.py"],
     deps = [
         ":fetch_job_metrics",
+        "//resim/metrics/proto:metrics_proto_py",
     ],
 )
 

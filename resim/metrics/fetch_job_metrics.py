@@ -268,8 +268,15 @@ def _fetch_metrics(
     Simple wrapper around get_metrics_proto which locks a mutex
     so we can multithread this.
     """
-    protos_lock.acquire()
-    protos[job_id].append(
-        get_metrics_proto(message_type=message_type, session=session, url=url)
+    metrics_proto = get_metrics_proto(
+        message_type=message_type, session=session, url=url
     )
+
+    if (
+        message_type == mp.Metric
+        and metrics_proto.type == mp.MetricType.IMAGE_METRIC_TYPE
+    ):
+        return
+    protos_lock.acquire()
+    protos[job_id].append(metrics_proto)
     protos_lock.release()

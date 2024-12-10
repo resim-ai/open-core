@@ -38,6 +38,7 @@ from resim.metrics.python.metrics import (
     ScalarMetric,
     SeriesMetricsData,
     StatesOverTimeMetric,
+    TextMetric,
 )
 from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
@@ -221,6 +222,7 @@ def _unpack_metric(
         ScalarMetric: _unpack_scalar_metric,
         PlotlyMetric: _unpack_plotly_metric,
         ImageMetric: _unpack_image_metric,
+        TextMetric: _unpack_text_metric,
         BatchwiseBarChartMetric: _unpack_batchwise_bar_chart_metric,
     }
     unpacker: Callable = unpackers[type(unpacked)]
@@ -430,6 +432,13 @@ def _unpack_image_metric(
         id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)],
     )
     unpacked.with_image_data(data)
+
+
+def _unpack_text_metric(
+    metric: mp.Metric, unpacked: TextMetric, _: dict[uuid.UUID, MetricsData]
+) -> None:
+    text_metric_text = metric.metric_values.text_metric_values.text
+    unpacked.with_text(text_metric_text)
 
 
 def _unpack_event(
