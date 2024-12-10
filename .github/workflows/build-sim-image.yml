@@ -42,6 +42,11 @@ jobs:
         with:
           registry: ${{ env.ECR_REGISTRY }}
 
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
       - name: Build and Push
         env:
           REPO: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
