@@ -1,0 +1,16 @@
+name: "Setup Bazel Cache Auth"
+description: "A custom action to setup a .netrc to auth with bazel cache"
+inputs:
+  bazel_cache_auth_string:
+    description: "An auth string to place in .netrc"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: "Append to .netrc"
+      shell: bash
+      run: |
+        echo "machine open-core-bazel-cache.resim.io" >> $HOME/.netrc
+        echo "login ocbc" >> $HOME/.netrc
+        echo "password ${{ inputs.bazel_cache_auth_string }}" >> $HOME/.netrc
+        chmod 600 $HOME/.netrc
