@@ -1,0 +1,7 @@
+{
+    "integrity": "sha256-e65F54J5c+++XnHUQdrb2BVmB4JKtC0dDJoSlEHnLBk=",
+    "patch_strip": 1,
+    "patches": {},
+    "strip_prefix": "open-core-0.3.3",
+    "url": "https://github.com/resim-ai/open-core/archive/refs/tags/v0.3.3.zip"
+}
