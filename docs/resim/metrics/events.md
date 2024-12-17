@@ -48,7 +48,7 @@ metric_2 = metrics_writer
             .is_event_metric()
 
 # Now associate with the event.
-event.with_metrics(metric_1, metric_2)
+event.with_metrics([metric_1, metric_2])
 ```
 
 The [ReSim Metrics Validator](https://github.com/resim-ai/open-core/blob/main/resim/metrics/proto/validate_metrics_proto.py) checks that all metrics associated with an event have been flagged as event metrics
