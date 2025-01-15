@@ -18,7 +18,7 @@ def pybind_extension(
     stubgen(
         name = name + ".stubgen",
         dep = ":{}".format(name),
-        stubgen = "//bazel:stubgen",
+        stubgen = "//bazel:pybind11-stubgen",
         testonly = kwargs.get("testonly"),
     )
 
@@ -30,9 +30,8 @@ def pybind_extension(
     )
 
 stubgen_template = """
-cd $BUILD_WORKSPACE_DIRECTORY
-export PYTHONPATH={python_path}
-{stubgen_binary} {args}
+export PYTHONPATH=$BUILD_WORKSPACE_DIRECTORY
+{stubgen_binary} {args} -o $BUILD_WORKSPACE_DIRECTORY
 """
 
 def _stubgen_impl(ctx):
@@ -45,25 +44,22 @@ def _stubgen_impl(ctx):
     module_name = package_path + input.basename.split(".")[0]
 
     args = []
-    for f in ctx.attr.dep.default_runfiles.files.to_list():
-        if f.basename.endswith(".so"):
-            # Should remove suffix rather than strip
-            args.extend(["-m", f.short_path.removesuffix(f.basename).replace("/", ".") + f.basename.split(".")[0]])
-
-    args.extend(["-m", module_name])
+    args.extend([module_name])
     args.extend(["-o", "."])
 
     script = ctx.actions.declare_file(ctx.label.name)
     script_content = stubgen_template.format(
         python_path = ctx.genfiles_dir.path,
-        stubgen_binary = stubgen_binary.path,
+        stubgen_binary = stubgen_binary.short_path,
         args = " ".join(args),
     )
+
     ctx.actions.write(script, script_content, is_executable = True)
 
     return DefaultInfo(
         executable = script,
-        runfiles = ctx.runfiles(files = [input] + ctx.attr.dep.default_runfiles.files.to_list()),
+        runfiles = ctx.runfiles(files = [input] + ctx.attr.dep.default_runfiles.files.to_list() +
+                                        ctx.attr.stubgen.default_runfiles.files.to_list()),
     )
 
 stubgen = rule(
@@ -74,7 +70,7 @@ stubgen = rule(
         "stubgen": attr.label(
             executable = True,
             doc = "Path to the pybind11-stubgen binary",
-            cfg = "exec",
+            cfg = "target",
         ),
     },
 )

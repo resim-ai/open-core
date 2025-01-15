@@ -18,6 +18,7 @@ namespace py = pybind11;
 // A simple pybinding of SO3
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(so3_python, m) {
+  py::module_::import("resim.transforms.python.quaternion");
   py::class_<SO3>(m, "SO3")
       .def_readonly_static("DIMS", &SO3::DIMS)
       .def_readonly_static("DOF", &SO3::DOF)
