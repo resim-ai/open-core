@@ -22,6 +22,7 @@ namespace py = pybind11;
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(geodetic_python, m) {
   py::module_::import("resim.transforms.python.se3_python");
+  py::module_::import("resim.transforms.python.so3_python");
 
   py::class_<Geodetic>(m, "Geodetic")
       .def(py::init<>())
