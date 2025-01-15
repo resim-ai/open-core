@@ -16,7 +16,11 @@ namespace resim::geometry {
 namespace py = pybind11;
 
 PYBIND11_MODULE(polygon_distance_python, m) {
-  m.def("polygon_distance", &polygon_distance);
+  m.def(
+      "polygon_distance",
+      &polygon_distance,
+      py::arg("polygon_a"),
+      py::arg("polygon_b"));
 }
 
 }  // namespace resim::geometry

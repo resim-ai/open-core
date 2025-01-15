@@ -6,9 +6,9 @@
 
 load("@com_github_mvukov_rules_ros2//ros2:ament.bzl", "ros2_ament_setup")
 load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_python//python:defs.bzl", "py_test")
+load("//bazel:python.bzl", "pybind_extension")
 load(":ros2_py_package.bzl", "ros2_py_package")
 
 cc_library(
@@ -482,5 +482,6 @@ ros2_py_package(
     deps = [
         ":default_converter_plugin.so",
         ":resim_log_from_ros2_python.so",
+        ":resim_log_from_ros2_python-stubs",
     ],
 )
