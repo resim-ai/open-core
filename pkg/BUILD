@@ -11,7 +11,7 @@ load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_cons
 # This "7 spaces and a pipe" format is needed to make the resulting metadata to
 # be parsable by RFC822 parser when using multiple lines. See
 # https://packaging.python.org/en/latest/specifications/core-metadata/#description
-LICENSE = """Copyright 2024 ReSim, Inc.
+LICENSE = """Copyright 2025 ReSim, Inc.
        |
        |Permission is hereby granted, free of charge, to any person obtaining a copy of
        |this software and associated documentation files (the "Software"), to deal in
