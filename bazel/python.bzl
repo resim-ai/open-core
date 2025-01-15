@@ -20,8 +20,10 @@ def pybind_extension(
         dep = ":{}".format(name),
         stubgen = "//bazel:pybind11-stubgen",
         testonly = kwargs.get("testonly"),
+        numpy = "@@rules_python~~pip~resim_python_deps_310_numpy//:pkg",
     )
 
+    # LicenseInfo, PyInfo, PyInfo, InstrumentedFilesInfo, PyCcLinkParamsProvider, OutputGroupInfo]
     native.filegroup(
         name = name + "-stubs",
         srcs = [name + ".pyi"],
@@ -30,7 +32,9 @@ def pybind_extension(
     )
 
 stubgen_template = """
-export PYTHONPATH=$BUILD_WORKSPACE_DIRECTORY
+pwd
+export PYTHONPATH="$BUILD_WORKSPACE_DIRECTORY:{python_path}"
+echo "$PYTHONPATH"
 {stubgen_binary} {args} -o $BUILD_WORKSPACE_DIRECTORY
 """
 
@@ -49,7 +53,7 @@ def _stubgen_impl(ctx):
 
     script = ctx.actions.declare_file(ctx.label.name)
     script_content = stubgen_template.format(
-        python_path = ctx.genfiles_dir.path,
+        python_path = ";".join(["./external/{}".format(imp) for imp in ctx.attr.numpy[PyInfo].imports.to_list()]),
         stubgen_binary = stubgen_binary.short_path,
         args = " ".join(args),
     )
@@ -58,7 +62,7 @@ def _stubgen_impl(ctx):
 
     return DefaultInfo(
         executable = script,
-        runfiles = ctx.runfiles(files = [input] + ctx.attr.dep.default_runfiles.files.to_list() +
+        runfiles = ctx.runfiles(files = [input] + ctx.attr.numpy.default_runfiles.files.to_list() + ctx.attr.dep.default_runfiles.files.to_list() +
                                         ctx.attr.stubgen.default_runfiles.files.to_list()),
     )
 
@@ -67,6 +71,7 @@ stubgen = rule(
     executable = True,
     attrs = {
         "dep": attr.label(allow_single_file = True),  # Input shared library
+        "numpy": attr.label(),
         "stubgen": attr.label(
             executable = True,
             doc = "Path to the pybind11-stubgen binary",
