@@ -18,19 +18,25 @@ namespace py = pybind11;
 // A simple pybinding of SO3
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(so3_python, m) {
+  py::module_::import("resim.transforms.python.quaternion");
+
   py::class_<SO3>(m, "SO3")
       .def_readonly_static("DIMS", &SO3::DIMS)
       .def_readonly_static("DOF", &SO3::DOF)
       .def(py::init<>())
-      .def(py::init<const Eigen::Quaterniond &>())
+      .def(py::init<const Eigen::Quaterniond &>(), py::arg("quaternion"))
       .def("identity", &SO3::identity<>)
       .def(py::self * py::self)
       .def(py::self * Eigen::Vector3d())
       .def(
           "rotate",
-          py::overload_cast<const Eigen::Vector3d &>(&SO3::rotate, py::const_))
+          py::overload_cast<const Eigen::Vector3d &>(&SO3::rotate, py::const_),
+          py::arg("source_vector"))
       .def("inverse", &SO3::inverse)
-      .def("interp", py::overload_cast<double>(&SO3::interp, py::const_))
+      .def(
+          "interp",
+          py::overload_cast<double>(&SO3::interp, py::const_),
+          py::arg("fraction"))
       .def("exp", &SO3::exp<>)
       .def("log", &SO3::log)
       .def(

@@ -19,22 +19,31 @@ namespace py = pybind11;
 // A simple pybinding of SE3
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(se3_python, m) {
+  py::module_::import("resim.transforms.python.so3_python");
+
   py::class_<SE3>(m, "SE3")
       .def_readonly_static("DIMS", &SE3::DIMS)
       .def_readonly_static("DOF", &SE3::DOF)
       .def(py::init<>())
-      .def(py::init<SO3>())
-      .def(py::init<Eigen::Vector3d>())
-      .def(py::init<SO3, Eigen::Vector3d>())
+      .def(py::init<SO3>(), py::arg("rotation"))
+      .def(py::init<Eigen::Vector3d>(), py::arg("translation"))
+      .def(
+          py::init<SO3, Eigen::Vector3d>(),
+          py::arg("rotation"),
+          py::arg("translation"))
       .def("identity", &SE3::identity<>)
       .def(py::self * py::self)
       .def(py::self * Eigen::Vector3d())
       .def(
           "rotate",
-          py::overload_cast<const Eigen::Vector3d &>(&SE3::rotate, py::const_))
+          py::overload_cast<const Eigen::Vector3d &>(&SE3::rotate, py::const_),
+          py::arg("source_vector"))
       .def("inverse", &SE3::inverse)
       .def("arc_length", &SE3::arc_length)
-      .def("interp", py::overload_cast<double>(&SE3::interp, py::const_))
+      .def(
+          "interp",
+          py::overload_cast<double>(&SE3::interp, py::const_),
+          py::arg("fraction"))
       .def("exp", &SE3::exp<>)
       .def("log", &SE3::log)
       .def(
