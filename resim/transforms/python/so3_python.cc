@@ -21,13 +21,19 @@ PYBIND11_MODULE(so3_python, m) {
   py::module_::import("resim.transforms.python.quaternion");
 
   py::class_<SO3>(m, "SO3")
+      // static members
       .def_readonly_static("DIMS", &SO3::DIMS)
       .def_readonly_static("DOF", &SO3::DOF)
+      // static methods
+      .def_static("identity", &SO3::identity<>)
+      .def_static("exp", &SO3::exp<>, py::arg("alg"))
+      // class constructors
       .def(py::init<>())
       .def(py::init<const Eigen::Quaterniond &>(), py::arg("quaternion"))
-      .def("identity", &SO3::identity<>)
+      // operator overloads
       .def(py::self * py::self)
       .def(py::self * Eigen::Vector3d())
+      // class methods
       .def(
           "rotate",
           py::overload_cast<const Eigen::Vector3d &>(&SO3::rotate, py::const_),
@@ -37,7 +43,6 @@ PYBIND11_MODULE(so3_python, m) {
           "interp",
           py::overload_cast<double>(&SO3::interp, py::const_),
           py::arg("fraction"))
-      .def("exp", &SO3::exp<>)
       .def("log", &SO3::log)
       .def(
           "is_approx",
