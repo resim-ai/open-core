@@ -7,6 +7,7 @@
 """Python & PyBind rule customizations."""
 
 load("@pybind11_bazel//:build_defs.bzl", _pybind_extension = "pybind_extension")
+load("@resim_python_deps//:requirements.bzl", "requirement")
 
 def pybind_extension(
         name,
@@ -37,6 +38,7 @@ def _stubgen_impl(ctx):
     stubgen_binary = ctx.executable._stubgen
 
     args = ctx.actions.args()
+    args.add("--numpy-array-use-type-var")
 
     stubs_dir = ctx.actions.declare_directory(ctx.attr.name)
     args.add("-o", stubs_dir.path)
@@ -46,14 +48,19 @@ def _stubgen_impl(ctx):
         fail("Wrong number of inputs!")
     input = inputs[0]
 
-    args.add("-m", _get_module_name(input))
+    python_path = [ctx.genfiles_dir.path]
+
+    for imp in ctx.attr._numpy[PyInfo].imports.to_list():
+        python_path.append("external/" + imp)
+
+    args.add(_get_module_name(input))
     ctx.actions.run(
         mnemonic = "GenerateStubs",
-        inputs = inputs + ctx.attr.extension.default_runfiles.files.to_list(),
+        inputs = inputs + ctx.attr.extension.default_runfiles.files.to_list() + ctx.attr._numpy.default_runfiles.files.to_list(),
         outputs = [stubs_dir],
         executable = stubgen_binary,
         arguments = [args],
-        env = {"PYTHONPATH": ctx.genfiles_dir.path},
+        env = {"PYTHONPATH": ":".join(python_path)},
     )
 
     # Move the stubs file out to the bazel hierarchy as well so we can package
@@ -81,11 +88,14 @@ stubgen = rule(
             allow_single_file = True,
             doc = "The extension file (e.g. quaternion.so) to generate stubs for.",
         ),
+        "_numpy": attr.label(
+            default = requirement("numpy"),
+        ),
         "_stubgen": attr.label(
             executable = True,
             doc = "Path to the stubgen binary",
             cfg = "exec",
-            default = ":stubgen",
+            default = ":pybind11-stubgen",
         ),
     },
 )

@@ -11,3 +11,9 @@ py_console_script_binary(
     pkg = "@resim_pkg_deps//mypy",
     visibility = ["//visibility:public"],
 )
+
+py_console_script_binary(
+    name = "pybind11-stubgen",
+    pkg = "@resim_pkg_deps//pybind11_stubgen",
+    visibility = ["//visibility:public"],
+)

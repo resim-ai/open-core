@@ -50,6 +50,8 @@ nh3==0.2.18
     # via readme-renderer
 pkginfo==1.10.0
     # via twine
+pybind11-stubgen==2.5.1
+    # via -r requirements.txt
 pycparser==2.22
     # via cffi
 pygments==2.18.0
