@@ -1,4 +1,5 @@
 from __future__ import annotations
+import numpy
 import resim.transforms.python.quaternion
 import typing
 __all__ = ['SO3']

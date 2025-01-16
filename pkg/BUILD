@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
@@ -39,7 +40,6 @@ py_package(
         "//resim/auth/python:device_code_client",
         "//resim/experiences/proto:experience_proto_py",
         "//resim/geometry/python:polygon_distance_python.so",
-        "//resim/geometry/python:polygon_distance_python-stubs",
         "//resim/metrics:default_report_metrics",
         "//resim/metrics:dice_coefficient",
         "//resim/metrics:fetch_all_pages",
@@ -63,15 +63,23 @@ py_package(
         "//resim/orchestration:kickoff_report",
         "//resim/transforms/proto:framed_vector_3_proto_py",
         "//resim/transforms/python:geodetic_python.so",
-        "//resim/transforms/python:geodetic_python-stubs",
         "//resim/transforms/python:quaternion.so",
-        "//resim/transforms/python:quaternion-stubs",
         "//resim/transforms/python:se3_python.so",
-        "//resim/transforms/python:se3_python-stubs",
         "//resim/transforms/python:so3_python.so",
-        "//resim/transforms/python:so3_python-stubs",
         "//resim/utils/proto:uuid_proto_py",
     ],
+)
+
+pkg_files(
+    name = "resim_package_stubs",
+    srcs = [
+        "//resim/geometry/python:polygon_distance_python.stubs",
+        "//resim/transforms/python:geodetic_python.stubs",
+        "//resim/transforms/python:quaternion.stubs",
+        "//resim/transforms/python:se3_python.stubs",
+        "//resim/transforms/python:so3_python.stubs",
+    ],
+    strip_prefix = ".",
 )
 
 genrule(
@@ -104,7 +112,10 @@ py_wheel(
     summary = "ReSim Metrics Libraries.",
     twine = "@resim_pkg_deps//twine",
     version = version,
-    deps = [":resim_package"],
+    deps = [
+        ":resim_package",
+        ":resim_package_stubs",
+    ],
 )
 
 py_package(
@@ -229,7 +240,10 @@ py_wheel(
     strip_path_prefixes = ["resim/ros2/ros2_py_package/"],
     summary = "ReSim ROS2 Libraries.",
     version = version,
-    deps = ["//resim/ros2:ros2_py_package"],
+    deps = [
+        "//resim/ros2:ros2_py_package",
+        "//resim/ros2:ros2_py_package_stubs",
+    ],
 )
 
 py_console_script_binary(
