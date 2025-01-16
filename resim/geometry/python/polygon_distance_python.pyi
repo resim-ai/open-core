@@ -1,3 +1,0 @@
-import numpy
-
-def polygon_distance(polygon_a: list[numpy.ndarray[numpy.float64[2, 1]]], polygon_b: list[numpy.ndarray[numpy.float64[2, 1]]]) -> float: ...
