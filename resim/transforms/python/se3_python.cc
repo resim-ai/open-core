@@ -19,6 +19,8 @@ namespace py = pybind11;
 // A simple pybinding of SE3
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(se3_python, m) {
+  py::module_::import("resim.transforms.python.so3_python");
+
   py::class_<SE3>(m, "SE3")
       .def_readonly_static("DIMS", &SE3::DIMS)
       .def_readonly_static("DOF", &SE3::DOF)
