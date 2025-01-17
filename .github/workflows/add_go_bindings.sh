@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 CURRENT_BRANCH=$(git branch --show-current)
 
@@ -15,8 +15,8 @@ fi
 
 BAZEL_BIN=$(bazel info bazel-bin)
 
-bazel build //resim/utils/proto:uuid_proto_go
-bazel build //resim/metrics/proto:metrics_proto_go
+bazel build --remote_download_all //resim/utils/proto:uuid_proto_go
+bazel build --remote_download_all //resim/metrics/proto:metrics_proto_go
 
 ls ${BAZEL_BIN}/resim/utils/proto
 cp -r $BAZEL_BIN/resim/utils/proto/uuid_proto_go_/github.com/resim-ai/open-core/* .
