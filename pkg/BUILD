@@ -116,6 +116,7 @@ py_wheel(
         ":resim_package",
     ] + select({
         "//:nocross": [":resim_package_stubs"],
+        "//conditions:default": [],
     }),
 )
 
@@ -245,6 +246,7 @@ py_wheel(
         "//resim/ros2:ros2_py_package",
     ] + select({
         "//:nocross": ["//resim/ros2:ros2_py_package_stubs"],
+        "//conditions:default": [],
     }),
 )
 
