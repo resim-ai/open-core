@@ -543,6 +543,27 @@ def _validate_image_metric_values(
     _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
 
 
+def _validate_image_list_metric_values(
+    image_list_metric_values: mp.ImageListMetricValues,
+    metrics_data_map: dict[str, mp.MetricsData],
+) -> None:
+    """
+    Check that an ImageListMetricValues is valid.
+
+    Args:
+        image_list_metric_values: The metric values to check.
+        metrics_data_map: A map to find the metrics data in.
+    """
+    _metrics_assert(len(image_list_metric_values.image_data_ids) > 0)
+    image_data_ids = image_list_metric_values.image_data_ids
+    for image_data_id in image_data_ids:
+        _validate_metrics_data_id(image_data_id)
+        id_str = image_data_id.id.data
+        _metrics_assert(id_str in metrics_data_map)
+        value_data = metrics_data_map[id_str]
+        _metrics_assert(value_data.data_type == mp.EXTERNAL_FILE_DATA_TYPE)
+
+
 def _validate_metric_values(
     metric_values: mp.MetricValues, metrics_data_map: dict[str, mp.MetricsData]
 ) -> None:
@@ -588,6 +609,10 @@ def _validate_metric_values(
         _validate_plotly_metric_values(metric_values.plotly_metric_values)
     elif metric_values.HasField("text_metric_values"):
         _validate_text_metric_values(metric_values.text_metric_values)
+    elif metric_values.HasField("image_list_metric_values"):
+        _validate_image_list_metric_values(
+            metric_values.image_list_metric_values, metrics_data_map
+        )
     else:  # metric_values.HasField("image_metric_values")
         _validate_image_metric_values(
             metric_values.image_metric_values, metrics_data_map
@@ -662,6 +687,8 @@ def _validate_metric(
         _metrics_assert(metric.metric_values.HasField("plotly_metric_values"))
     elif metric.type == mp.TEXT_METRIC_TYPE:
         _metrics_assert(metric.metric_values.HasField("text_metric_values"))
+    elif metric.type == mp.IMAGE_LIST_METRIC_TYPE:
+        _metrics_assert(metric.metric_values.HasField("image_list_metric_values"))
     else:  # mp.IMAGE_METRIC_TYPE
         _metrics_assert(metric.metric_values.HasField("image_metric_values"))
 

@@ -1637,6 +1637,91 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
         self.assertEqual(len(output.metrics_msg.metrics_data), 1)
 
+    def test_image_list_metric(self) -> None:
+        job_id = uuid.uuid4()
+
+        file_data_one = metrics.ExternalFileMetricsData(
+            name="an external image 1", filename="test.gif"
+        )
+
+        file_data_two = metrics.ExternalFileMetricsData(
+            name="an external image 2", filename="test.gif"
+        )
+
+        metric = metrics.ImageListMetric(
+            name="test metric",
+            description="a test image list metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+        )
+
+        self.assertEqual(metric.image_list_data, [])
+
+        self.assertEqual(
+            metric, metric.with_image_list_data([file_data_one, file_data_two])
+        )
+
+    def test_image_list_metric_pack(self) -> None:
+        job_id = uuid.uuid4()
+
+        image_one = metrics.ExternalFileMetricsData(
+            name="an external image 1", filename="test.gif"
+        )
+
+        image_two = metrics.ExternalFileMetricsData(
+            name="an external image 2", filename="test.gif"
+        )
+
+        # Use the constructor to initialize the data this time, in contrast with
+        # the above test.
+        metric = metrics.ImageListMetric(
+            name="test metric",
+            description="a test image metric",
+            status=MetricStatus.PASSED_METRIC_STATUS,
+            importance=MetricImportance.ZERO_IMPORTANCE,
+            blocking=False,
+            should_display=True,
+            parent_job_id=job_id,
+            order=0.5,
+            image_list_data=[image_one, image_two],
+        )
+
+        msg = metric.pack()
+
+        self.assert_common_fields_match(msg=msg, metric=metric)
+        self.assertEqual(msg.type, mp.MetricType.Value("IMAGE_LIST_METRIC_TYPE"))
+        self.assertTrue(msg.metric_values.HasField("image_list_metric_values"))
+        values = msg.metric_values.image_list_metric_values
+        # to do: tidy
+        self.assertEqual(
+            values.image_data_ids[0].id, metrics_utils.pack_uuid_to_proto(image_one.id)
+        )
+        self.assertEqual(
+            values.image_data_ids[1].id, metrics_utils.pack_uuid_to_proto(image_two.id)
+        )
+
+        output = metrics_utils.ResimMetricsOutput()
+        metric.recursively_pack_into(output)
+        self.assertIn(metric.id, output.packed_ids)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+        ids = [
+            uuid.UUID(data.metrics_data_id.id.data)
+            for data in output.metrics_msg.metrics_data
+        ]
+        self.assertIn(image_one.id, ids)
+        self.assertIn(image_two.id, ids)
+        self.assertEqual(output.metrics_msg.job_level_metrics.metrics[0], msg)
+
+        # Check no duplication
+        metric.recursively_pack_into(output)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+
     def test_metrics_data(self) -> None:
         index_data = metrics.SeriesMetricsData(
             name="index data",
