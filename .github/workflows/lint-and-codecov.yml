@@ -23,7 +23,7 @@ jobs:
       - name: Build Aarch64 Wheel
         id: build_aarch64_wheel
         env:
-          RESIM_VERSION: ${{ github.event.inputs.tag }}
+          RESIM_VERSION: v420
           OUTPUT_BASE: "~/.cache/cross_output" # Purposefully avoids the cache
         run: |
           bazel --output_base $OUTPUT_BASE \
