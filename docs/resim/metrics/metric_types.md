@@ -185,7 +185,7 @@ The ReSim metrics framework also supports attaching an arbitrary image as a metr
 
 ## Image List Metric
 
-For situations where you wish to attach a list of images to a single metrics, the ReSim metrics framework also supports an `ImageListMetric`. This is simply achieved by storing the images in the `/tmp/resim/outputs` directory and referencing the filenames in the metric.
+For situations where you wish to attach a list of images to a single metric, the ReSim metrics framework also supports an `ImageListMetric`. This is achieved by storing the images in the `/tmp/resim/outputs` directory in the metrics build and referencing the filenames in the metric.
 
 
 ### Parameters
