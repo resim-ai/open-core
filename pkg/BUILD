@@ -114,8 +114,9 @@ py_wheel(
     version = version,
     deps = [
         ":resim_package",
-        ":resim_package_stubs",
-    ],
+    ] + select({
+        "//:nocross": [":resim_package_stubs"],
+    }),
 )
 
 py_package(
@@ -242,8 +243,9 @@ py_wheel(
     version = version,
     deps = [
         "//resim/ros2:ros2_py_package",
-        "//resim/ros2:ros2_py_package_stubs",
-    ],
+    ] + select({
+        "//:nocross": ["//resim/ros2:ros2_py_package_stubs"],
+    }),
 )
 
 py_console_script_binary(
