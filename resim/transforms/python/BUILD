@@ -4,9 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
+load("//bazel:python.bzl", "pybind_extension")
 
 pybind_extension(
     name = "quaternion",

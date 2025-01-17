@@ -18,7 +18,7 @@ namespace py = pybind11;
 // composition because users should use SO3 for thess.
 PYBIND11_MODULE(quaternion, m) {
   py::class_<Eigen::Quaterniond>(m, "Quaternion")
-      .def(py::init<const Eigen::Vector4d &>())
+      .def(py::init<const Eigen::Vector4d &>(), py::arg("vector"))
       .def(
           py::init<double, double, double, double>(),
           py::arg("w"),
