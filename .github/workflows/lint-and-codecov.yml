@@ -20,22 +20,6 @@ jobs:
         with:
           bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
 
-      - name: Build Aarch64 Wheel
-        id: build_aarch64_wheel
-        env:
-          RESIM_VERSION: v420
-          OUTPUT_BASE: "~/.cache/cross_output" # Purposefully avoids the cache
-        run: |
-          bazel --output_base $OUTPUT_BASE \
-            build --platforms //:aarch64_linux //pkg:resim_wheel \
-              --repo_env="RESIM_VERSION=$RESIM_VERSION"
-          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
-          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
-            cquery --platforms //:aarch64_linux //pkg:resim_wheel \
-              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-              --output files)
-          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
-
       - name: Build `compile_commands.json` database
         run: bazel run @hedron_compile_commands//:refresh_all
 
