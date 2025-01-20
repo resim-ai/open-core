@@ -6,6 +6,7 @@
 
 """Python & PyBind rule customizations."""
 
+load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
 load("@pybind11_bazel//:build_defs.bzl", _pybind_extension = "pybind_extension")
 load("@resim_python_deps//:requirements.bzl", "requirement")
 
@@ -22,6 +23,7 @@ def pybind_extension(
         extension = ":{}".format(name),
         testonly = kwargs.get("testonly"),
         visibility = kwargs.get("visibility"),
+        target_compatible_with = HOST_CONSTRAINTS,
     )
 
 def _get_module_name(pybind_binary_path):

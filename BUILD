@@ -4,6 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
+
 exports_files(["requirements.txt"])
 
 platform(
@@ -12,4 +14,10 @@ platform(
         "@platforms//os:linux",
         "@platforms//cpu:aarch64",
     ],
+)
+
+config_setting(
+    name = "nocross",
+    constraint_values = HOST_CONSTRAINTS,
+    visibility = ["//visibility:public"],
 )
