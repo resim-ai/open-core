@@ -7,7 +7,7 @@ exports_files(["requirements.txt"])
 
 py_console_script_binary(
     name = "openapi-python-client",
-    pkg = "@resim_python_client_deps//openapi_python_client",
+    pkg = "@resim_python_client_dev_deps//openapi_python_client",
 )
 
 openapi_client(
