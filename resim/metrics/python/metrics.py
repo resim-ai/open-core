@@ -249,6 +249,8 @@ class Metric(ABC, Generic[MetricT]):
             unpacked = PlotlyMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("IMAGE_METRIC_TYPE"):
             unpacked = ImageMetric(name=msg.name)
+        elif msg.type == metrics_proto.MetricType.Value("IMAGE_LIST_METRIC_TYPE"):
+            unpacked = ImageListMetric(name=msg.name)
         elif msg.type == metrics_proto.MetricType.Value("TEXT_METRIC_TYPE"):
             unpacked = TextMetric(name=msg.name)
         else:
@@ -1525,6 +1527,74 @@ class ImageMetric(Metric["ImageMetric"]):
 
         if self.image_data is not None:
             self.image_data.recursively_pack_into(metrics_output)
+
+
+@metric_dataclass
+class ImageListMetric(Metric["ImageListMetric"]):
+    image_list_data: List[ExternalFileMetricsData]
+
+    def __init__(
+        self: ImageListMetric,
+        name: str,
+        description: Optional[str] = None,
+        status: Optional[MetricStatus] = None,
+        importance: Optional[MetricImportance] = None,
+        blocking: Optional[bool] = None,
+        should_display: Optional[bool] = None,
+        parent_job_id: Optional[uuid.UUID] = None,
+        order: Optional[float] = None,
+        event_metric: Optional[bool] = None,
+        tags: Optional[List[Tag]] = None,
+        image_list_data: Optional[List[ExternalFileMetricsData]] = None,
+    ):
+        super().__init__(
+            name=name,
+            description=description,
+            status=status,
+            importance=importance,
+            blocking=blocking,
+            should_display=should_display,
+            parent_job_id=parent_job_id,
+            order=order,
+            event_metric=event_metric,
+            tags=tags,
+        )
+        if image_list_data is None:
+            self.image_list_data = []
+        else:
+            self.image_list_data = image_list_data
+
+    def with_image_list_data(
+        self: ImageListMetric, image_list_data: List[ExternalFileMetricsData]
+    ) -> ImageListMetric:
+        self.image_list_data = image_list_data
+        return self
+
+    def pack(self: ImageListMetric) -> metrics_proto.Metric:
+        msg = super().pack()
+        msg.type = metrics_proto.MetricType.Value("IMAGE_LIST_METRIC_TYPE")
+
+        metric_values = msg.metric_values.image_list_metric_values
+
+        if self.image_list_data is not None:
+            for image_data in self.image_list_data:
+                id_msg = metrics_proto.MetricsDataId()
+                id_msg.id.CopyFrom(pack_uuid_to_proto(image_data.id))
+                metric_values.image_data_ids.extend([id_msg])
+
+        return msg
+
+    def recursively_pack_into(
+        self: ImageListMetric, metrics_output: ResimMetricsOutput
+    ) -> None:
+        if self.id in metrics_output.packed_ids:
+            return
+        metrics_output.packed_ids.add(self.id)
+
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
+
+        for data in self.image_list_data:
+            data.recursively_pack_into(metrics_output)
 
 
 @metric_dataclass

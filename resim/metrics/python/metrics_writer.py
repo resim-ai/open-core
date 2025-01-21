@@ -22,6 +22,7 @@ from resim.metrics.python.metrics import (
     ExternalFileMetricsData,
     GroupedMetricsData,
     HistogramMetric,
+    ImageListMetric,
     ImageMetric,
     LinePlotMetric,
     Metric,
@@ -142,6 +143,11 @@ class ResimMetricsWriter:
 
     def add_image_metric(self, name: str) -> ImageMetric:
         metric = ImageMetric(name=name, parent_job_id=self.job_id)
+        self.add_metric(metric)
+        return metric
+
+    def add_image_list_metric(self, name: str) -> ImageListMetric:
+        metric = ImageListMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
 

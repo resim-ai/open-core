@@ -30,6 +30,7 @@ from resim.metrics.python.metrics import (
     ExternalFileMetricsData,
     GroupedMetricsData,
     HistogramMetric,
+    ImageListMetric,
     ImageMetric,
     LinePlotMetric,
     Metric,
@@ -222,6 +223,7 @@ def _unpack_metric(
         ScalarMetric: _unpack_scalar_metric,
         PlotlyMetric: _unpack_plotly_metric,
         ImageMetric: _unpack_image_metric,
+        ImageListMetric: _unpack_image_list_metric,
         TextMetric: _unpack_text_metric,
         BatchwiseBarChartMetric: _unpack_batchwise_bar_chart_metric,
     }
@@ -432,6 +434,23 @@ def _unpack_image_metric(
         id_to_unpacked_metrics_data[_unpack_uuid(image_data.image_data_id.id)],
     )
     unpacked.with_image_data(data)
+
+
+def _unpack_image_list_metric(
+    metric: mp.Metric,
+    unpacked: ImageListMetric,
+    id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
+) -> None:
+    image_list_data = metric.metric_values.image_list_metric_values
+    data = []
+    for image_data_id in image_list_data.image_data_ids:
+        data.append(
+            cast(
+                ExternalFileMetricsData,
+                id_to_unpacked_metrics_data[_unpack_uuid(image_data_id.id)],
+            )
+        )
+    unpacked.with_image_list_data(data)
 
 
 def _unpack_text_metric(
