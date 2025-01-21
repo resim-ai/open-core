@@ -1,1 +1,2 @@
-openapi-python-client==0.23.0
+openapi-python-client==0.21.5
+pydantic>=2.1.1,<2.10

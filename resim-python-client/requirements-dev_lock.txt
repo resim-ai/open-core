@@ -36,11 +36,13 @@ markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-openapi-python-client==0.23.0
+openapi-python-client==0.21.5
     # via -r requirements-dev.txt
-pydantic==2.10.5
-    # via openapi-python-client
-pydantic-core==2.27.2
+pydantic==2.9.2
+    # via
+    #   -r requirements-dev.txt
+    #   openapi-python-client
+pydantic-core==2.23.4
     # via pydantic
 pygments==2.19.1
     # via rich
