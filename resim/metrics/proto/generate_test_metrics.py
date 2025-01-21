@@ -844,13 +844,13 @@ def _add_image_list_metric(job_metrics: mp.JobMetrics) -> None:
     metrics_data_one.metrics_data_id.id.data = _get_uuid_str()
     metrics_data_one.data_type = mp.EXTERNAL_FILE_DATA_TYPE
     metrics_data_one.name = "Majestic Redwood Photo"
-    metrics_data_one.external_file.path = "my_tree.gif"
+    metrics_data_one.external_file.path = "my_redwood.gif"
     # tree two
     metrics_data_two = job_metrics.metrics_data.add()
     metrics_data_two.metrics_data_id.id.data = _get_uuid_str()
     metrics_data_two.data_type = mp.EXTERNAL_FILE_DATA_TYPE
     metrics_data_two.name = "Gnarled Oak Photo"
-    metrics_data_two.external_file.path = "my_tree.gif"
+    metrics_data_two.external_file.path = "my_oak.gif"
 
     metrics_data_list = [
         metrics_data_one.metrics_data_id,

@@ -1641,11 +1641,11 @@ class MetricsTest(unittest.TestCase):
         job_id = uuid.uuid4()
 
         file_data_one = metrics.ExternalFileMetricsData(
-            name="an external image 1", filename="test.gif"
+            name="an external image 1", filename="test-1.gif"
         )
 
         file_data_two = metrics.ExternalFileMetricsData(
-            name="an external image 2", filename="test.gif"
+            name="an external image 2", filename="test-2.gif"
         )
 
         metric = metrics.ImageListMetric(
