@@ -157,6 +157,7 @@ enum MetricType {
     IMAGE_METRIC_TYPE               = 9;
     BATCHWISE_BAR_CHART_METRIC_TYPE = 10;
     TEXT_METRIC_TYPE                = 11;
+    IMAGE_LIST_METRIC_TYPE          = 12;
 }
 
 message MetricId {
@@ -299,6 +300,7 @@ message MetricValues {
         ImageMetricValues             image_metric_values               = 9;
         BatchwiseBarChartMetricValues batchwise_bar_chart_metric_values = 10;
         TextMetricValues              text_metric_values                = 11;
+        ImageListMetricValues         image_list_metric_values          = 12;
     }
 }
 
@@ -462,6 +464,10 @@ message PlotlyMetricValues {
 
 message ImageMetricValues {
     MetricsDataId image_data_id = 1;
+}
+
+message ImageListMetricValues {
+    repeated MetricsDataId image_data_ids = 1;
 }
 
 message TextMetricValues {

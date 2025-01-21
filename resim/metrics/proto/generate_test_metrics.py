@@ -827,6 +827,39 @@ def _add_image_metric(job_metrics: mp.JobMetrics) -> None:
     image_metric_values.image_data_id.CopyFrom(metrics_data.metrics_data_id)
 
 
+def _add_image_list_metric(job_metrics: mp.JobMetrics) -> None:
+    metric = job_metrics.job_level_metrics.metrics.add()
+    metric.metric_id.id.data = _get_uuid_str()
+    metric.name = "A set of photos of trees"
+    metric.type = mp.IMAGE_LIST_METRIC_TYPE
+    metric.description = "Actual photos of real-world trees"
+    metric.status = mp.PASSED_METRIC_STATUS
+    metric.should_display = True
+    metric.blocking = False
+    metric.importance = mp.LOW_IMPORTANCE
+    metric.order = 1.2
+    metric.job_id.CopyFrom(job_metrics.job_id)
+    # tree one
+    metrics_data_one = job_metrics.metrics_data.add()
+    metrics_data_one.metrics_data_id.id.data = _get_uuid_str()
+    metrics_data_one.data_type = mp.EXTERNAL_FILE_DATA_TYPE
+    metrics_data_one.name = "Majestic Redwood Photo"
+    metrics_data_one.external_file.path = "my_redwood.gif"
+    # tree two
+    metrics_data_two = job_metrics.metrics_data.add()
+    metrics_data_two.metrics_data_id.id.data = _get_uuid_str()
+    metrics_data_two.data_type = mp.EXTERNAL_FILE_DATA_TYPE
+    metrics_data_two.name = "Gnarled Oak Photo"
+    metrics_data_two.external_file.path = "my_oak.gif"
+
+    metrics_data_list = [
+        metrics_data_one.metrics_data_id,
+        metrics_data_two.metrics_data_id,
+    ]
+    image_list_metric_values = metric.metric_values.image_list_metric_values
+    image_list_metric_values.image_data_ids.extend(metrics_data_list)
+
+
 def _add_text_metric(job_metrics: mp.JobMetrics) -> None:
     metric = job_metrics.job_level_metrics.metrics.add()
     metric.metric_id.id.data = _get_uuid_str()
@@ -932,6 +965,7 @@ def generate_test_metrics(block_fail: bool = False) -> mp.JobMetrics:
     _add_plotly_metric(job_metrics)
     _add_text_metric(job_metrics)
     _add_image_metric(job_metrics)
+    _add_image_list_metric(job_metrics)
     _populate_metrics_statuses(job_metrics)
     # Test events:
     scalar_event_metric_id = _add_event_scalar_metric(job_metrics, True)
