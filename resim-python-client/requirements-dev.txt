@@ -1,5 +1,5 @@
 # We can't advance this because it's a breaking change. Past this, UUIDs are
-# correctly implemented, when much of our code assume strings.
+# correctly implemented, when much of our code assumes strings.
 openapi-python-client==0.21.5
 
 # If we go to 2.10 we have to upgrade openapi-python-client to avoid bugs. We
