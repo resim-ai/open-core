@@ -5,13 +5,14 @@
 # https://opensource.org/licenses/MIT.
 
 load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
 # This "7 spaces and a pipe" format is needed to make the resulting metadata to
 # be parsable by RFC822 parser when using multiple lines. See
 # https://packaging.python.org/en/latest/specifications/core-metadata/#description
-LICENSE = """Copyright 2024 ReSim, Inc.
+LICENSE = """Copyright 2025 ReSim, Inc.
        |
        |Permission is hereby granted, free of charge, to any person obtaining a copy of
        |this software and associated documentation files (the "Software"), to deal in
@@ -69,6 +70,18 @@ py_package(
     ],
 )
 
+pkg_files(
+    name = "resim_package_stubs",
+    srcs = [
+        "//resim/geometry/python:polygon_distance_python.stubs",
+        "//resim/transforms/python:geodetic_python.stubs",
+        "//resim/transforms/python:quaternion.stubs",
+        "//resim/transforms/python:se3_python.stubs",
+        "//resim/transforms/python:so3_python.stubs",
+    ],
+    strip_prefix = ".",
+)
+
 genrule(
     name = "combined_requires",
     srcs = [
@@ -99,7 +112,12 @@ py_wheel(
     summary = "ReSim Metrics Libraries.",
     twine = "@resim_pkg_deps//twine",
     version = version,
-    deps = [":resim_package"],
+    deps = [
+        ":resim_package",
+    ] + select({
+        "//:nocross": [":resim_package_stubs"],
+        "//conditions:default": [],
+    }),
 )
 
 py_package(
@@ -224,7 +242,12 @@ py_wheel(
     strip_path_prefixes = ["resim/ros2/ros2_py_package/"],
     summary = "ReSim ROS2 Libraries.",
     version = version,
-    deps = ["//resim/ros2:ros2_py_package"],
+    deps = [
+        "//resim/ros2:ros2_py_package",
+    ] + select({
+        "//:nocross": ["//resim/ros2:ros2_py_package_stubs"],
+        "//conditions:default": [],
+    }),
 )
 
 py_console_script_binary(

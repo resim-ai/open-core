@@ -22,7 +22,10 @@ PYBIND11_MODULE(resim_log_from_ros2_python, m) {
             plugin_path,
             input_log_path,
             output_log_path);
-      });
+      },
+      py::arg("plugin_path"),
+      py::arg("input_log"),
+      py::arg("output_log"));
 }
 
 }  // namespace resim::ros2

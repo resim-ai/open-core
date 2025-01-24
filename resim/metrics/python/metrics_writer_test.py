@@ -657,6 +657,46 @@ class TestMetricsWriter(unittest.TestCase):
         self.assertEqual(metric_base.name, METRIC_NAME)
         self.assertEqual(uuid.UUID(metric_values.image_data_id.id.data), METRIC_DATA.id)
 
+    def test_image_list_metric(self) -> None:
+        METRIC_NAME = "Image list metric"
+        METRIC_DESCRIPTION = "Description"
+        METRIC_BLOCKING = True
+        METRIC_DISPLAY = True
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
+        IMAGE_1 = ExternalFileMetricsData(name="Image 1", filename="image1.jpg")
+        IMAGE_2 = ExternalFileMetricsData(name="Image 2", filename="image2.jpg")
+        METRIC_DATA = [IMAGE_1, IMAGE_2]
+
+        (
+            self.writer.add_image_list_metric(METRIC_NAME)
+            .with_image_list_data(METRIC_DATA)
+            .with_description(METRIC_DESCRIPTION)
+            .with_blocking(METRIC_BLOCKING)
+            .with_should_display(METRIC_DISPLAY)
+            .with_importance(METRIC_IMPORTANCE)
+            .with_status(METRIC_STATUS)
+        )
+
+        output = self.writer.write()
+        self.assertEqual(len(output.packed_ids), 3)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 2)
+
+        metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = metric_base.metric_values.image_list_metric_values
+
+        self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
+        self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
+        self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
+        self.assertEqual(metric_base.name, METRIC_NAME)
+        self.assertEqual(
+            [uuid.UUID(item.id.data) for item in metric_values.image_data_ids],
+            [item.id for item in METRIC_DATA],
+        )
+
     def test_external_file_metrics_data(self) -> None:
         """Test that we can add an external file metrics data."""
         NAME = "test_metrics_data"

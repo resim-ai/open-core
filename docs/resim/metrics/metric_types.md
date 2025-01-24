@@ -189,7 +189,14 @@ ReSim supports displaying arbitrary Markdown as a metric. This metric also has n
 associated. In this way, one can provide textual output from any system, evaluated with metric data. 
 This is commonly used in non-autonomy applications of the ReSim app.
 
-
 ### Parameters
 
 - `text: str` - the metric's text.
+
+## Image List Metric
+
+For situations where you wish to attach a list of images to a single metric, the ReSim metrics framework also supports an `ImageListMetric`. This is achieved by storing the images in the `/tmp/resim/outputs` directory in the metrics build and referencing the filenames in the metric.
+
+### Parameters
+
+- `image_list_data: List[ExternalFileMetricsData]` - the metric's images, as a list of external file metrics data, which simply encapsulates the path to each file.

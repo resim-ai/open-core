@@ -22,6 +22,7 @@ namespace py = pybind11;
 // TODO(mikebauer) Add frames
 PYBIND11_MODULE(geodetic_python, m) {
   py::module_::import("resim.transforms.python.se3_python");
+  py::module_::import("resim.transforms.python.so3_python");
 
   py::class_<Geodetic>(m, "Geodetic")
       .def(py::init<>())
@@ -53,16 +54,20 @@ PYBIND11_MODULE(geodetic_python, m) {
           [](const Geodetic &g) { return g.altitude.in(au::feet); })
       .def(
           "set_latitude_deg",
-          [](Geodetic &g, const double x) { g.latitude = au::degrees(x); })
+          [](Geodetic &g, const double x) { g.latitude = au::degrees(x); },
+          py::arg("latitude_deg"))
       .def(
           "set_longitude_deg",
-          [](Geodetic &g, const double x) { g.longitude = au::degrees(x); })
+          [](Geodetic &g, const double x) { g.longitude = au::degrees(x); },
+          py::arg("longitude_deg"))
       .def(
           "set_altitude_m",
-          [](Geodetic &g, const double x) { g.altitude = au::meters(x); })
-      .def("set_altitude_ft", [](Geodetic &g, const double x) {
-        g.altitude = au::feet(x);
-      });
+          [](Geodetic &g, const double x) { g.altitude = au::meters(x); },
+          py::arg("altitude_m"))
+      .def(
+          "set_altitude_ft",
+          [](Geodetic &g, const double x) { g.altitude = au::feet(x); },
+          py::arg("altitude_ft"));
 
   py::class_<GeodeticWithRotation>(m, "GeodeticWithRotation")
       .def(py::init<>())
@@ -82,17 +87,23 @@ PYBIND11_MODULE(geodetic_python, m) {
   m.def(
       "ecef_position_from_geodetic",
       static_cast<Eigen::Vector3d (*)(const Geodetic &)>(
-          &ecef_position_from_geodetic));
+          &ecef_position_from_geodetic),
+      py::arg("geodetic"));
 
-  m.def("geodetic_from_ecef_position", &geodetic_from_ecef_position);
+  m.def(
+      "geodetic_from_ecef_position",
+      &geodetic_from_ecef_position,
+      py::arg("ecef_position"));
 
   m.def(
       "ecef_from_body_from_geodetic_with_rotation",
-      &ecef_from_body_from_geodetic_with_rotation);
+      &ecef_from_body_from_geodetic_with_rotation,
+      py::arg("geodetic_with_rotation"));
 
   m.def(
       "geodetic_with_rotation_from_ecef_from_body",
-      &geodetic_with_rotation_from_ecef_from_body);
+      &geodetic_with_rotation_from_ecef_from_body,
+      py::arg("ecef_from_body"));
 }
 
 }  // namespace resim::transforms
