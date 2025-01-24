@@ -183,10 +183,19 @@ The ReSim metrics framework also supports attaching an arbitrary image as a metr
 
 - `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
 
+## Text Metric
+
+ReSim supports displaying arbitrary Markdown as a metric. This metric also has no `MetricsData`
+associated. In this way, one can provide textual output from any system, evaluated with metric data. 
+This is commonly used in non-autonomy applications of the ReSim app.
+
+### Parameters
+
+- `text: str` - the metric's text.
+
 ## Image List Metric
 
 For situations where you wish to attach a list of images to a single metric, the ReSim metrics framework also supports an `ImageListMetric`. This is achieved by storing the images in the `/tmp/resim/outputs` directory in the metrics build and referencing the filenames in the metric.
-
 
 ### Parameters
 
