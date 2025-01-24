@@ -72,6 +72,7 @@ def random_project(state: MockState) -> Project:
         org_id=state.org_id,
         project_id=str(project_id),
         user_id=f"{_random_string()}@{state.org_id}",
+        archived=False,
     )
 
 
