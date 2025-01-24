@@ -27,6 +27,5 @@ bool boxes_collide(
     const OrientedBox<Group> &box_1,
     const OrientedBox<Group> &box_2,
     double collision_tolerance = 1e-4);
-;
 
 }  // namespace resim::geometry
