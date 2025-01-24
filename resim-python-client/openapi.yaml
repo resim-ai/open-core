@@ -23,6 +23,8 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/experienceTagID'
+    archived:
+      type: boolean
     associatedAccount:
       type: string
     batch:
@@ -46,6 +48,8 @@ components:
           $ref: '#/components/schemas/timestamp'
         description:
           type: string
+        executionError:
+          $ref: '#/components/schemas/executionError'
         friendlyName:
           $ref: '#/components/schemas/friendlyName'
         jobMetricsStatusCounts:
@@ -88,8 +92,13 @@ components:
     batchInput:
       type: object
       properties:
+        allowableFailurePercent:
+          type: integer
+          nullable: true
         associatedAccount:
           $ref: '#/components/schemas/associatedAccount'
+        batchName:
+          $ref: '#/components/schemas/name'
         buildID:
           $ref: '#/components/schemas/buildID'
         excludedExperienceIDs:
@@ -299,6 +308,60 @@ components:
       minLength: 1
     checksum:
       type: string
+    compareBatchTest:
+      type: object
+      required:
+      - experienceID
+      - experienceName
+      - fromTest
+      - toTest
+      properties:
+        experienceID:
+          $ref: '#/components/schemas/experienceID'
+        experienceName:
+          $ref: '#/components/schemas/experienceName'
+        fromTest:
+          $ref: '#/components/schemas/compareBatchTestDetails'
+        toTest:
+          $ref: '#/components/schemas/compareBatchTestDetails'
+    compareBatchTestDetails:
+      type: object
+      nullable: true
+      required:
+      - jobID
+      - status
+      - numMetrics
+      properties:
+        jobID:
+          $ref: '#/components/schemas/jobID'
+        numMetrics:
+          type: integer
+          description: The number of failblock/failwarn/passing metrics (based on
+            job's status). Otherwise this will be null
+          nullable: true
+        status:
+          $ref: '#/components/schemas/conflatedJobStatus'
+    compareBatchesOutput:
+      type: object
+      required:
+      - total
+      - nextPageToken
+      - tests
+      properties:
+        nextPageToken:
+          type: string
+        tests:
+          type: array
+          items:
+            $ref: '#/components/schemas/compareBatchTest'
+        total:
+          type: integer
+    compareBatchesStatusFilter:
+      type: string
+      enum:
+      - BOTH_PASSING
+      - BOTH_FAILING
+      - ONE_FAILING
     conflatedJobStatus:
       type: string
       enum:
@@ -466,6 +529,8 @@ components:
           $ref: '#/components/schemas/testSuiteName'
         showOnSummary:
           type: boolean
+        summaryReferenceDate:
+          $ref: '#/components/schemas/timestamp'
         systemID:
           $ref: '#/components/schemas/systemID'
     customMetric:
@@ -559,6 +624,14 @@ components:
     excludedExperienceID:
       type: string
       format: uuid
+    executionError:
+      type: object
+      required:
+      - errorCode
+      properties:
+        errorCode:
+          type: string
+          description: Standardized error code (e.g., UNKNOWN_ERROR, NONZERO_EXIT_CODE)
     executionStep:
       type: string
       enum:
@@ -664,6 +737,25 @@ components:
     fileSize:
       type: integer
       format: int64
+    firstBuildMetric:
+      type: object
+      description: The first batch metric in the sequence, and some info about how
+        it has changed
+      nullable: true
+      required:
+      - time
+      - value
+      - delta
+      properties:
+        delta:
+          type: number
+          format: double
+        time:
+          $ref: '#/components/schemas/timestamp'
+        value:
+          type: number
+          format: double
+          example: -120.234
     friendlyName:
       type: string
     getQuotaOutput:
@@ -695,6 +787,8 @@ components:
           $ref: '#/components/schemas/timestamp'
         description:
           type: string
+        executionError:
+          $ref: '#/components/schemas/executionError'
         experienceID:
           $ref: '#/components/schemas/experienceID'
         experienceName:
@@ -790,6 +884,62 @@ components:
           $ref: '#/components/schemas/jobStatus'
         updatedAt:
           $ref: '#/components/schemas/timestamp'
+    keyMetric:
+      type: object
+      nullable: true
+      required:
+      - name
+      - target
+      - firstBuildMetric
+      - latestValue
+      - unit
+      - performance
+      properties:
+        firstBuildMetric:
+          $ref: '#/components/schemas/firstBuildMetric'
+        latestValue:
+          type: number
+          format: double
+          example: 150
+        name:
+          type: string
+          example: Meal Planning Time
+        performance:
+          type: array
+          items:
+            $ref: '#/components/schemas/keyMetricPerformancePoint'
+        target:
+          $ref: '#/components/schemas/keyMetricTarget'
+        unit:
+          type: string
+          example: Seconds
+          nullable: true
+    keyMetricPerformancePoint:
+      type: object
+      required:
+      - time
+      - value
+      properties:
+        time:
+          $ref: '#/components/schemas/timestamp'
+        value:
+          type: number
+          format: double
+    keyMetricTarget:
+      type: object
+      description: The optional desired target for this metric
+      nullable: true
+      required:
+      - operator
+      - value
+      properties:
+        operator:
+          type: string
+          example: <
+        value:
+          type: number
+          format: double
+          example: 150.1
     lineNumber:
       type: integer
       format: int32
@@ -1150,6 +1300,7 @@ components:
       - MCAP_LOG
       - MP4_LOG
       - ARCHIVE_LOG
+      - FOXGLOVE_MCAP_LOG
     mcapURL:
       type: string
       format: uri
@@ -1397,6 +1548,9 @@ components:
     parameterSweepInput:
       type: object
       properties:
+        allowableFailurePercent:
+          type: integer
+          nullable: true
         associatedAccount:
           $ref: '#/components/schemas/associatedAccount'
         buildID:
@@ -1464,7 +1618,10 @@ components:
       - creationTimestamp
       - userID
       - orgID
+      - archived
       properties:
+        archived:
+          $ref: '#/components/schemas/archived'
         creationTimestamp:
           $ref: '#/components/schemas/timestamp'
         description:
@@ -1480,6 +1637,23 @@ components:
     projectID:
       type: string
       format: uuid
+    referenceBatchSummary:
+      type: object
+      nullable: true
+      required:
+      - fixedTests
+      - newTests
+      - newIssues
+      properties:
+        fixedTests:
+          type: integer
+          format: int64
+        newIssues:
+          type: integer
+          format: int64
+        newTests:
+          type: integer
+          format: int64
     report:
       type: object
       required:
@@ -1564,6 +1738,8 @@ components:
           $ref: '#/components/schemas/metricsBuildID'
         name:
           $ref: '#/components/schemas/name'
+        poolLabels:
+          $ref: '#/components/schemas/poolLabels'
         respectRevisionBoundary:
           $ref: '#/components/schemas/respectRevisionBoundary'
         startTimestamp:
@@ -1735,7 +1911,10 @@ components:
       - creationTimestamp
       - userID
       - orgID
+      - archived
       properties:
+        archived:
+          $ref: '#/components/schemas/archived'
         build_gpus:
           type: integer
         build_memory_mib:
@@ -1816,6 +1995,8 @@ components:
           $ref: '#/components/schemas/projectID'
         showOnSummary:
           type: boolean
+        summaryReferenceDate:
+          $ref: '#/components/schemas/timestamp'
         systemID:
           $ref: '#/components/schemas/systemID'
         testSuiteID:
@@ -1829,8 +2010,13 @@ components:
       required:
       - buildID
       properties:
+        allowableFailurePercent:
+          type: integer
+          nullable: true
         associatedAccount:
           $ref: '#/components/schemas/associatedAccount'
+        batchName:
+          $ref: '#/components/schemas/name'
         buildID:
           $ref: '#/components/schemas/buildID'
         parameters:
@@ -1898,6 +2084,7 @@ components:
       format: uuid
     testSuiteName:
       type: string
+      minLength: 1
     testSuiteRevision:
       type: integer
       format: int32
@@ -1907,10 +2094,13 @@ components:
       - name
       - testSuiteID
       - testSuiteRevision
+      - testSuiteDescription
       - projectID
       - systemID
       - branchID
       - reportID
+      - keyMetric
+      - referenceBatchSummary
       - summary
       - batches
       properties:
@@ -1920,10 +2110,16 @@ components:
             $ref: '#/components/schemas/testSuiteBatchSummaryJobResults'
         branchID:
           $ref: '#/components/schemas/branchID'
+        keyMetric:
+          $ref: '#/components/schemas/keyMetric'
         name:
           $ref: '#/components/schemas/testSuiteName'
         projectID:
           $ref: '#/components/schemas/projectID'
+        referenceBatch:
+          $ref: '#/components/schemas/testSuiteBatchSummaryJobResults'
+        referenceBatchSummary:
+          $ref: '#/components/schemas/referenceBatchSummary'
         reportID:
           $ref: '#/components/schemas/reportID'
         summary:
@@ -1944,6 +2140,8 @@ components:
               format: int64
         systemID:
           $ref: '#/components/schemas/systemID'
+        testSuiteDescription:
+          $ref: '#/components/schemas/testSuiteDescription'
         testSuiteID:
           $ref: '#/components/schemas/testSuiteID'
         testSuiteRevision:
@@ -1977,6 +2175,21 @@ components:
       properties:
         description:
           type: string
+    updateBuildFields:
+      type: object
+      properties:
+        branchID:
+          type: string
+          format: uuid
+        description:
+          type: string
+    updateBuildInput:
+      type: object
+      properties:
+        build:
+          $ref: '#/components/schemas/updateBuildFields'
+        updateMask:
+          $ref: '#/components/schemas/updateMask'
     updateEventInput:
       type: object
       required:
@@ -2289,8 +2502,8 @@ paths:
     delete:
       tags:
       - projects
-      description: Deletes a project.
-      operationId: deleteProject
+      description: Archived a project.
+      operationId: archiveProject
       parameters:
       - name: projectID
         in: path
@@ -2559,6 +2772,57 @@ paths:
       security:
       - OAuth:
         - batches:write
+  /projects/{projectID}/batches/{batchID}/compare/{otherBatchID}:
+    get:
+      tags:
+      - batches
+      description: Get a summary describing how individual tests have changed between
+        the two given batches. A warning or a blocking failure is considered failing
+        from the point of view of filters and ordering.
+      operationId: compareBatches
+      parameters:
+      - name: projectID
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - name: batchID
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/batchID'
+      - name: otherBatchID
+        in: path
+        description: the batch to compare to
+        required: true
+        schema:
+          $ref: '#/components/schemas/batchID'
+      - name: status
+        in: query
+        description: filter tests by their status
+        schema:
+          $ref: '#/components/schemas/compareBatchesStatusFilter'
+      - name: search
+        in: query
+        description: filter tests by their name
+        schema:
+          type: string
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageToken'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/compareBatchesOutput'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - batches:read
   /projects/{projectID}/batches/{batchID}/jobs:
     get:
       tags:
@@ -2599,6 +2863,15 @@ paths:
         description: Filter experiences (in job) by a text string on name and description
         schema:
           type: string
+      - name: experienceTagIDs
+        in: query
+        description: Filter jobs by the tag id(s) attached to the experience
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
       - $ref: '#/components/parameters/pageSize'
       - $ref: '#/components/parameters/pageToken'
       - $ref: '#/components/parameters/orderBy'
@@ -2939,6 +3212,12 @@ paths:
             schema:
               $ref: '#/components/schemas/jobLog'
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jobLog'
         "201":
           description: OK
           content:
@@ -3573,6 +3852,12 @@ paths:
             schema:
               $ref: '#/components/schemas/batchLog'
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/batchLog'
         "201":
           description: OK
           content:
@@ -4495,6 +4780,43 @@ paths:
       security:
       - OAuth:
         - builds:read
+    patch:
+      tags:
+      - builds
+      description: Updates the build.
+      operationId: updateBuild
+      parameters:
+      - name: projectID
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - name: buildID
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/buildID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateBuildInput'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/build'
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - builds:write
   /projects/{projectID}/builds/accounts:
     get:
       tags:
@@ -6576,8 +6898,8 @@ paths:
     delete:
       tags:
       - systems
-      description: Deletes a system.
-      operationId: deleteSystem
+      description: Archives a system.
+      operationId: archiveSystem
       parameters:
       - name: projectID
         in: path
