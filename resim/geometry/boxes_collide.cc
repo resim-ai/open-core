@@ -4,11 +4,12 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#include "resim/geometry/boxes_collide.hh"
+
 #include <Eigen/Dense>
 
 #include "resim/assert/assert.hh"
 #include "resim/geometry/box_box_distance.hh"
-#include "resim/geometry/boxes_collide.hh"
 #include "resim/geometry/gjk_algorithm.hh"
 #include "resim/transforms/se3.hh"
 
