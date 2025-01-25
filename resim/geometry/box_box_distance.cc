@@ -25,7 +25,7 @@ Vec3 box_support(const OrientedBox<Group> &box, const Vec3 &direction) {
   const Vec3 direction_in_box_coordinates{
       box.reference_from_box().rotation().inverse() * direction};
 
-  const Vec3 support_in_box_coordinates{direction.binaryExpr(
+  const Vec3 support_in_box_coordinates{direction_in_box_coordinates.binaryExpr(
       box.extents(),
       [](const double direction_element, const double extents_element) {
         constexpr double HALF = 0.5;

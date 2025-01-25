@@ -94,6 +94,19 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "box_box_distance_test",
+    srcs = ["box_box_distance_test.cc"],
+    deps = [
+        ":boxes_collide",
+        "//resim/assert",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
 cc_library(
     name = "boxes_collide",
     srcs = ["boxes_collide.cc"],
