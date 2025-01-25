@@ -4,13 +4,14 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#include "resim/geometry/box_box_distance.hh"
+
 #include <gtest/gtest.h>
 
 #include <Eigen/Dense>
 
 #include "oriented_box.hh"
 #include "resim/assert/assert.hh"
-#include "resim/geometry/box_box_distance.hh"
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"
 namespace resim::geometry {
