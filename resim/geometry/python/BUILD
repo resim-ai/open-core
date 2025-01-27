@@ -43,7 +43,7 @@ py_test(
     srcs = ["oriented_box_python_test.py"],
     deps = [
         "//resim/geometry/python:oriented_box_python",
+        "//resim/transforms/python:se3_python.so",
         requirement("numpy"),
-        "//resim/transforms/python:se3_python",
     ],
 )
