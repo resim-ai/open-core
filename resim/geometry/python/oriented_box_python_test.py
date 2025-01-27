@@ -19,8 +19,35 @@ import resim.transforms.python.se3_python as se3
 class OrientedBoxPythonTest(unittest.TestCase):
     """Unit tests for Oriented Box pybinding"""
 
-    def oriented_box_test(self) -> None:
-        se3 = se3.SE3.identity()
+    def test_constructor(self) -> None:
+        # SETUP
+        DIM = 3
+        reference_from_box = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
+        extents = np.random.rand(DIM)
+
+        # ACTION
+        box = oribox.OrientedBox(reference_from_box, extents)
+
+        # VERIFICATION
+        self.assertTrue(reference_from_box.is_approx(box.reference_from_box()))
+        np.testing.assert_allclose(extents, box.extents())
+
+    def test_setters(self) -> None:
+        # SETUP
+        DIM = 3
+        reference_from_box = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
+        extents = np.random.rand(DIM)
+        box = oribox.OrientedBox(reference_from_box, extents)
+
+        # ACTION
+        new_reference_from_box = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
+        new_extents = np.random.rand(DIM)
+        box.set_reference_from_box(new_reference_from_box)
+        box.set_extents(new_extents)
+
+        # VERIFICATION
+        self.assertTrue(new_reference_from_box.is_approx(box.reference_from_box()))
+        np.testing.assert_allclose(new_extents, box.extents())
 
 
 if __name__ == "__main__":
