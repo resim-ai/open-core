@@ -44,5 +44,6 @@ py_test(
     deps = [
         "//resim/geometry/python:oriented_box_python",
         requirement("numpy"),
+        "//resim/transforms/python:se3_python",
     ],
 )
