@@ -26,7 +26,7 @@ class OrientedBoxPythonTest(unittest.TestCase):
         extents = np.random.rand(DIM)
 
         # ACTION
-        box = oribox.OrientedBox(reference_from_box, extents)
+        box = oribox.OrientedBox(reference_from_box=reference_from_box, extents=extents)
 
         # VERIFICATION
         self.assertTrue(reference_from_box.is_approx(box.reference_from_box()))
@@ -37,7 +37,7 @@ class OrientedBoxPythonTest(unittest.TestCase):
         DIM = 3
         reference_from_box = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
         extents = np.random.rand(DIM)
-        box = oribox.OrientedBox(reference_from_box, extents)
+        box = oribox.OrientedBox(reference_from_box=reference_from_box, extents=extents)
 
         # ACTION
         new_reference_from_box = se3.SE3.exp(np.random.rand(se3.SE3.DOF))
