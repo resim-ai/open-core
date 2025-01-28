@@ -15,6 +15,7 @@
 #include "resim/planning/ilqr.hh"
 #include "resim/time/timestamp.hh"
 #include "resim/utils/double_buffer.hh"
+#include "state/observable_state.hh"
 
 namespace resim::actor {
 
@@ -46,6 +47,9 @@ class ILQRDrone : public Actor {
   // Get the current time
   time::Timestamp current_time() const override;
 
+  void observe_states(
+      const std::vector<state::ObservableState> &states) override;
+
  private:
   using State = planning::drone::State;
   using Control = planning::drone::Control;
@@ -64,6 +68,7 @@ class ILQRDrone : public Actor {
   time::Timestamp current_time_;
 
   State state_;
+  std::vector<state::ObservableState> avoidance_states_;
   planning::ILQR<State, Control> ilqr_;
   std::vector<State> state_trajectory_;
   DoubleBuffer<std::vector<Control>> control_trajectory_;

@@ -19,10 +19,11 @@ struct State {
     POSITION,
     ANGULAR_VELOCITY,
     VELOCITY,
+    TIME,
     NUM_BLOCKS,
   };
 
-  using Partition = resim::math::VectorPartition<3, 3, 3, 3>;
+  using Partition = resim::math::VectorPartition<3, 3, 3, 3, 1>;
 
   static constexpr int DIM = math::OffsetAt<Partition, NUM_BLOCKS>::value;
   using Vec = Eigen::Matrix<double, DIM, 1>;
@@ -33,6 +34,7 @@ struct State {
   Eigen::Vector3d position;
   Eigen::Vector3d angular_velocity;
   Eigen::Vector3d velocity;
+  Eigen::Matrix<double, 1, 1> time;
 };
 
 State operator+(const State &x, const typename State::Vec &dx);
