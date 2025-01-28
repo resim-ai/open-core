@@ -25,7 +25,7 @@ PYBIND11_MODULE(oriented_box_python, m) {
       .def(
           py::init<SE3, Eigen::Vector3d>(),
           py::arg("reference_from_box"),
-          py::arg("translation"))
+          py::arg("extents"))
       .def("reference_from_box", &OrientedBox<SE3>::reference_from_box)
       .def("extents", &OrientedBox<SE3>::extents)
       .def("set_reference_from_box", &OrientedBox<SE3>::set_reference_from_box)
