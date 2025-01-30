@@ -80,10 +80,39 @@ cc_test(
 )
 
 cc_library(
+    name = "box_box_distance",
+    srcs = ["box_box_distance.cc"],
+    hdrs = ["box_box_distance.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gjk_algorithm",
+        ":oriented_box",
+        "//resim/assert",
+        "//resim/transforms:liegroup_concepts",
+        "//resim/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "box_box_distance_test",
+    srcs = ["box_box_distance_test.cc"],
+    deps = [
+        ":boxes_collide",
+        "//resim/assert",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "boxes_collide",
     srcs = ["boxes_collide.cc"],
     hdrs = ["boxes_collide.hh"],
     deps = [
+        ":box_box_distance",
         ":gjk_algorithm",
         ":oriented_box",
         "//resim/assert",

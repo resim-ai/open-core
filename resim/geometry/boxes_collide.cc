@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 
 #include "resim/assert/assert.hh"
+#include "resim/geometry/box_box_distance.hh"
 #include "resim/geometry/gjk_algorithm.hh"
 #include "resim/transforms/se3.hh"
 
@@ -17,29 +18,6 @@ namespace resim::geometry {
 namespace {
 using Vec3 = Eigen::Vector3d;
 using transforms::LieGroupType;
-
-// This helper represents the support function for a simple oriented box
-template <LieGroupType Group>
-Vec3 box_support(const OrientedBox<Group> &box, const Vec3 &direction) {
-  REASSERT(not direction.isZero(), "Zero direction detected!");
-  const Vec3 direction_in_box_coordinates{
-      box.reference_from_box().rotation().inverse() * direction};
-
-  const Vec3 support_in_box_coordinates{direction.binaryExpr(
-      box.extents(),
-      [](const double direction_element, const double extents_element) {
-        constexpr double HALF = 0.5;
-        constexpr double ZERO = 0.;
-        return extents_element *
-               (direction_element > 0.
-                    ? HALF
-                    : (direction_element < 0. ? -HALF : ZERO));
-      })};
-
-  Vec3 support_in_ref_coordinates{
-      box.reference_from_box() * support_in_box_coordinates};
-  return support_in_ref_coordinates;
-}
 
 // This simple helper detects whether the bounding spheres of the
 // given bounding boxes collide within the given collision tolerance.
@@ -76,20 +54,7 @@ bool boxes_collide(
   if (not bounding_spheres_collide(box_1, box_2, collision_tolerance)) {
     return false;
   }
-  constexpr int DIM = 3;
-  const SupportFunction<DIM> support_1{[&](const Vec3 &direction) -> Vec3 {
-    return box_support(box_1, direction);
-  }};
-  const SupportFunction<DIM> support_2{[&](const Vec3 &direction) -> Vec3 {
-    return box_support(box_2, direction);
-  }};
-
-  const std::optional<double> maybe_box_box_distance =
-      gjk_algorithm(support_1, support_2);
-
-  REASSERT(maybe_box_box_distance.has_value(), "GJK Algorithm Failed!");
-
-  return *maybe_box_box_distance < collision_tolerance;
+  return box_box_distance(box_1, box_2) < collision_tolerance;
 }
 
 template bool boxes_collide(
