@@ -73,6 +73,7 @@ py_package(
 pkg_files(
     name = "resim_package_stubs",
     srcs = [
+        "//resim/geometry/python:oriented_box_python.stubs",
         "//resim/geometry/python:polygon_distance_python.stubs",
         "//resim/transforms/python:geodetic_python.stubs",
         "//resim/transforms/python:quaternion.stubs",

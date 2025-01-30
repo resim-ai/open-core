@@ -27,3 +27,23 @@ py_test(
         requirement("numpy"),
     ],
 )
+
+pybind_extension(
+    name = "oriented_box_python",
+    srcs = ["oriented_box_python.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/geometry:oriented_box",
+        "//resim/transforms/python:se3_python.so",
+    ],
+)
+
+py_test(
+    name = "oriented_box_python_test",
+    srcs = ["oriented_box_python_test.py"],
+    deps = [
+        "//resim/geometry/python:oriented_box_python",
+        "//resim/transforms/python:se3_python.so",
+        requirement("numpy"),
+    ],
+)
