@@ -4,12 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include "resim/actor/ilqr_drone.hh"
-
 #include <algorithm>
 #include <iostream>
 #include <iterator>
 
+#include "resim/actor/ilqr_drone.hh"
 #include "resim/actor/state/rigid_body_state.hh"
 #include "resim/math/vector_partition.hh"
 #include "resim/planning/cost_building_blocks.hh"
@@ -173,7 +172,7 @@ CostFunctionRegistry make_cost(
          NullableReference<planning::CostDiffs<State, Control>> diffs) {
         auto cost_result = quadratic_cost<3>(
             x.velocity,
-            0.06 * Eigen::Matrix3d::Identity(),
+            0.1 * Eigen::Matrix3d::Identity(),
             diffs.has_value() ? ComputeDiffs::YES : ComputeDiffs::NO);
 
         if (diffs.has_value()) {
