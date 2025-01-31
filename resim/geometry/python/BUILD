@@ -47,3 +47,23 @@ py_test(
         requirement("numpy"),
     ],
 )
+
+pybind_extension(
+    name = "box_box_distance_python",
+    srcs = ["box_box_distance_python.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":oriented_box_python.so",
+        "//resim/geometry:box_box_distance",
+    ],
+)
+
+py_test(
+    name = "box_box_distance_python_test",
+    srcs = ["box_box_distance_python_test.py"],
+    deps = [
+        "//resim/geometry/python:box_box_distance_python",
+        "//resim/transforms/python:se3_python.so",
+        requirement("numpy"),
+    ],
+)
