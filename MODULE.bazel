@@ -1,6 +1,6 @@
 module(
     name = "resim_open_core",
-    version = "0.3.3",
+    version = "0.6.2",
 )
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.7.8")
