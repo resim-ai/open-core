@@ -85,7 +85,7 @@ cc_library(
     name = "transform_from_ros2",
     srcs = ["transform_from_ros2.cc"],
     hdrs = ["transform_from_ros2.hh"],
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_from_ros2",
         "//resim/msg:transform_proto_cc",
@@ -116,6 +116,7 @@ cc_library(
     name = "pose_from_ros2",
     srcs = ["pose_from_ros2.cc"],
     hdrs = ["pose_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
         "//resim/msg:pose_proto_cc",
@@ -143,6 +144,7 @@ cc_library(
     name = "point_from_ros2",
     srcs = ["point_from_ros2.cc"],
     hdrs = ["point_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         "//resim/transforms:framed_vector",
         "//resim/transforms/proto:framed_vector_3_proto_cc",
@@ -169,7 +171,7 @@ cc_library(
     name = "odometry_from_ros2",
     srcs = ["odometry_from_ros2.cc"],
     hdrs = ["odometry_from_ros2.hh"],
-    visibility = ["//resim/ros2:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_from_ros2",
         ":pose_from_ros2",
@@ -193,6 +195,7 @@ cc_library(
     name = "oriented_box_from_ros2",
     srcs = ["oriented_box_from_ros2.cc"],
     hdrs = ["oriented_box_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":pose_from_ros2",
         "//resim/assert",
@@ -217,6 +220,7 @@ cc_library(
     name = "detection_from_ros2",
     srcs = ["detection_from_ros2.cc"],
     hdrs = ["detection_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_from_ros2",
         ":oriented_box_from_ros2",
@@ -240,6 +244,7 @@ cc_library(
     name = "navsat_from_ros2",
     srcs = ["navsat_from_ros2.cc"],
     hdrs = ["navsat_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":header_from_ros2",
         "//resim/assert",
@@ -355,6 +360,7 @@ cc_library(
     name = "resim_log_from_ros2",
     srcs = ["resim_log_from_ros2.cc"],
     hdrs = ["resim_log_from_ros2.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":converter_plugin",
         "//resim/assert",
