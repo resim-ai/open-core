@@ -9,15 +9,13 @@ import argparse
 import base64
 import hashlib
 import json
-import os
 import re
-import tempfile
 from pathlib import Path
 
 import httpx
 
 
-def generate_sha256_hash(url):
+def generate_sha256_hash(url: str) -> str:
     with httpx.Client(follow_redirects=True) as client:
         response = client.get(url)
         response.raise_for_status()
@@ -38,7 +36,8 @@ def main():
 
     version = args.version.removeprefix("v")
 
-    # Verify that the args all make sense and the right directories exist / don't exist
+    # Verify that the args all make sense and the right directories exist /
+    # don't exist
     module_path = args.registry_dir / "modules" / "resim_open_core"
     assert module_path.is_dir(), "Bad module path!"
 
@@ -74,7 +73,10 @@ def main():
 
         # Replace the old version with the new one
         return re.sub(
-            pattern, f"\g<1>{version}\g<3>", module_str.decode("utf-8"), flags=re.DOTALL
+            pattern,
+            rf"\g<1>{version}\g<3>",
+            module_str.decode("utf-8"),
+            flags=re.DOTALL,
         )
 
     # Fetch the relevant MODULE.bazel and write it to the registry, updating its version
