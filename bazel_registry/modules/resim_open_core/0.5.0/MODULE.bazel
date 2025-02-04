@@ -1,6 +1,6 @@
 module(
     name = "resim_open_core",
-    version = "0.6.2",
+    version = "0.5.0",
 )
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.7.8")
@@ -65,13 +65,6 @@ pip.parse(
     requirements_lock = "@resim_open_core//resim-python-client:requirements_lock.txt",
 )
 use_repo(pip, "resim_python_client_deps")
-
-pip.parse(
-    hub_name = "resim_python_client_dev_deps",
-    python_version = "3.10",
-    requirements_lock = "@resim_open_core//resim-python-client:requirements-dev_lock.txt",
-)
-use_repo(pip, "resim_python_client_dev_deps")
 
 register_toolchains(
     "@resim_open_core//resim/toolchain:cc_toolchain_for_k8",
