@@ -24,7 +24,7 @@ def generate_sha256_hash(url: str) -> str:
     return f"sha256-{base64_encoded}"
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="update_open_core", description="Update the entries for open core"
     )
@@ -63,11 +63,14 @@ def main():
         json.dump(source, fp)
 
     # Step 2: Add the MODULE.bazel
-    module_url = f"https://raw.githubusercontent.com/resim-ai/open-core/refs/tags/v{version}/MODULE.bazel"
+    module_url = (
+        "https://raw.githubusercontent.com/"
+        + f"resim-ai/open-core/refs/tags/v{version}/MODULE.bazel"
+    )
 
     # We haven't been that good at keeping the version up to date in our MODULE.bazel, so patch it
     # when writing the MODULE.bazel
-    def update_version(module_str):
+    def update_version(module_str: bytes) -> str:
         # Regex pattern to find the version inside the module block
         pattern = r'(module\s*\(\s*[^)]*?version\s*=\s*")([\d\.]+)(")'
 
