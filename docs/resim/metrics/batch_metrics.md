@@ -21,9 +21,12 @@ The batch metrics config (as provided to the batch metrics run on launch) is a s
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
-  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
+  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee",
+  "projectID": "6133c1a9-b6d8-41fb-b7d7-44f1889511dd"
 }
 ```
+
+> NOTE: If you're wanting to develop locally, you can retrieve your authToken from [https://app.resim.ai/debug] in the `auth.bearer` field.
 
 These fields should be used to retrieve the test-level metrics and metrics data associated with a batch, and these should be used to compute batch-level metrics. We provide code to do this in [open-core](https://github.com/resim-ai/open-core/tree/main/resim/metrics), in combination with some code snippets below.
 
