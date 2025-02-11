@@ -35,12 +35,15 @@ First you can read the config in using the following snippet:
 ```python
 import json 
 
+BATCH_METRICS_CONFIG_PATH = "/tmp/resim/inputs/batch_metrics_config.json"
+
 with open(BATCH_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
     metrics_config = json.load(metrics_config_file)
 
-token=metrics_config["authToken"],
-api_url=metrics_config["apiURL"],
-batch_id=metrics_config["batchID"],
+token=metrics_config["authToken"]
+api_url=metrics_config["apiURL"]
+batch_id=metrics_config["batchID"]
+project_id=metrics_config["projectID"]
 ```
 
 Once these are loaded, you can download the metrics using our `fetch_job_metrics` Python package.
@@ -48,7 +51,7 @@ Once these are loaded, you can download the metrics using our `fetch_job_metrics
 ```python
 import resim.metrics.fetch_job_metrics as fjm
 
-job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token, api_url, uuid.UUID(batchID))
+job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token=token, api_url=api_url, project_id=uuid.UUID(project_id), batch_id=uuid.UUID(batchID))
 ```
 
 The result maps job IDs to `UnpackedMetrics` - this is a simple `dataclass` with three fields:
