@@ -18,10 +18,11 @@ RESIM_GREEN = "#D3FAA3"
 RESIM_PURPLE = "#D6B9FC"
 RESIM_ORANGE = "#FFC195"
 RESIM_TURQUOISE = "#ACFCEE"
-ERROR_RED = "#EF6666"
+ERROR_RED = "#AD4143"  # roughly equivalent to #CE4747 80% on #3A3A44
 PASSED_BLUE = "#7CA0FB"
 WARNING_ORANGE = "#FFAC70"
 GRIDCOLOR_GRAY = "#3A3A44"
+BLOCKING_RED = "#FA7070"
 
 
 def resim_plotly_style(fig: Figure, **kwargs: Any) -> None:
@@ -67,7 +68,7 @@ resim_colors = [
 
 
 resim_status_color_map = {
-    ConflatedJobStatus.BLOCKER: ERROR_RED,
+    ConflatedJobStatus.BLOCKER: BLOCKING_RED,
     ConflatedJobStatus.CANCELLED: RESIM_PINK,
     ConflatedJobStatus.ERROR: ERROR_RED,
     ConflatedJobStatus.PASSED: PASSED_BLUE,
