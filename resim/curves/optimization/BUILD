@@ -68,3 +68,17 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "pose_error_model",
+    srcs = ["pose_error_model.cc"],
+    hdrs = ["pose_error_model.hh"],
+    deps = [
+        ":t_curve_differential",
+        "//resim/transforms:se3",
+        "//resim/curves:t_curve",
+        "//resim/math:gauss_newton_optimizer",
+        "@libeigen//:eigen",
+
+    ],
+)
