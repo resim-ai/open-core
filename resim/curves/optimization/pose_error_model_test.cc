@@ -148,7 +148,6 @@ void save_visualization_log(
   }
   logger.log_proto("observations", start_time, poses);
 
-  constexpr double DT = 1e-2;
   ::foxglove::SceneUpdate update;
   auto &entity = *update.add_entities();
   resim::time::proto::pack(start_time, entity.mutable_timestamp());
@@ -163,9 +162,13 @@ void save_visualization_log(
   visualization::foxglove::pack_into_foxglove(
       visualization::colors::PERU,
       line.mutable_color());
-  for (double t = t_curve.start_time(); t < t_curve.end_time(); t += DT) {
+  constexpr auto DT = 10ms;
+  for (auto t = start_time; t < end_time; t += DT) {
     visualization::foxglove::pack_into_foxglove(
-        t_curve.point_at(t).frame_from_ref().inverse().translation(),
+        t_curve.point_at(time::as_seconds(t.time_since_epoch()))
+            .frame_from_ref()
+            .inverse()
+            .translation(),
         line.add_points());
   }
   logger.log_proto("t_curve_path", start_time, update);
@@ -188,9 +191,11 @@ void save_visualization_log(
 
 TEST(PoseErrorModelTest, TestOptimizeComplex) {
   // SETUP
+  constexpr int MAX_ITERATIONS = 100;
+  constexpr double TOLERANCE = 1e-4;
   math::GaussNewtonOptimizer optimizer{math::GaussNewtonOptimizer::Options{
-      .max_iterations = 100,
-      .tolerance = 1e-4,
+      .max_iterations = MAX_ITERATIONS,
+      .tolerance = TOLERANCE,
   }};
   const std::string key = "trajectory";
   constexpr std::size_t SEED = 893U;
@@ -204,7 +209,6 @@ TEST(PoseErrorModelTest, TestOptimizeComplex) {
     const double t = ELAPSED_TIME * static_cast<double>(ii) / (NUM_POSES - 1);
     const double x = LONG_SPEED * t;
     const double y = std::sin(M_PI * x / 4.0);
-    std::cout << x << ", " << y << std::endl;
     const double theta = std::atan2(M_PI * std::cos(M_PI * x / 4.0) / 4.0, 1.0);
 
     // Create observations with noise
