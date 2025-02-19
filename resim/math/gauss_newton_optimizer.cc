@@ -109,7 +109,8 @@ GaussNewtonOptimizer::Result GaussNewtonOptimizer::optimize() {
 
     error_jacobian.setFromTriplets(
         error_jacobian_triplets.cbegin(),
-        error_jacobian_triplets.cend());
+        error_jacobian_triplets.cend(),
+        [](const double a, const double b) { return a + b; });
 
     const SpMat JTJ = error_jacobian.transpose() * error_jacobian;
     Eigen::SimplicialCholesky<SpMat> chol(

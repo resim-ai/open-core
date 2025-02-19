@@ -70,15 +70,41 @@ cc_test(
 )
 
 cc_library(
+    name = "control_point_parameter",
+    srcs = ["control_point_parameter.cc"],
+    hdrs = ["control_point_parameter.hh"],
+    deps = [
+        ":two_jet_tangent_space",
+        "//resim/curves:t_curve",
+        "//resim/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
     name = "pose_error_model",
     srcs = ["pose_error_model.cc"],
     hdrs = ["pose_error_model.hh"],
     deps = [
+        ":control_point_parameter",
         ":t_curve_differential",
-        "//resim/transforms:se3",
+        "//resim/assert",
         "//resim/curves:t_curve",
         "//resim/math:gauss_newton_optimizer",
+        "//resim/transforms:se3",
         "@libeigen//:eigen",
+    ],
+)
 
+cc_test(
+    name = "pose_error_model_test",
+    srcs = ["pose_error_model_test.cc"],
+    deps = [
+        ":control_point_parameter",
+        ":pose_error_model",
+        ":two_jet_tangent_space",
+        "//resim/transforms:se3",
+        "@com_google_googletest//:gtest_main",
+        "@libeigen//:eigen",
     ],
 )

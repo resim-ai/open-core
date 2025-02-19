@@ -4,7 +4,10 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#pragma once
+
 #include <Eigen/Dense>
+#include <string>
 #include <utility>
 
 #include "resim/math/gauss_newton_optimizer.hh"
@@ -13,14 +16,16 @@
 namespace resim::curves::optimization {
 
 struct TimedPose {
-  double time = 0;
+  double time = 0.0;
+  transforms::SE3 observation_from_scene;
 };
 
 class PoseErrorModel : public math::ErrorModel {
  public:
-  PoseErrorModel(const int num_points, std::vector<TimedPose> poses)
-      : num_points_{num_points},
-        poses_{std::move(poses)} {}
+  PoseErrorModel(
+      const math::GaussNewtonOptimizer &optimizer,
+      std::string key,
+      std::vector<TimedPose> poses);
 
   int dof() const override;
 
@@ -29,7 +34,8 @@ class PoseErrorModel : public math::ErrorModel {
       const JacobianWriter &error_jacobian_writer) const override;
 
  private:
-  int num_points_;
+  const math::GaussNewtonOptimizer &optimizer_;
+  std::string key_;
   std::vector<TimedPose> poses_;
 };
 
