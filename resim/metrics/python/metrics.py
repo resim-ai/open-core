@@ -35,6 +35,7 @@ from google.protobuf.json_format import Parse
 from google.protobuf.struct_pb2 import Struct
 
 import resim.metrics.proto.metrics_pb2 as metrics_proto
+from resim.metrics.python.emissions import emit, is_jsonable
 from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
     HistogramBucket,
@@ -329,6 +330,15 @@ class ScalarMetric(Metric["ScalarMetric"]):
         if self.unit is not None:
             metric_values.unit = self.unit
 
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+
+        emit(self.name, {"value": self.value, "unit": self.unit})
+        
+        ###################
+        # END V2 EMISSIONS
+        ###################
         return msg
 
     def recursively_pack_into(
@@ -1452,6 +1462,15 @@ class PlotlyMetric(Metric["PlotlyMetric"]):
             Parse(self.plotly_data, struct_proto)
             metric_values.json.CopyFrom(struct_proto)
 
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+
+        emit(self.name, {"plotly": self.plotly_data})
+
+        ###################
+        # END V2 EMISSIONS
+        ###################
         return msg
 
     def recursively_pack_into(
@@ -1642,6 +1661,15 @@ class TextMetric(Metric["TextMetric"]):
         metric_values = msg.metric_values.text_metric_values
         metric_values.text = self.text
 
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+
+        emit(self.name, {"text": self.text})
+
+        ###################
+        # END V2 EMISSIONS
+        ###################
         return msg
 
     def recursively_pack_into(
@@ -1893,6 +1921,37 @@ class SeriesMetricsData(MetricsData["SeriesMetricsData"]):
         msg.series.CopyFrom(series)
         msg.data_type = data_type
 
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+
+        is_timestamp_index = (
+            msg.is_indexed and
+            self.index_data is not None and
+            self.index_data.series is not None and
+            isinstance(self.index_data.series[0], Timestamp)
+        )
+
+        emission_data = {
+            "values": list(self.series)
+        }
+        timestamps = None
+        if is_timestamp_index:
+            timestamps = list(self.index_data.series)
+        elif msg.is_indexed:
+            emission_data["index"] = list(self.index_data.series)
+
+        for k, v in emission_data.items():
+            if not is_jsonable(v[0]):
+                print(f"Skipping {self.name} emission: All data values must be JSON serializable, found {type(v[0])} for key {k}")
+                return msg
+
+        emit(self.name, emission_data, timestamps=timestamps)
+
+        ###################
+        # END V2 EMISSIONS
+        ###################
+
         return msg
 
     def recursively_pack_into(
@@ -2006,6 +2065,31 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
         assert len(data_types) == 1, f"Invalid number of data types: {len(data_types)}"
         msg.data_type = data_types.pop()
 
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+        
+        is_timestamp_index = msg.is_indexed and self.index_data.series is not None and isinstance(self.index_data.series[0], Timestamp)
+        emission_data = {
+            cat: list(self.category_to_series[cat]) for cat in categories
+        }
+        timestamps = None
+        if is_timestamp_index:
+            timestamps = list(self.index_data.series)
+        else:
+            emission_data["index"] = list(self.index_data.series)
+
+        for k, v in emission_data.items():
+            if not is_jsonable(v[0]):
+                print(f"Skipping {self.name} emission: All data values must be JSON serializable, found {type(v[0])} for key {k}")
+                return msg
+
+        emit(self.name, emission_data, timestamps=timestamps)
+
+        ###################
+        # END V2 EMISSIONS
+        ###################
+
         return msg
 
     def recursively_pack_into(
@@ -2040,6 +2124,20 @@ class ExternalFileMetricsData(BaseMetricsData["ExternalFileMetricsData"]):
         external_file = metrics_proto.ExternalFile()
         external_file.path = self.filename
         msg.external_file.CopyFrom(external_file)
+
+        #####################
+        # BEGIN V2 EMISSIONS
+        #####################
+        
+        emission_data = {
+            "path": self.filename
+        }
+
+        emit(self.name, emission_data)
+
+        ###################
+        # END V2 EMISSIONS
+        ###################
 
         return msg
 
