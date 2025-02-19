@@ -47,13 +47,17 @@ void PoseErrorModel::operator()(
   for (std::size_t ii = 0U; ii < poses_.size(); ++ii) {
     const auto &pose = poses_.at(ii);
 
-    const auto next_it = std::upper_bound(
+    auto next_it = std::upper_bound(
         t_curve_control_block.data.cbegin(),
         t_curve_control_block.data.cend(),
         pose.time,
         [](const double time, const ControlPointParameter &p) {
           return time < p.value.time;
         });
+
+    if (next_it == t_curve_control_block.data.cend()) {
+      --next_it;
+    }
     const auto prev_it = std::prev(next_it);
 
     const auto point = point_at<SE3>(pose.time, prev_it->value, next_it->value);

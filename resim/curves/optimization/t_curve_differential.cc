@@ -6,6 +6,8 @@
 
 #include "resim/curves/optimization/t_curve_differential.hh"
 
+#include <iostream>
+
 #include "resim/assert/assert.hh"
 #include "resim/curves/optimization/two_jet_tangent_space.hh"
 #include "resim/curves/quintic_poly_coeffs.hh"

@@ -7,6 +7,7 @@
 #include "resim/math/gauss_newton_optimizer.hh"
 
 #include <Eigen/Sparse>
+#include <iostream>
 #include <limits>
 #include <utility>
 
