@@ -44,16 +44,14 @@ We would read these in, and as always, we'd output any metrics we want to `/tmp/
 
 ## Batch Mode computation
 
-> WARNING:
-> The information here represents the current status of the batch metrics worker which is not final. We will improve the system by making it more generic and automated in the future
-
 If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in `batch mode`! This file should look something like this:
 
 ```json
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
-  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
+  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee",
+  "projectID": "6133c1a9-b6d8-41fb-b7d7-44f1889511dd"
 }
 ```
 
@@ -65,9 +63,6 @@ These four things will be used to retrieve the metrics data associated from test
 
 
 ## Report Mode Computation
-
-!!! Warning
-    The information here represents the current status of the report metrics worker which is not final. We will improve the system by making it more generic and automated in the future
 
 If the file `/tmp/resim/inputs/report_config.json` is present, we are in `report mode`! This file should look something like this:
 
