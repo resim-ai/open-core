@@ -162,17 +162,17 @@ class ResimMetricsWriter:
         return metrics_data
 
     def write(
-        self, metrics_status_override: typing.Optional[MetricStatus] = None
+        self, metrics_status_override: typing.Optional[MetricStatus] = None, emit_metrics_data: bool = True
     ) -> ResimMetricsOutput:
         output = ResimMetricsOutput()
 
         for i, metric in enumerate(self.metrics.values()):
             if metric.order is None:
                 metric.order = float(i)
-            metric.recursively_pack_into(output)
+            metric.recursively_pack_into(output, emit_metrics_data)
 
         for metric_data in self.metrics_data.values():
-            metric_data.recursively_pack_into(output)
+            metric_data.recursively_pack_into(output, emit_metrics_data)
 
         for event in self.events.values():
             event.recursively_pack_into(output)
