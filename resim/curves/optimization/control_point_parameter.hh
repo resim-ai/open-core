@@ -14,6 +14,9 @@
 
 namespace resim::curves::optimization {
 
+// A simple struct containing a TCurve<SE3>::Control and giving it the DOF
+// parameter and accumulate() function required by
+// resim::math::GaussNewtonOptimizer.
 struct ControlPointParameter {
   static constexpr int DOF = TWO_JET_DOF<transforms::SE3>;
 

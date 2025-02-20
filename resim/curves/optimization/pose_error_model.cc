@@ -7,7 +7,6 @@
 #include "resim/curves/optimization/pose_error_model.hh"
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 
 #include "resim/assert/assert.hh"
@@ -48,6 +47,7 @@ void PoseErrorModel::operator()(
         return a.value.time < b.value.time;
       }));
 
+  // Add each pose's error independently
   for (std::size_t ii = 0U; ii < poses_.size(); ++ii) {
     const auto &pose = poses_.at(ii);
 
@@ -58,6 +58,7 @@ void PoseErrorModel::operator()(
         pose.time <= t_curve_control_block.data.back().value.time,
         "Pose time outside of parameter block range");
 
+    // Get the next and previous control points around this observation.
     auto next_it = std::upper_bound(
         t_curve_control_block.data.cbegin(),
         t_curve_control_block.data.cend(),
@@ -71,28 +72,33 @@ void PoseErrorModel::operator()(
     }
     const auto prev_it = std::prev(next_it);
 
+    // Evaluate the TCurve and differentials
     const auto point = point_at<SE3>(pose.time, prev_it->value, next_it->value);
 
-    const auto idx = [&t_curve_control_block](const auto it) {
-      return static_cast<int>(
-          std::distance(t_curve_control_block.data.cbegin(), it));
-    };
-
+    // Get the offset of this pose's error in the overall error vector.
     const int offset = static_cast<int>(ii * SE3::DOF);
 
+    // Populate the error
     error_block.segment<SE3::DOF>(offset) =
         (pose.observation_from_scene * point.point.frame_from_ref().inverse())
             .log();
 
+    // Write the Jacobian block for this pose:
+    const auto idx = [&t_curve_control_block](const auto it) {
+      return static_cast<int>(
+          std::distance(t_curve_control_block.data.cbegin(), it));
+    };
     const int prev_idx = idx(prev_it);
     const int next_idx = idx(next_it);
     for (int jj = 0U; jj < SE3::DOF; ++jj) {
       for (int kk = 0U; kk < TWO_JET_DOF<SE3>; ++kk) {
+        // Jacobian w.r.t. previous point
         error_jacobian_writer(
             key_,
             offset + jj,
-            prev_idx * static_cast<int>(TWO_JET_DOF<SE3>) + kk,
+            prev_idx * TWO_JET_DOF<SE3> + kk,
             point.d_prev(jj, kk));
+        // Jacobian w.r.t. next point
         error_jacobian_writer(
             key_,
             offset + jj,
