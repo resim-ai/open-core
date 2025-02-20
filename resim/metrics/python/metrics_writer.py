@@ -16,6 +16,7 @@ from resim.metrics.python.metrics import (
     BarChartMetric,
     BaseMetricsData,
     BaseMetricsDataT,
+    BatchwiseBarChartMetric,
     DoubleOverTimeMetric,
     DoubleSummaryMetric,
     Event,
@@ -153,6 +154,11 @@ class ResimMetricsWriter:
 
     def add_text_metric(self, name: str) -> TextMetric:
         metric = TextMetric(name=name, parent_job_id=self.job_id)
+        self.add_metric(metric)
+        return metric
+
+    def add_batchwise_bar_chart_metric(self, name: str) -> BatchwiseBarChartMetric:
+        metric = BatchwiseBarChartMetric(name=name, parent_job_id=self.job_id)
         self.add_metric(metric)
         return metric
 
