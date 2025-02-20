@@ -419,8 +419,8 @@ async def fetch_and_compute_metrics(
 def to_resim_timestamp(ts: pd.Timestamp) -> mu.Timestamp:
     NANOS_PER_SEC = 1e9
     return mu.Timestamp(
-        secs=int(ts.timestamp() // NANOS_PER_SEC),
-        nanos=int(ts.timestamp() % NANOS_PER_SEC),
+        secs=int(ts.timestamp()),
+        nanos=int((ts.timestamp() - int(ts.timestamp())) * NANOS_PER_SEC),
     )
 
 
