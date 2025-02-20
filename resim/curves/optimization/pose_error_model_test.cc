@@ -128,6 +128,8 @@ TEST(PoseErrorModelTest, TestOptimize) {
   }
 }
 
+// Simple helper which saves an mcap at `viz.mcap` which can be utilized in
+// Foxglove Studio to visualize the given target poses and t_curve.
 void save_visualization_log(
     const std::vector<TimedPose> &target_poses,
     const TCurve<SE3> &t_curve) {
