@@ -1,23 +1,29 @@
 # Curve Optimization
 
-The aim of this folder is to support the optimization of a TCurve to match a
-sequence of timed poses. The way that we do this is by creating an Error Model which penalizes deviation of the trajectory from a given sequence of timed poses.
+The aim of this folder is to support the optimization of a TCurve to match a sequence of timed poses.
+To do this, we make use of [Gauss-Newton Optimization](https://ethaneade.com/optimization.pdf) as
+implemented [here](/resim/math/gauss_newton_optimizer.hh). To do this, we need two main components:
 
+ - A parameter implementation located in [control_point_parameter.hh](control_point_parameter.hh).
+   This gives us a type that behaves like a `TCurve<SE3>::Control` but which has the interface
+   expected by the `GaussNewtonOptimizer` to create a `ParameterBlock<ControlPointParameter>` so we
+   can find the TCurve that minimizes our objective.
+ - An error model implementation located in [pose_error_model.hh](pose_error_model.hh).
+   This defines our objective function. It is constructed with a series of timed
+   pose observations that the TCurve is expected to follow. This relies on the
+   [t_curve_differential.hh](t_curve_differential.hh) library to do the heavy lifting when it comes
+   to computing the TCurve's pose at the time of each pose observation and the derivatives of this
+   pose with respect to the control point parameters. Specifically, this error model insists that
+   the $\text{SE}(3)$ logarithm of `observed_frame_from_scene * t_curve_from_scene.inverse()` be as
+   small as possible.
 
-## Error Model
+Once we have these, we can register them with the `GaussNewtonOptimizer` and fit curves to our
+heart's content. To get an idea of what this looks like, you can run:
 
-The error model is the collection of the errors at a series of observed times $t_0, t_1, ..., t_n$. At these times, we've observed poses $p_0, p_1, ..., p_n$. Let's say that the curve $\gamma$ is defined by parameters $X$. The error is given by:
+```
+bazel build //resim/curves/optimization:pose_error_model_test
+./bazel-bin/resim/curves/optimization/pose_error_model_test
+```
 
-$$
-E_i(X) = \log(p_i \gamma(X, t_i)^{-1})
-$$
-
-As we know from [Ethan Eade](https://ethaneade.com/optimization.pdf), the Jacobian we want for each $i$ is:
-
-$$
-J = \frac{d \gamma(X, t_i)}{dX}
-$$
-
-Which we compute in the `//resim/curves/optimization:t_curve_differential` library once we've selected the relevant previous and next points.
-
-We're going to be tracking a param
+This will create a file `vis.mcap` in your current working directory which can be opened in
+[Foxglove Studio](https://app.foxglove.dev/) to see the results of such a TCurve fitting.

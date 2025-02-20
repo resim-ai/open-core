@@ -37,6 +37,10 @@ void PoseErrorModel::operator()(
   const auto t_curve_control_block =
       optimizer_.get_parameters<ControlPointParameter>(key_);
 
+  REASSERT(
+      not t_curve_control_block.data.empty(),
+      "Encountered invalid parameter block");
+
   REASSERT(std::is_sorted(
       t_curve_control_block.data.cbegin(),
       t_curve_control_block.data.cend(),
@@ -46,6 +50,13 @@ void PoseErrorModel::operator()(
 
   for (std::size_t ii = 0U; ii < poses_.size(); ++ii) {
     const auto &pose = poses_.at(ii);
+
+    REASSERT(
+        t_curve_control_block.data.front().value.time <= pose.time,
+        "Pose time outside of parameter block range");
+    REASSERT(
+        pose.time <= t_curve_control_block.data.back().value.time,
+        "Pose time outside of parameter block range");
 
     auto next_it = std::upper_bound(
         t_curve_control_block.data.cbegin(),
