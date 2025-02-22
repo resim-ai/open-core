@@ -697,6 +697,83 @@ class TestMetricsWriter(unittest.TestCase):
             [item.id for item in METRIC_DATA],
         )
 
+    def test_batchwise_bar_chart_metric(self) -> None:
+        METRIC_NAME = "Batchwise bar chart metric"
+        METRIC_DESCRIPTION = "Description"
+        METRIC_BLOCKING = True
+        METRIC_DISPLAY = True
+        METRIC_IMPORTANCE = MetricImportance.HIGH_IMPORTANCE
+        METRIC_STATUS = MetricStatus.PASSED_METRIC_STATUS
+
+        index_data = SeriesMetricsData(
+            name="batch_ids", series=np.array([uuid.uuid4() for _ in range(2)])
+        )
+
+        times_data = SeriesMetricsData(
+            name="times",
+            series=np.array(
+                [
+                    Timestamp(secs=1, nanos=0),
+                    Timestamp(secs=2, nanos=0),
+                ]
+            ),
+            index_data=index_data,
+        )
+
+        value_data = SeriesMetricsData(
+            name="values", series=np.array([1.0, 2.0]), index_data=index_data
+        )
+
+        status_data = SeriesMetricsData(
+            name="statuses",
+            series=np.array(2 * [MetricStatus.PASSED_METRIC_STATUS]),
+            index_data=index_data,
+        )
+
+        category = "passed"
+        project_id = consistent_uuid()
+
+        (
+            self.writer.add_batchwise_bar_chart_metric(METRIC_NAME)
+            .append_category_data(category, times_data, value_data, status_data)
+            .with_description(METRIC_DESCRIPTION)
+            .with_blocking(METRIC_BLOCKING)
+            .with_should_display(METRIC_DISPLAY)
+            .with_importance(METRIC_IMPORTANCE)
+            .with_status(METRIC_STATUS)
+            .with_project_id(project_id)
+        )
+
+        output = self.writer.write()
+        self.assertEqual(len(output.packed_ids), 5)
+        self.assertEqual(len(output.metrics_msg.job_level_metrics.metrics), 1)
+        self.assertEqual(len(output.metrics_msg.metrics_data), 4)
+
+        metric_base = output.metrics_msg.job_level_metrics.metrics[0]
+        metric_values = metric_base.metric_values.batchwise_bar_chart_metric_values
+
+        self.assertEqual(metric_base.description, METRIC_DESCRIPTION)
+        self.assertEqual(metric_base.blocking, METRIC_BLOCKING)
+        self.assertEqual(metric_base.should_display, METRIC_DISPLAY)
+        self.assertEqual(metric_base.importance, METRIC_IMPORTANCE.value)
+        self.assertEqual(metric_base.status, METRIC_STATUS.value)
+        self.assertEqual(metric_base.name, METRIC_NAME)
+
+        self.assertEqual(metric_values.project_id.data, str(project_id))
+
+        self.assertEqual(
+            {data_id.id.data for data_id in metric_values.times_data_id},
+            {str(times_data.id)},
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in metric_values.values_data_id},
+            {str(value_data.id)},
+        )
+        self.assertEqual(
+            {data_id.id.data for data_id in metric_values.statuses_data_id},
+            {str(status_data.id)},
+        )
+
     def test_external_file_metrics_data(self) -> None:
         """Test that we can add an external file metrics data."""
         NAME = "test_metrics_data"

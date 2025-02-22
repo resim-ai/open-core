@@ -21,9 +21,12 @@ The batch metrics config (as provided to the batch metrics run on launch) is a s
 {
   "authToken" : "...",
   "apiURL" : "https://api.resim.ai/v1",
-  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee"
+  "batchID" : "7579affb-3e5b-4f02-871b-bf275aef67ee",
+  "projectID": "6133c1a9-b6d8-41fb-b7d7-44f1889511dd"
 }
 ```
+
+> NOTE: If you're wanting to develop locally, you can retrieve your authToken from [https://app.resim.ai/debug](https://app.resim.ai/debug) in the `auth.bearer` field.
 
 These fields should be used to retrieve the test-level metrics and metrics data associated with a batch, and these should be used to compute batch-level metrics. We provide code to do this in [open-core](https://github.com/resim-ai/open-core/tree/main/resim/metrics), in combination with some code snippets below.
 
@@ -32,12 +35,15 @@ First you can read the config in using the following snippet:
 ```python
 import json 
 
+BATCH_METRICS_CONFIG_PATH = "/tmp/resim/inputs/batch_metrics_config.json"
+
 with open(BATCH_METRICS_CONFIG_PATH, "r", encoding="utf-8") as metrics_config_file:
     metrics_config = json.load(metrics_config_file)
 
-token=metrics_config["authToken"],
-api_url=metrics_config["apiURL"],
-batch_id=metrics_config["batchID"],
+token=metrics_config["authToken"]
+api_url=metrics_config["apiURL"]
+batch_id=metrics_config["batchID"]
+project_id=metrics_config["projectID"]
 ```
 
 Once these are loaded, you can download the metrics using our `fetch_job_metrics` Python package.
@@ -45,7 +51,7 @@ Once these are loaded, you can download the metrics using our `fetch_job_metrics
 ```python
 import resim.metrics.fetch_job_metrics as fjm
 
-job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token, api_url, uuid.UUID(batchID))
+job_to_metrics: Dict[uuid.UUID, UnpackedMetrics] = fjm.fetch_job_metrics_by_batch(token=token, api_url=api_url, project_id=uuid.UUID(project_id), batch_id=uuid.UUID(batchID))
 ```
 
 The result maps job IDs to `UnpackedMetrics` - this is a simple `dataclass` with three fields:

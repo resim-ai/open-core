@@ -25,6 +25,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Type,
     TypeAlias,
     TypeVar,
     Union,
@@ -56,8 +57,11 @@ from resim.metrics.python.metrics_utils import (
 MetricT = TypeVar("MetricT", bound="Metric")
 
 
-def metric_dataclass(*args: Callable) -> Callable:
-    return dataclasses.dataclass(*args, init=False, kw_only=True, repr=True, eq=False)
+T = TypeVar("T")
+
+
+def metric_dataclass(cls: Type[T]) -> Type[T]:
+    return dataclasses.dataclass(init=False, kw_only=True, repr=True, eq=False)(cls)
 
 
 @metric_dataclass
