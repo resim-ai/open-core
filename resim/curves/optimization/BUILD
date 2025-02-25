@@ -85,6 +85,7 @@ cc_library(
     name = "pose_error_model",
     srcs = ["pose_error_model.cc"],
     hdrs = ["pose_error_model.hh"],
+    visibility = ["//visibility:public"],
     deps = [
         ":control_point_parameter",
         ":t_curve_differential",
