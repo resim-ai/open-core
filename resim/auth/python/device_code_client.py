@@ -53,9 +53,9 @@ class DeviceCodeClient:
 
     def refresh(self) -> None:
         """Clear the local token cache and the internal token."""
+        self._token = None
         if self._cache_location.exists():
             self._cache_location.unlink()
-        self._token = None
 
     def get_jwt(self) -> dict[str, typing.Any]:
         """Get the current token, fetching if necessary."""

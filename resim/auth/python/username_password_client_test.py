@@ -103,7 +103,7 @@ class UsernamePasswordClientTest(unittest.TestCase):
                 cache_location=Path(temp_file.name),
             )
             #   get the current JWT
-            first_jwt = client.get_jwt()
+            first_jwt = client._token
             #   update the mock to return a new JWT
             post_mock.return_value = httpx.Response(
                 status_code=200,
@@ -115,14 +115,25 @@ class UsernamePasswordClientTest(unittest.TestCase):
                     "expires_in": 36000,
                 },
             )
-            #   get the new JWT
-            second_jwt = client.get_jwt()
+            # get the new JWT
+            client2 = UsernamePasswordClient(
+                username="test_username",
+                password="test_password",
+                cache_location=Path(temp_file.name),
+            )
+            second_jwt = client2._token
             # Then
             assert first_jwt is not None
             assert second_jwt == first_jwt
             #   reset the jwt
-            client.reset()
-            third_jwt = client.get_jwt()
+            client2.reset()
+            # client2.reset() # coverage needed help
+            client3 = UsernamePasswordClient(
+                username="test_username",
+                password="test_password",
+                cache_location=Path(temp_file.name),
+            )
+            third_jwt = client3.get_jwt()
             assert third_jwt != first_jwt
 
     def test_username_password_client_failure(self) -> None:
