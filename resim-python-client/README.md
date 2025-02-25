@@ -1,5 +1,5 @@
-# resim-python-client
-A client library for accessing the ReSim Customer API
+# ReSim API Python Client
+A client library for accessing the ReSim Customer API. The client is generated from the [ReSim API specification](https://redocly.github.io/redoc/?url=https://api.resim.ai).
 
 ## Usage
 First, create a client:
@@ -24,40 +24,49 @@ client = UsernamePasswordClient(
 Now call your endpoint and use the generated models:
 
 ```python
-from resim_python_client.models import Batch
-from resim_python_client.api.batches import get_batch
+from resim_python_client.models import Batch, ListBatchesOutput
+from resim_python_client.api.batches import list_batches
 from resim_python_client.types import Response
 
 with client as client:
-    my_data = get_batch.sync(client=client)
-    assert my_data != None, "Failed to get batch"
+    # to fetch without any extra information about the response
+    batches_output: ListBatchesOutput = list_batches.sync(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client)
+    assert batches_output is not None, "Failed to get batches"
+    
     # or if you need more info (e.g. status_code)
-    response: Response[Batch] = get_batch.sync_detailed(client=client)
-    assert response.status_code == 200, "Failed to get batch"
+    response: Response[ListBatchesOutput] = list_batches.sync_detailed(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client)
+    assert response.status_code == 200, "Failed to get batches"
+    batches_output: ListBatchesOutput = response.parsed
+
+    # this endpoint is paginated, so you can pull your batches out of the response type
+    my_batches: List[Batch] = batches_output.batches
+    # and if you need more batches, you can fetch the next page
+    next_batches_output: ListBatchesOutput = list_batches.sync(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client, page_token=batches_output.next_page_token)
+    my_batches.extend(next_batches_output.batches)
 ```
 
 Or do the same thing with an async version:
 
 ```python
 from resim_python_client.models import Batch
-from resim_python_client.api.batches import get_batch
+from resim_python_client.api.batches import list_batches
 from resim_python_client.types import Response
 
 async with client as client:
-    my_data: Batch = await get_batch.asyncio(client=client)
-    assert my_data != None, "Failed to get batch"
+    my_batches: ListBatchesOutput = await list_batches.asyncio(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client)
+    assert my_batches is not None, "Failed to get batches"
     # or if you need more info (e.g. status_code)
-    response: Response[Batch] = await get_batch.asyncio_detailed(client=client)
-    assert response.status_code == 200, "Failed to get batch"
+    response: Response[ListBatchesOutput] = await list_batches.asyncio_detailed(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client)
+    assert response.status_code == 200, "Failed to get batches"
 ```
 
 To discover more endpoints, check out our [Swagger Docs](https://redocly.github.io/redoc/?url=https://api.resim.ai). 
 
 Things to know:
 1. Every path/method combo becomes a Python module with four functions:
-    1. `sync`: Blocking request that returns parsed data (if successful) or `None`. This may be omitted if there is no data to parse.
+    1. `sync`: Blocking request that returns parsed data (if successful) or `None`. This method may be omitted if there is no data to parse, ie. on some creation endpoints.
     1. `sync_detailed`: Blocking request that always returns a `Request`, optionally with `parsed` set if the request was successful.
-    1. `asyncio`: Like `sync` but async instead of blocking. 
+    1. `asyncio`: Like `sync` but async instead of blocking. This method may be omitted if there is no data to parse, ie. on some creation endpoints.
     1. `asyncio_detailed`: Like `sync_detailed` but async instead of blocking.
 
 1. All path/query params, and bodies become method arguments.
@@ -77,7 +86,7 @@ with client as client:
         project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", experience_id="bf6806c7-aa15-464d-8b2c-387d12c732da", 
         client=client, body=UpdateExperienceInput(name="Better Experience")
     )
-    assert updated_experience != None, "Failed to update experience"
+    assert updated_experience is not None, "Failed to update experience"
     assert updated_experience.name == "Better Experience", "Experience name was not updated"
 ```
 
