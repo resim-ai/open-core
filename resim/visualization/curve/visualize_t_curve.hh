@@ -1,3 +1,9 @@
+// Copyright 2025 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
 #pragma once
 
 #include <foxglove/PosesInFrame.pb.h>
@@ -88,7 +94,7 @@ class MultiTCurveVisualizer {
   CurveVisualizationOptions options_;
   std::string scene_update_topic_;
   std::string poses_in_frame_topic_;
-  McapLogger &logger_;
+  McapLogger *logger_;
 
   ::foxglove::SceneUpdate scene_update_;
   std::map<time::Timestamp, ::foxglove::PosesInFrame> poses_in_frame_;

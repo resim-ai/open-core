@@ -50,9 +50,9 @@ MultiTCurveVisualizer::MultiTCurveVisualizer(
     : options_{options},
       scene_update_topic_{std::move(scene_update_topic)},
       poses_in_frame_topic_{std::move(poses_in_frame_topic)},
-      logger_{*logger} {
-  logger_.add_proto_channel<::foxglove::SceneUpdate>(scene_update_topic_);
-  logger_.add_proto_channel<::foxglove::PosesInFrame>(poses_in_frame_topic_);
+      logger_{&*logger} {
+  logger_->add_proto_channel<::foxglove::SceneUpdate>(scene_update_topic_);
+  logger_->add_proto_channel<::foxglove::PosesInFrame>(poses_in_frame_topic_);
 }
 
 MultiTCurveVisualizer::~MultiTCurveVisualizer() { write(); }
@@ -95,10 +95,10 @@ void MultiTCurveVisualizer::write() {
   if (not poses_in_frame_.empty()) {
     first_time = poses_in_frame_.begin()->first;
   }
-  logger_.log_proto(scene_update_topic_, first_time, scene_update_);
+  logger_->log_proto(scene_update_topic_, first_time, scene_update_);
 
   for (const auto &[time, poses] : poses_in_frame_) {
-    logger_.log_proto(poses_in_frame_topic_, time, poses);
+    logger_->log_proto(poses_in_frame_topic_, time, poses);
   }
 }
 
