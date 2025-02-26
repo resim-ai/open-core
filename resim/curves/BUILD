@@ -300,3 +300,27 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "sample_t_curve",
+    srcs = ["sample_t_curve.cc"],
+    hdrs = ["sample_t_curve.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":t_curve",
+        "//resim/curves/optimization:two_jet_tangent_space",
+        "//resim/math:multivariate_gaussian",
+        "//resim/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "sample_t_curve_test",
+    srcs = ["sample_t_curve_test.cc"],
+    deps = [
+        ":sample_t_curve",
+        "//resim/visualization/curve:visualize_t_curve",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
