@@ -16,7 +16,7 @@ namespace resim::curves {
 using resim::transforms::SE3;
 
 namespace {
-static constexpr int TWO_JET_DOF = optimization::TWO_JET_DOF<SE3>;
+constexpr int TWO_JET_DOF = optimization::TWO_JET_DOF<SE3>;
 }
 
 std::vector<TCurve<SE3>> sample_t_curves(
@@ -49,9 +49,11 @@ std::vector<TCurve<SE3>> sample_t_curves(
     auto control_points = seed_curve.control_pts();
     for (int jj = 0; jj < control_points.size(); ++jj) {
       auto &point = control_points.at(jj);
+
+      const int block_start = TWO_JET_DOF * jj;
       point.point = optimization::accumulate(
           point.point,
-          samples.block<1, TWO_JET_DOF>(ii, TWO_JET_DOF * jj).transpose());
+          samples.block<1, TWO_JET_DOF>(ii, block_start).transpose());
     }
     results.emplace_back(control_points);
   }

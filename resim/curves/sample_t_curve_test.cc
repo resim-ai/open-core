@@ -25,7 +25,7 @@ using transforms::SE3;
 void save_visualization_log(const std::vector<TCurve<SE3>> &t_curves) {
   const char *maybe_outputs_dir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
   const std::filesystem::path OUTPUTS_DIR{
-      maybe_outputs_dir ? maybe_outputs_dir : "."};
+      maybe_outputs_dir != nullptr ? maybe_outputs_dir : "."};
   resim::McapLogger logger{OUTPUTS_DIR / "vis.mcap"};
 
   visualization::curve::MultiTCurveVisualizer visualizer{
@@ -42,14 +42,12 @@ void save_visualization_log(const std::vector<TCurve<SE3>> &t_curves) {
 // Simple helper to get a covariance matrix that's coerced to be
 // positive-semi-definite. Our strategy is to enforce correlation of adjacent
 // points and then coerce the result to be positive-semi-definite.
-Eigen::MatrixXd covariance(
-    const double magnitude,
-    const std::size_t num_points) {
-  Eigen::MatrixXd cov{Eigen::MatrixXd::Zero(
-      num_points * optimization::TWO_JET_DOF<SE3>,
-      num_points * optimization::TWO_JET_DOF<SE3>)};
+Eigen::MatrixXd covariance(const double magnitude, const int num_points) {
+  const int mat_dim = num_points * optimization::TWO_JET_DOF<SE3>;
+
+  Eigen::MatrixXd cov{Eigen::MatrixXd::Zero(mat_dim, mat_dim)};
   constexpr auto DOF = optimization::TWO_JET_DOF<SE3>;
-  for (int ii = 0; ii < (num_points - 1u); ++ii) {
+  for (int ii = 0; ii < (num_points - 1); ++ii) {
     for (int jj = 0; jj < DOF; ++jj) {
       cov(ii * DOF + jj, (ii + 1) * DOF + jj) = magnitude;
       cov((ii + 1) * DOF + jj, ii * DOF + jj) = magnitude;
@@ -64,7 +62,7 @@ Eigen::MatrixXd covariance(
       solver.eigenvalues()
           .unaryExpr([&](double eigenval) { return std::max(eigenval, 0.); })
           .asDiagonal()};
-  Eigen::MatrixXd eigenvectors{solver.eigenvectors()};
+  const Eigen::MatrixXd &eigenvectors{solver.eigenvectors()};
   return eigenvectors * coerced_diagonal * eigenvectors.inverse();
 }
 
@@ -72,8 +70,9 @@ TEST(SampleTCurveTest, TestSampleTCurves) {
   // SETUP
   constexpr int NUM_CURVES = 5;
 
-  std::vector<TCurve<SE3>::Control> points;
   constexpr int NUM_POINTS = 10;
+  std::vector<TCurve<SE3>::Control> points;
+  points.reserve(NUM_POINTS);
   for (int ii = 0; ii < NUM_POINTS; ++ii) {
     points.emplace_back(TCurve<SE3>::Control{
         .time = static_cast<double>(ii),
@@ -85,8 +84,8 @@ TEST(SampleTCurveTest, TestSampleTCurves) {
   }
   TCurve<SE3> seed_curve{points};
 
-  Eigen::VectorXd mean =
-      Eigen::VectorXd::Zero(NUM_POINTS * optimization::TWO_JET_DOF<SE3>);
+  constexpr int MAT_DIM = NUM_POINTS * optimization::TWO_JET_DOF<SE3>;
+  Eigen::VectorXd mean = Eigen::VectorXd::Zero(MAT_DIM);
   constexpr double MAGNITUDE = 1e-2;
   Eigen::MatrixXd cov = covariance(MAGNITUDE, NUM_POINTS);
 
