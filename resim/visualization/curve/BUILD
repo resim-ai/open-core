@@ -123,7 +123,7 @@ cc_library(
     name = "visualize_t_curve",
     srcs = ["visualize_t_curve.cc"],
     hdrs = ["visualize_t_curve.hh"],
-    visibility = ["//resim/visualization:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":esc_frames_from_t_curve",
         ":line_primitive_from_t_curve",

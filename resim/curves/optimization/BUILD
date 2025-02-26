@@ -10,6 +10,7 @@ cc_library(
     name = "two_jet_tangent_space",
     srcs = ["two_jet_tangent_space.cc"],
     hdrs = ["two_jet_tangent_space.hh"],
+    visibility = ["//resim/curves:__subpackages__"],
     deps = [
         "//resim/curves:two_jet",
         "//resim/math:vector_partition",
