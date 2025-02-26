@@ -1,6 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-
 cc_library(
     name = "esc_frames_from_t_curve",
     srcs = ["esc_frames_from_t_curve.cc"],
@@ -22,9 +21,9 @@ cc_test(
     deps = [
         ":esc_frames_from_t_curve",
         "//resim/curves:test_helpers",
+        "//resim/time/proto:time_to_proto",
         "//resim/transforms:se3",
         "//resim/visualization/foxglove:pose_to_foxglove",
-        "//resim/time/proto:time_to_proto",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -93,9 +92,9 @@ cc_library(
         "//resim/assert",
         "//resim/curves:t_curve",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/transforms:se3",
         "//resim/visualization/foxglove:pose_to_foxglove",
-        "//resim/time/proto:time_to_proto",
     ],
 )
 
@@ -114,7 +113,6 @@ cc_test(
     ],
 )
 
-
 cc_library(
     name = "visualize_t_curve",
     srcs = ["visualize_t_curve.cc"],
@@ -128,9 +126,9 @@ cc_library(
         "//resim/curves:t_curve",
         "//resim/time:sample_interval",
         "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
         "//resim/utils:inout",
         "//resim/utils:mcap_logger",
-        "//resim/time/proto:time_to_proto",
     ],
 )
 

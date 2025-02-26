@@ -1,3 +1,5 @@
+#include "resim/visualization/curve/visualize_t_curve.hh"
+
 #include <utility>
 
 #include "resim/time/proto/time_to_proto.hh"
@@ -5,7 +7,6 @@
 #include "resim/visualization/curve/esc_frames_from_t_curve.hh"
 #include "resim/visualization/curve/line_primitive_from_t_curve.hh"
 #include "resim/visualization/curve/poses_in_frame_from_t_curve.hh"
-#include "resim/visualization/curve/visualize_t_curve.hh"
 
 namespace resim::visualization::curve {
 

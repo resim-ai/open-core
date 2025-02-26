@@ -1,4 +1,6 @@
 
+#include "resim/visualization/curve/esc_frames_from_t_curve.hh"
+
 #include <foxglove/Point3.pb.h>
 #include <foxglove/Pose.pb.h>
 #include <gtest/gtest.h>
@@ -8,7 +10,6 @@
 #include "resim/curves/test_helpers.hh"
 #include "resim/time/sample_interval.hh"
 #include "resim/transforms/se3.hh"
-#include "resim/visualization/curve/esc_frames_from_t_curve.hh"
 #include "resim/visualization/curve/poses_in_frame_from_t_curve.hh"
 #include "resim/visualization/foxglove/pose_to_foxglove.hh"
 

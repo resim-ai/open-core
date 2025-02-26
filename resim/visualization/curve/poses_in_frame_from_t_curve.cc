@@ -1,7 +1,8 @@
 
+#include "resim/visualization/curve/poses_in_frame_from_t_curve.hh"
+
 #include "resim/assert/assert.hh"
 #include "resim/time/proto/time_to_proto.hh"
-#include "resim/visualization/curve/poses_in_frame_from_t_curve.hh"
 #include "resim/visualization/foxglove/pose_to_foxglove.hh"
 
 namespace resim::visualization::curve {
