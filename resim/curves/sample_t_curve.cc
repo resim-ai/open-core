@@ -11,19 +11,34 @@ namespace resim::curves {
 
 using resim::transforms::SE3;
 
-std::vector<TCurve<SE3>> sample_t_curves_pointwise(
+namespace {
+static constexpr int TWO_JET_DOF = optimization::TWO_JET_DOF<SE3>;
+}
+
+std::vector<TCurve<SE3>> sample_t_curves(
     const int num_curves,
     const TCurve<SE3> &seed_curve,
     Eigen::VectorXd mean,
     Eigen::MatrixXd covariance) {
-  constexpr int TWO_JET_DOF = optimization::TWO_JET_DOF<SE3>;
-  REASSERT(mean.size() == TWO_JET_DOF, "Incorrect mean dimension.");
-  REASSERT(covariance.rows() == TWO_JET_DOF, "Incorrect covariance dimension.");
-  REASSERT(covariance.cols() == TWO_JET_DOF, "Incorrect covariance dimension.");
+  const std::size_t curve_size = seed_curve.control_pts().size();
+  REASSERT(
+      mean.size() == TWO_JET_DOF * curve_size,
+      "Incorrect mean dimension.");
+  REASSERT(
+      covariance.rows() == TWO_JET_DOF * curve_size,
+      "Incorrect covariance dimension.");
+  REASSERT(
+      covariance.cols() == TWO_JET_DOF * curve_size,
+      "Incorrect covariance dimension.");
   math::Gaussian gaussian{std::move(mean), std::move(covariance)};
+  return sample_t_curves(num_curves, seed_curve, InOut{gaussian});
+}
 
-  const Eigen::MatrixXd samples =
-      gaussian.samples(num_curves * seed_curve.control_pts().size());
+std::vector<TCurve<SE3>> sample_t_curves(
+    const int num_curves,
+    const TCurve<SE3> &seed_curve,
+    InOut<math::Gaussian> gaussian) {
+  const Eigen::MatrixXd samples = gaussian->samples(num_curves);
 
   std::vector<TCurve<SE3>> results;
   for (int ii = 0; ii < num_curves; ++ii) {
@@ -32,7 +47,7 @@ std::vector<TCurve<SE3>> sample_t_curves_pointwise(
       auto &point = control_points.at(jj);
       point.point = optimization::accumulate(
           point.point,
-          samples.row(ii * control_points.size() + jj).transpose());
+          samples.block<1, TWO_JET_DOF>(ii, TWO_JET_DOF * jj).transpose());
     }
     results.emplace_back(control_points);
   }
