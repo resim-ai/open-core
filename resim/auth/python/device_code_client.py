@@ -60,9 +60,9 @@ class DeviceCodeClient:
     def get_jwt(self) -> dict[str, typing.Any]:
         """Get the current token, fetching if necessary."""
         if self._token is None and self._cache_location.exists():
-            assert self._cache_location.is_file(), (
-                "Directory detected in cache location!"
-            )
+            assert (
+                self._cache_location.is_file()
+            ), "Directory detected in cache location!"
             with open(self._cache_location, "r", encoding="utf-8") as cache:
                 self._token = json.load(cache)
 

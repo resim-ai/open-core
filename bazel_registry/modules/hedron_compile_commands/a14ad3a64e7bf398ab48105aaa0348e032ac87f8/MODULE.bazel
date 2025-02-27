@@ -4,10 +4,14 @@ module(
     compatibility_level = 0,
 )
 
+# buildifier: disable=unused-variable
 p = use_extension("//:workspace_setup.bzl", "hedron_compile_commands_extension")
 
+# buildifier: disable=unused-variable
 pt = use_extension("//:workspace_setup_transitive.bzl", "hedron_compile_commands_extension")
 
+# buildifier: disable=unused-variable
 ptt = use_extension("//:workspace_setup_transitive_transitive.bzl", "hedron_compile_commands_extension")
 
+# buildifier: disable=unused-variable
 pttt = use_extension("//:workspace_setup_transitive_transitive_transitive.bzl", "hedron_compile_commands_extension")
