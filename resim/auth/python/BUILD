@@ -8,6 +8,12 @@ load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 py_library(
+    name = "const",
+    srcs = ["const.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "device_code_client",
     srcs = ["device_code_client.py"],
     visibility = ["//visibility:public"],
@@ -15,6 +21,7 @@ py_library(
         requirement("polling2"),
         requirement("requests"),
         ":check_expiration",
+        ":const",
     ],
 )
 
@@ -23,6 +30,26 @@ py_test(
     srcs = ["device_code_client_test.py"],
     deps = [
         ":device_code_client",
+    ],
+)
+
+py_library(
+    name = "username_password_client",
+    srcs = ["username_password_client.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("httpx"),
+        ":check_expiration",
+        ":const",
+        "//resim-python-client",
+    ],
+)
+
+py_test(
+    name = "username_password_client_test",
+    srcs = ["username_password_client_test.py"],
+    deps = [
+        ":username_password_client",
     ],
 )
 

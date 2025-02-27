@@ -142,9 +142,10 @@ class DeviceCodeClientTest(unittest.TestCase):
         """
         Test that we can get the expected token with the expected queries to the server.
         """
-        with unittest.mock.patch(
-            "requests.post"
-        ) as mock, tempfile.TemporaryDirectory() as tmpdir:
+        with (
+            unittest.mock.patch("requests.post") as mock,
+            tempfile.TemporaryDirectory() as tmpdir,
+        ):
 
             def side_effect(
                 uri: str, *, data: dict[str, typing.Any]
@@ -180,7 +181,6 @@ class DeviceCodeClientTest(unittest.TestCase):
             # Test refreshing
             server = MockServer(testcase=self)
             client.refresh()
-            client.refresh()  # Called intentionally for coverage
             token = client.get_jwt()
             self.assertEqual(token, client.get_jwt())
             self.assertEqual(token["access_token"], TOKEN)
@@ -202,9 +202,10 @@ class DeviceCodeClientTest(unittest.TestCase):
         """
         Verify that we raise on 404.
         """
-        with unittest.mock.patch(
-            "requests.post"
-        ) as mock, tempfile.TemporaryDirectory() as tmpdir:
+        with (
+            unittest.mock.patch("requests.post") as mock,
+            tempfile.TemporaryDirectory() as tmpdir,
+        ):
 
             def side_effect(
                 uri: str, *, data: dict[str, typing.Any]

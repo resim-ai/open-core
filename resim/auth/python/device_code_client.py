@@ -7,7 +7,7 @@
 """
 This file contains a Client class used to communicate with an OAuth
 2 authentication server to procure a JSON Web Token (jwt) for use with
-ReSim's API (https://api.resim.ai).
+ReSim's API (https://api.resim.ai) via the device code flow.
 """
 
 import json
@@ -19,11 +19,14 @@ import polling2
 import requests
 
 import resim.auth.python.check_expiration as check_exp
+from resim.auth.python.const import (
+    DEFAULT_AUDIENCE,
+    DEFAULT_CACHE_LOCATION,
+    DEFAULT_DOMAIN,
+    DEFAULT_SCOPE,
+)
 
-DEFAULT_SCOPE = "offline_access"
-DEFAULT_AUDIENCE = "https://api.resim.ai"
-DEFAULT_CACHE_LOCATION = pathlib.Path.home() / ".resim" / "token.json"
-DEFAULT_CLIENT_ID = "gTp1Y0kOyQ7QzIo2lZm0auGM6FJZZVvy"
+DEVICE_CODE_CLIENT_ID = "gTp1Y0kOyQ7QzIo2lZm0auGM6FJZZVvy"
 
 
 class DeviceCodeClient:
@@ -35,8 +38,8 @@ class DeviceCodeClient:
     def __init__(
         self,
         *,
-        domain: str,
-        client_id: str = DEFAULT_CLIENT_ID,
+        domain: str = DEFAULT_DOMAIN,
+        client_id: str = DEVICE_CODE_CLIENT_ID,
         scope: str = DEFAULT_SCOPE,
         audience: str = DEFAULT_AUDIENCE,
         cache_location: pathlib.Path = DEFAULT_CACHE_LOCATION,
@@ -50,16 +53,16 @@ class DeviceCodeClient:
 
     def refresh(self) -> None:
         """Clear the local token cache and the internal token."""
+        self._token = None
         if self._cache_location.exists():
             self._cache_location.unlink()
-        self._token = None
 
     def get_jwt(self) -> dict[str, typing.Any]:
         """Get the current token, fetching if necessary."""
         if self._token is None and self._cache_location.exists():
-            assert (
-                self._cache_location.is_file()
-            ), "Directory detected in cache location!"
+            assert self._cache_location.is_file(), (
+                "Directory detected in cache location!"
+            )
             with open(self._cache_location, "r", encoding="utf-8") as cache:
                 self._token = json.load(cache)
 
