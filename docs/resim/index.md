@@ -5,6 +5,16 @@ code intended to accelerate robotics development.
 
 ## Getting Started
 
+A number of our libraries have Python bindings or implementations, such as a subset of the `transforms` and `metrics` libraries as well as a Python client for the ReSim API.
+These are distributed as part of our [Python package](https://pypi.org/project/resim-open-core/) which can be easily installed using `pip`.
+```bash
+pip install resim-open-core
+```
+
+If you're using C++ and Bazel, you can follow the development instructions below to build some examples and explore our libraries.
+
+## Development
+
 ### Install and Setup Docker
 
 These instructions vary by host platform: 

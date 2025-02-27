@@ -1,4 +1,4 @@
-# The Metrics Writer
+# Metrics Writer
 
 When authoring metrics, we provide a writer that lets you more easily output all your metrics into our protobuf format, without dealing with protobuf or any details of the file format. We call this the `ResimMetricsWriter`.
 

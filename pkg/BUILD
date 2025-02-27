@@ -38,6 +38,7 @@ py_package(
     deps = [
         "//resim/actor/state/proto:observable_state_proto_py",
         "//resim/auth/python:device_code_client",
+        "//resim/auth/python:username_password_client",
         "//resim/experiences/proto:experience_proto_py",
         "//resim/geometry/python:polygon_distance_python.so",
         "//resim/metrics:default_report_metrics",

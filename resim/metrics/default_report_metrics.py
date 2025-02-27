@@ -15,6 +15,7 @@ import uuid
 from datetime import datetime
 from typing import Awaitable, Hashable
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from resim_python_client.api.batches import list_batch_metrics, list_metrics_for_job
@@ -37,6 +38,7 @@ from resim.metrics.fetch_report_metrics import (
     fetch_jobs_for_batches,
 )
 from resim.metrics.proto.validate_metrics_proto import validate_job_metrics
+from resim.metrics.python.metrics import SeriesMetricsData
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
 from resim.metrics.resim_style import resim_plotly_style, resim_status_color_map
 
@@ -44,6 +46,7 @@ logger = logging.getLogger("resim")
 
 DEFAULT_CONFIG_PATH = pathlib.Path("/tmp/resim/inputs/report_config.json")
 DEFAULT_OUTPUT_PATH = pathlib.Path("/tmp/resim/outputs/metrics.binproto")
+
 
 ################################################################################
 # HELPERS
@@ -398,6 +401,7 @@ async def fetch_and_compute_metrics(
 
     compute_metrics(
         writer=writer,
+        project_id=project_id,
         batches_frame=batches_frame,
         tests_frame=tests_frame,
         builds_frame=builds_frame,
@@ -412,55 +416,98 @@ async def fetch_and_compute_metrics(
         f.write(metrics_proto.metrics_msg.SerializeToString())
 
 
-def test_status_over_time_metric(
-    *, writer: ResimMetricsWriter, tests_frame: pd.DataFrame, builds_frame: pd.DataFrame
-) -> None:
-    fig = go.Figure()
+def to_resim_timestamp(ts: pd.Timestamp) -> mu.Timestamp:
+    NANOS_PER_SEC = 1e9
+    return mu.Timestamp(
+        secs=int(ts.timestamp()),
+        nanos=int((ts.timestamp() - int(ts.timestamp())) * NANOS_PER_SEC),
+    )
 
+
+def test_status_over_time_metric(
+    *,
+    writer: ResimMetricsWriter,
+    project_id: uuid.UUID,
+    tests_frame: pd.DataFrame,
+    builds_frame: pd.DataFrame,
+) -> None:
     status_counts_frame = (
-        tests_frame.groupby("build_id")["status"]
+        tests_frame.groupby(["batch_id", "build_id"])["status"]
         .value_counts()
         .unstack(fill_value=0)
         .join(builds_frame)
         .sort_values(by=["build_creation_timestamp"])
+        .reset_index()
     )
 
-    for status in (
+    statuses = (
         ConflatedJobStatus.PASSED,
         ConflatedJobStatus.WARNING,
         ConflatedJobStatus.BLOCKER,
         ConflatedJobStatus.ERROR,
         ConflatedJobStatus.CANCELLED,
-    ):
-        if status not in status_counts_frame.columns:
-            continue
-        fig.add_trace(
-            go.Bar(
-                x=status_counts_frame.build_creation_timestamp.dt.strftime(
-                    "%Y-%m-%d %H:%M"
-                ),
-                y=status_counts_frame[status],
-                name=status,
-                marker_color=resim_status_color_map[status],
-            )
-        )
-    fig.update_xaxes(type="category")
-    resim_plotly_style(
-        fig,
-        barmode="stack",
-        yaxis_title="Number of Tests",
-        xaxis_title="Time",
     )
 
-    (
-        writer.add_plotly_metric("test_status_over_time")
+    status_over_time_metric = (
+        writer.add_batchwise_bar_chart_metric(name="test_status_over_time")
         .with_description("Test Statuses Over Sequential Batches")
         .with_blocking(False)
         .with_should_display(True)
         .with_importance(mu.MetricImportance.HIGH_IMPORTANCE)
         .with_status(mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS)
-        .with_plotly_data(fig.to_json())
+        .with_project_id(project_id)
+        .with_stack_bars(True)
+        .with_x_axis_name("Time")
+        .with_y_axis_name("Number of Experiences")
     )
+
+    index_data = SeriesMetricsData(
+        name="batch_ids",
+        series=np.array(
+            [uuid.UUID(id) for id in status_counts_frame.batch_id.to_list()]
+        ),
+    )
+
+    colors = []
+
+    for status in statuses:
+        if status not in status_counts_frame.columns:
+            continue
+
+        status_over_time_metric.append_category_data(
+            category=status,
+            times_data=SeriesMetricsData(
+                name=f"Batch Times: {status}",
+                series=np.array(
+                    list(
+                        map(
+                            to_resim_timestamp,
+                            status_counts_frame.build_creation_timestamp.to_list(),
+                        )
+                    )
+                ),
+                index_data=index_data,
+            ),
+            values_data=SeriesMetricsData(
+                name=f"Status Counts: {status}",
+                series=np.array(
+                    status_counts_frame[status].to_numpy().astype(np.float64)
+                ),
+                index_data=index_data,
+            ),
+            statuses_data=SeriesMetricsData(
+                name=f"Statuses: {status}",
+                series=np.array(
+                    [mu.MetricStatus.NOT_APPLICABLE_METRIC_STATUS]
+                    * len(status_counts_frame)
+                ),
+                index_data=index_data,
+            ),
+        )
+
+        colors.append(resim_status_color_map[status])
+
+    status_over_time_metric.with_colors(colors)
 
 
 def high_level_totals_metrics(
@@ -785,6 +832,7 @@ def scalar_batch_metrics_box_plot_metrics(
 def compute_metrics(
     *,
     writer: ResimMetricsWriter,
+    project_id: uuid.UUID,
     batches_frame: pd.DataFrame,
     tests_frame: pd.DataFrame,
     builds_frame: pd.DataFrame,
@@ -797,6 +845,7 @@ def compute_metrics(
 
     Args:
         writer:              The writer to write the metrics to.
+        project_id:          The project id for the report.
         batches_frame:       Information on the batches in the report.
         tests_frame:         Information on the tests in the report.
         builds_frame:        Information on the builds in the report.
@@ -806,7 +855,10 @@ def compute_metrics(
     """
 
     test_status_over_time_metric(
-        writer=writer, tests_frame=tests_frame, builds_frame=builds_frame
+        writer=writer,
+        project_id=project_id,
+        tests_frame=tests_frame,
+        builds_frame=builds_frame,
     )
     high_level_totals_metrics(
         writer=writer, batches_frame=batches_frame, tests_frame=tests_frame

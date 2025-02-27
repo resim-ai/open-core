@@ -5,14 +5,16 @@
 This repository contains the open source subset of
 [ReSim](https://www.resim.ai/)'s C++ code intended to accelerate robotics
 development. For detailed documentation, please visit
-[docs.resim.ai](https://docs.resim.ai).
+[docs.resim.ai](https://docs.resim.ai/open-core/).
 
-# Getting Started 
-The expected developer workflow takes place entirely within our Docker
-container. See [docs.resim.ai](https://docs.resim.ai) for detailed instructions
-on getting started.
+## Getting Started 
+A number of our libraries have Python bindings or implementations, such as a subset of the `transforms` and `metrics` libraries as well as a Python client for the ReSim API.
+These are distributed as part of our [Python package](https://pypi.org/project/resim-open-core/) which can be easily installed using `pip`.
+```bash
+pip install resim-open-core
+```
 
-# Structure
+## Structure
 Currently, the libraries are divided up into:
 
  - [Examples](resim/examples): Example binaries which demonstrate how to use our libraries.
@@ -37,9 +39,15 @@ Currently, the libraries are divided up into:
  - [Planning](resim/planning): Tools for high-level planning and optimal
    control.
  - [Simulator](resim/simulator): Our core simulator libraries. 
+ - [Python API Client](resim-python-client): An auto-generated Python client for the ReSim API.
 
+## Development
 
-# Building
+The expected developer workflow takes place entirely within our Docker
+container. See [docs.resim.ai](https://docs.resim.ai/open-core#development) for detailed instructions
+on getting started.
+
+### Building
 
 We use [Bazel](https://bazel.build/) as our build and test tool. As an example
 for those who might be less familiar with bazel, one can build our simulator
@@ -59,6 +67,6 @@ for the target being built. However, we do depend on the UUID library from
 [util-linux/util-linux](https://github.com/util-linux/util-linux), which is
 included in our development docker container.
 
-# Documentation
+## Documentation
 
 If you add a new file to `docs/`, it needs to be added to the `nav:` section in the `mkdocs.yml` of our internal docs repo before it will be easy to find on docs.resim.ai
