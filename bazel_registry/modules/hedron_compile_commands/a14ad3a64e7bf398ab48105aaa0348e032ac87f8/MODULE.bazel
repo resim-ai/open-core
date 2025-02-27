@@ -1,7 +1,7 @@
 module(
     name = "hedron_compile_commands",
-    compatibility_level = 0,
     version = "a14ad3a64e7bf398ab48105aaa0348e032ac87f8",
+    compatibility_level = 0,
 )
 
 p = use_extension("//:workspace_setup.bzl", "hedron_compile_commands_extension")

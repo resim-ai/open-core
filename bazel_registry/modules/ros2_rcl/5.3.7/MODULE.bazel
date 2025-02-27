@@ -1,7 +1,7 @@
 module(
     name = "ros2_rcl",
-    compatibility_level = 5,
     version = "5.3.7",
+    compatibility_level = 5,
 )
 
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
