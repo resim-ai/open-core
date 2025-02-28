@@ -77,9 +77,9 @@ class UsernamePasswordClient(AuthenticatedClient):
     def get_jwt(self) -> dict[str, Any]:
         """Get the current token, fetching if necessary."""
         if self.token is None and self._cache_location.exists():
-            assert (
-                self._cache_location.is_file()
-            ), "Directory detected in cache location!"
+            assert self._cache_location.is_file(), (
+                "Directory detected in cache location!"
+            )
             try:
                 with open(self._cache_location, "r", encoding="utf-8") as cache:
                     self.token = json.load(cache)

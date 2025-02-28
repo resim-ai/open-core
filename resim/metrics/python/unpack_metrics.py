@@ -64,7 +64,7 @@ def unpack_metrics(
     *,
     metrics: list[mp.Metric],
     metrics_data: list[mp.MetricsData],
-    events: list[mp.Event]
+    events: list[mp.Event],
 ) -> UnpackedMetrics:
     """The main unpacker for metrics, metrics data, and events
 
@@ -211,7 +211,6 @@ def _unpack_metric(
     id_to_unpacked_metrics_data: dict[uuid.UUID, BaseMetricsData],
     id_to_unpacked_metrics: dict[uuid.UUID, Metric],
 ) -> Metric:
-
     unpacked = Metric.unpack_common_fields(metric)
     unpackers: dict[type[Any], Callable] = {
         DoubleSummaryMetric: _unpack_double_summary_metric,
