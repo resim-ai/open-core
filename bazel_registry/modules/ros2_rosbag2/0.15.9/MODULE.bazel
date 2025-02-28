@@ -1,7 +1,7 @@
 module(
     name = "ros2_rosbag2",
-    compatibility_level = 0,
     version = "0.15.9",
+    compatibility_level = 0,
 )
 
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
@@ -21,7 +21,6 @@ bazel_dep(name = "mcap", version = "1.2.1")
 bazel_dep(name = "zstd", version = "1.5.6")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 use_repo(pip, "rules_ros2_pip_deps")
 
 # These dependencies are *NOT* complete, but we don't depend on any
