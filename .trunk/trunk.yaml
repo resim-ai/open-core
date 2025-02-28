@@ -38,23 +38,24 @@ lint:
         - types-requests
         - types-protobuf
   enabled:
-    - isort@5.13.2
-    - black@24.4.2
-    - buildifier@6.1.0
+    - ruff@0.9.7:
+        commands:
+          - lint
+          - format
+    - buildifier@7.1.1 # should match the version in .bazelversion
     - clang-tidy@15.0.6
-    - clang-format@14.0.0
-    - pylint@2.17.5
-    - mypy@1.5.1
+    - clang-format@16.0.3
+    - mypy@1.15.0
 runtimes:
 # These runtimes do not influence anything running in our development
 # docker container, or our bazel environment. These runtimes set the 
 # version of a language which will be used by trunk while they execute
 # their tools. The defaults recommended by Trunk are used for this reason.
   enabled:
-    - go@1.19.5
-    - node@18.12.1
+    - go@1.21.0
+    - node@18.20.5
     - python@3.10.8
-    - ruby@3.1.0
+    - ruby@3.1.4
 actions:
   enabled:
     - trunk-announce

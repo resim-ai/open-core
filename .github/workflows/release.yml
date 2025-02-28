@@ -48,7 +48,7 @@ jobs:
 
 
       - name: Generate Coverage Report
-        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration"
+        run: bazel coverage ... --combined_report=lcov --java_runtime_version=remotejdk_11 --nocache_test_results --test_tag_filters="-integration" --remote_download_all
 
       - uses: codecov/codecov-action@v3
         with:

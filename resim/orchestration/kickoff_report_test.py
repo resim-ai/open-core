@@ -92,9 +92,7 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
             k
             for k in client.state.metrics_builds.keys()
             if str(k) != batch.metrics_build_id
-        ][
-            0
-        ]  # Get another metrics build
+        ][0]  # Get another metrics build
         test_suite = client.state.test_suites[UUID(batch.test_suite_id)]
         start_timestamp = datetime.now(tz=timezone.utc)
 
@@ -147,8 +145,9 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
             return None
 
         # ACTION / VERIFICATION
-        with patch(GET_TEST_SUITE_FUNCTION, new=return_none), self.assertRaises(
-            RuntimeError
+        with (
+            patch(GET_TEST_SUITE_FUNCTION, new=return_none),
+            self.assertRaises(RuntimeError),
         ):
             await kr.run_report_for_batch(
                 project_id=UUID(batch.project_id),
@@ -169,8 +168,9 @@ class KickoffReportTest(unittest.IsolatedAsyncioTestCase):
             return None
 
         # ACTION / VERIFICATION
-        with patch(CREATE_REPORT_FUNCTION, new=return_none), self.assertRaises(
-            RuntimeError
+        with (
+            patch(CREATE_REPORT_FUNCTION, new=return_none),
+            self.assertRaises(RuntimeError),
         ):
             await kr.run_report_for_batch(
                 project_id=UUID(batch.project_id),

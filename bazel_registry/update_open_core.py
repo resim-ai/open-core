@@ -83,9 +83,10 @@ def main() -> None:
         )
 
     # Fetch the relevant MODULE.bazel and write it to the registry, updating its version
-    with httpx.Client(follow_redirects=True) as client, open(
-        new_entry_dir / "MODULE.bazel", "w", encoding="utf-8"
-    ) as fp:
+    with (
+        httpx.Client(follow_redirects=True) as client,
+        open(new_entry_dir / "MODULE.bazel", "w", encoding="utf-8") as fp,
+    ):
         response = client.get(module_url)
         response.raise_for_status()
         fp.write(update_version(response.content))
