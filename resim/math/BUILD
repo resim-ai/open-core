@@ -164,3 +164,26 @@ cc_test(
         "@libeigen//:eigen",
     ],
 )
+
+cc_library(
+    name = "gauss_newton_optimizer",
+    srcs = ["gauss_newton_optimizer.cc"],
+    hdrs = ["gauss_newton_optimizer.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/assert",
+        "//resim/utils:double_buffer",
+        "//resim/utils:inout",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "gauss_newton_optimizer_test",
+    srcs = ["gauss_newton_optimizer_test.cc"],
+    deps = [
+        ":gauss_newton_optimizer",
+        ":polynomial",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
