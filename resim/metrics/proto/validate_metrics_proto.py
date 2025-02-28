@@ -332,10 +332,7 @@ def _validate_line_plot_metric_values(
                     mp.DOUBLE_SERIES_DATA_TYPE,
                     mp.INDEXED_DOUBLE_SERIES_DATA_TYPE,
                 },
-                allowed_index_types={
-                    mp.TIMESTAMP_SERIES_DATA_TYPE,
-                    mp.INDEXED_TIMESTAMP_SERIES_DATA_TYPE,
-                },
+                allowed_index_types=_ALL_SERIES_DATA_TYPES,
             )
 
 
@@ -707,7 +704,10 @@ def _validate_job_level_metrics(
         events_list: A list of all the events
     """
     for metric in job_level_metrics.metrics:
-        _validate_metric(metric, metrics_data_map, events_list)
+        try:
+            _validate_metric(metric, metrics_data_map, events_list)
+        except InvalidMetricsException as e:
+            raise InvalidMetricsException(f"Error validating metric {metric.name}") from e
     _validate_metric_status(job_level_metrics.metrics_status)
 
 
@@ -894,16 +894,23 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     # Use a set to check for duplicated names
     metric_names = set()
     for metric in job_metrics.job_level_metrics.metrics:
-        _metrics_assert(metric.name not in metric_names)
-        metric_names.add(metric.name)
-        _metrics_assert(metric.job_id == job_metrics.job_id)
+        try:
+            _metrics_assert(metric.name not in metric_names)
+            metric_names.add(metric.name)
+            _metrics_assert(metric.job_id == job_metrics.job_id)
+        except InvalidMetricsException as e:
+            raise InvalidMetricsException(f"Error validating metric {metric.name}") from e
+
 
     # Use a set to check for duplicated names
     metric_data_names = set()
     for metric_data in job_metrics.metrics_data:
-        _metrics_assert(metric_data.name not in metric_data_names)
-        metric_data_names.add(metric_data.name)
-        _validate_metrics_data(metric_data, metrics_data_map)
+        try:
+            _metrics_assert(metric_data.name not in metric_data_names)
+            metric_data_names.add(metric_data.name)
+            _validate_metrics_data(metric_data, metrics_data_map)
+        except InvalidMetricsException as e:
+            raise InvalidMetricsException(f"Error validating metric data {metric_data.name}") from e
 
     if job_metrics.events:
         # Use a set to check for duplicated names
@@ -912,7 +919,10 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
         # Validate that all events per-job use the same timestamp type:
         timestamp_type = job_metrics.events[0].timestamp_type
         for event in job_metrics.events:
-            _metrics_assert(event.name not in event_names)
-            _metrics_assert(event.timestamp_type == timestamp_type)
-            event_names.add(event.name)
-            _validate_event(event, metrics_map)
+            try:
+                _metrics_assert(event.name not in event_names)
+                _metrics_assert(event.timestamp_type == timestamp_type)
+                event_names.add(event.name)
+                _validate_event(event, metrics_map)
+            except InvalidMetricsException as e:
+                raise InvalidMetricsException(f"Error validating event {event.name}") from e
