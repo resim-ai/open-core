@@ -34,6 +34,12 @@ jobs:
         # directory.
         run: git config --global --add safe.directory /__w/open-core/open-core
 
+      - name: Unit Tests
+        run: bazel test //... --remote_download_all
+
+      - name: Build `compile_commands.json` database
+        run: bazel run @hedron_compile_commands//:refresh_all
+
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
         with:

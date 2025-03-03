@@ -36,7 +36,7 @@ ResponseType = typing.TypeVar("ResponseType", bound=HasNextPageToken)
 def fetch_all_pages(
     endpoint: typing.Callable[..., ResponseType],
     *args: typing.Any,
-    **kwargs: typing.Any
+    **kwargs: typing.Any,
 ) -> list[ResponseType]:
     """
     Fetches all pages from a given endpoint.
@@ -56,7 +56,7 @@ def fetch_all_pages(
 async def async_fetch_all_pages(
     endpoint: typing.Callable[..., typing.Awaitable[ResponseType]],
     *args: typing.Any,
-    **kwargs: typing.Any
+    **kwargs: typing.Any,
 ) -> list[ResponseType]:
     """
     Fetches all pages from a given endpoint.

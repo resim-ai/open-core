@@ -300,7 +300,7 @@ async def make_tags_frame(
 
 
 def make_job_metrics_frame(
-    job_to_metrics_map: dict[str, list[JobMetric]]
+    job_to_metrics_map: dict[str, list[JobMetric]],
 ) -> pd.DataFrame:
     job_metrics_frame = pd.DataFrame(
         [
@@ -316,7 +316,7 @@ def make_job_metrics_frame(
 
 
 def make_batch_metrics_frame(
-    batch_to_metrics_map: dict[str, list[BatchMetric]]
+    batch_to_metrics_map: dict[str, list[BatchMetric]],
 ) -> pd.DataFrame:
     batch_metrics_frame = pd.DataFrame(
         [

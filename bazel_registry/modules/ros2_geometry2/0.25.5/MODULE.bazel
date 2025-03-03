@@ -1,7 +1,7 @@
 module(
     name = "ros2_geometry2",
-    compatibility_level = 0,
     version = "0.25.5",
+    compatibility_level = 0,
 )
 
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")

@@ -254,8 +254,9 @@ concept CustomComparable = requires(T a, T b) {
 };
 
 template <std::equality_comparable T>
-bool verify_equality(ADLTag /*unused*/, const T &a, const T &b) requires(
-    not CustomComparable<T>) {
+bool verify_equality(ADLTag /*unused*/, const T &a, const T &b)
+requires(not CustomComparable<T>)
+{
   return a == b;
 }
 
@@ -368,9 +369,9 @@ bool auto_verify_equality(
 }
 
 template <Parsable T>
-    bool verify_equality(ADLTag /*unused*/, const T &a, const T &b) requires(
-        not std::equality_comparable<T>) &&
-    (not CustomComparable<T>) {
+bool verify_equality(ADLTag /*unused*/, const T &a, const T &b)
+requires(not std::equality_comparable<T>) && (not CustomComparable<T>)
+{
   constexpr size_t NUM_FIELDS = decltype(get_parser(TypeTag<T>()))::NUM_FIELDS;
   return auto_verify_equality(
       ADLTag(),
