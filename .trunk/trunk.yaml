@@ -42,8 +42,8 @@ lint:
         commands:
           - lint
           - format
-    - buildifier@8.0.3
-    - clang-tidy@16.0.3
+    - buildifier@7.1.1 # should match the version in .bazelversion
+    - clang-tidy@15.0.6
     - clang-format@16.0.3
     - mypy@1.15.0
 runtimes:

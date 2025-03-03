@@ -103,7 +103,7 @@ class UsernamePasswordClientTest(unittest.TestCase):
                 cache_location=Path(temp_file.name),
             )
             #   get the current JWT
-            first_jwt = client._token
+            first_jwt = client.token
             #   update the mock to return a new JWT
             post_mock.return_value = httpx.Response(
                 status_code=200,
@@ -121,7 +121,7 @@ class UsernamePasswordClientTest(unittest.TestCase):
                 password="test_password",
                 cache_location=Path(temp_file.name),
             )
-            second_jwt = client2._token
+            second_jwt = client2.token
             # Then
             assert first_jwt is not None
             assert second_jwt == first_jwt

@@ -1,24 +1,21 @@
 module(
     name = "resim-python-client",
-    compatibility_level = 0,
     version = "185d9c00b3d7903150a3149fd7e258d9ceae12f5",
+    compatibility_level = 0,
 )
 
 bazel_dep(name = "rules_python", version = "0.31.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-
 python.toolchain(
     ignore_root_user_error = True,
     python_version = "3.10",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 pip.parse(
     hub_name = "resim_python_client_deps",
     python_version = "3.10",
     requirements_lock = "@resim-python-client//:requirements_lock.txt",
 )
-
 use_repo(pip, "resim_python_client_deps")

@@ -176,7 +176,7 @@ def _validate_values_and_statuses(
     metrics_data_map: dict[str, mp.MetricsData],
     *,
     allowed_value_types: set[mp.MetricsDataType],
-    allowed_index_types: set[mp.MetricsDataType]
+    allowed_index_types: set[mp.MetricsDataType],
 ) -> None:
     """
     Validate that the given value data and status data match.
