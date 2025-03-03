@@ -150,7 +150,7 @@ def _fetch_all_urls(
 def _fetch_all_protos(
     *,
     metrics_urls: dict[uuid.UUID, list[str]],
-    metrics_data_urls: dict[uuid.UUID, list[str]]
+    metrics_data_urls: dict[uuid.UUID, list[str]],
 ) -> tuple[dict[uuid.UUID, list[mp.Metric]], dict[uuid.UUID, list[mp.MetricsData]]]:
     """
     Get and parse the protobuf data from the given urls
@@ -222,7 +222,7 @@ def _get_metrics_urls(
     job_id: uuid.UUID,
     client: AuthenticatedClient,
     metrics_urls: dict[uuid.UUID, list[str]],
-    metrics_urls_lock: threading.Lock
+    metrics_urls_lock: threading.Lock,
 ) -> None:
     """
     Simple wrapper around fetch_metrics_urls which locks a mutex
@@ -242,7 +242,7 @@ def _get_metrics_data_urls(
     job_id: uuid.UUID,
     client: AuthenticatedClient,
     metrics_data_urls: dict[uuid.UUID, list[str]],
-    metrics_data_urls_lock: threading.Lock
+    metrics_data_urls_lock: threading.Lock,
 ) -> None:
     """
     Simple wrapper around fetch_metrics_data_urls which locks a mutex
@@ -262,7 +262,7 @@ def _fetch_metrics(
     job_id: uuid.UUID,
     url: str,
     protos: dict[uuid.UUID, list[Any]],
-    protos_lock: threading.Lock
+    protos_lock: threading.Lock,
 ) -> None:
     """
     Simple wrapper around get_metrics_proto which locks a mutex

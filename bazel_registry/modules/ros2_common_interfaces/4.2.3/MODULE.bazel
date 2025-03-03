@@ -1,7 +1,7 @@
 module(
     name = "ros2_common_interfaces",
-    compatibility_level = 4,
     version = "4.2.3",
+    compatibility_level = 4,
 )
 
 bazel_dep(name = "rules_python", version = "0.31.0")

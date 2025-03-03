@@ -1,7 +1,7 @@
 module(
     name = "ros2_rosidl",
-    compatibility_level = 3,
     version = "3.1.5",
+    compatibility_level = 3,
 )
 
 bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
@@ -10,5 +10,4 @@ bazel_dep(name = "rules_python", version = "0.31.0")
 bazel_dep(name = "ros2_rcutils", version = "5.1.4")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 use_repo(pip, "rules_ros2_pip_deps")

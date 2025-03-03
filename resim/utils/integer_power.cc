@@ -18,8 +18,9 @@ namespace {
 // A simple helper used to check if overflow will occur when multiplying a and
 // b.
 template <typename IntegerType>
-void overflow_check(IntegerType a, IntegerType b) requires
-    std::is_unsigned_v<IntegerType> {
+void overflow_check(IntegerType a, IntegerType b)
+requires std::is_unsigned_v<IntegerType>
+{
   constexpr IntegerType MAX_VALUE = std::numeric_limits<IntegerType>::max();
   REASSERT(a <= MAX_VALUE / b, "Overflow detected!");
 }
@@ -28,8 +29,9 @@ void overflow_check(IntegerType a, IntegerType b) requires
 
 // An integer version of power using repeated squaring.
 template <typename IntegerType>
-IntegerType pow(IntegerType base, IntegerType exponent) requires
-    std::is_unsigned_v<IntegerType> {
+IntegerType pow(IntegerType base, IntegerType exponent)
+requires std::is_unsigned_v<IntegerType>
+{
   constexpr IntegerType ONE = 0x1;
   constexpr IntegerType ZERO = 0x0;
 

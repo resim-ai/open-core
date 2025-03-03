@@ -8,6 +8,7 @@
 """
 Unit tests for dice_coefficient.py
 """
+
 import copy
 import unittest
 
