@@ -1,7 +1,7 @@
 module(
     name = "ros2_rclcpp",
-    compatibility_level = 16,
     version = "16.0.8",
+    compatibility_level = 16,
 )
 
 bazel_dep(name = "rules_cc", version = "0.0.9")
@@ -20,5 +20,4 @@ bazel_dep(name = "ros2_class_loader", version = "2.2.0")
 bazel_dep(name = "ros2_libstatistics_collector", version = "1.3.1")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 use_repo(pip, "rules_ros2_pip_deps")

@@ -1,7 +1,7 @@
 module(
     name = "com_github_mvukov_rules_ros2",
-    compatibility_level = 0,
     version = "14b75cb377784f21d709663df6c599056a512c18",
+    compatibility_level = 0,
 )
 
 bazel_dep(name = "rules_cc", version = "0.0.9")
@@ -9,20 +9,17 @@ bazel_dep(name = "bazel_skylib", version = "1.6.1")
 bazel_dep(name = "rules_python", version = "0.31.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-
 python.toolchain(
     ignore_root_user_error = True,
     python_version = "3.10",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 pip.parse(
     hub_name = "rules_ros2_pip_deps",
     python_version = "3.10",
     requirements_lock = "@com_github_mvukov_rules_ros2//:requirements_lock.txt",
 )
-
 use_repo(pip, "rules_ros2_pip_deps")
 
 bazel_dep(name = "ros2_rosidl", version = "3.1.5")

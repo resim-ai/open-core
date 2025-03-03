@@ -28,7 +28,7 @@ def fetch_metrics_urls(
     project_id: uuid.UUID,
     batch_id: uuid.UUID,
     job_id: uuid.UUID,
-    client: AuthenticatedClient
+    client: AuthenticatedClient,
 ) -> list[str]:
     """Fetch all metrics urls for a given job_id."""
     return [
@@ -49,7 +49,7 @@ def fetch_metrics_data_urls(
     project_id: uuid.UUID,
     batch_id: uuid.UUID,
     job_id: uuid.UUID,
-    client: AuthenticatedClient
+    client: AuthenticatedClient,
 ) -> list[str]:
     """Fetch all metrics data urls for a given job_id."""
 

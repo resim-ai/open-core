@@ -49,7 +49,8 @@ class UsernamePasswordClient(AuthenticatedClient):
         password: Optional[str] = os.getenv("RESIM_PASSWORD"),
         **kwargs: Any,
     ):
-        self._token: Optional[dict[str, Any]] = None
+        self.token: Optional[dict[str, Any]] = None
+
         self._client_id = client_id
         self._cache_location = cache_location
         self._domain = domain
@@ -69,24 +70,24 @@ class UsernamePasswordClient(AuthenticatedClient):
 
     def reset(self) -> None:
         """Clear the local token cache and the internal token."""
-        self._token = None
+        self.token = None
         if self._cache_location.exists():
             self._cache_location.unlink()
 
     def get_jwt(self) -> dict[str, Any]:
         """Get the current token, fetching if necessary."""
-        if self._token is None and self._cache_location.exists():
+        if self.token is None and self._cache_location.exists():
             assert self._cache_location.is_file(), (
                 "Directory detected in cache location!"
             )
             try:
                 with open(self._cache_location, "r", encoding="utf-8") as cache:
-                    self._token = json.load(cache)
+                    self.token = json.load(cache)
             except json.JSONDecodeError as _:
-                self._token = None
+                self.token = None
 
-        if self._token is None or check_exp.is_expired(token_data=self._token):
-            self._token = _get_new_token(
+        if self.token is None or check_exp.is_expired(token_data=self.token):
+            self.token = _get_new_token(
                 domain=self._domain,
                 client_id=self._client_id,
                 scope=self._scope,
@@ -96,8 +97,8 @@ class UsernamePasswordClient(AuthenticatedClient):
             )
             self._cache_location.parent.mkdir(parents=True, exist_ok=True)
             with open(self._cache_location, "w", encoding="utf-8") as cache:
-                cache.write(json.dumps(self._token, indent=4))
-        return self._token
+                cache.write(json.dumps(self.token, indent=4))
+        return self.token
 
 
 def _get_new_token(
