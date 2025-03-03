@@ -113,9 +113,9 @@ class Metric(ABC, Generic[MetricT]):
         if not isinstance(__value, type(self)):
             return False
 
-        assert (
-            self.id is not None and __value.id is not None
-        ), "Cannot compare values without valid ids"
+        assert self.id is not None and __value.id is not None, (
+            "Cannot compare values without valid ids"
+        )
 
         return self.id == __value.id
 
@@ -1681,9 +1681,9 @@ class BaseMetricsData(ABC, Generic[BaseMetricsDataT]):
         if not isinstance(__value, type(self)):
             return False
 
-        assert (
-            self.id is not None and __value.id is not None
-        ), "Cannot compare values without valid ids"
+        assert self.id is not None and __value.id is not None, (
+            "Cannot compare values without valid ids"
+        )
 
         return self.id == __value.id
 
@@ -1968,9 +1968,9 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
 
-        assert (
-            len(self.category_to_series.keys()) > 0
-        ), "Cannot pack grouped data with no categories."
+        assert len(self.category_to_series.keys()) > 0, (
+            "Cannot pack grouped data with no categories."
+        )
 
         categories = list(self.category_to_series.keys())
         if self.unit is not None:
@@ -2096,9 +2096,9 @@ class Event:
         if not isinstance(__value, type(self)):
             return False
 
-        assert (
-            self.id is not None and __value.id is not None
-        ), "Cannot compare values without valid ids"
+        assert self.id is not None and __value.id is not None, (
+            "Cannot compare values without valid ids"
+        )
 
         return self.id == __value.id
 

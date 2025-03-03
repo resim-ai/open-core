@@ -117,8 +117,8 @@ concept inherits_liegroup = std::is_base_of_v<LieGroup<T::DIMS, T::DOF>, T>;
 template <typename T>
 concept has_action =
     requires(const T v, const Eigen::Matrix<double, T::DIMS, 1> point) {
-  { v* point } -> std::same_as<Eigen::Matrix<double, T::DIMS, 1>>;
-};
+      { v* point } -> std::same_as<Eigen::Matrix<double, T::DIMS, 1>>;
+    };
 
 // Trait to check whether a type T has an exponential defined for it.
 template <typename T>
@@ -154,8 +154,8 @@ concept has_adjoint = requires(const T v) {
 template <typename T>
 concept has_adjoint_times =
     requires(const T v, const typename T::TangentMapping dv) {
-  { v.adjoint_times(dv) } -> std::same_as<typename T::TangentVector>;
-};
+      { v.adjoint_times(dv) } -> std::same_as<typename T::TangentVector>;
+    };
 
 // Trait to check whether a type T defines an algebra adjoint method.
 template <typename T>

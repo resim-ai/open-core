@@ -134,8 +134,8 @@ typename SE3::TangentVector RigidBodyAerodynamics::body_pressure_force(
   return pressure_force;
 }
 
-const std::vector<std::shared_ptr<AerodynamicElement>>
-    &RigidBodyAerodynamics::components() const {
+const std::vector<std::shared_ptr<AerodynamicElement>> &
+RigidBodyAerodynamics::components() const {
   return components_;
 }
 
