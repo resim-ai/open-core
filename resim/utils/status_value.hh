@@ -146,22 +146,37 @@ constexpr const Status &StatusValue<T>::status() const {
       [](const Status &status) -> const Status & { return status; });
 }
 
+namespace detail {
+
+template <typename T>
+class Wrapper {
+ public:
+  explicit Wrapper(StatusValue<T> sv) : status_value_{std::move(sv)} {}
+
+  auto operator()() -> decltype(auto) {
+    return std::move(status_value_).value();
+  }
+
+  constexpr const Status &status() const { return status_value_.status(); }
+
+ private:
+  StatusValue<T> status_value_;
+};
+
+}  // namespace detail
+
 // Return from the enclosing function if the given status result is not
 // ok. Otherwise, assign the value as the value of this expression. We don't
 // really have a choice but to use the GNU statement expression extension here
 // unless we pass the assignment target in too. We use the lambda because
 // otherwise the statement expression doesn't preserve references.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define RETURN_OR_ASSIGN(status_value)                        \
-  ({                                                          \
-    auto &&evalutated_status_value =                          \
-        std::forward<decltype(status_value)>(status_value);   \
-    RETURN_IF_NOT_OK(evalutated_status_value.status());       \
-    [&]() -> decltype(auto) {                                 \
-      return std::forward<decltype(evalutated_status_value)>( \
-                 evalutated_status_value)                     \
-          .value();                                           \
-    };                                                        \
+#define RETURN_OR_ASSIGN(status_value)                                        \
+  ({                                                                          \
+    detail::Wrapper<typename std::decay_t<decltype(status_value)>::ValueType> \
+        wrapper(status_value);                                                \
+    RETURN_IF_NOT_OK(wrapper.status());                                       \
+    std::move(wrapper);                                                       \
   })()
 
 }  // namespace resim

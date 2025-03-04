@@ -32,3 +32,32 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "t_curve_distribution",
+    hdrs = ["t_curve_distribution.hh"],
+    deps = [
+        "//resim/curves:t_curve",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "learn_t_curve_distribution",
+    srcs = ["learn_t_curve_distribution.cc"],
+    hdrs = ["learn_t_curve_distribution.hh"],
+    deps = [
+        ":t_curve_distribution",
+        ":two_jet_mean",
+    ],
+)
+
+cc_test(
+    name = "learn_t_curve_distribution_test",
+    srcs = ["learn_t_curve_distribution_test.cc"],
+    deps = [
+    "//resim/time:sample_interval",
+        ":learn_t_curve_distribution",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

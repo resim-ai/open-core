@@ -4,9 +4,9 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include "resim/toolchain/check_compiler.hh"
-
 #include <gtest/gtest.h>
+
+#include "resim/toolchain/check_compiler.hh"
 
 namespace resim::toolchain {
 
@@ -22,8 +22,7 @@ TEST(CheckCompiler, VerifyExpectedCompiler) {
   and the expected cpp standard (2020) were used in the compilation.*/
   const auto compiler_data = query_compiler_data();
   EXPECT_NE(compiler_data.cpp_standard.find("2020"), std::string::npos);
-  EXPECT_NE(compiler_data.compiler_version.find("Clang"), std::string::npos);
-  EXPECT_NE(compiler_data.compiler_version.find("14"), std::string::npos);
+  EXPECT_NE(compiler_data.compiler_version.find("Clang 19"), std::string::npos);
 }
 
 }  // namespace resim::toolchain
