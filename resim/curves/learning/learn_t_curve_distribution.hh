@@ -7,7 +7,7 @@
 #pragma once
 
 #include <functional>
-#include <ranges>
+#include <vector>
 
 #include "resim/curves/learning/t_curve_distribution.hh"
 #include "resim/curves/two_jet.hh"
@@ -16,27 +16,9 @@
 
 namespace resim::curves::learning {
 
-namespace concepts {
-template <typename T>
-concept TimeView =
-    std::ranges::view<T> && std::same_as<std::ranges::range_value_t<T>, double>;
-
-}  // namespace concepts
-
-template <concepts::TimeView TV, std::ranges::view CurveView>
-requires std::same_as<
-    std::ranges::range_value_t<CurveView>,
-    std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>>
 StatusValue<TCurveDistribution> learn_t_curve_distribution(
-    const TV &timestamps,
-    const CurveView &curves) {
-  using TwoJetL = TwoJetL<transforms::SE3>;
-  for (const auto &time : timestamps) {
-    for (const auto &curve : curves) {
-      const TwoJetL sample = RETURN_OR_ASSIGN(curve(time));
-    }
-  }
-  return MAKE_STATUS("Not implemented!");
-}
+    const std::vector<double> &timestamps,
+    const std::vector<
+        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves);
 
 }  // namespace resim::curves::learning
