@@ -20,6 +20,7 @@
 namespace resim::curves::learning {
 
 using transforms::SE3;
+using Vec3 = Eigen::Vector3d;
 using TwoJetL = TwoJetL<SE3>;
 using TangentVector = optimization::TwoJetTangentVector<SE3>;
 
@@ -123,6 +124,32 @@ TEST(TwoJetMeanTest, TestTwoJetNoConverge) {
   // VERIFICATION
   // Shouldn't converge because MAX_ITERATIONS is 1
   EXPECT_FALSE(sample_mean_sv.ok());
+}
+
+TEST(TwoJetMeanTest, TestOpposingTwoJets) {
+  // SETUP
+  constexpr int MAX_ITERATIONS = 50;
+  constexpr double TOLERANCE = 1e-6;
+
+  TwoJetTestHelper<TwoJetL> helper;
+  std::vector<TwoJetL> samples;
+  samples.push_back(helper.make_test_two_jet());
+
+  const SE3 &frame_from_ref{samples.front().frame_from_ref()};
+  const SE3 opposing_frame_from_ref{
+      transforms::SO3::exp(M_PI * Vec3::UnitZ()) * frame_from_ref.rotation(),
+      frame_from_ref.translation()};
+
+  samples.emplace_back(
+      opposing_frame_from_ref,
+      samples.front().d_frame_from_ref(),
+      samples.front().d2_frame_from_ref());
+
+  // ACTION
+  const auto sample_mean_sv = two_jet_mean(samples, TOLERANCE, MAX_ITERATIONS);
+
+  // VERIFICATION
+  EXPECT_TRUE(sample_mean_sv.ok());
 }
 
 }  // namespace resim::curves::learning

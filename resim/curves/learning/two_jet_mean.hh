@@ -19,7 +19,7 @@ namespace resim::curves::learning {
 // is defined as the left minus operator as defined in
 // resim/curves/optimization/two_jet_tangent_space.hh. Another way of saying
 // this is that u is the mean of all the samples when they're expressed in u's
-// tangent space. We use iteration to find u  and therefore a tolerance and a
+// tangent space. We use iteration to find u and therefore a tolerance and a
 // maximum number of iterations must be provided.
 // @param[in] samples - The samples to compute the mean of.
 // @param[in] tolerance - The absolute tolerance for computing the mean.
