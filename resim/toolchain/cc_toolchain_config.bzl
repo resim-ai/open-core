@@ -5,7 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 # Copied from https://bazel.build/tutorials/cc-toolchain-config
-# with updated clang version 14 paths
+# with updated clang version 19 paths
 """C++ toolchain config"""
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
@@ -47,7 +47,7 @@ def _toolchain_config_helper(
     tool_paths = [
         tool_path(
             name = "gcc",
-            path = "/usr/bin/clang",
+            path = "/usr/bin/clang-19",
         ),
         tool_path(
             name = "ld",
@@ -59,19 +59,19 @@ def _toolchain_config_helper(
         ),
         tool_path(
             name = "cpp",
-            path = "/usr/bin/clang-cpp-14",
+            path = "/usr/bin/clang-cpp-19",
         ),
         tool_path(
             name = "gcov",
-            path = "/usr/bin/llvm-profdata-14",
+            path = "/usr/bin/llvm-profdata-19",
         ),
         tool_path(
             name = "llvm-cov",
-            path = "/usr/bin/llvm-cov-14",
+            path = "/usr/bin/llvm-cov-19",
         ),
         tool_path(
             name = "llvm-profdata",
-            path = "/usr/bin/llvm-profdata-14",
+            path = "/usr/bin/llvm-profdata-19",
         ),
         tool_path(
             name = "nm",
@@ -168,7 +168,7 @@ def _impl(ctx):
     return _toolchain_config_helper(
         ctx,
         [
-            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/lib/llvm-19/lib/clang/19/include",
             "/usr/include",
         ],
     )
@@ -177,7 +177,7 @@ def _aarch64_impl(ctx):
     return _toolchain_config_helper(
         ctx,
         [
-            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/lib/llvm-19/lib/clang/19/include",
             "/usr/include",
         ],
     )
@@ -186,7 +186,7 @@ def _amd64_aarch64_cross_impl(ctx):
     return _toolchain_config_helper(
         ctx,
         [
-            "/usr/lib/llvm-14/lib/clang/14.0.0/include",
+            "/usr/lib/llvm-19/lib/clang/19/include",
             "/usr/aarch64-linux-gnu/include",
         ],
         "aarch64",

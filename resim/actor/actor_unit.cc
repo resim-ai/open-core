@@ -44,11 +44,11 @@ ActorUnit::ActorUnit(
     std::unique_ptr<Actor> actor,
     InOut<simulator::ExecutorBuilder> executor_builder)
     : SimulationUnit(std::move(logger_interface)),
-      actor_{std::move(actor)},
-      simulate_forward_dependency_{fmt::format(
-          "simulate_forward_{}",
-          (actor_ != nullptr ? actor_->id().to_string() : ""))} {
+      actor_{std::move(actor)} {
   REASSERT(actor_ != nullptr, "Null actor passed to actor unit");
+
+  simulate_forward_dependency_ =
+      fmt::format("simulate_forward_{}", actor_->id().to_string());
 
   executor_builder->add_task<time::Timestamp>(
       "simulate_forward",

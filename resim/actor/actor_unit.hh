@@ -33,7 +33,7 @@ class ActorUnit : public simulator::SimulationUnit {
 
   // A private dependency string used to enforce that simulate forward always
   // runs before actor state publication.
-  const std::string simulate_forward_dependency_;
+  std::string simulate_forward_dependency_;
 };
 
 // This unit logs the output states published by all actor units
