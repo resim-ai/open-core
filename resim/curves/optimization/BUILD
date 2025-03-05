@@ -69,3 +69,55 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "control_point_parameter",
+    srcs = ["control_point_parameter.cc"],
+    hdrs = ["control_point_parameter.hh"],
+    deps = [
+        ":two_jet_tangent_space",
+        "//resim/curves:t_curve",
+        "//resim/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "pose_error_model",
+    srcs = ["pose_error_model.cc"],
+    hdrs = ["pose_error_model.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":control_point_parameter",
+        ":t_curve_differential",
+        "//resim/assert",
+        "//resim/curves:t_curve",
+        "//resim/math:gauss_newton_optimizer",
+        "//resim/transforms:se3",
+        "@libeigen//:eigen",
+    ],
+)
+
+cc_test(
+    name = "pose_error_model_test",
+    srcs = ["pose_error_model_test.cc"],
+    deps = [
+        ":control_point_parameter",
+        ":pose_error_model",
+        ":two_jet_tangent_space",
+        "//resim/testing:random_matrix",
+        "//resim/time:timestamp",
+        "//resim/time/proto:time_to_proto",
+        "//resim/transforms:se3",
+        "//resim/transforms:so3",
+        "//resim/utils:mcap_logger",
+        "//resim/visualization:color",
+        "//resim/visualization/foxglove:color_to_foxglove",
+        "//resim/visualization/foxglove:pose_to_foxglove",
+        "//resim/visualization/foxglove:vector_to_foxglove",
+        "@com_google_googletest//:gtest_main",
+        "@fmt",
+        "@foxglove_schemas",
+        "@libeigen//:eigen",
+    ],
+)
