@@ -527,4 +527,19 @@ TEST(StatusValueTest, TestReturnOrAssignCallsOnce) {
   }
 }
 
+TEST(StatusValueTest, TestReturnOrAssignMovement) {
+  // SETUP
+  std::string f{"ASDF"};
+  StatusValue<std::string> sv{f};
+
+  // ACTION
+  [&]() -> Status {
+    RETURN_OR_ASSIGN(sv);
+    return OKAY_STATUS;
+  }();
+
+  // VERIFICATION
+  EXPECT_EQ(f, "ASDF");
+}
+
 }  // namespace resim
