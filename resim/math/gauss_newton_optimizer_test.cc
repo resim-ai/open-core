@@ -83,6 +83,11 @@ class QuadraticErrorModel : public ErrorModel {
       error_jacobian_writer(constant_key_, ii, 0, 1.);
       error_jacobian_writer(linear_key_, ii, 0, point.x());
       error_jacobian_writer(quadratic_key_, ii, 0, point.x() * point.x());
+
+      // Check that things add rather than overwrite
+      error_jacobian_writer(constant_key_, ii, 0, 0.);
+      error_jacobian_writer(linear_key_, ii, 0, 0.);
+      error_jacobian_writer(quadratic_key_, ii, 0, 0.);
     }
   }
 
