@@ -78,10 +78,14 @@ class FramedVector : public Eigen::Matrix<double, dims, 1> {
 
   // Equality comparison operator that considers the frame as well
   // as the vector.
-  // Note that comparisons between unframed and framed vectors still work,
-  // through inheritance from the base class, although they ignore frames.
   bool operator==(const FramedVector<dims> &other) const {
     return Vector::operator==(other) && frame_ == other.frame();
+  }
+
+  // Equality comparison operator with the base class. The inherited one does
+  // not work because the above overload shadows it.
+  bool operator==(const Vector &other) const {
+    return Vector::operator==(other);
   }
 
   // The approximate equality comparison method also considers frames.
