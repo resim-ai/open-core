@@ -28,6 +28,7 @@ cc_test(
         "//resim/curves/optimization:two_jet_tangent_space",
         "//resim/testing:random_matrix",
         "//resim/transforms:se3",
+        "//resim/transforms:so3",
         "//resim/utils:inout",
         "@com_google_googletest//:gtest_main",
     ],

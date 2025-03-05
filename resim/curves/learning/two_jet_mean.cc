@@ -21,6 +21,9 @@ StatusValue<TwoJetL> two_jet_mean(
     const double tolerance,
     const int max_iterations) {
   REASSERT(not samples.empty(), "Sample size must be greater than 1");
+  REASSERT(
+      max_iterations > 0,
+      "Number of iterations must be greater than zero");
 
   TwoJetL guess = samples.front();
   TangentVector delta{TangentVector::Zero()};
