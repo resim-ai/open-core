@@ -308,9 +308,11 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":t_curve",
+        "//resim/assert",
         "//resim/curves/optimization:two_jet_tangent_space",
         "//resim/math:multivariate_gaussian",
         "//resim/transforms:se3",
+        "//resim/utils:inout",
         "@libeigen//:eigen",
     ],
 )
@@ -320,6 +322,9 @@ cc_test(
     srcs = ["sample_t_curve_test.cc"],
     deps = [
         ":sample_t_curve",
+        ":t_curve",
+        "//resim/curves/optimization:two_jet_tangent_space",
+        "//resim/transforms:se3",
         "//resim/visualization/curve:visualize_t_curve",
         "@com_google_googletest//:gtest_main",
     ],
