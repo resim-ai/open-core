@@ -16,17 +16,24 @@
 
 namespace resim::curves::learning {
 
-template <std::ranges::view TimeView, std::ranges::view CurveView>
-requires std::same_as < std::ranges::range_value_t<TimeView>,
-double > &&std::same_as<
-             std::ranges::range_value_t<CurveView>,
-             std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>>
-             StatusValue<TCurveDistribution> learn_t_curve_distribution(
-                 const TimeView &timestamps,
-                 const CurveView &curves) {
+namespace concepts {
+template <typename T>
+concept TimeView =
+    std::ranges::view<T> && std::same_as<std::ranges::range_value_t<T>, double>;
+
+}  // namespace concepts
+
+template <concepts::TimeView TV, std::ranges::view CurveView>
+requires std::same_as<
+    std::ranges::range_value_t<CurveView>,
+    std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>>
+StatusValue<TCurveDistribution> learn_t_curve_distribution(
+    const TV &timestamps,
+    const CurveView &curves) {
+  using TwoJetL = TwoJetL<transforms::SE3>;
   for (const auto &time : timestamps) {
     for (const auto &curve : curves) {
-      RETURN_OR_ASSIGN(curve(time));
+      const TwoJetL sample = RETURN_OR_ASSIGN(curve(time));
     }
   }
   return MAKE_STATUS("Not implemented!");
