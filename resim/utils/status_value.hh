@@ -152,16 +152,13 @@ constexpr const Status &StatusValue<T>::status() const {
 // unless we pass the assignment target in too. We use the lambda because
 // otherwise the statement expression doesn't preserve references.
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define RETURN_OR_ASSIGN(status_value)                        \
-  ({                                                          \
-    auto &&evalutated_status_value =                          \
-        std::forward<decltype(status_value)>(status_value);   \
-    RETURN_IF_NOT_OK(evalutated_status_value.status());       \
-    [&]() -> decltype(auto) {                                 \
-      return std::forward<decltype(evalutated_status_value)>( \
-                 evalutated_status_value)                     \
-          .value();                                           \
-    };                                                        \
+#define RETURN_OR_ASSIGN(status_value)                     \
+  ({                                                       \
+    auto evaluated_status_value = std::move(status_value); \
+    RETURN_IF_NOT_OK(evaluated_status_value.status());     \
+    [&]() -> decltype(auto) {                              \
+      return std::move(evaluated_status_value).value();    \
+    };                                                     \
   })()
 
 }  // namespace resim

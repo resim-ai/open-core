@@ -4,3 +4,7 @@ comment: # this is a top-level key
   require_changes: false # if true: only post the comment if coverage changes
   require_base: no # [if yes :: must have a base report to post]
   require_head: yes # [if yes :: must have a head report to post]
+
+ignore:
+  - resim/converter/fuzz_helpers_test_template.hh # testonly
+  - resim/visualization/curve/line_primitive_from_curve_test_helpers.cc # testonly
