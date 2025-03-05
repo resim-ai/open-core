@@ -53,15 +53,21 @@ Status return_if_not_ok_function(const StatusValue<T> &sv) {
 }
 
 // A helper function which calls RETURN_OR_ASSIGN() so we can test it.
-template <typename StatusValueType>
-Status return_or_assign_function(StatusValueType &&sv) {
-  const typename std::decay_t<StatusValueType>::ValueType val =
-      RETURN_OR_ASSIGN(std::forward<StatusValueType>(sv));
+template <typename V>
+Status return_or_assign_function(StatusValue<V> &&sv) {
+  const Status status_copy = sv.status();
+  RETURN_OR_ASSIGN(std::move(sv));
+  EXPECT_TRUE(status_copy.ok());
+  return OKAY_STATUS;
+}
+
+template <typename V>
+Status return_or_assign_function(const StatusValue<V> &sv) {
+  const V val = RETURN_OR_ASSIGN(sv);
   EXPECT_TRUE(sv.ok());
   EXPECT_EQ(val, sv.value());
   return OKAY_STATUS;
 }
-
 }  // namespace
 
 // Test that we can construct a StatusValue<T> based on a value.
@@ -525,6 +531,20 @@ TEST(StatusValueTest, TestReturnOrAssignCallsOnce) {
 
     EXPECT_EQ(call_count, 1);
   }
+}
+
+TEST(StatusValueTest, TestReturnOrAssignMovement) {
+  // SETUP
+  std::string f{"ASDF"};
+  StatusValue<std::string> sv{f};
+
+  // ACTION
+  [&]() -> Status {
+    RETURN_OR_ASSIGN(sv);
+    return OKAY_STATUS;
+  }();
+  // VERIFICATION
+  EXPECT_EQ(f, "ASDF");
 }
 
 }  // namespace resim
