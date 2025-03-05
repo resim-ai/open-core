@@ -79,6 +79,7 @@ cc_test(
 
 cc_library(
     name = "line_primitive_from_curve_test_helpers",
+    testonly = True,
     srcs = ["line_primitive_from_curve_test_helpers.cc"],
     hdrs = ["line_primitive_from_curve_test_helpers.hh"],
     visibility = ["//resim/visualization:__subpackages__"],
