@@ -60,18 +60,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "line_primitive_from_curve_test_helpers",
-    srcs = ["line_primitive_from_curve_test_helpers.cc"],
-    hdrs = ["line_primitive_from_curve_test_helpers.hh"],
-    visibility = ["//resim/visualization:__subpackages__"],
-    deps = [
-        "//resim/visualization:color",
-        "@com_google_googletest//:gtest_main",
-        "@foxglove_schemas",
-    ],
-)
-
 cc_test(
     name = "line_primitive_from_t_curve_test",
     srcs = ["line_primitive_from_t_curve_test.cc"],
@@ -86,6 +74,29 @@ cc_test(
         "@com_google_googletest//:gtest_main",
         "@foxglove_schemas",
         "@libeigen//:eigen",
+    ],
+)
+
+cc_library(
+    name = "line_primitive_from_curve_test_helpers",
+    srcs = ["line_primitive_from_curve_test_helpers.cc"],
+    hdrs = ["line_primitive_from_curve_test_helpers.hh"],
+    visibility = ["//resim/visualization:__subpackages__"],
+    deps = [
+        "//resim/visualization:color",
+        "@com_google_googletest//:gtest_main",
+        "@foxglove_schemas",
+    ],
+)
+
+cc_test(
+    name = "line_primitive_from_curve_test_helpers_test",
+    srcs = ["line_primitive_from_curve_test_helpers_test.cc"],
+    deps = [
+        ":line_primitive_from_curve_test_helpers",
+        "//resim/visualization:color",
+        "@com_google_googletest//:gtest_main",
+        "@foxglove_schemas",
     ],
 )
 

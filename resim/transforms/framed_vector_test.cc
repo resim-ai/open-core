@@ -85,7 +85,8 @@ TYPED_TEST(FramedVectorTest, VectorAddition) {
   // Direct comparison of framed and unframed vectors should work.
   EXPECT_EQ(resultant_framed_vector, resultant_unframed_1);
   EXPECT_EQ(resultant_framed_vector, resultant_unframed_2);
-  EXPECT_EQ(resultant_framed_vector, test_vector_1 + test_vector_2);
+  const Eigen::Matrix<double, D, 1> sum = test_vector_1 + test_vector_2;
+  EXPECT_EQ(resultant_framed_vector, sum);
 }
 
 TYPED_TEST(FramedVectorTest, ComparisonOperations) {
