@@ -4,11 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#include "resim/math/gauss_newton_optimizer.hh"
+
 #include <Eigen/Sparse>
 #include <limits>
 #include <utility>
-
-#include "resim/math/gauss_newton_optimizer.hh"
 
 namespace resim::math {
 
