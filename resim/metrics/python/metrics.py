@@ -36,6 +36,7 @@ from google.protobuf.json_format import Parse
 from google.protobuf.struct_pb2 import Struct
 
 import resim.metrics.proto.metrics_pb2 as metrics_proto
+from resim.metrics.python.emissions import emit, is_jsonable
 from resim.metrics.python.metrics_utils import (
     DoubleFailureDefinition,
     HistogramBucket,
@@ -263,7 +264,7 @@ class Metric(ABC, Generic[MetricT]):
         return unpacked
 
     @abstractmethod
-    def recursively_pack_into(self, metrics_output: ResimMetricsOutput) -> None:
+    def recursively_pack_into(self, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True) -> None:
         raise NotImplementedError()
 
 
@@ -319,7 +320,7 @@ class ScalarMetric(Metric["ScalarMetric"]):
         self.failure_definition = failure_definition
         return self
 
-    def pack(self: ScalarMetric) -> metrics_proto.Metric:
+    def pack(self: ScalarMetric, emit_metrics_data: bool = True) -> metrics_proto.Metric:
         msg = super().pack()
         msg.type = metrics_proto.MetricType.Value("SCALAR_METRIC_TYPE")
 
@@ -333,16 +334,19 @@ class ScalarMetric(Metric["ScalarMetric"]):
         if self.unit is not None:
             metric_values.unit = self.unit
 
+        if emit_metrics_data:
+            emit(self.name, {"value": self.value, "unit": self.unit})
+        
         return msg
 
     def recursively_pack_into(
-        self: ScalarMetric, metrics_output: ResimMetricsOutput
+        self: ScalarMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
 
-        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack(emit_metrics_data)])
 
 
 @metric_dataclass
@@ -511,7 +515,7 @@ class DoubleOverTimeMetric(Metric["DoubleOverTimeMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: DoubleOverTimeMetric, metrics_output: ResimMetricsOutput
+        self: DoubleOverTimeMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -520,10 +524,10 @@ class DoubleOverTimeMetric(Metric["DoubleOverTimeMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         for data in self.doubles_over_time_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         for data in self.statuses_over_time_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -689,7 +693,7 @@ class StatesOverTimeMetric(Metric["StatesOverTimeMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: StatesOverTimeMetric, metrics_output: ResimMetricsOutput
+        self: StatesOverTimeMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -698,10 +702,10 @@ class StatesOverTimeMetric(Metric["StatesOverTimeMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         for data in self.states_over_time_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         for data in self.statuses_over_time_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -837,7 +841,7 @@ class LinePlotMetric(Metric["LinePlotMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: LinePlotMetric, metrics_output: ResimMetricsOutput
+        self: LinePlotMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -846,13 +850,13 @@ class LinePlotMetric(Metric["LinePlotMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         for data in self.x_doubles_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         for data in self.y_doubles_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         for data in self.statuses_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -982,7 +986,7 @@ class BarChartMetric(Metric["BarChartMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: BarChartMetric, metrics_output: ResimMetricsOutput
+        self: BarChartMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -991,10 +995,10 @@ class BarChartMetric(Metric["BarChartMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         for data in self.values_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         for data in self.statuses_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1147,7 +1151,7 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: BatchwiseBarChartMetric, metrics_output: ResimMetricsOutput
+        self: BatchwiseBarChartMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1156,15 +1160,15 @@ class BatchwiseBarChartMetric(Metric["BatchwiseBarChartMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
         if self.times_data is not None:
             for times_data in self.times_data:
-                times_data.recursively_pack_into(metrics_output)
+                times_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         if self.values_data is not None:
             for values_data in self.values_data:
-                values_data.recursively_pack_into(metrics_output)
+                values_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         if self.statuses_data is not None:
             for statuses_data in self.statuses_data:
-                statuses_data.recursively_pack_into(metrics_output)
+                statuses_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1275,7 +1279,7 @@ class HistogramMetric(Metric["HistogramMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: HistogramMetric, metrics_output: ResimMetricsOutput
+        self: HistogramMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1283,10 +1287,10 @@ class HistogramMetric(Metric["HistogramMetric"]):
 
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
         if self.values_data is not None:
-            self.values_data.recursively_pack_into(metrics_output)
+            self.values_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         if self.statuses_data is not None:
-            self.statuses_data.recursively_pack_into(metrics_output)
+            self.statuses_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 # Indices are a simple union, as we don't bind the type
@@ -1392,7 +1396,7 @@ class DoubleSummaryMetric(Metric["DoubleSummaryMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: DoubleSummaryMetric, metrics_output: ResimMetricsOutput
+        self: DoubleSummaryMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1401,10 +1405,10 @@ class DoubleSummaryMetric(Metric["DoubleSummaryMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         if self.value_data is not None:
-            self.value_data.recursively_pack_into(metrics_output)
+            self.value_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
         if self.status_data is not None:
-            self.status_data.recursively_pack_into(metrics_output)
+            self.status_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1445,7 +1449,7 @@ class PlotlyMetric(Metric["PlotlyMetric"]):
         self.plotly_data = plotly_data
         return self
 
-    def pack(self: PlotlyMetric) -> metrics_proto.Metric:
+    def pack(self: PlotlyMetric, emit_metrics_data: bool = True) -> metrics_proto.Metric:
         msg = super().pack()
         msg.type = metrics_proto.MetricType.Value("PLOTLY_METRIC_TYPE")
 
@@ -1456,16 +1460,19 @@ class PlotlyMetric(Metric["PlotlyMetric"]):
             Parse(self.plotly_data, struct_proto)
             metric_values.json.CopyFrom(struct_proto)
 
+        if emit_metrics_data:
+            emit(self.name, {"plotly": self.plotly_data})
+        
         return msg
 
     def recursively_pack_into(
-        self: PlotlyMetric, metrics_output: ResimMetricsOutput
+        self: PlotlyMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
 
-        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack(emit_metrics_data)])
 
 
 @metric_dataclass
@@ -1521,7 +1528,7 @@ class ImageMetric(Metric["ImageMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: ImageMetric, metrics_output: ResimMetricsOutput
+        self: ImageMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1530,7 +1537,7 @@ class ImageMetric(Metric["ImageMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         if self.image_data is not None:
-            self.image_data.recursively_pack_into(metrics_output)
+            self.image_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1589,7 +1596,7 @@ class ImageListMetric(Metric["ImageListMetric"]):
         return msg
 
     def recursively_pack_into(
-        self: ImageListMetric, metrics_output: ResimMetricsOutput
+        self: ImageListMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
@@ -1598,7 +1605,7 @@ class ImageListMetric(Metric["ImageListMetric"]):
         metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
 
         for data in self.image_list_data:
-            data.recursively_pack_into(metrics_output)
+            data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1639,23 +1646,26 @@ class TextMetric(Metric["TextMetric"]):
         self.text = text
         return self
 
-    def pack(self: TextMetric) -> metrics_proto.Metric:
+    def pack(self: TextMetric, emit_metrics_data: bool = True) -> metrics_proto.Metric:
         msg = super().pack()
         msg.type = metrics_proto.MetricType.Value("TEXT_METRIC_TYPE")
 
         metric_values = msg.metric_values.text_metric_values
         metric_values.text = self.text
 
+        if emit_metrics_data:
+            emit(self.name, {"text": self.text})
+
         return msg
 
     def recursively_pack_into(
-        self: TextMetric, metrics_output: ResimMetricsOutput
+        self: TextMetric, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
 
-        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack()])
+        metrics_output.metrics_msg.job_level_metrics.metrics.extend([self.pack(emit_metrics_data)])
 
 
 # -------------------
@@ -1688,18 +1698,18 @@ class BaseMetricsData(ABC, Generic[BaseMetricsDataT]):
         return self.id == __value.id
 
     @abstractmethod
-    def pack(self: BaseMetricsDataT) -> metrics_proto.MetricsData:
+    def pack(self: BaseMetricsDataT, emit_metrics_data: bool = True) -> metrics_proto.MetricsData:
         raise NotImplementedError()
 
     @abstractmethod
     def recursively_pack_into(
-        self: BaseMetricsDataT, metrics_output: ResimMetricsOutput
+        self: BaseMetricsDataT, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
 
-        output = self.pack()
+        output = self.pack(emit_metrics_data)
 
         metrics_output.metrics_msg.metrics_data.extend([output])
 
@@ -1751,18 +1761,18 @@ class MetricsData(BaseMetricsData[MetricsDataT]):
 
     @abstractmethod
     def recursively_pack_into(
-        self: MetricsDataT, metrics_output: ResimMetricsOutput
+        self: MetricsDataT, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
         if self.id in metrics_output.packed_ids:
             return
         metrics_output.packed_ids.add(self.id)
 
-        output = self.pack()
+        output = self.pack(emit_metrics_data)
 
         metrics_output.metrics_msg.metrics_data.extend([output])
 
         if self.index_data is not None:
-            self.index_data.recursively_pack_into(metrics_output)
+            self.index_data.recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1871,7 +1881,7 @@ class SeriesMetricsData(MetricsData["SeriesMetricsData"]):
 
         return grouped_data
 
-    def pack(self: SeriesMetricsData) -> metrics_proto.MetricsData:
+    def pack(self: SeriesMetricsData, emit_metrics_data: bool = True) -> metrics_proto.MetricsData:
         msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
@@ -1897,12 +1907,36 @@ class SeriesMetricsData(MetricsData["SeriesMetricsData"]):
         msg.series.CopyFrom(series)
         msg.data_type = data_type
 
+        if emit_metrics_data:
+            is_timestamp_index = (
+                msg.is_indexed and
+                self.index_data is not None and
+                self.index_data.series is not None and
+                isinstance(self.index_data.series[0], Timestamp)
+            )
+
+            emission_data = {
+                "values": list(self.series)
+            }
+            timestamps = None
+            if is_timestamp_index:
+                timestamps = list(self.index_data.series)
+            elif msg.is_indexed:
+                emission_data["index"] = list(self.index_data.series)
+
+            for k, v in emission_data.items():
+                if not is_jsonable(v[0]):
+                    print(f"Skipping {self.name} emission: All data values must be JSON serializable, found {type(v[0])} for key {k}")
+                    return msg
+
+            emit(self.name, emission_data, timestamps=timestamps)
+
         return msg
 
     def recursively_pack_into(
-        self: SeriesMetricsData, metrics_output: ResimMetricsOutput
+        self: SeriesMetricsData, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
-        super().recursively_pack_into(metrics_output)
+        super().recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -1963,7 +1997,7 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
         self.category_to_series[category] = series
         return self
 
-    def pack(self: GroupedMetricsData) -> metrics_proto.MetricsData:
+    def pack(self: GroupedMetricsData, emit_metrics_data: bool = True) -> metrics_proto.MetricsData:
         msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
@@ -2010,12 +2044,30 @@ class GroupedMetricsData(MetricsData["GroupedMetricsData"]):
         assert len(data_types) == 1, f"Invalid number of data types: {len(data_types)}"
         msg.data_type = data_types.pop()
 
+        if emit_metrics_data:
+            is_timestamp_index = msg.is_indexed and self.index_data.series is not None and isinstance(self.index_data.series[0], Timestamp)
+            emission_data = {
+                cat: list(self.category_to_series[cat]) for cat in categories
+            }
+            timestamps = None
+            if is_timestamp_index:
+                timestamps = list(self.index_data.series)
+            else:
+                emission_data["index"] = list(self.index_data.series)
+
+            for k, v in emission_data.items():
+                if not is_jsonable(v[0]):
+                    print(f"Skipping {self.name} emission: All data values must be JSON serializable, found {type(v[0])} for key {k}")
+                    return msg
+
+            emit(self.name, emission_data, timestamps=timestamps)
+
         return msg
 
     def recursively_pack_into(
-        self: GroupedMetricsData, metrics_output: ResimMetricsOutput
+        self: GroupedMetricsData, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
-        super().recursively_pack_into(metrics_output)
+        super().recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 @metric_dataclass
@@ -2032,7 +2084,7 @@ class ExternalFileMetricsData(BaseMetricsData["ExternalFileMetricsData"]):
         self.filename = filename
         return self
 
-    def pack(self: ExternalFileMetricsData) -> metrics_proto.MetricsData:
+    def pack(self: ExternalFileMetricsData, emit_metrics_data: bool = True) -> metrics_proto.MetricsData:
         msg = metrics_proto.MetricsData()
         msg.metrics_data_id.id.CopyFrom(pack_uuid_to_proto(self.id))
         msg.name = self.name
@@ -2044,13 +2096,20 @@ class ExternalFileMetricsData(BaseMetricsData["ExternalFileMetricsData"]):
         external_file = metrics_proto.ExternalFile()
         external_file.path = self.filename
         msg.external_file.CopyFrom(external_file)
+        
+        if emit_metrics_data:
+            emission_data = {
+                "path": self.filename
+            }
+
+            emit(self.name, emission_data)
 
         return msg
 
     def recursively_pack_into(
-        self: ExternalFileMetricsData, metrics_output: ResimMetricsOutput
+        self: ExternalFileMetricsData, metrics_output: ResimMetricsOutput, emit_metrics_data: bool = True
     ) -> None:
-        super().recursively_pack_into(metrics_output)
+        super().recursively_pack_into(metrics_output, emit_metrics_data)
 
 
 # -------------------
