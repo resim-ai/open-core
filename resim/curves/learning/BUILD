@@ -57,8 +57,11 @@ cc_test(
     name = "learn_t_curve_distribution_test",
     srcs = ["learn_t_curve_distribution_test.cc"],
     deps = [
-    "//resim/time:sample_interval",
         ":learn_t_curve_distribution",
+        "//resim/curves:sample_t_curve",
+        "//resim/math:is_approx",
+        "//resim/time:sample_interval",
+        "//resim/visualization/curve:visualize_t_curve",
         "@com_google_googletest//:gtest_main",
     ],
 )

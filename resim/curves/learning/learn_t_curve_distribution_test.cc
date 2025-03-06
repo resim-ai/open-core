@@ -9,11 +9,16 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Dense>
+#include <filesystem>
+#include <random>
+#include <span>
 
 #include "resim/curves/optimization/two_jet_tangent_space.hh"
 #include "resim/curves/sample_t_curve.hh"
 #include "resim/curves/t_curve.hh"
+#include "resim/math/is_approx.hh"
 #include "resim/time/sample_interval.hh"
+#include "resim/visualization/curve/visualize_t_curve.hh"
 
 namespace resim::curves::learning {
 
@@ -21,40 +26,48 @@ using transforms::SE3;
 using Vec3 = Eigen::Vector3d;
 using TwoJetL = TwoJetL<SE3>;
 
+void save_visualization_log(
+    const std::span<const TCurve<SE3>> &t_curves,
+    const std::string_view name) {
+  const char *maybe_outputs_dir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
+  const std::filesystem::path OUTPUTS_DIR{
+      maybe_outputs_dir != nullptr ? maybe_outputs_dir : "."};
+  resim::McapLogger logger{OUTPUTS_DIR / name};
+
+  visualization::curve::MultiTCurveVisualizer visualizer{
+      visualization::curve::CurveVisualizationOptions(),
+      "/update",
+      "/poses",
+      InOut(logger)};
+
+  for (const auto &t_curve : t_curves) {
+    visualizer.add_curve(t_curve);
+  }
+}
+
 // Simple helper to get a covariance matrix that's coerced to be
 // positive-semi-definite. Our strategy is to enforce correlation of adjacent
 // points and then coerce the result to be positive-semi-definite.
 Eigen::MatrixXd covariance(const double magnitude, const int num_points) {
   const int mat_dim = num_points * optimization::TWO_JET_DOF<SE3>;
 
-  Eigen::MatrixXd cov{Eigen::MatrixXd::Zero(mat_dim, mat_dim)};
-  constexpr auto DOF = optimization::TWO_JET_DOF<SE3>;
-  for (int ii = 0; ii < (num_points - 1); ++ii) {
-    for (int jj = 0; jj < DOF; ++jj) {
-      cov(ii * DOF + jj, (ii + 1) * DOF + jj) = magnitude;
-      cov((ii + 1) * DOF + jj, ii * DOF + jj) = magnitude;
-    }
-  }
-  // Coerce PSD:
-  using Solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>;
-  Solver solver(cov);
-  REASSERT(solver.info() != Eigen::NumericalIssue, "Eigen solver error.");
-
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> coerced_diagonal{
-      solver.eigenvalues()
-          .unaryExpr([&](double eigenval) { return std::max(eigenval, 0.); })
-          .asDiagonal()};
-  const Eigen::MatrixXd &eigenvectors{solver.eigenvectors()};
-  return eigenvectors * coerced_diagonal * eigenvectors.inverse();
+  constexpr int SEED = 89;
+  std::mt19937 rng{SEED};
+  std::uniform_real_distribution<double> dist{-0.01, 0.01};
+  Eigen::MatrixXd L{Eigen::MatrixXd::NullaryExpr(mat_dim, mat_dim, [&]() {
+    return dist(rng);
+  })};
+  return L * L.transpose();
 }
 
-std::vector<TCurve<SE3>> make_curves() {
-  constexpr int NUM_CURVES = 5;
+std::vector<std::function<StatusValue<TwoJetL>(double)>> make_curves(
+    const int num_points,
+    const Eigen::MatrixXd &covariance) {
+  constexpr int NUM_CURVES = 1000;
 
-  constexpr int NUM_POINTS = 10;
   std::vector<TCurve<SE3>::Control> points;
-  points.reserve(NUM_POINTS);
-  for (int ii = 0; ii < NUM_POINTS; ++ii) {
+  points.reserve(num_points);
+  for (int ii = 0; ii < num_points; ++ii) {
     points.emplace_back(TCurve<SE3>::Control{
         .time = static_cast<double>(ii),
         .point = TwoJetL(
@@ -65,20 +78,33 @@ std::vector<TCurve<SE3>> make_curves() {
   }
   TCurve<SE3> seed_curve{points};
 
-  constexpr int MAT_DIM = NUM_POINTS * optimization::TWO_JET_DOF<SE3>;
-  Eigen::VectorXd mean = Eigen::VectorXd::Zero(MAT_DIM);
-  constexpr double MAGNITUDE = 1e-2;
-  Eigen::MatrixXd cov = covariance(MAGNITUDE, NUM_POINTS);
+  const int mat_dim = num_points * optimization::TWO_JET_DOF<SE3>;
+  Eigen::VectorXd mean = Eigen::VectorXd::Zero(mat_dim);
 
   // ACTION
-  return sample_t_curves(NUM_CURVES, seed_curve, mean, cov);
+  auto t_curves = sample_t_curves(NUM_CURVES, seed_curve, mean, covariance);
+
+  constexpr int NUM_VIS = 20;
+  save_visualization_log(
+      std::span(t_curves.cbegin(), t_curves.cbegin() + NUM_VIS),
+      "samples.mcap");
+
+  std::vector<std::function<StatusValue<TwoJetL>(double)>> results;
+  results.reserve(NUM_CURVES);
+  for (auto &t_curve : t_curves) {
+    results.emplace_back([t_curve = std::move(t_curve)](const double t) {
+      return t_curve.point_at(t);
+    });
+  }
+  return results;
 }
 
 TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
   // SETUP
+  constexpr int NUM_POINTS = 5;
   constexpr double START_TIME = 0.0;
-  constexpr double END_TIME = 10.0;
-  constexpr double MAX_ABS_DT = 1.5;
+  constexpr double END_TIME = NUM_POINTS - 1;
+  constexpr double MAX_ABS_DT = 1.0;
   std::vector<double> times;
   time::sample_interval(
       START_TIME,
@@ -86,20 +112,26 @@ TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
       MAX_ABS_DT,
       [&times](const double time) { times.push_back(time); });
 
-  std::vector<std::function<StatusValue<TwoJetL>(double)>> curves;
-  curves.emplace_back([](const double t) -> StatusValue<TwoJetL> {
-    return TwoJetL::identity();
-  });
+  constexpr double MAGNITUDE = 1e-2;
+  Eigen::MatrixXd cov = covariance(MAGNITUDE, NUM_POINTS);
 
-  for (int ii = 0; ii < 10; ++ii) {
-    curves.emplace_back(curves.back());
-  }
+  const std::vector<std::function<StatusValue<TwoJetL>(double)>> curves{
+      make_curves(NUM_POINTS, cov)};
 
   // ACTION
-
-  auto maybe_distribution = learn_t_curve_distribution(times, curves);
-
+  const auto maybe_distribution = learn_t_curve_distribution(times, curves);
   ASSERT_TRUE(maybe_distribution.ok());
+  const auto &distribution = maybe_distribution.value();
+
+  // VERIFICATION
+  ASSERT_TRUE(
+      distribution.covariance.isApprox(distribution.covariance.transpose()));
+  constexpr double TOLERANCE = 1e-5;
+  math::is_approx(cov, distribution.covariance, TOLERANCE);
+
+  save_visualization_log(
+      std::vector<TCurve<SE3>>{distribution.mean},
+      "mean.mcap");
 }
 
 }  // namespace resim::curves::learning
