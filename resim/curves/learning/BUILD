@@ -61,7 +61,7 @@ cc_test(
         "//resim/curves:sample_t_curve",
         "//resim/math:is_approx",
         "//resim/time:sample_interval",
-        "//resim/visualization/curve:visualize_t_curve",
+        "//resim/visualization:save_visualization_log",
         "@com_google_googletest//:gtest_main",
     ],
 )

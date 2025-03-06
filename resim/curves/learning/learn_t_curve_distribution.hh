@@ -19,6 +19,8 @@ namespace resim::curves::learning {
 StatusValue<TCurveDistribution> learn_t_curve_distribution(
     const std::vector<double> &times,
     const std::vector<
-        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves);
+        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves,
+    double mean_tolerance,
+    int mean_max_iterations);
 
 }  // namespace resim::curves::learning

@@ -6,7 +6,6 @@
 
 #include "resim/curves/learning/learn_t_curve_distribution.hh"
 
-#include <iostream>  // TODO
 #include <ranges>
 #include <span>
 
@@ -24,7 +23,9 @@ using transforms::SE3;
 StatusValue<TCurveDistribution> learn_t_curve_distribution(
     const std::vector<double> &times,
     const std::vector<
-        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves) {
+        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves,
+    const double mean_tolerance,
+    const int mean_max_iterations) {
   using TwoJetL = TwoJetL<transforms::SE3>;
   const std::size_t num_times = times.size();
   const std::size_t num_curves = curves.size();
@@ -43,29 +44,30 @@ StatusValue<TCurveDistribution> learn_t_curve_distribution(
   }
 
   // Compute the means:
-  constexpr double TOLERANCE = 1e-4;
-  constexpr int MAX_ITERATIONS = 15;
   std::vector<TCurve<SE3>::Control> means;
   means.reserve(num_times);
   for (std::size_t ii = 0; ii < num_times; ++ii) {
     const std::span<const TwoJetL> poses_at_time{
-        std::views::counted(samples.cbegin() + ii * num_curves, num_curves)};
+        std::next(samples.cbegin(), static_cast<int>(ii * num_curves)),
+        num_curves};
 
     means.emplace_back(TCurve<SE3>::Control{
         .time = times.at(ii),
         .point = RETURN_OR_ASSIGN(
-            two_jet_mean(poses_at_time, TOLERANCE, MAX_ITERATIONS))});
+            two_jet_mean(poses_at_time, mean_tolerance, mean_max_iterations))});
   }
 
   // Compute the covariance
   constexpr int DOF = optimization::TWO_JET_DOF<SE3>;
-  Eigen::MatrixXd mean_deviation =
-      Eigen::MatrixXd::Zero(DOF * num_times, num_curves);
+  Eigen::MatrixXd mean_deviation = Eigen::MatrixXd::Zero(
+      static_cast<int>(DOF * num_times),
+      static_cast<int>(num_curves));
 
-  for (std::size_t ii = 0; ii < num_times; ++ii) {
+  for (int ii = 0; ii < num_times; ++ii) {
     const auto &mean = means.at(ii).point;
-    for (std::size_t jj = 0; jj < num_curves; ++jj) {
-      mean_deviation.block<DOF, 1>(ii * DOF, jj) =
+    for (int jj = 0; jj < num_curves; ++jj) {
+      const int offset = ii * DOF;
+      mean_deviation.block<DOF, 1>(offset, jj) =
           optimization::difference(samples.at(ii * num_curves + jj), mean);
     }
   }

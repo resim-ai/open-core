@@ -18,32 +18,14 @@
 #include "resim/curves/t_curve.hh"
 #include "resim/math/is_approx.hh"
 #include "resim/time/sample_interval.hh"
-#include "resim/visualization/curve/visualize_t_curve.hh"
+#include "resim/visualization/save_visualization_log.hh"
 
 namespace resim::curves::learning {
 
 using transforms::SE3;
 using Vec3 = Eigen::Vector3d;
 using TwoJetL = TwoJetL<SE3>;
-
-void save_visualization_log(
-    const std::span<const TCurve<SE3>> &t_curves,
-    const std::string_view name) {
-  const char *maybe_outputs_dir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
-  const std::filesystem::path OUTPUTS_DIR{
-      maybe_outputs_dir != nullptr ? maybe_outputs_dir : "."};
-  resim::McapLogger logger{OUTPUTS_DIR / name};
-
-  visualization::curve::MultiTCurveVisualizer visualizer{
-      visualization::curve::CurveVisualizationOptions(),
-      "/update",
-      "/poses",
-      InOut(logger)};
-
-  for (const auto &t_curve : t_curves) {
-    visualizer.add_curve(t_curve);
-  }
-}
+using visualization::save_visualization_log;
 
 // Simple helper to get a covariance matrix that's coerced to be
 // positive-semi-definite. Our strategy is to enforce correlation of adjacent
@@ -53,7 +35,9 @@ Eigen::MatrixXd covariance(const double magnitude, const int num_points) {
 
   constexpr int SEED = 89;
   std::mt19937 rng{SEED};
-  std::uniform_real_distribution<double> dist{-0.01, 0.01};
+  constexpr double LB = -0.01;
+  constexpr double UB = 0.01;
+  std::uniform_real_distribution<double> dist{LB, UB};
   Eigen::MatrixXd L{Eigen::MatrixXd::NullaryExpr(mat_dim, mat_dim, [&]() {
     return dist(rng);
   })};
@@ -105,6 +89,8 @@ TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
   constexpr double START_TIME = 0.0;
   constexpr double END_TIME = NUM_POINTS - 1;
   constexpr double MAX_ABS_DT = 1.0;
+  constexpr double MEAN_TOLERANCE = 1e-8;
+  constexpr double MEAN_MAX_ITERATIONS = 15;
   std::vector<double> times;
   time::sample_interval(
       START_TIME,
@@ -119,7 +105,11 @@ TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
       make_curves(NUM_POINTS, cov)};
 
   // ACTION
-  const auto maybe_distribution = learn_t_curve_distribution(times, curves);
+  const auto maybe_distribution = learn_t_curve_distribution(
+      times,
+      curves,
+      MEAN_TOLERANCE,
+      MEAN_MAX_ITERATIONS);
   ASSERT_TRUE(maybe_distribution.ok());
   const auto &distribution = maybe_distribution.value();
 
@@ -129,9 +119,7 @@ TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
   constexpr double TOLERANCE = 1e-5;
   math::is_approx(cov, distribution.covariance, TOLERANCE);
 
-  save_visualization_log(
-      std::vector<TCurve<SE3>>{distribution.mean},
-      "mean.mcap");
+  save_visualization_log(distribution.mean, "mean.mcap");
 }
 
 }  // namespace resim::curves::learning

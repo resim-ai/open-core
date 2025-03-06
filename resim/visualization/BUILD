@@ -97,3 +97,17 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "save_visualization_log",
+    testonly = True,
+    srcs = ["save_visualization_log.cc"],
+    hdrs = ["save_visualization_log.hh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/curves:t_curve",
+        "//resim/transforms:se3",
+        "//resim/utils:mcap_logger",
+        "//resim/visualization/curve:visualize_t_curve",
+    ],
+)
