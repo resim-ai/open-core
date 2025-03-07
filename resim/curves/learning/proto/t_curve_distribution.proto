@@ -1,0 +1,16 @@
+// Copyright 2025 ReSim, Inc.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+syntax = "proto3";
+
+import "resim/curves/proto/t_curve.proto";
+
+package resim.curves.learning.proto;
+
+message TCurveDistribution {
+    resim.curves.proto.TCurve_SE3 mean                = 1;
+    repeated double               covariance_elements = 2;
+}
