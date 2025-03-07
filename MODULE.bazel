@@ -100,5 +100,16 @@ oci.pull(
     ],
     tag = "3.11-slim",
 )
+oci.pull(
+    name = "alpine",
+    image = "alpine",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+    registry = "index.docker.io",
+    tag = "latest",
+)
 use_repo(oci, "debian_slim")
 use_repo(oci, "python_image")
+use_repo(oci, "alpine")
