@@ -7,7 +7,6 @@
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 
-# Define the tarball containing the entrypoint script
 tar(
     name = "entrypoint_layer",
     srcs = [
@@ -15,18 +14,17 @@ tar(
     ],
 )
 
-# Define the OCI image
 oci_image(
     name = "log_ingest_build",
     base = "@alpine",
-    entrypoint = ["/entrypoint.sh"],
+    entrypoint = ["./entrypoint.sh"],
     tars = [":entrypoint_layer"],
-    workdir = "/",
+    workdir = "/resim/builds/log-ingest/",
 )
 
-# Optionally, define a push rule to push the image to a repository
 oci_push(
     name = "log_ingest_build_push",
     image = ":log_ingest_build",
     repository = "public.ecr.aws/resim/open-builds/log-ingest",
+    tags = ["latest"],
 )

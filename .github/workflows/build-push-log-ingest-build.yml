@@ -62,4 +62,4 @@ jobs:
           REPO_NAME: ${{ env.REGISTRY_NAME }}/${{ env.REPO_NAME }}
           IMAGE_VERSION: ${{ steps.meta.outputs.version }}
           SHA: ${{ github.sha }}
-        run: bazel run //resim/builds/log-ingest:log_ingest_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"
+        run: bazel run //resim/builds/log-ingest:log_ingest_build_push -- --repository "$REPO_NAME" --tag "$IMAGE_VERSION" --tag "sha-${SHA}"  --tag "latest"
