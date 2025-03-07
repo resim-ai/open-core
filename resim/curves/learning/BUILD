@@ -50,6 +50,12 @@ cc_library(
     deps = [
         ":t_curve_distribution",
         ":two_jet_mean",
+        "//resim/assert",
+        "//resim/curves:t_curve",
+        "//resim/curves:two_jet",
+        "//resim/optimization:two_jet_tangent_space",
+        "//resim/transforms:se3",
+        "//resim/utils:status_value",
     ],
 )
 
