@@ -3,7 +3,7 @@ on:
   push:
     branches:
     - main
-    - iain/log-ingest-build
+    - prod/iain/log-ingest-build
 
 permissions:
   id-token: write
