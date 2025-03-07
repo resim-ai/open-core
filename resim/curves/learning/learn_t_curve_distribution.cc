@@ -21,9 +21,10 @@ namespace resim::curves::learning {
 using transforms::SE3;
 
 StatusValue<TCurveDistribution> learn_t_curve_distribution(
-    const std::vector<double> &times,
-    const std::vector<
-        std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>> &curves,
+    const std::span<const double> &times,
+    const std::span<
+        const std::function<StatusValue<TwoJetL<transforms::SE3>>(double)>>
+        &curves,
     const double mean_tolerance,
     const int mean_max_iterations) {
   using TwoJetL = TwoJetL<transforms::SE3>;
@@ -36,9 +37,9 @@ StatusValue<TCurveDistribution> learn_t_curve_distribution(
   std::vector<TwoJetL> samples;
   samples.reserve(num_times * num_curves);
   for (std::size_t ii = 0; ii < num_times; ++ii) {
-    const double time = times.at(ii);
+    const double time = times[ii];
     for (std::size_t jj = 0; jj < num_curves; ++jj) {
-      const auto &curve = curves.at(jj);
+      const auto &curve = curves[jj];
       samples.push_back(RETURN_OR_ASSIGN(curve(time)));
     }
   }
@@ -52,7 +53,7 @@ StatusValue<TCurveDistribution> learn_t_curve_distribution(
         num_curves};
 
     means.emplace_back(TCurve<SE3>::Control{
-        .time = times.at(ii),
+        .time = times[ii],
         .point = RETURN_OR_ASSIGN(
             two_jet_mean(poses_at_time, mean_tolerance, mean_max_iterations))});
   }
