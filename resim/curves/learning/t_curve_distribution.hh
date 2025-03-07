@@ -13,6 +13,9 @@
 
 namespace resim::curves::learning {
 
+// A simple representation of a Gaussian TCurve distribution as its mean and
+// covariance. The covariance is expected to be a PSD matrix with dimension
+// (resim::curves::optimization::TWO_JET_DOF<SE3> * mean.control_pts().size())
 struct TCurveDistribution {
   TCurve<transforms::SE3> mean;
   Eigen::MatrixXd covariance{Eigen::MatrixXd::Zero(0, 0)};
