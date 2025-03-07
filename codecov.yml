@@ -8,3 +8,4 @@ comment: # this is a top-level key
 ignore:
   - resim/converter/fuzz_helpers_test_template.hh # testonly
   - resim/visualization/curve/line_primitive_from_curve_test_helpers.cc # testonly
+  - resim/visualization/save_visualization_log.cc # testonly

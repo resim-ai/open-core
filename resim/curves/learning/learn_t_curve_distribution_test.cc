@@ -44,14 +44,15 @@ Eigen::MatrixXd covariance(const double magnitude, const int num_points) {
   return L * L.transpose();
 }
 
+// Helper to sample a bunch of curves with the given covariance matrix.
 std::vector<std::function<StatusValue<TwoJetL>(double)>> make_curves(
-    const int num_points,
+    const int num_points_per_curve,
     const Eigen::MatrixXd &covariance) {
   constexpr int NUM_CURVES = 1000;
 
   std::vector<TCurve<SE3>::Control> points;
-  points.reserve(num_points);
-  for (int ii = 0; ii < num_points; ++ii) {
+  points.reserve(num_points_per_curve);
+  for (int ii = 0; ii < num_points_per_curve; ++ii) {
     points.emplace_back(TCurve<SE3>::Control{
         .time = static_cast<double>(ii),
         .point = TwoJetL(
@@ -62,7 +63,7 @@ std::vector<std::function<StatusValue<TwoJetL>(double)>> make_curves(
   }
   TCurve<SE3> seed_curve{points};
 
-  const int mat_dim = num_points * optimization::TWO_JET_DOF<SE3>;
+  const int mat_dim = num_points_per_curve * optimization::TWO_JET_DOF<SE3>;
   Eigen::VectorXd mean = Eigen::VectorXd::Zero(mat_dim);
 
   // ACTION
@@ -110,16 +111,80 @@ TEST(LearnTCurveDistributionTest, TestLearnTCurveDistribution) {
       curves,
       MEAN_TOLERANCE,
       MEAN_MAX_ITERATIONS);
+
+  // VERIFICATION
   ASSERT_TRUE(maybe_distribution.ok());
   const auto &distribution = maybe_distribution.value();
 
-  // VERIFICATION
   ASSERT_TRUE(
       distribution.covariance.isApprox(distribution.covariance.transpose()));
   constexpr double TOLERANCE = 1e-5;
   math::is_approx(cov, distribution.covariance, TOLERANCE);
 
   save_visualization_log(distribution.mean, "mean.mcap");
+}
+
+TEST(LearnTCurveDistributionTest, TestInvalidTimes) {
+  // SETUP
+  constexpr double START_TIME = 0.0;
+  constexpr double END_TIME = 1.0;
+  constexpr double MAX_ABS_DT = 0.1;
+  constexpr double MEAN_TOLERANCE = 1e-8;
+  constexpr double MEAN_MAX_ITERATIONS = 15;
+  std::vector<double> times;
+  time::sample_interval(
+      START_TIME,
+      END_TIME,
+      MAX_ABS_DT,
+      [&times](const double time) { times.push_back(time); });
+
+  std::vector<std::function<StatusValue<TwoJetL>(double)>> curves;
+  curves.emplace_back([](const double time) -> StatusValue<TwoJetL> {
+    return MAKE_STATUS("Invalid time!");
+  });
+  curves.emplace_back(curves.back());
+
+  // ACTION
+  const auto maybe_distribution = learn_t_curve_distribution(
+      times,
+      curves,
+      MEAN_TOLERANCE,
+      MEAN_MAX_ITERATIONS);
+
+  // VERIFICATION
+  EXPECT_FALSE(maybe_distribution.ok());
+}
+
+TEST(LearnTCurveDistributionTest, TestNonConvergingMean) {
+  // SETUP
+  constexpr int NUM_POINTS = 5;
+  constexpr double START_TIME = 0.0;
+  constexpr double END_TIME = NUM_POINTS - 1;
+  constexpr double MAX_ABS_DT = 1.0;
+  constexpr double MEAN_TOLERANCE = 1e-8;
+  constexpr double MEAN_MAX_ITERATIONS = 1;
+  std::vector<double> times;
+  time::sample_interval(
+      START_TIME,
+      END_TIME,
+      MAX_ABS_DT,
+      [&times](const double time) { times.push_back(time); });
+
+  constexpr double MAGNITUDE = 1e-2;
+  Eigen::MatrixXd cov = covariance(MAGNITUDE, NUM_POINTS);
+
+  const std::vector<std::function<StatusValue<TwoJetL>(double)>> curves{
+      make_curves(NUM_POINTS, cov)};
+
+  // ACTION
+  const auto maybe_distribution = learn_t_curve_distribution(
+      times,
+      curves,
+      MEAN_TOLERANCE,
+      MEAN_MAX_ITERATIONS);
+
+  // VERIFICATION
+  EXPECT_FALSE(maybe_distribution.ok());
 }
 
 }  // namespace resim::curves::learning
