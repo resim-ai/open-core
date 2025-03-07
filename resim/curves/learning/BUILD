@@ -53,7 +53,7 @@ cc_library(
         "//resim/assert",
         "//resim/curves:t_curve",
         "//resim/curves:two_jet",
-        "//resim/optimization:two_jet_tangent_space",
+        "//resim/curves/optimization:two_jet_tangent_space",
         "//resim/transforms:se3",
         "//resim/utils:status_value",
     ],
