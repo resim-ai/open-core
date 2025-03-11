@@ -71,3 +71,18 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "fuzz_helpers",
+    testonly = True,
+    srcs = ["fuzz_helpers.cc"],
+    hdrs = ["fuzz_helpers.hh"],
+    deps = [
+        ":t_curve_distribution",
+        "//resim/converter:fuzz_helpers",
+        "//resim/curves:t_curve",
+        "//resim/curves:two_jet",
+        "//resim/transforms:se3",
+        "//resim/utils:inout",
+    ],
+)
