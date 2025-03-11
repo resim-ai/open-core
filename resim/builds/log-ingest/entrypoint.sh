@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -euxo pipefail
 echo "Welcome to ReSim Log Ingestion"
 
 # Exit codes:
