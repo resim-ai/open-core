@@ -12,6 +12,7 @@ py_library(
     srcs = ["metrics.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":emissions",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
         "@com_google_protobuf//:protobuf_python",
@@ -97,5 +98,15 @@ py_test(
         "//resim/metrics/proto:generate_test_metrics",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
+    ],
+)
+
+py_library(
+    name = "emissions",
+    srcs = ["emissions.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("numpy"),
+        ":metrics_utils",
     ],
 )
