@@ -19,6 +19,7 @@ from resim_python_client.api.batches import (
 from resim_python_client.client import AuthenticatedClient
 from resim_python_client.models.metrics_data import MetricsData
 from resim_python_client.models.metrics_data_type import MetricsDataType
+from resim_python_client.models import ListJobMetricsOutput
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
 
@@ -31,15 +32,17 @@ def fetch_metrics_urls(
     client: AuthenticatedClient,
 ) -> list[str]:
     """Fetch all metrics urls for a given job_id."""
+    responses: list[ListJobMetricsOutput] = fetch_all_pages(
+        list_metrics_for_job.sync,
+        str(project_id),
+        str(batch_id),
+        str(job_id),
+        client=client,
+    )
+
     return [
         metric.metric_url
-        for metrics_response in fetch_all_pages(
-            list_metrics_for_job.sync,
-            str(project_id),
-            str(batch_id),
-            str(job_id),
-            client=client,
-        )
+        for metrics_response in responses
         for metric in metrics_response.metrics
     ]
 
@@ -57,15 +60,16 @@ def fetch_metrics_data_urls(
         result: bool = data.metrics_data_type == MetricsDataType.STANDARD
         return result
 
+    responses = fetch_all_pages(
+        list_metrics_data_for_job.sync,
+        str(project_id),
+        str(batch_id),
+        str(job_id),
+        client=client,
+    )
     return [
         metrics_data.metrics_data_url
-        for metrics_data_response in fetch_all_pages(
-            list_metrics_data_for_job.sync,
-            str(project_id),
-            str(batch_id),
-            str(job_id),
-            client=client,
-        )
+        for metrics_data_response in responses
         for metrics_data in metrics_data_response.metrics_data
         if is_standard(metrics_data)
     ]

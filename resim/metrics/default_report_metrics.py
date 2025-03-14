@@ -31,6 +31,12 @@ from resim_python_client.models.job_metric import JobMetric
 from resim_python_client.models.metric_status import MetricStatus
 from resim_python_client.models.metric_type import MetricType
 
+from resim_python_client.models import (
+    ListJobMetricsOutput,
+    ListBatchMetricsOutput,
+    ListExperiencesOutput,
+)
+
 import resim.metrics.python.metrics_utils as mu
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
 from resim.metrics.fetch_report_metrics import (
@@ -116,7 +122,7 @@ async def _fetch_job_metrics_for_job(
     Returns:
         A list of this job's Metrics.
     """
-    job_metrics = await async_fetch_all_pages(
+    job_metrics: list[ListJobMetricsOutput] = await async_fetch_all_pages(
         list_metrics_for_job.asyncio,
         project_id=project_id,
         batch_id=batch_id,
@@ -166,7 +172,7 @@ async def _fetch_batch_metrics_for_batch(
     Returns:
         A list of batches metrics for this batch.
     """
-    batch_metrics = await async_fetch_all_pages(
+    batch_metrics: list[ListBatchMetricsOutput] = await async_fetch_all_pages(
         list_batch_metrics.asyncio,
         project_id=project_id,
         batch_id=batch_id,
@@ -283,7 +289,7 @@ async def make_tags_frame(
     }
 
     async def get_tag_row(experience_id: str) -> tuple[str, set[str]]:
-        pages = await async_fetch_all_pages(
+        pages: list[ListExperiencesOutput] = await async_fetch_all_pages(
             list_experience_tags_for_experience.asyncio,
             client=client,
             project_id=str(project_id),
