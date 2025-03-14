@@ -38,7 +38,7 @@ def fetch_all_pages(
     endpoint: typing.Callable[..., typing.Any | ResponseType | None],
     *args: typing.Any,
     **kwargs: typing.Any,
-) -> list[typing.Any | None | ResponseType]:
+) -> list[typing.Any | ResponseType]:
     """
     Fetches all pages from a given endpoint.
     """
@@ -58,7 +58,7 @@ async def async_fetch_all_pages(
     endpoint: typing.Callable[..., typing.Awaitable[typing.Any | None | ResponseType]],
     *args: typing.Any,
     **kwargs: typing.Any,
-) -> list[typing.Any | None | ResponseType]:
+) -> list[typing.Any | ResponseType]:
     """
     Fetches all pages from a given endpoint.
     """
