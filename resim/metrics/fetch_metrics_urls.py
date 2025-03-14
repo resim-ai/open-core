@@ -60,7 +60,7 @@ def fetch_metrics_data_urls(
         result: bool = data.metrics_data_type == MetricsDataType.STANDARD
         return result
 
-    responses = fetch_all_pages(
+    responses: list[ListJobMetricsOutput] = fetch_all_pages(
         list_metrics_data_for_job.sync,
         str(project_id),
         str(batch_id),
