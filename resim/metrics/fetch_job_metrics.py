@@ -16,6 +16,7 @@ from typing import Any, Dict
 
 import requests
 from resim_python_client.api.batches import list_jobs
+from resim_python_client.models import Job
 from resim_python_client.client import AuthenticatedClient
 
 import resim.metrics.proto.metrics_pb2 as mp
@@ -45,7 +46,7 @@ def fetch_job_metrics_by_batch(
 
     # Fetch the jobs for this batch
     client = AuthenticatedClient(base_url=api_url, token=token)
-    jobs_responses = fetch_all_pages(
+    jobs_responses: list[Job] = fetch_all_pages(
         list_jobs.sync, str(project_id), str(batch_id), client=client
     )
     jobs = [
