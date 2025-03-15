@@ -325,7 +325,7 @@ cc_test(
         ":t_curve",
         "//resim/curves/optimization:two_jet_tangent_space",
         "//resim/transforms:se3",
-        "//resim/visualization/curve:visualize_t_curve",
+        "//resim/visualization:save_visualization_log",
         "@com_google_googletest//:gtest_main",
     ],
 )
