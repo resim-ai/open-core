@@ -117,6 +117,7 @@ py_wheel(
     version = version,
     deps = [
         ":resim_package",
+        "//resim:py_typed_marker",
     ] + select({
         "//:nocross": [":resim_package_stubs"],
         "//conditions:default": [],

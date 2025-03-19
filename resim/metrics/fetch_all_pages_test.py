@@ -61,7 +61,9 @@ class FetchAllPagesTest(unittest.TestCase):
 
     def test_fetch_all_pages(self) -> None:
         """Test that we fetch all pages we expect to"""
-        all_pages = fetch_all_pages(_test_endpoint, _TEST_ARG, testcase=self)
+        all_pages: list[TestResponseType] = fetch_all_pages(
+            _test_endpoint, _TEST_ARG, testcase=self
+        )
         self.assertEqual(len(all_pages), len(_PAGE_TOKENS))
         for page in all_pages:
             self.assertEqual(page.value, _TEST_ARG)
@@ -70,7 +72,7 @@ class FetchAllPagesTest(unittest.TestCase):
 class AsyncFetchAllPagesTest(unittest.IsolatedAsyncioTestCase):
     async def test_async_fetch_all_pages(self) -> None:
         """Test that we fetch all pages we expect to"""
-        all_pages = await async_fetch_all_pages(
+        all_pages: list[TestResponseType] = await async_fetch_all_pages(
             _async_test_endpoint, _TEST_ARG, testcase=self
         )
         self.assertEqual(len(all_pages), len(_PAGE_TOKENS))
