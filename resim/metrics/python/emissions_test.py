@@ -1,4 +1,4 @@
-# Copyright 2023 ReSim, Inc.
+# Copyright 2025 ReSim, Inc.
 #
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
@@ -25,7 +25,6 @@ class EmissionsTest(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test environment."""
-        # trunk-ignore(pylint/R1732)
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_path = Path(self.temp_dir.name) / "emissions.ndjson"
 

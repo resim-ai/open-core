@@ -1,3 +1,9 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 import json
 from io import TextIOWrapper
 from pathlib import Path
@@ -20,6 +26,18 @@ def emit(
     file_path: Path = Path("/tmp/resim/outputs/emissions.ndjson"),
     file: Optional[TextIOWrapper] = None,
 ) -> None:
+    """
+    Emit a single point or a series of datapoints to a file.
+
+    Args:
+        topic_name: The name of the topic to emit the data to.
+        data: A dictionary of data to emit. If using a series of timestamps, all data values must be lists.
+    Optional Args:
+        timestamp: The timestamp of the data point to emit. Mutually exclusive with timestamps.
+        timestamps: A list of timestamps to emit the data at. Mutually exclusive with timestamp.
+        file_path: The path to the file to emit the data to. Mutually exclusive with file.
+        file: An optional file object to emit the data to. Mutually exclusive with file_path.
+    """
     try:
         # only allow one of timestamp or timestamps to be set
         if timestamp is not None and timestamps is not None:
@@ -38,7 +56,6 @@ def emit(
 
             open_file = file
             if open_file is None:
-                # trunk-ignore(pylint/R1732)
                 open_file = open(file_path, "a", encoding="utf8")
 
             for i, ts in enumerate(timestamps):
@@ -62,14 +79,13 @@ def emit(
         }
         if timestamp is not None:
             if isinstance(timestamp, Timestamp):
-                emission["$metadata"]["timestamp"] = timestamp.to_int()
+                emission["$metadata"]["timestamp"] = timestamp.to_nanos()
             else:
                 emission["$metadata"]["timestamp"] = timestamp
 
         # write the emission to the output file
         open_file = file
         if open_file is None:
-            # trunk-ignore(pylint/R1732)
             open_file = open(file_path, "a", encoding="utf8")
         open_file.write(json.dumps(emission) + "\n")
         if file is None:

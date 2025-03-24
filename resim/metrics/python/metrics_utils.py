@@ -57,7 +57,8 @@ class Timestamp:
     secs: int
     nanos: int
 
-    def to_int(self) -> int:
+    def to_nanos(self) -> int:
+        """Convert the timestamp to number of nanoseconds."""
         return self.secs * 1_000_000_000 + self.nanos
 
     def pack(self: Timestamp) -> timestamp_proto.Timestamp:

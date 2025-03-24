@@ -27,7 +27,7 @@ class MetricsUtilsTest(unittest.TestCase):
 
     def test_timestamp_to_int(self) -> None:
         ts = mu.Timestamp(secs=12, nanos=345)
-        self.assertEqual(ts.to_int(), 12 * 1_000_000_000 + 345)
+        self.assertEqual(ts.to_nanos(), 12 * 1_000_000_000 + 345)
 
     def test_pack_timestamp(self) -> None:
         # SETUP

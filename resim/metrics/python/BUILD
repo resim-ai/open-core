@@ -12,7 +12,6 @@ py_library(
     srcs = ["metrics.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":emissions",
         ":metrics_utils",
         "//resim/metrics/proto:metrics_proto_py",
         "@com_google_protobuf//:protobuf_python",
