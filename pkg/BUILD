@@ -50,6 +50,7 @@ py_package(
         "//resim/metrics:get_metrics_proto",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
+        "//resim/metrics/python:emissions",
         "//resim/metrics/python:metrics",
         "//resim/metrics/python:metrics_utils",
         "//resim/metrics/python:metrics_writer",
