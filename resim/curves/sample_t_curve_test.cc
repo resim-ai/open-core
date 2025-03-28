@@ -14,30 +14,13 @@
 #include "resim/curves/optimization/two_jet_tangent_space.hh"
 #include "resim/curves/t_curve.hh"
 #include "resim/transforms/se3.hh"
-#include "resim/visualization/curve/visualize_t_curve.hh"
+#include "resim/visualization/save_visualization_log.hh"
 
 namespace resim::curves {
 
 using Vec3 = Eigen::Vector3d;
 using transforms::SE3;
-
-// Simple visualization for the tcurves
-void save_visualization_log(const std::vector<TCurve<SE3>> &t_curves) {
-  const char *maybe_outputs_dir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
-  const std::filesystem::path OUTPUTS_DIR{
-      maybe_outputs_dir != nullptr ? maybe_outputs_dir : "."};
-  resim::McapLogger logger{OUTPUTS_DIR / "vis.mcap"};
-
-  visualization::curve::MultiTCurveVisualizer visualizer{
-      visualization::curve::CurveVisualizationOptions(),
-      "/update",
-      "/poses",
-      InOut(logger)};
-
-  for (const auto &curve : t_curves) {
-    visualizer.add_curve(curve);
-  }
-}
+using visualization::save_visualization_log;
 
 // Simple helper to get a covariance matrix that's coerced to be
 // positive-semi-definite. Our strategy is to enforce correlation of adjacent
@@ -109,7 +92,7 @@ TEST(SampleTCurveTest, TestSampleTCurves) {
       ASSERT_LT(diff.norm(), UNLIKELY_TO_BE_THIS_BIG);
     }
   }
-  save_visualization_log(curves);
+  save_visualization_log(curves, "vis.mcap");
 }
 
 }  // namespace resim::curves
