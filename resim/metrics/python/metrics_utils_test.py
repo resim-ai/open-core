@@ -25,6 +25,10 @@ class MetricsUtilsTest(unittest.TestCase):
         self.assertEqual(output.metrics_msg, mp.JobMetrics())
         self.assertEqual(output.packed_ids, set())
 
+    def test_timestamp_to_int(self) -> None:
+        ts = mu.Timestamp(secs=12, nanos=345)
+        self.assertEqual(ts.to_nanos(), 12 * 1_000_000_000 + 345)
+
     def test_pack_timestamp(self) -> None:
         # SETUP
         test_ts = mu.Timestamp(

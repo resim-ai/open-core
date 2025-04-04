@@ -109,6 +109,7 @@ py_library(
     srcs = ["fetch_all_pages.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim-python-client",
     ],
 )
 

@@ -99,3 +99,13 @@ py_test(
         "//resim/metrics/proto:validate_metrics_proto",
     ],
 )
+
+py_library(
+    name = "emissions",
+    srcs = ["emissions.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("numpy"),
+        ":metrics_utils",
+    ],
+)
