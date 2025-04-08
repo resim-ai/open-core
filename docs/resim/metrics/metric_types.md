@@ -35,7 +35,59 @@ This is a maximally simple metric, with a single double. This is one of only two
 - `failure_definition: DoubleFailureDefinition` - the thresholds (on `value`) for whether the metric fails.
 - `unit: str` - a unit associated with `value`.
 
+## Plotly Metric
+
+In the event that the above metric types are not sufficient, ReSim support displaying an arbitrary plotly chart, via serializing 
+the [plotly JSON model](https://plotly.com/chart-studio-help/json-chart-schema/). This is the second metric to not have any `MetricsData`
+associated. It takes advantage of the ability to serialize a plotly figure as a JSON string:
+
+```python
+figure = px.pie(
+    data_frame=<data_frame>,
+    values=<values>,
+    names=<name>,
+    title=f"Pie chart example",
+    template=<template>,
+)
+plotly_json = figure.to_json()
+```
+
+In this way, charts not yet supported natively can be displayed and have the rest of the metrics framework metadata e.g. importance, status associated.
+
+### Parameters
+
+- `plotly_data: str` - the metric's plotly chart.
+
+## Image Metric
+
+The ReSim metrics framework also supports attaching an arbitrary image as a metric. This could be used to attach images from sensors, or from extremely custom charts previously created. This is simply achieved by storing the image in the `/tmp/resim/outputs` directory and referencing the filename in the metric.
+
+
+### Parameters
+
+- `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
+
+## Text Metric
+
+ReSim supports displaying arbitrary Markdown as a metric. This metric also has no `MetricsData`
+associated. In this way, one can provide textual output from any system, evaluated with metric data. 
+This is commonly used in non-autonomy applications of the ReSim app.
+
+### Parameters
+
+- `text: str` - the metric's text.
+
+## Image List Metric
+
+For situations where you wish to attach a list of images to a single metric, the ReSim metrics framework also supports an `ImageListMetric`. This is achieved by storing the images in the `/tmp/resim/outputs` directory in the metrics build and referencing the filenames in the metric.
+
+### Parameters
+
+- `image_list_data: List[ExternalFileMetricsData]` - the metric's images, as a list of external file metrics data, which simply encapsulates the path to each file.
+
 ## Bar Chart
+
+`Note:` To provide more flexibility in your metrics, we are deprecating Rechart metrics. Please take a look at Plotly with some examples in the sandbox(link to sandbox)
 
 Bar chart provides a stacked or side-by-side bar chart of numerical data. An example would be the precision and recall being plotted as bars, over several different detection categories.
 
@@ -150,53 +202,3 @@ Histograms plot the frequencies with which doubles appear in an array, by bucket
 ### Grouped data support
 
 Grouped data should not currently be provided to histogram metrics.
-
-## Plotly Metric
-
-In the event that the above metric types are not sufficient, ReSim support displaying an arbitrary plotly chart, via serializing 
-the [plotly JSON model](https://plotly.com/chart-studio-help/json-chart-schema/). This is the second metric to not have any `MetricsData`
-associated. It takes advantage of the ability to serialize a plotly figure as a JSON string:
-
-```python
-figure = px.pie(
-    data_frame=<data_frame>,
-    values=<values>,
-    names=<name>,
-    title=f"Pie chart example",
-    template=<template>,
-)
-plotly_json = figure.to_json()
-```
-
-In this way, charts not yet supported natively can be displayed and have the rest of the metrics framework metadata e.g. importance, status associated.
-
-### Parameters
-
-- `plotly_data: str` - the metric's plotly chart.
-
-## Image Metric
-
-The ReSim metrics framework also supports attaching an arbitrary image as a metric. This could be used to attach images from sensors, or from extremely custom charts previously created. This is simply achieved by storing the image in the `/tmp/resim/outputs` directory and referencing the filename in the metric.
-
-
-### Parameters
-
-- `image_data: ExternalFileMetricsData` - the metric's image, as an external file metrics data, which simply encapsulates the path to the file.
-
-## Text Metric
-
-ReSim supports displaying arbitrary Markdown as a metric. This metric also has no `MetricsData`
-associated. In this way, one can provide textual output from any system, evaluated with metric data. 
-This is commonly used in non-autonomy applications of the ReSim app.
-
-### Parameters
-
-- `text: str` - the metric's text.
-
-## Image List Metric
-
-For situations where you wish to attach a list of images to a single metric, the ReSim metrics framework also supports an `ImageListMetric`. This is achieved by storing the images in the `/tmp/resim/outputs` directory in the metrics build and referencing the filenames in the metric.
-
-### Parameters
-
-- `image_list_data: List[ExternalFileMetricsData]` - the metric's images, as a list of external file metrics data, which simply encapsulates the path to each file.
