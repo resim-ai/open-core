@@ -85,15 +85,18 @@ For situations where you wish to attach a list of images to a single metric, the
 
 - `image_list_data: List[ExternalFileMetricsData]` - the metric's images, as a list of external file metrics data, which simply encapsulates the path to each file.
 
-## Bar Chart
+## Deprecated Metrics
 
-`Note:` To provide more flexibility in your metrics, we are deprecating Rechart metrics. Please take a look at Plotly with some examples in the sandbox(link to sandbox)
+!!! warning "Deprecation Notice"
+    To provide more flexibility in your metrics, we are deprecating Rechart metrics. Please take a look at Plotly with some examples in the sandbox(link to sandbox)
+
+### Bar Chart
 
 Bar chart provides a stacked or side-by-side bar chart of numerical data. An example would be the precision and recall being plotted as bars, over several different detection categories.
 
 ![An example bar chart](./bar_chart.png)
 
-### Parameters
+#### Parameters
 
 - `values_data: List[MetricsData]` - A list of $k$ series of doubles, each indexed by the same series of strings. These are the values to plot, and every series will be plotted on the same bar chart. The index values are the labels on the x-axis.
 - `statuses_data: List[MetricsData]` - A list of $k$ series of MetricStatuses, each indexed by the same series of strings. These are statuses associated with the above values.
@@ -102,17 +105,17 @@ Bar chart provides a stacked or side-by-side bar chart of numerical data. An exa
 - `y_axis_name: str`
 - `stack_bars: bool` - A bool indicating whether to stack the $k$ series. If this is true, a stacked bar chart will be produced, with all the series stacked above the corresponding index. If this is false, the $k$ bars per-index will be placed next to each other, above the corresponding index.
 
-### Grouped data support
+#### Grouped data support
 
 Grouped data should not currently be supplied to bar chart metrics.
 
-## Double over time
+### Double over time
 
 This is a plot of doubles, across timestamps in the simulation/experience. An example would be the distance between a self-driving car and the car in front, over a 30 second experience.
 
 ![An example double over time](./double_over_time.png)
 
-### Parameters
+#### Parameters
 
 - `doubles_over_time_data: List[MetricsData]` - A list of $k$ MetricsData containing series of doubles, indexed by series of timestamps. Each such series will be plotted as a separate line on the same chart.
 - `statuses_over_time_data: List[MetricsData]` - A list of $k$ MetricsData containing series of statuses, indexed by the same timestamps.
@@ -122,36 +125,36 @@ This is a plot of doubles, across timestamps in the simulation/experience. An ex
 - `y_axis_name: str`
 - `legend_series_names: List[str]`: An optional list of $k$ names for the data series - if not provided, the MetricsData names will be used.
 
-### Grouped Data Support
+#### Grouped Data Support
 
 Grouped data should not currently be supplied to double over time metrics.
 
-## Double Summary 
+### Double Summary 
 
 This is a single double summarizing a larger series of data. Currently, it only supports indexing an element from a series - in the future, we will likely add simple operations such as max, min, mean, and median.
 
 ![An example double summary metric](./double_summary.png)
 
-### Parameters
+#### Parameters
 
 - `value_data: MetricsData` - A series of doubles, optionally indexed.
 - `status_data: MetricStatus` - A series of statuses, corresponding to `value_data`.
 - `index_data: Union[int, str, Timestamp, uuid.UUID]` - An optional index $i$, with type corresponding to the index type of `value_data` (or `int` if there is no index). If not provided, then 0 will be used. This "selects" the element with corresponding index from value_data.
 - `failure_definition`: A failure definition for the selected value.
 
-### Grouped data
+#### Grouped data
 
 - Grouped data can be provided, and will be plotted as a key-value table, with key being the group name, and value being the corresponding double.
 
 ![An example grouped double summary metric](./grouped_double_summary.png)
 
-## States over Time
+### States over Time
 
 States-over-time charts visualize a categorical enum which changes over time. An example would be the classifications for an object's type, plotted over time; or a vehicle's attempted maneuver over time.
 
 ![An example states over time chart](./states_over_time.png)
 
-### Parameters 
+#### Parameters 
 
 - `states_over_time_data: List[MetricsData]`: A list of $k$ series, of strings, each indexed by timestamps. The strings here are used as an enum representing "states the system can be in", which are then plotted over time. If more than one series is provided, they will be plotted next to each other in one plot.
 - `statuses_over_time_data: List[MetricsData]`: A list of $k$ series of statuses, each indexed by timestamps. These are the timestamp-level statuses associated with `states_over_time_data`.
@@ -159,12 +162,11 @@ States-over-time charts visualize a categorical enum which changes over time. An
 - `failure_states: Set[str]` - A subset of `states_set`, representing the states in which it should fail.
 - `legend_series_names: List[str]` - A list of $k$ strings, storing the legend names of the series in `states_over_time_data`.
 
-
-### Grouped data support
+#### Grouped data support
 
 Grouped data is supported for StatesOverTime metrics, and will give a dropdown, with one chart per category.
 
-## Line Chart
+### Line Chart
 
 Line charts are classical line charts, plotting a dependent variable against an independent variable, joined by a line. Multiple lines can be placed on one chart.
 
@@ -172,7 +174,7 @@ Line charts are classical line charts, plotting a dependent variable against an 
 
 ![An example line chart](./line_chart.png)
 
-### Parameters
+#### Parameters
 
 - `x_doubles_data: List[MetricsData]` - A list of $k$ series of x-axis values to plot, which are doubles. Each series will be plotted on the same chart.
 - `y_doubles_data: List[MetricsData]` - A list of $k$ series of y-axis values, where the $i$^{th} series corresponds to the $i$^{th} series in `x_doubles_data`.
@@ -181,17 +183,17 @@ Line charts are classical line charts, plotting a dependent variable against an 
 - `y_axis_name: str`
 - `legend_series_names` - A list of $k$ strings, storing the legend names of the series in `x_doubles_data` and `y_doubles_data`.
 
-### Grouped data support
+#### Grouped data support
 
 Grouped data should currently not be provided to line plot.
 
-## Histogram
+### Histogram
 
 Histograms plot the frequencies with which doubles appear in an array, by bucketing them and plotting them as a bar chart. An example would be the frequencies over frames of the probabilities output by a classifier; or the frequencies with which there are a certain number of actors detected.
 
 ![An example histogram](./histogram.png)
 
-### Parameters
+#### Parameters
 
 - `values_data: MetricsData`: A series of doubles, the frequencies of which will be plotted.
 - `statuses_data: MetricsData`: The associated statuses to `values_data`.
@@ -199,6 +201,6 @@ Histograms plot the frequencies with which doubles appear in an array, by bucket
 - `lower_bound`: An optional lower bound on how small values can be.
 - `upper_bound`: An optional upper bound on how big values can be.
 
-### Grouped data support
+#### Grouped data support
 
 Grouped data should not currently be provided to histogram metrics.
