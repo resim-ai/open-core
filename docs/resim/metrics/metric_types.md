@@ -88,7 +88,7 @@ For situations where you wish to attach a list of images to a single metric, the
 ## Deprecated Metrics
 
 !!! warning "Deprecation Notice"
-    To provide more flexibility in your metrics, we are deprecating Rechart metrics. Please take a look at Plotly with some examples in the sandbox(link to sandbox)
+    To provide more flexibility in your metrics, we are deprecating Rechart metrics. Please take a look at Plotly with [an example in the sandbox](https://github.com/resim-ai/sandbox/blob/8d10f09ceadea4f929c1a54fd6eeb4b859010529/systems/drone/metrics/batch_metrics.py#L184)
 
 ### Bar Chart
 
