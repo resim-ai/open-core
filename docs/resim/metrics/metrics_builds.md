@@ -18,7 +18,7 @@ Metrics Builds have three modes, two of which *must implemented within the same 
 Whether we are in `test mode` or `batch mode` is determined by the files present in `/tmp/resim/inputs/` when the metrics build container runs.
 
 - If the file `/tmp/resim/inputs/batch_metrics_config.json` is present, we are in batch mode, and our build should compute batch metrics using this config.
-- If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in test mode, and our build should compute test metrics. In this case, `/tmp/resim/inputs/` will instead contain an `experience` and `logs` directory respectively containing the input and output of the test which we can use to compute our metrics.
+- If the file `/tmp/resim/inputs/batch_metrics_config.json` is *not* present, then we are in test mode, and our build should compute test metrics. In this case, `/tmp/resim/inputs/` will contain an `experience` and `logs` directory. The `experience` directory will contain the experience data from the test (e.g. the `/tmp/resim/inputs` folder from the experience stage), and the `logs` directory will contain the log data (e.g. the `/tmp/resim/outputs` folder from the experience stage).
 
 ## Test Suite Report Mode
 

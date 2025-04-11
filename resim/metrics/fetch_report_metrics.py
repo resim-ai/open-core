@@ -49,7 +49,7 @@ async def fetch_batches_for_report(
 
     search_string = " AND ".join(search_components)
 
-    batches = await async_fetch_all_pages(
+    batches: list[Batch] = await async_fetch_all_pages(
         list_batches.asyncio,
         project_id=project_id_str,
         search=search_string,
@@ -67,7 +67,7 @@ async def fetch_jobs_for_batches(
 ) -> dict[str, list[Job]]:
     """Fetch all jobs for the given list of batch_ids and return them in a dict
     of batch ids to lists of jobs."""
-    jobs = await asyncio.gather(
+    jobs: list[Job] = await asyncio.gather(
         *(
             async_fetch_all_pages(
                 list_jobs.asyncio,
