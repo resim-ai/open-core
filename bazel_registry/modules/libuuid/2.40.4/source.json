@@ -1,0 +1,10 @@
+{
+    # "url": "https://github.com/util-linux/util-linux/archive/refs/tags/v2.40.4.tar.gz",
+    "integrity": "sha256-a5TRyjO3hs0S6QRho8rBhn560QtGnlvGf06PiePgOp0=",
+    "strip_prefix": "util-linux-2.40.4",
+    "patches": {
+        "add_build_file.patch": "sha256-WYDtqeHBpJlz6+LHuw81MPk4IDMQgLKEuyzznt6tZmo=",
+        "module_dot_bazel.patch": "sha256-P0W+YmFD9pqCq5sKDOauWh/QNK40Zp5y/1LYlRlo5KI="
+    },
+    "patch_strip": 0
+}
