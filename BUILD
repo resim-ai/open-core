@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 exports_files(["requirements.txt"])
 
@@ -19,5 +20,11 @@ platform(
 config_setting(
     name = "nocross",
     constraint_values = HOST_CONSTRAINTS,
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "use_system_uuid",
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )

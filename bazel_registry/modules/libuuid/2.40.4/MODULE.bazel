@@ -1,7 +1,0 @@
-module(
-    name = "libuuid",
-    compatibility_level = 1,
-    version = "2.40.4",
-)
-
-bazel_dep(name = "platforms", version = "0.0.11")
