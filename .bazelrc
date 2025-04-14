@@ -7,7 +7,7 @@ common --enable_bzlmod
 coverage --java_runtime_version=remotejdk_11 --nocache_test_results
 coverage --combined_report=lcov --experimental_generate_llvm_lcov --experimental_use_llvm_covmap
 
-common --registry=https://raw.githubusercontent.com/resim-ai/open-core/prod/mikebauer/upgrade-bazel-and-fmt/bazel_registry/
+common --registry=https://raw.githubusercontent.com/resim-ai/open-core/bf6f31624c1af8ef36b5a910806ef247fef84b46/bazel_registry/
 common --registry=https://bcr.bazel.build
 common --incompatible_strict_action_env
 
