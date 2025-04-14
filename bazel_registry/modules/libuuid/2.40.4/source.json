@@ -3,7 +3,7 @@
     "integrity": "sha256-a5TRyjO3hs0S6QRho8rBhn560QtGnlvGf06PiePgOp0=",
     "strip_prefix": "util-linux-2.40.4",
     "patches": {
-        "add_build_file.patch": "sha256-aCD1yKoaLEltFGaVaKUU8XV79hd+LHGJIN/hi4y4uXg=",
+        "add_build_file.patch": "sha256-18hM6I8Qg9B2MMno2+DFSWxJIINAMksf5cvyr3NJJTk=",
         "module_dot_bazel.patch": "sha256-ZTS8aGSHBhWAtFU/AWGc9FWtCqmC/oCLuWGLh6rf5A8="
     },
     "patch_strip": 0

@@ -1,9 +1,9 @@
 diff --git BUILD.bazel BUILD.bazel
 new file mode 100644
-index 000000000..cf7760c67
+index 000000000..e7d27c141
 --- /dev/null
 +++ BUILD.bazel
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,76 @@
 +cc_library(
 +    name = "common",
 +    srcs = [
@@ -25,7 +25,10 @@ index 000000000..cf7760c67
 +    ],
 +    defines = ["HAVE_NANOSLEEP"] +
 +              select({
-+                  "@platforms//os:linux": ["HAVE_SYS_FILE_H"],
++                  "@platforms//os:linux": [
++                      "HAVE_SYS_FILE_H",
++                      "HAVE_REALLOCARRAY",
++                  ],
 +                  "//conditions:default": [],
 +              }),
 +    strip_include_prefix = "include",
