@@ -9,6 +9,7 @@ RUN apt-get install -y g++ clang lcov clang-format clang-tidy clangd
 RUN apt-get install -y g++-12-aarch64-linux-gnu qemu-user
 RUN apt-get install -y openssh-server unzip groff man
 RUN apt-get install -y emacs vim zsh tmux
+RUN apt-get install -y file zip # Bazel expects these
 RUN apt-get install -y cgdb
 RUN apt-get install -y libcurl4-openssl-dev
 
