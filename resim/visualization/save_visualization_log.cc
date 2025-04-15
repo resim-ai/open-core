@@ -4,18 +4,19 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include "resim/visualization/save_visualization_log.hh"
-
 #include "resim/curves/t_curve.hh"
 #include "resim/utils/mcap_logger.hh"
 #include "resim/visualization/curve/visualize_t_curve.hh"
+#include "resim/visualization/save_visualization_log.hh"
 
 namespace resim::visualization {
 
 void save_visualization_log(
     const std::span<const curves::TCurve<transforms::SE3>> &t_curves,
     const std::string_view filename) {
-  const char *maybe_outputs_dir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
+  // TODO(mbauer) Set maybe_path_outputs from TEST_UNDECLARED_OUTPUTS_DIR"
+  // again.
+  const char *maybe_outputs_dir = nullptr;
   const std::filesystem::path OUTPUTS_DIR{
       maybe_outputs_dir != nullptr ? maybe_outputs_dir : "."};
   resim::McapLogger logger{OUTPUTS_DIR / filename};
