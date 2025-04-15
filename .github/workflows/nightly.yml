@@ -7,7 +7,7 @@ on:
 jobs:
   nightly:
     name: Nightly Checks
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: public.ecr.aws/resim/core:latest 
     steps:
