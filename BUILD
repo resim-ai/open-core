@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
 
 exports_files(["requirements.txt"])
 

@@ -34,15 +34,15 @@ cc_library(
     srcs = ["uuid.cc"],
     hdrs = ["uuid.hh"],
     linkopts = select({
-        ":use_system_uuid_true": ["-luuid"],
         ":use_system_uuid_false": [],
+        ":use_system_uuid_true": ["-luuid"],
     }),
     visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
     ] + select({
-        ":use_system_uuid_true": [],
         ":use_system_uuid_false": ["@libuuid"],
+        ":use_system_uuid_true": [],
     }),
 )
 
