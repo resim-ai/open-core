@@ -4,10 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+#include "resim/visualization/save_visualization_log.hh"
+
 #include "resim/curves/t_curve.hh"
 #include "resim/utils/mcap_logger.hh"
 #include "resim/visualization/curve/visualize_t_curve.hh"
-#include "resim/visualization/save_visualization_log.hh"
 
 namespace resim::visualization {
 
