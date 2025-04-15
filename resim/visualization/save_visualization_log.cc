@@ -15,7 +15,7 @@ namespace resim::visualization {
 void save_visualization_log(
     const std::span<const curves::TCurve<transforms::SE3>> &t_curves,
     const std::string_view filename) {
-  // TODO(mbauer) Set maybe_path_outputs from TEST_UNDECLARED_OUTPUTS_DIR"
+  // TODO(mbauer) Set maybe_outputs_dir from TEST_UNDECLARED_OUTPUTS_DIR"
   // again.
   const char *maybe_outputs_dir = nullptr;
   const std::filesystem::path OUTPUTS_DIR{
