@@ -15,15 +15,35 @@ exports_files(
     ],
 )
 
+config_setting(
+    name = "use_system_uuid_true",
+    flag_values = {
+        "//:use_system_uuid": "true",
+    },
+)
+
+config_setting(
+    name = "use_system_uuid_false",
+    flag_values = {
+        "//:use_system_uuid": "false",
+    },
+)
+
 cc_library(
     name = "uuid",
     srcs = ["uuid.cc"],
     hdrs = ["uuid.hh"],
+    linkopts = select({
+        ":use_system_uuid_false": [],
+        ":use_system_uuid_true": ["-luuid"],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//resim/assert",
-        "@libuuid",
-    ],
+    ] + select({
+        ":use_system_uuid_false": ["@libuuid"],
+        ":use_system_uuid_true": [],
+    }),
 )
 
 cc_test(

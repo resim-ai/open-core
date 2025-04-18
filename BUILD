@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
 
 exports_files(["requirements.txt"])
@@ -19,5 +20,14 @@ platform(
 config_setting(
     name = "nocross",
     constraint_values = HOST_CONSTRAINTS,
+    visibility = ["//visibility:public"],
+)
+
+# Use the system uuid library optionally. Typically, we don't want to do this,
+# but in certain cases (e.g. emscripten) it's convenient. In the emscripten
+# case, there's a stub of it in the sysroot that we want to utilize.
+bool_flag(
+    name = "use_system_uuid",
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
