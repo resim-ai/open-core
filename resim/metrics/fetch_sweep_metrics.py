@@ -58,7 +58,7 @@ async def _fetch_scalar_metrics_for_job(
     ]
 
 
-async def _fetch_sweep_metrics_frame(
+async def fetch_sweep_metrics_frame(
     *, client: AuthenticatedClient, sweep_id: UUID, project_id: UUID, pivot: bool
 ) -> pd.DataFrame:
     """
@@ -171,7 +171,7 @@ from others.
         token=device_code_client.get_jwt()["access_token"],
     )
 
-    metrics_frame = await _fetch_sweep_metrics_frame(
+    metrics_frame = await fetch_sweep_metrics_frame(
         client=client,
         sweep_id=args.sweep_id,
         project_id=args.project_id,

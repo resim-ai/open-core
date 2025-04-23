@@ -252,6 +252,7 @@ pkg_tar(
 py_binary(
     name = "fetch_sweep_metrics",
     srcs = ["fetch_sweep_metrics.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
         "//resim-python-client",
