@@ -16,6 +16,8 @@ from resim_python_client.models import (
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
 from resim_python_client.api.parameter_sweeps import get_parameter_sweep
 
+_PAGE_SIZE = 100
+
 
 async def _fetch_jobs_for_batch(
     *, client: AuthenticatedClient, batch_id: UUID, project_id: UUID
@@ -28,6 +30,7 @@ async def _fetch_jobs_for_batch(
         client=client,
         project_id=str(project_id),
         batch_id=str(batch_id),
+        page_size=_PAGE_SIZE,
     )
     return [j for page in job_pages for j in page.jobs]
 
@@ -45,6 +48,7 @@ async def _fetch_scalar_metrics_for_job(
         project_id=str(project_id),
         batch_id=str(batch_id),
         job_id=str(job_id),
+        page_size=_PAGE_SIZE,
     )
     return [
         (m.name, m.value, m.unit)
