@@ -5,9 +5,13 @@ from resim_python_client.api.batches import list_jobs, list_metrics_for_job
 from uuid import UUID
 import pandas as pd
 import argparse
-import asyncio
 
-from resim_python_client.models import Job, MetricType
+from resim_python_client.models import (
+    Job,
+    MetricType,
+    ListJobsOutput,
+    ListJobMetricsOutput,
+)
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
 from resim_python_client.api.parameter_sweeps import get_parameter_sweep
 
@@ -15,7 +19,7 @@ from resim_python_client.api.parameter_sweeps import get_parameter_sweep
 async def _fetch_jobs_for_batch(
     *, client: AuthenticatedClient, batch_id: UUID, project_id: UUID
 ) -> list[Job]:
-    job_pages = await async_fetch_all_pages(
+    job_pages: list[ListJobsOutput] = await async_fetch_all_pages(
         list_jobs.asyncio,
         client=client,
         project_id=str(project_id),
@@ -27,7 +31,7 @@ async def _fetch_jobs_for_batch(
 async def _fetch_scalar_metrics_for_job(
     *, client: AuthenticatedClient, job_id: UUID, batch_id: UUID, project_id: UUID
 ) -> pd.DataFrame:
-    job_metrics_pages = await async_fetch_all_pages(
+    job_metrics_pages: ListJobMetricsOutput = await async_fetch_all_pages(
         list_metrics_for_job.asyncio,
         client=client,
         project_id=str(project_id),
@@ -65,7 +69,7 @@ async def fetch_sweep_metrics_frame(
 
     sem = asyncio.Semaphore(20)
 
-    async def fetch_metrics(row: tuple):
+    async def fetch_metrics(row: pd.DataFrame) -> pd.DataFrame:
         async with sem:
             job_id = row["job_id"]
             batch_id = row["batch_id"]
@@ -91,7 +95,7 @@ async def fetch_sweep_metrics_frame(
     metrics_frame.to_csv("/home/ubuntu/job_metrics.csv", index=False)
 
 
-async def main():
+async def main() -> None:
     parser = argparse.ArgumentParser(prog="fetch_sweep_metrics")
     parser.add_argument("--project-id", type=UUID, required=True)
     parser.add_argument("--sweep-id", type=UUID, required=True)
