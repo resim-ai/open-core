@@ -248,3 +248,14 @@ pkg_tar(
     include_runfiles = True,
     strip_prefix = "/",
 )
+
+py_binary(
+    name = "fetch_sweep_metrics",
+    srcs = ["fetch_sweep_metrics.py"],
+    deps = [
+        ":fetch_all_pages",
+        "//resim-python-client",
+        "//resim/auth/python:device_code_client",
+        requirement("pandas"),
+    ],
+)
