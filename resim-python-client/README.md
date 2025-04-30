@@ -10,7 +10,7 @@ from resim.auth.python.device_code_client import DeviceCodeClient, UsernamePassw
 
 # If you're using your local machine, you can use the device code flow to get a token
 device_code_client = DeviceCodeClient()
-client = AuthenticatedClient(base_url="https://api.resim.ai/v1/", token=device_code_client.get_jwt())
+client = AuthenticatedClient(base_url="https://api.resim.ai/v1/", token=device_code_client.get_jwt()["access_token"])
 
 # OR
 

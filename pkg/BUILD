@@ -47,6 +47,7 @@ py_package(
         "//resim/metrics:fetch_job_metrics",
         "//resim/metrics:fetch_metrics_urls",
         "//resim/metrics:fetch_report_metrics",
+        "//resim/metrics:fetch_sweep_metrics",
         "//resim/metrics:get_metrics_proto",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/proto:validate_metrics_proto",
