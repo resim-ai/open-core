@@ -1,3 +1,9 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 from pathlib import Path
 import uuid
 from resim.metrics.python.metrics_writer import ResimMetricsWriter
