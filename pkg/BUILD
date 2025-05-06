@@ -55,6 +55,7 @@ py_package(
         "//resim/metrics/python:metrics",
         "//resim/metrics/python:metrics_utils",
         "//resim/metrics/python:metrics_writer",
+        "//resim/metrics/python:plotly_helpers",
         "//resim/metrics/python:unpack_metrics",
         "//resim/msg:detection_proto_py",
         "//resim/msg:header_proto_py",
