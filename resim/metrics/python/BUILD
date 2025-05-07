@@ -109,3 +109,14 @@ py_library(
         ":metrics_utils",
     ],
 )
+
+py_library(
+    name = "plotly_helpers",
+    srcs = ["plotly_helpers.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("plotly"),
+        requirement("pandas"),
+        "//resim/metrics:resim_style",
+    ],
+)
