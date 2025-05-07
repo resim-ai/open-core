@@ -56,12 +56,12 @@ def resim_plotly_style(fig: Figure, **kwargs: Any) -> None:
 
 
 resim_colors = [
+    RESIM_PURPLE,
     RESIM_GREEN,
     RESIM_BLUE,
     RESIM_RED,
     RESIM_YELLOW,
     RESIM_PINK,
-    RESIM_PURPLE,
     RESIM_ORANGE,
     RESIM_TURQUOISE,
 ] + qualitative.Alphabet

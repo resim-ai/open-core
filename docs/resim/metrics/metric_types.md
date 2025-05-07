@@ -58,6 +58,16 @@ In this way, charts not yet supported natively can be displayed and have the res
 
 - `plotly_data: str` - the metric's plotly chart.
 
+### Examples
+
+Plotly doesn't support all of the charts we previously supported, so we've added some helper functions to create some of the more complex charts.
+
+#### States over Time
+
+This chart is supported by the `create_state_timeline_chart` function. An example of how to use it is available in the open-core examples [here](https://github.com/resim-ai/open-core/blob/main/resim/examples/plotly_metrics.py).
+
+<img src="./state_timeline_plotly.png" width="700px" alt="An example states over time chart">
+
 ## Image Metric
 
 The ReSim metrics framework also supports attaching an arbitrary image as a metric. This could be used to attach images from sensors, or from extremely custom charts previously created. This is simply achieved by storing the image in the `/tmp/resim/outputs` directory and referencing the filename in the metric.

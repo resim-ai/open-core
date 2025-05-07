@@ -115,5 +115,16 @@ py_test(
     srcs = ["emissions_test.py"],
     deps = [
         ":emissions",
+    ]
+)
+
+py_library(
+    name = "plotly_helpers",
+    srcs = ["plotly_helpers.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("plotly"),
+        requirement("pandas"),
+        "//resim/metrics:resim_style",
     ],
 )

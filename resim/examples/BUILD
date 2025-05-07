@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 cc_binary(
     name = "assert_and_status",
@@ -103,5 +104,14 @@ cc_binary(
     srcs = ["match.cc"],
     deps = [
         "//resim/utils:match",
+    ],
+)
+
+py_binary(
+    name = "plotly_metrics",
+    srcs = ["plotly_metrics.py"],
+    deps = [
+        "//resim/metrics/python:metrics_writer",
+        "//resim/metrics/python:plotly_helpers",
     ],
 )
