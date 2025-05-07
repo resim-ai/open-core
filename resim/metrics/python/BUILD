@@ -109,3 +109,11 @@ py_library(
         ":metrics_utils",
     ],
 )
+
+py_test(
+    name = "emissions_test",
+    srcs = ["emissions_test.py"],
+    deps = [
+        ":emissions",
+    ],
+)
