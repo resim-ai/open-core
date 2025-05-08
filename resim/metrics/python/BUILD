@@ -115,7 +115,7 @@ py_test(
     srcs = ["emissions_test.py"],
     deps = [
         ":emissions",
-    ]
+    ],
 )
 
 py_library(
