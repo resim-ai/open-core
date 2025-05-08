@@ -14,6 +14,7 @@ contents that can be posted to the metrics endpoint.
 
 import re
 import uuid
+import math
 
 import google.protobuf.timestamp_pb2 as timestamp_proto
 import resim.utils.proto.uuid_pb2 as uuid_proto
@@ -501,6 +502,9 @@ def _validate_scalar_metric_values(scalar_metric_values: mp.ScalarMetricValues) 
         scalar_metric_values: The metric values to check.
     """
     _metrics_assert(scalar_metric_values.HasField("value"))
+    _metrics_assert(
+        not math.isnan(scalar_metric_values.value), "Scalar metric value cannot be NaN"
+    )
 
 
 def _validate_plotly_metric_values(plotly_metric_values: mp.PlotlyMetricValues) -> None:
