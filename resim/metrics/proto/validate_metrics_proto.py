@@ -502,7 +502,10 @@ def _validate_scalar_metric_values(scalar_metric_values: mp.ScalarMetricValues) 
         scalar_metric_values: The metric values to check.
     """
     _metrics_assert(scalar_metric_values.HasField("value"))
-    _metrics_assert(not math.isnan(scalar_metric_values.value), "Scalar metric value cannot be NaN")
+    _metrics_assert(
+        not math.isnan(scalar_metric_values.value), "Scalar metric value cannot be NaN"
+    )
+
 
 def _validate_plotly_metric_values(plotly_metric_values: mp.PlotlyMetricValues) -> None:
     """

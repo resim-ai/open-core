@@ -129,8 +129,12 @@ class ValidateMetricsProtoTest(unittest.TestCase):
         metrics = gtm.generate_test_metrics(True)
 
         # Test NaN in regular series
-        scalar_metric = next(metric for metric in metrics.job_level_metrics.metrics if metric.name == "Ambient Temperature")
-        scalar_metric.metric_values.scalar_metric_values.value = float('nan')
+        scalar_metric = next(
+            metric
+            for metric in metrics.job_level_metrics.metrics
+            if metric.name == "Ambient Temperature"
+        )
+        scalar_metric.metric_values.scalar_metric_values.value = float("nan")
 
         with self.assertRaises(vmp.InvalidMetricsException):
             vmp.validate_job_metrics(metrics)
