@@ -55,7 +55,7 @@ def emit(
                 open_file = file
                 if open_file is None:
                     open_file = open(file_path, "a", encoding="utf8")
-                for i in range(lengths.pop()):
+                for i in range(lengths.pop()):  # pragma: no branch
                     scalar_data = {k: v[i] for k, v in data.items()}
                     emit(
                         topic_name,
@@ -64,7 +64,7 @@ def emit(
                     )
                 if file is None:
                     open_file.close()
-                return
+                return  # pragma: no branch
 
         if timestamp is None and timestamps is not None:
             # assert all data values are mapped to lists of the same length
@@ -81,7 +81,7 @@ def emit(
             if open_file is None:
                 open_file = open(file_path, "a", encoding="utf8")
 
-            for i, ts in enumerate(timestamps):
+            for i, ts in enumerate(timestamps):  # pragma: no branch
                 scalar_data = {k: v[i] for k, v in data.items()}
                 emit(
                     topic_name,
@@ -91,7 +91,7 @@ def emit(
                 )
             if file is None:
                 open_file.close()
-            return
+            return  # pragma: no branch
 
         # build the single point emission dictionary
         emission = {
