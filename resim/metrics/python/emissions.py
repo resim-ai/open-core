@@ -50,12 +50,12 @@ def emit(
             and len(data) > 0
             and all(isinstance(v, list) for v in data.values())
         ):
-            lengths = [len(v) for v in data.values()]
-            if len(set(lengths)) == 1:
+            lengths = set(len(v) for v in data.values())
+            if len(lengths) == 1:
                 open_file = file
                 if open_file is None:
                     open_file = open(file_path, "a", encoding="utf8")
-                for i in range(lengths[0]):
+                for i in range(lengths.pop()):
                     scalar_data = {k: v[i] for k, v in data.items()}
                     emit(
                         topic_name,

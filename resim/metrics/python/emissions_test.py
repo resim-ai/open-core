@@ -267,6 +267,22 @@ class EmissionsTest(unittest.TestCase):
             self.assertEqual(emission["$data"], data2)
             self.assertNotIn("timestamp", emission["$metadata"])
 
+    def test_emit_explode_empty_lists(self) -> None:
+        """Test that emission does not explode if all values are empty lists."""
+        topic_name = "test_topic"
+
+        data: dict[str, list[Any]] = {"a": [], "b": []}
+        emit(topic_name, data, file_path=self.temp_path)
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 0)
+
+        self.temp_path.unlink()  # clear file
+        emit(topic_name, data, file_path=self.temp_path, timestamps=[])
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
