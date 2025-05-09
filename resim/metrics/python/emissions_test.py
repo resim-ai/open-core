@@ -223,6 +223,66 @@ class EmissionsTest(unittest.TestCase):
             self.assertEqual(emission1["$data"], data1)
             self.assertEqual(emission2["$data"], data2)
 
+    def test_emit_explode_lists_without_timestamps(self) -> None:
+        """Test that lists are exploded into individual emissions if no timestamp(s) is provided."""
+        topic_name = "test_topic"
+        data: dict[str, list[Any]] = {"a": [1, 2, 3], "b": ["x", "y", "z"]}
+
+        emit(topic_name, data, file_path=self.temp_path)
+
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 3)
+            for i, line in enumerate(content):
+                emission = json.loads(line)
+                self.assertEqual(emission["$metadata"]["topic"], topic_name)
+                self.assertEqual(
+                    emission["$data"], {"a": data["a"][i], "b": data["b"][i]}
+                )
+                self.assertNotIn("timestamp", emission["$metadata"])
+
+    def test_emit_no_explode_when_not_all_lists(self) -> None:
+        """Test that emission does not explode if not all values are lists or lists of the same length."""
+        topic_name = "test_topic"
+        # Case 1: one value is not a list
+        data1 = {"a": [1, 2, 3], "b": "not_a_list"}
+        emit(topic_name, data1, file_path=self.temp_path)
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 1)
+            emission = json.loads(content[0])
+            self.assertEqual(emission["$metadata"]["topic"], topic_name)
+            self.assertEqual(emission["$data"], data1)
+            self.assertNotIn("timestamp", emission["$metadata"])
+
+        # Case 2: lists of different lengths
+        self.temp_path.unlink()  # clear file
+        data2 = {"a": [1, 2, 3], "b": ["x", "y"]}
+        emit(topic_name, data2, file_path=self.temp_path)
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 1)
+            emission = json.loads(content[0])
+            self.assertEqual(emission["$metadata"]["topic"], topic_name)
+            self.assertEqual(emission["$data"], data2)
+            self.assertNotIn("timestamp", emission["$metadata"])
+
+    def test_emit_explode_empty_lists(self) -> None:
+        """Test that emission does not explode if all values are empty lists."""
+        topic_name = "test_topic"
+
+        data: dict[str, list[Any]] = {"a": [], "b": []}
+        emit(topic_name, data, file_path=self.temp_path)
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 0)
+
+        self.temp_path.unlink()  # clear file
+        emit(topic_name, data, file_path=self.temp_path, timestamps=[])
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.readlines()
+            self.assertEqual(len(content), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
