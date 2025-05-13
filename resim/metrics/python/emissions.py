@@ -43,6 +43,29 @@ def emit(
         if timestamp is not None and timestamps is not None:
             raise ValueError("Only one of timestamp or timestamps can be set")
 
+        # If no timestamp(s) and all data values are lists of the same length, recursively emit each point
+        if (
+            timestamp is None
+            and timestamps is None
+            and len(data) > 0
+            and all(isinstance(v, list) for v in data.values())
+        ):
+            lengths = set(len(v) for v in data.values())
+            if len(lengths) == 1:
+                open_file = file
+                if open_file is None:
+                    open_file = open(file_path, "a", encoding="utf8")
+                for i in range(lengths.pop()):  # pragma: no cover
+                    scalar_data = {k: v[i] for k, v in data.items()}
+                    emit(
+                        topic_name,
+                        scalar_data,
+                        file=open_file,
+                    )
+                if file is None:
+                    open_file.close()
+                return  # pragma: no cover
+
         if timestamp is None and timestamps is not None:
             # assert all data values are mapped to lists of the same length
             if not all(isinstance(v, list) for v in data.values()):
@@ -58,7 +81,7 @@ def emit(
             if open_file is None:
                 open_file = open(file_path, "a", encoding="utf8")
 
-            for i, ts in enumerate(timestamps):
+            for i, ts in enumerate(timestamps):  # pragma: no cover
                 scalar_data = {k: v[i] for k, v in data.items()}
                 emit(
                     topic_name,
@@ -68,7 +91,7 @@ def emit(
                 )
             if file is None:
                 open_file.close()
-            return
+            return  # pragma: no cover
 
         # build the single point emission dictionary
         emission = {

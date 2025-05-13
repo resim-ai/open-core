@@ -110,6 +110,14 @@ py_library(
     ],
 )
 
+py_test(
+    name = "emissions_test",
+    srcs = ["emissions_test.py"],
+    deps = [
+        ":emissions",
+    ],
+)
+
 py_library(
     name = "plotly_helpers",
     srcs = ["plotly_helpers.py"],
