@@ -23,6 +23,7 @@ def emit(
     timestamps: Optional[
         Union[list[int], list[Timestamp], npt.NDArray[np.int_]]
     ] = None,
+    event: bool = False,
     file_path: Path = Path("/tmp/resim/outputs/emissions.ndjson"),
     file: Optional[TextIOWrapper] = None,
 ) -> None:
@@ -35,6 +36,7 @@ def emit(
     Optional Args:
         timestamp: The timestamp of the data point to emit. Mutually exclusive with timestamps.
         timestamps: A list of timestamps to emit the data at. Mutually exclusive with timestamp.
+        event: Annotates the emission as an event. Must be used with a single timestamp.
         file_path: The path to the file to emit the data to. Mutually exclusive with file.
         file: An optional file object to emit the data to. Mutually exclusive with file_path.
     """
@@ -43,10 +45,17 @@ def emit(
         if timestamp is not None and timestamps is not None:
             raise ValueError("Only one of timestamp or timestamps can be set")
 
+        # If event is True, ensure this is a single timestamp emission
+        if event and (timestamp is None or timestamps is not None):
+            raise ValueError(
+                "Event emissions must have a single timestamp (no recursion or multiple timestamps)"
+            )
+
         # If no timestamp(s) and all data values are lists of the same length, recursively emit each point
         if (
             timestamp is None
             and timestamps is None
+            and not event
             and len(data) > 0
             and all(isinstance(v, list) for v in data.values())
         ):
@@ -105,6 +114,9 @@ def emit(
                 emission["$metadata"]["timestamp"] = timestamp.to_nanos()
             else:
                 emission["$metadata"]["timestamp"] = timestamp
+        # Set event flag if event is True and this is a single timestamp emission
+        if event and timestamp is not None:
+            emission["$metadata"]["event"] = True
 
         # write the emission to the output file
         open_file = file
