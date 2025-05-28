@@ -283,6 +283,50 @@ class EmissionsTest(unittest.TestCase):
             content = f.readlines()
             self.assertEqual(len(content), 0)
 
+    def test_emit_event_validation(self) -> None:
+        """Test that event emissions require a single timestamp and that event=True is set in the metadata."""
+        topic_name = "test_topic"
+        data = {"value": [41, 42, 43]}
+        timestamp = 12345
+
+        # Test valid event emission with a single timestamp
+        emit(
+            topic_name, data, timestamp=timestamp, event=True, file_path=self.temp_path
+        )
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            content = f.read().strip()
+            emission = json.loads(content)
+            self.assertEqual(emission["$metadata"]["topic"], topic_name)
+            self.assertEqual(emission["$data"], data)
+            self.assertEqual(emission["$metadata"]["timestamp"], timestamp)
+            self.assertTrue(emission["$metadata"]["event"])
+
+        # Test that event=True without a single timestamp raises an error
+        if self.temp_path.exists():
+            self.temp_path.unlink()  # clear file
+        with self.assertRaises(RuntimeError) as context:
+            emit(topic_name, data, event=True, file_path=self.temp_path)
+        self.assertIn(
+            "Event emissions must have a single timestamp",
+            str(context.exception.__cause__),
+        )
+
+        # Test that event=True with timestamps raises an error
+        if self.temp_path.exists():
+            self.temp_path.unlink()  # clear file
+        with self.assertRaises(RuntimeError) as context:
+            emit(
+                topic_name,
+                {"values": [1, 2, 3]},
+                timestamps=[1000, 2000, 3000],
+                event=True,
+                file_path=self.temp_path,
+            )
+        self.assertIn(
+            "Event emissions must have a single timestamp",
+            str(context.exception.__cause__),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
