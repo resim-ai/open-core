@@ -21,7 +21,7 @@ def create_state_timeline_chart(
     *,
     colors: Optional[dict[str, str]] = None,
     xaxis_title: str = "Elapsed time (s)",
-) -> str | None:
+) -> go.Figure | None:
     """Create a state timeline chart.
 
     Args:
@@ -31,7 +31,7 @@ def create_state_timeline_chart(
         xaxis_title: Optional title for the x-axis
 
     Returns:
-        A JSON string representation of the plotly figure, or None if no data
+        A plotly figure, or None if no data
     """
     if not timestamps:
         logger.warning("No timestamps found for state timeline chart")
@@ -89,8 +89,9 @@ def create_state_timeline_chart(
     fig = go.Figure()
 
     # Define colors for all states
-    colors = colors or {
-        state: color for state, color in zip(all_states, itertools.cycle(resim_colors))
+    colors = {
+        state: color
+        for state, color in zip(sorted(all_states), itertools.cycle(resim_colors))
     }
 
     already_on_legend = set()
@@ -113,7 +114,8 @@ def create_state_timeline_chart(
                         name=state,
                         showlegend=True if state not in already_on_legend else False,
                         legendgroup=state,
-                        hovertemplate=f"{format(row['Start'], '.3f')} - {format(row['End'], '.3f')}",
+                        hovertemplate=f"<b style='color:{colors[state]};'>{state}</b>: {format(row['Start'], '.3f')} - {format(row['End'], '.3f')}",
+                        hoverlabel=dict(namelength=0),
                     )
                 )
                 already_on_legend.add(state)
@@ -122,14 +124,12 @@ def create_state_timeline_chart(
     fig.update_layout(
         xaxis_title=xaxis_title,
         barmode="stack",
-        hovermode="y unified",
-        hoverlabel=dict(
-            bgcolor=GRIDCOLOR_GRAY,
-        ),
+        hovermode="closest",
+        hoverlabel=dict(bgcolor=GRIDCOLOR_GRAY),
         showlegend=True,
         legend=dict(orientation="h", y=1.0, x=0.5, xanchor="center", yanchor="bottom"),
     )
     fig.update_xaxes(rangemode="tozero")
     resim_plotly_style(fig)
 
-    return str(fig.to_json())
+    return fig
