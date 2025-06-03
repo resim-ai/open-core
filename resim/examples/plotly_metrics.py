@@ -79,7 +79,7 @@ def add_state_timeline_metric(writer: ResimMetricsWriter) -> None:
         .with_importance(MetricImportance.HIGH_IMPORTANCE)
         .with_should_display(True)
         .with_blocking(True)
-        .with_plotly_data(plotly_json)
+        .with_plotly_data(str(plotly_json.to_json()))
     )
 
 
