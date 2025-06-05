@@ -11,6 +11,7 @@ Unit tests for validate_metrics_proto.
 
 import copy
 import unittest
+import uuid
 
 import resim.metrics.proto.generate_test_metrics as gtm
 import resim.metrics.proto.metrics_pb2 as mp
@@ -76,6 +77,56 @@ class ValidateMetricsProtoTest(unittest.TestCase):
             bad_event_job_proto = gtm.generate_bad_events(expect_event=expected_event)
             with self.assertRaises(vmp.InvalidMetricsException):
                 vmp.validate_job_metrics(bad_event_job_proto)
+
+    def test_valid_duplicate_metric_names(self) -> None:
+        """
+        Test that the validator works when duplicate metrics are split between non-event and event metrics
+        """
+        metrics = gtm.generate_test_metrics(False)
+
+        # Create two metrics with the same name
+        metric1 = metrics.job_level_metrics.metrics[0]
+        metric1.event_metric = False
+
+        metric2 = copy.deepcopy(metric1)
+        metric2.metric_id.id.data = str(uuid.uuid4())  # Give it a new ID
+        metric2.event_metric = True
+        metrics.job_level_metrics.metrics.append(metric2)
+
+        metric3 = copy.deepcopy(metric1)
+        metric3.metric_id.id.data = str(uuid.uuid4())  # Give it a new ID
+        metric3.event_metric = True
+        metrics.job_level_metrics.metrics.append(metric3)
+
+        # Add one metric to each event
+        metrics.events[0].metrics.append(metric2.metric_id)
+        metrics.events[1].metrics.append(metric3.metric_id)
+
+        vmp.validate_job_metrics(metrics)
+
+    def test_duplicate_metric_names_in_event(self) -> None:
+        """
+        Test that the validator fails when an event contains metrics with duplicate names
+        """
+        metrics = gtm.generate_test_metrics(False)
+
+        # Create two metrics with the same name
+        metric1 = metrics.job_level_metrics.metrics[0]
+        metric1.event_metric = True
+        metric2 = copy.deepcopy(metric1)
+        metric2.metric_id.id.data = str(uuid.uuid4())  # Give it a new ID
+        metric2.event_metric = True
+        metrics.job_level_metrics.metrics.append(metric2)
+
+        # Add both metrics to the event
+        metrics.events[0].metrics.append(metric1.metric_id)
+        metrics.events[0].metrics.append(metric2.metric_id)
+
+        with self.assertRaises(vmp.InvalidMetricsException) as context:
+            vmp.validate_job_metrics(metrics)
+        self.assertIn(
+            "Event metric names must be unique within the event", str(context.exception)
+        )
 
     def test_invalid_event_timestamps(self) -> None:
         """

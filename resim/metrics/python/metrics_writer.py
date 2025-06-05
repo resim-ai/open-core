@@ -44,25 +44,24 @@ class ResimMetricsWriter:
     metrics: Dict[uuid.UUID, Metric]
     metrics_data: Dict[uuid.UUID, BaseMetricsData]
     events: Dict[uuid.UUID, Event]
-
-    names: Set[str]
+    metrics_data_names: Set[str]
+    event_names: Set[str]
 
     def __init__(self, job_id: uuid.UUID):
         self.job_id = job_id
         self.metrics = {}
         self.metrics_data = {}
         self.events = {}
-        self.names = set()
+        self.metrics_data_names = set()
+        self.event_names = set()
 
     def add_metrics_data(self, data: BaseMetricsDataT) -> BaseMetricsDataT:
-        assert data.name not in self.names
-        self.names.add(data.name)
+        assert data.name not in self.metrics_data_names
+        self.metrics_data_names.add(data.name)
         self.metrics_data[data.id] = data
         return data
 
     def add_metric(self, metric: MetricT) -> MetricT:
-        assert metric.name not in self.names
-        self.names.add(metric.name)
         self.metrics[metric.id] = metric
         return metric
 
@@ -75,8 +74,8 @@ class ResimMetricsWriter:
         Returns:
             Event: the added event, for chaining
         """
-        assert event.name not in self.names
-        self.names.add(event.name)
+        assert event.name not in self.event_names
+        self.event_names.add(event.name)
         self.events[event.id] = event
         return event
 

@@ -546,7 +546,7 @@ class TestMetricsWriter(unittest.TestCase):
         metrics_data = self.writer.add_grouped_metrics_data(name=NAME)
         self.assertEqual(type(metrics_data), GroupedMetricsData)
         self.assertEqual(metrics_data.name, NAME)
-        self.assertIn(NAME, self.writer.names)
+        self.assertIn(NAME, self.writer.metrics_data_names)
         self.assertIn(metrics_data.id, self.writer.metrics_data)
         self.assertEqual(self.writer.metrics_data[metrics_data.id], metrics_data)
 
@@ -780,7 +780,7 @@ class TestMetricsWriter(unittest.TestCase):
         metrics_data = self.writer.add_external_file_metrics_data(name=NAME)
         self.assertEqual(type(metrics_data), ExternalFileMetricsData)
         self.assertEqual(metrics_data.name, NAME)
-        self.assertIn(NAME, self.writer.names)
+        self.assertIn(NAME, self.writer.metrics_data_names)
         self.assertIn(metrics_data.id, self.writer.metrics_data)
         self.assertEqual(self.writer.metrics_data[metrics_data.id], metrics_data)
 
