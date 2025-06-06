@@ -2101,6 +2101,22 @@ class MetricsTest(unittest.TestCase):
         self.assertTrue(event.timestamp == timestamp)
         self.assertTrue(event.timestamp_type == TimestampType.ABSOLUTE_TIMESTAMP)
 
+    def test_event_duplicate_metric_names(self) -> None:
+        """Test that Event.with_metrics() fails when metrics have duplicate names"""
+        event = metrics.Event(name="test_event")
+
+        # Create two metrics with the same name
+        metric1 = metrics.ScalarMetric(
+            name="duplicate_name", parent_job_id=uuid.uuid4()
+        )
+        metric2 = metrics.ScalarMetric(
+            name="duplicate_name", parent_job_id=uuid.uuid4()
+        )
+
+        with self.assertRaises(AssertionError) as context:
+            event.with_metrics([metric1, metric2])
+        self.assertIn("Event metrics must have unique names", str(context.exception))
+
     def test_event_pack(self) -> None:
         name = "my_event"
         description = "event description"

@@ -62,7 +62,7 @@ def _validate_uuid(unique_id: uuid_proto.UUID) -> None:
     try:
         uuid.UUID(hex=unique_id.data)
     except ValueError as exc:
-        raise InvalidMetricsException() from exc
+        raise InvalidMetricsException("Invalid UUID.") from exc
 
 
 def _validate_metrics_data_id(metrics_data_id: mp.MetricsDataId) -> None:
@@ -793,14 +793,25 @@ def _validate_event(event: mp.Event, metrics_map: dict[str, mp.Metric]) -> None:
         metrics_map: A map to find the metric in.
     """
     _validate_event_id(event.event_id)
-    _metrics_assert(event.name != "")
+    _metrics_assert(event.name != "", "Event name cannot be empty.")
     # No constraints on description
     # No constraints on tags
 
-    # Validate that each metric id is in the metrics_map:
+    # Validate that each metric id is in the metrics_map
+    names = set()
     for metric_id in event.metrics:
         _validate_metric_id(metric_id)
-        _metrics_assert(metric_id.id.data in metrics_map)
+        _metrics_assert(
+            metric_id.id.data in metrics_map,
+            f"Event metric id {metric_id.id.data} not found in metrics map.",
+        )
+        # Check name is unique within the event
+        metric = metrics_map[metric_id.id.data]
+        _metrics_assert(
+            metric.name not in names,
+            f"Event metric names must be unique within the event: {event.name}.",
+        )
+        names.add(metric.name)
 
     _validate_metric_status(event.status)
 
@@ -895,12 +906,19 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     )
     _validate_metric_status(job_metrics.metrics_status)
 
-    # Use a set to check for duplicated names
+    # Use a set to check for duplicated names for non-event metrics
     metric_names = set()
     for metric in job_metrics.job_level_metrics.metrics:
-        _metrics_assert(metric.name not in metric_names)
-        metric_names.add(metric.name)
-        _metrics_assert(metric.job_id == job_metrics.job_id)
+        if not metric.event_metric:
+            _metrics_assert(
+                metric.name not in metric_names,
+                f"Metric name {metric.name} is not unique.",
+            )
+            metric_names.add(metric.name)
+        _metrics_assert(
+            metric.job_id == job_metrics.job_id,
+            "Metric job ID must match the writer's job ID.",
+        )
 
     # Use a set to check for duplicated names
     metric_data_names = set()

@@ -2133,6 +2133,10 @@ class Event:
         return self
 
     def with_metrics(self: Event, metrics: List[Metric]) -> Event:
+        # ensure all event metrics have unique names
+        assert len(metrics) == len(set(m.name for m in metrics)), (
+            "Event metrics must have unique names."
+        )
         self.metrics = metrics
         return self
 
