@@ -33,6 +33,7 @@ State Dynamics::operator()(
   get_block<State::Partition, State::VELOCITY>(dx) =
       x.scene_from_body_rotation * Vec3::UnitZ() * u.thrust -
       Vec3::UnitZ() * gravitational_acceleration_mpss_;
+  get_block<State::Partition, State::TIME>(dx).x() = 1.0;
   dx = dx * dt_;
 
   if (diffs) {
