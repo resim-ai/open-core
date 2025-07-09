@@ -50,6 +50,7 @@ class FetchReportMetricsTest(unittest.IsolatedAsyncioTestCase):
             test_suite_id=str(uuid.uuid4()),
             test_suite_revision=3,
             user_id="",
+            metrics_set_name="blah",
         )
         self.client = ClientMock()
 
