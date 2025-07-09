@@ -109,6 +109,7 @@ def random_test_suite(state: MockState) -> Batch:
         user_id=f"{_random_string()}@{state.org_id}",
         metrics_build_id=metrics_build.metrics_build_id,
         show_on_summary=_random_bool(),
+        archived=False,
     )
 
 
@@ -234,6 +235,7 @@ async def create_report_asyncio(
         test_suite_id=body.test_suite_id,
         test_suite_revision=body.test_suite_revision,
         user_id=f"simbox@{client.state.org_id}",
+        metrics_set_name="blah",
     )
     client.state.reports[report_id] = report
     return report
