@@ -22,6 +22,10 @@ import resim.metrics.fetch_job_metrics as fjm
 import resim.metrics.proto.metrics_pb2 as mp
 
 _TOKEN = "wowwhatacoincidentaltoken"
+_IMAGE_METRIC_TYPES = {
+    mp.MetricType.IMAGE_METRIC_TYPE,
+    mp.MetricType.IMAGE_LIST_METRIC_TYPE,
+}
 
 
 @dataclass(frozen=True)
@@ -120,12 +124,18 @@ _METRICS_URL_TO_MESSAGE_MAP = {
     for i in range(10)
 }
 
-# Give each job a single image metric
+# Give each job a single image metric and a single image list metric
 NUM_IMAGE_METRICS_PER_JOB = 1  # this gets used below
+NUM_IMAGE_LIST_METRICS_PER_JOB = 1
+
 for job, urls in _JOB_ID_METRICS_URL_MAP.items():
     current = _METRICS_URL_TO_MESSAGE_MAP[urls[0]]
     _METRICS_URL_TO_MESSAGE_MAP[urls[0]] = MockMetric(
         name=current.name, data=current.data, type=mp.MetricType.IMAGE_METRIC_TYPE
+    )
+    current = _METRICS_URL_TO_MESSAGE_MAP[urls[1]]
+    _METRICS_URL_TO_MESSAGE_MAP[urls[1]] = MockMetric(
+        name=current.name, data=current.data, type=mp.MetricType.IMAGE_LIST_METRIC_TYPE
     )
 
 
@@ -270,14 +280,13 @@ class FetchJobMetricsTest(unittest.TestCase):
             # The image metric data should be missing
             self.assertEqual(
                 len(metrics_protos[job_id]),
-                len(metric_urls) - NUM_IMAGE_METRICS_PER_JOB,
+                len(metric_urls)
+                - NUM_IMAGE_METRICS_PER_JOB
+                - NUM_IMAGE_LIST_METRICS_PER_JOB,
             )
             self.assertEqual(len(metrics_data_protos[job_id]), len(metrics_data_urls))
             for url in metric_urls:
-                if (
-                    _METRICS_URL_TO_MESSAGE_MAP[url].type
-                    != mp.MetricType.IMAGE_METRIC_TYPE
-                ):
+                if _METRICS_URL_TO_MESSAGE_MAP[url].type not in _IMAGE_METRIC_TYPES:
                     self.assertIn(
                         _METRICS_URL_TO_MESSAGE_MAP[url], metrics_protos[job_id]
                     )
@@ -340,7 +349,7 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
                         _METRICS_URL_TO_MESSAGE_MAP[url]
                         for url in _JOB_ID_METRICS_URL_MAP[job_id]
                         if _METRICS_URL_TO_MESSAGE_MAP[url].type
-                        != mp.MetricType.IMAGE_METRIC_TYPE
+                        not in _IMAGE_METRIC_TYPES
                     ),
                 )
                 self.assertEqual(
@@ -354,8 +363,7 @@ class FetchJobMetricsByBatchTest(unittest.TestCase):
                 expected_names = set(
                     _METRICS_URL_TO_MESSAGE_MAP[url].name
                     for url in _JOB_ID_METRICS_URL_MAP[job_id]
-                    if _METRICS_URL_TO_MESSAGE_MAP[url].type
-                    != mp.MetricType.IMAGE_METRIC_TYPE
+                    if _METRICS_URL_TO_MESSAGE_MAP[url].type not in _IMAGE_METRIC_TYPES
                 ).union(
                     set(
                         _METRICS_DATA_URL_TO_MESSAGE_MAP[url].name
