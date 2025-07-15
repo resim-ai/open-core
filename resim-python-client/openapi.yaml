@@ -346,8 +346,6 @@ components:
           $ref: '#/components/schemas/buildDescription'
         imageUri:
           $ref: '#/components/schemas/buildImageUri'
-        longDescription:
-          $ref: '#/components/schemas/buildLongDescription'
         name:
           $ref: '#/components/schemas/buildName'
         orgID:
@@ -368,7 +366,6 @@ components:
       - systemID
       - name
       - description
-      - longDescription
       - version
       - imageUri
       - buildSpecification
@@ -378,23 +375,15 @@ components:
       type: object
     buildDescription:
       deprecated: true
-      description: '[DEPRECATED] This field was previously used to set the build''s
-        name. If both ''description'' and ''name'' are provided, ''name'' will take
-        precedence. In a future version, this field will be repurposed to store the
-        build''s description.'
+      description: The description of the build. May be a SHA or commit message.
       type: string
     buildID:
       format: uuid
       type: string
     buildImageUri:
       type: string
-    buildLongDescription:
-      deprecated: true
-      description: '[DEPRECATED] This field is temporarily being used to set the build''s
-        description. In a future version, the `description` field will be used instead.'
-      type: string
     buildName:
-      description: The name of the build. This replaces the previous usage of 'description'.
+      description: The name of the build.
       type: string
     buildSpecificationInput:
       format: byte
@@ -497,8 +486,6 @@ components:
           $ref: '#/components/schemas/buildDescription'
         imageUri:
           $ref: '#/components/schemas/buildImageUri'
-        longDescription:
-          $ref: '#/components/schemas/buildLongDescription'
         name:
           $ref: '#/components/schemas/buildName'
         systemID:
@@ -526,8 +513,6 @@ components:
           $ref: '#/components/schemas/buildDescription'
         imageUri:
           $ref: '#/components/schemas/buildImageUri'
-        longDescription:
-          $ref: '#/components/schemas/buildLongDescription'
         name:
           $ref: '#/components/schemas/buildName'
         triggeredVia:
@@ -2414,8 +2399,6 @@ components:
           type: string
         description:
           $ref: '#/components/schemas/buildDescription'
-        longDescription:
-          $ref: '#/components/schemas/buildLongDescription'
         name:
           $ref: '#/components/schemas/buildName'
       type: object
