@@ -273,10 +273,11 @@ def _fetch_metrics(
         message_type=message_type, session=session, url=url
     )
 
-    if  (
+    if (
         # these metrics depend on external file metrics, which we do not fetch due to optimize the fetch process. So if we unpack them, it could fail
         message_type == mp.Metric
-        and metrics_proto.type in  [mp.MetricType.IMAGE_METRIC_TYPE, mp.MetricType.IMAGE_LIST_METRIC_TYPE] 
+        and metrics_proto.type
+        in [mp.MetricType.IMAGE_METRIC_TYPE, mp.MetricType.IMAGE_LIST_METRIC_TYPE]
     ):
         return
     protos_lock.acquire()
