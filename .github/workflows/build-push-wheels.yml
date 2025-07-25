@@ -1,10 +1,15 @@
 name: Build and push python wheels
 on:
-  pull_request:
+  workflow_call:
+    inputs:
+      resim_version:
+        description: 'Version string to embed in the wheels and push to PyPI'
+        required: true
+        type: string
 
 jobs:
   build:
-    name: Build (${{ matrix.python-version }}, ${{ matrix.arch }})
+    name: Build Wheel (${{ matrix.python-version }}, ${{ matrix.arch }})
     runs-on: ubuntu-22.04
     container:
       image: public.ecr.aws/resim/core:latest 
@@ -24,7 +29,7 @@ jobs:
       - name: Build Bazel Wheel
         id: build_wheel
         env:
-          RESIM_VERSION: "0.1.0" # TODO
+          RESIM_VERSION: ${{ inputs.resim_version }}
           OUTPUT_BASE: "~/.cache/cross_output_${{ matrix.arch }}"
         run: |
           PY_VERSION=${{ matrix.python-version }}
@@ -43,5 +48,38 @@ jobs:
               //pkg:resim_wheel \
               --repo_env="RESIM_VERSION=$RESIM_VERSION" \
               --output files)
-          echo "wheel_path=$(realpath $WHEELPATH)"
           echo "wheel_path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.arch }}-${{ matrix.python-version }}
+          path: ${{ steps.build_wheel.outputs.wheel_path }}
+
+  upload:
+    name: Upload Wheels to PyPI
+    needs: build
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Flatten downloaded wheels
+        run: |
+          mkdir -p dist_flat
+          find dist -name "*.whl" -exec cp {} dist_flat/ \;
+          ls -l dist_flat/
+
+      - name: Upload to PyPI
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          for whl in dist_flat/*.whl; do
+            bazel run //pkg:twine upload "$whl" -- -u __token__ -p "$PYPI_TOKEN" --skip-existing
+          done
