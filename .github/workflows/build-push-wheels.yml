@@ -5,7 +5,9 @@ on:
 jobs:
   build:
     name: Build (${{ matrix.python-version }}, ${{ matrix.arch }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest 
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
