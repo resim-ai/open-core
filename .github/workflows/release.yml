@@ -85,7 +85,6 @@ jobs:
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "bazel-bin/pkg/*.whl"
           generateReleaseNotes: true
           tag: ${{ github.event.inputs.tag }}
           draft: true

@@ -60,16 +60,22 @@ jobs:
     name: Upload Wheels to PyPI
     needs: build
     runs-on: ubuntu-22.04
-    container:
-      image: public.ecr.aws/resim/core:latest
     steps:
       - uses: actions/checkout@v4
-
+  
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # or whichever version you need
+  
+      - name: Install Twine
+        run: pip install --upgrade twine
+  
       - name: Download all wheel artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist/
-
+  
       - name: Flatten downloaded wheels
         run: |
           mkdir -p dist_flat
@@ -78,8 +84,7 @@ jobs:
 
       - name: Upload to PyPI
         env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          for whl in dist_flat/*.whl; do
-            bazel run //pkg:twine upload "$whl" -- -u __token__ -p "$PYPI_TOKEN" --skip-existing
-          done
+          twine upload dist_flat/*.whl --skip-existing
