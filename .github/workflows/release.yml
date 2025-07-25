@@ -67,24 +67,32 @@ jobs:
       #    ./.github/workflows/add_go_bindings.sh
 
 
-  build_push_wheels:
-    needs: pre_release_checks
-    uses: ./.github/workflows/build-push-wheels.yml
-    with:
-      resim_version: ${{ github.event.inputs.tag }}
-    secrets: inherit
+  #build_push_wheels:
+  #  needs: pre_release_checks
+  #  uses: ./.github/workflows/build-push-wheels.yml
+  #  with:
+  #    resim_version: ${{ github.event.inputs.tag }}
+  #  secrets: inherit
 
   do_release:
-    needs: [pre_release_checks, build_push_wheels]
+    needs: [pre_release_checks]
     name: Release
     runs-on: ubuntu-22.04
     container:
       image: public.ecr.aws/resim/core:latest
     steps:
+      - name: Build Wheels
+        id: build_wheel
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: |
+          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          
       - name: Draft Release
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
+          artifacts: "bazel-bin/pkg/*.whl"          
           generateReleaseNotes: true
           tag: ${{ github.event.inputs.tag }}
           draft: true
