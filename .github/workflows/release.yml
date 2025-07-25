@@ -67,7 +67,7 @@ jobs:
       #    ./.github/workflows/add_go_bindings.sh
 
       - name: Clean Old Wheels
-        run: rm -rf ./bazel-bin/pkg/*
+        run: rm -rf bazel-bin/pkg/*
 
       - name: Build Wheels
         env:
