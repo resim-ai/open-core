@@ -23,26 +23,26 @@ jobs:
         # directory.
         run: git config --global --add safe.directory /__w/open-core/open-core
 
-      #- name: Check tag availability
-      #  if: "${{ github.event.inputs.tag != '' }}"
-      #  env:
-      #    RESIM_VERSION: ${{ github.event.inputs.tag }}
-      #  run: ./.github/workflows/check_tags_available.sh
-      #
-      #- name: Cache Bazel
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      ~/.cache/bazel
-      #    key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
-      #    restore-keys: |
-      #      ${{ runner.os }}-bazel-
-      #
-      #- name: Setup Bazel Cache Auth
-      #  uses: ./.github/actions/setup-bazel-cache-auth
-      #  with:
-      #    bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
-      #
+      - name: Check tag availability
+        if: "${{ github.event.inputs.tag != '' }}"
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: ./.github/workflows/check_tags_available.sh
+      
+      - name: Cache Bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+      
       #- name: Build `compile_commands.json` database
       #  run: bazel run @hedron_compile_commands//:refresh_all
       #
@@ -65,7 +65,18 @@ jobs:
       #    git config --global user.name "GitHub Action"
       #    git config --global user.email "github-action@github.com"
       #    ./.github/workflows/add_go_bindings.sh
-
+      - name: Build Wheels
+        env:
+          RESIM_VERSION: ${{ github.event.inputs.tag }}
+        run: |
+          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          
+      - name: Upload wheels as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels
+          path: bazel-bin/pkg/*.whl
+      
 
   #build_push_wheels:
   #  needs: pre_release_checks
@@ -78,21 +89,17 @@ jobs:
     needs: [pre_release_checks]
     name: Release
     runs-on: ubuntu-22.04
-    container:
-      image: public.ecr.aws/resim/core:latest
     steps:
-      - name: Build Wheels
-        id: build_wheel
-        env:
-          RESIM_VERSION: ${{ github.event.inputs.tag }}
-        run: |
-          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: python-wheels
           
       - name: Draft Release
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "bazel-bin/pkg/*.whl"          
+          artifacts: "*.whl"
           generateReleaseNotes: true
           tag: ${{ github.event.inputs.tag }}
           draft: true
