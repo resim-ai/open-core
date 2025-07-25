@@ -12,7 +12,7 @@ jobs:
     name: Build Wheel (${{ matrix.python-version }}, ${{ matrix.arch }})
     runs-on: ubuntu-22.04
     container:
-      image: public.ecr.aws/resim/core:latest 
+      image: public.ecr.aws/resim/core:latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
@@ -25,7 +25,7 @@ jobs:
         uses: ./.github/actions/setup-bazel-cache-auth
         with:
           bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
-        
+
       - name: Build Bazel Wheel
         id: build_wheel
         env:
@@ -62,29 +62,25 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-  
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # or whichever version you need
-  
+
       - name: Install Twine
         run: pip install --upgrade twine
-  
-      - name: Download all wheel artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist/
-  
-      - name: Flatten downloaded wheels
-        run: |
-          mkdir -p dist_flat
-          find dist -name "*.whl" -exec cp {} dist_flat/ \;
-          ls -l dist_flat/
+
+    - name: Download built wheel artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist/
+        pattern: wheel-*
+        merge-multiple: true
 
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload dist_flat/*.whl --skip-existing
+          twine upload dist/*.whl --skip-existing
