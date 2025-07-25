@@ -87,4 +87,4 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload dist_flat/*.whl --skip-existing
+          twine upload --repository testpypi dist_flat/*.whl --skip-existing
