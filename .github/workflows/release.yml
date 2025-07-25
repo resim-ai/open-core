@@ -67,7 +67,9 @@ jobs:
       #    ./.github/workflows/add_go_bindings.sh
 
       - name: Clean Old Wheels
-        run: rm -rf bazel-bin/pkg/*
+        run: |
+          rm -rf bazel-bin/pkg/*
+          ls bazel-bin/pkg/
 
       - name: Build Wheels
         env:
@@ -82,15 +84,15 @@ jobs:
           path: bazel-bin/pkg/*.whl
 
 
-  build_push_wheels:
-    needs: pre_release_checks
-    uses: ./.github/workflows/build-push-wheels.yml
-    with:
-      resim_version: ${{ github.event.inputs.tag }}
-    secrets: inherit
+  #build_push_wheels:
+  #  needs: pre_release_checks
+  #  uses: ./.github/workflows/build-push-wheels.yml
+  #  with:
+  #    resim_version: ${{ github.event.inputs.tag }}
+  #  secrets: inherit
 
   do_release:
-    needs: [build_push_wheels, pre_release_checks]
+    needs: [pre_release_checks]
     name: Release
     runs-on: ubuntu-22.04
     steps:
