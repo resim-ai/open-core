@@ -68,8 +68,8 @@ jobs:
 
       - name: Clean Old Wheels
         run: |
-          rm -rf bazel-bin/pkg/*
-          ls bazel-bin/pkg/
+          BAZELBIN=$(bazel info --repo_env="RESIM_VERSION=$RESIM_VERSION" bazel-bin)
+          rm -rf $BAZELBIN/pkg/*
 
       - name: Build Wheels
         env:
