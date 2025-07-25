@@ -102,8 +102,7 @@ genrule(
 PY_VERSION_TAG = select({
     "@rules_python//python/config_settings:is_python_3.10": "cp310",
     "@rules_python//python/config_settings:is_python_3.11": "cp311",
-    # Add more versions as needed
-    "//conditions:default": "cp310",  # fallback
+    "//conditions:default": "cp310",
 })
 
 py_wheel(
