@@ -1,0 +1,45 @@
+name: Build and push python wheels
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Build (${{ matrix.python-version }}, ${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+        arch: ["x86_64", "aarch64"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+        
+      - name: Build Bazel Wheel
+        id: build_wheel
+        env:
+          RESIM_VERSION: "0.1.0" # TODO
+          OUTPUT_BASE: "~/.cache/cross_output_${{ matrix.arch }}"
+        run: |
+          PY_VERSION=${{ matrix.python-version }}
+          ARCH=${{ matrix.arch }}
+          PLATFORM="//:${ARCH}_linux"
+          PY_VERSION_FLAG="--@rules_python//python/config_settings:python_version=${PY_VERSION}"
+
+          bazel --output_base $OUTPUT_BASE \
+            build --platforms ${PLATFORM} ${PY_VERSION_FLAG} \
+              //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION"
+
+          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
+            cquery --platforms ${PLATFORM} ${PY_VERSION_FLAG} \
+              //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)
+          echo "wheel_path=$(realpath $WHEELPATH)"
+          echo "wheel_path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT

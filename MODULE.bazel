@@ -45,11 +45,21 @@ python.toolchain(
     ignore_root_user_error = True,
     python_version = "3.10",
 )
+python.toolchain(
+    configure_coverage_tool = True,
+    ignore_root_user_error = True,
+    python_version = "3.11",
+)
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "resim_python_deps",
     python_version = "3.10",
+    requirements_lock = "@resim_open_core//:requirements_lock.txt",
+)
+pip.parse(
+    hub_name = "resim_python_deps",
+    python_version = "3.11",
     requirements_lock = "@resim_open_core//:requirements_lock.txt",
 )
 use_repo(pip, "resim_python_deps")
@@ -58,16 +68,31 @@ pip.parse(
     python_version = "3.10",
     requirements_lock = "@resim_open_core//pkg:requirements_lock.txt",
 )
+pip.parse(
+    hub_name = "resim_pkg_deps",
+    python_version = "3.11",
+    requirements_lock = "@resim_open_core//pkg:requirements_lock.txt",
+)
 use_repo(pip, "resim_pkg_deps")
 pip.parse(
     hub_name = "resim_python_client_deps",
     python_version = "3.10",
     requirements_lock = "@resim_open_core//resim-python-client:requirements_lock.txt",
 )
+pip.parse(
+    hub_name = "resim_python_client_deps",
+    python_version = "3.11",
+    requirements_lock = "@resim_open_core//resim-python-client:requirements_lock.txt",
+)
 use_repo(pip, "resim_python_client_deps")
 pip.parse(
     hub_name = "resim_python_client_dev_deps",
     python_version = "3.10",
+    requirements_lock = "@resim_open_core//resim-python-client:requirements-dev_lock.txt",
+)
+pip.parse(
+    hub_name = "resim_python_client_dev_deps",
+    python_version = "3.11",
     requirements_lock = "@resim_open_core//resim-python-client:requirements-dev_lock.txt",
 )
 use_repo(pip, "resim_python_client_dev_deps")

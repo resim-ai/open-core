@@ -12,3 +12,6 @@ common --registry=https://bcr.bazel.build
 common --incompatible_strict_action_env
 
 build --remote_cache=https://open-core-bazel-cache.resim.io
+build --@rules_python//python/config_settings:python_version=3.10
+
+build:py311 --@rules_python//python/config_settings:python_version=3.11

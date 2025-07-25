@@ -10,6 +10,14 @@ load("@platforms//host:constraints.bzl", "HOST_CONSTRAINTS")
 exports_files(["requirements.txt"])
 
 platform(
+    name = "x86_64_linux",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+platform(
     name = "aarch64_linux",
     constraint_values = [
         "@platforms//os:linux",
