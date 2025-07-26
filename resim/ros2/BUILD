@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@com_github_mvukov_rules_ros2//ros2:ament.bzl", "ros2_ament_setup")
+load("@com_github_mvukov_rules_ros2//ros2:py_defs.bzl", "ros2_py_test")
 load("@com_github_mvukov_rules_ros2//ros2:cc_defs.bzl", "ros2_cpp_binary", "ros2_cpp_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
@@ -445,22 +445,12 @@ pybind_extension(
     ],
 )
 
-ros2_ament_setup(
-    name = "resim_log_from_ros2_python_test_ament",
-    testonly = True,
-    deps = [
-        ":default_converter_plugin.so",
-        ":resim_log_from_ros2_python.so",
-        ":resim_log_from_ros2_test_helpers_python.so",
-    ],
-)
-
-py_test(
+ros2_py_test(
     name = "resim_log_from_ros2_python_test",
     srcs = ["resim_log_from_ros2_python_test.py"],
+    main = "resim_log_from_ros2_python_test.py",
     data = [
         ":resim_log_from_ros2_python.so",
-        ":resim_log_from_ros2_python_test_ament",
         ":resim_log_from_ros2_test_helpers_python.so",
         "//resim/ros2/testing:resim_log_from_ros2_test_converter_plugin.so",
     ],

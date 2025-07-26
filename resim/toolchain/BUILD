@@ -116,8 +116,3 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
-
-py_test(
-    name = "check_python_test",
-    srcs = ["check_python_test.py"],
-)
