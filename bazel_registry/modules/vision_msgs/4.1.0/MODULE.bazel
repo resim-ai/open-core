@@ -3,6 +3,9 @@ module(
     version = "4.1.0",
     compatibility_level = 4,
 )
-
-bazel_dep(name = "com_github_mvukov_rules_ros2", version = "14b75cb377784f21d709663df6c599056a512c18")
-bazel_dep(name = "ros2_common_interfaces", version = "4.2.3")
+bazel_dep(name = "com_github_mvukov_rules_ros2", version = "0.0.0-20250612-f0d04fe")
+rules_ros2_non_module_deps = use_extension("@com_github_mvukov_rules_ros2//ros2:extensions.bzl", "non_module_deps")
+use_repo(
+    rules_ros2_non_module_deps,
+    "ros2_common_interfaces",
+)

@@ -20,13 +20,6 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
     """
     Unit test for pybinding of resim_log_from_ros2
     """
-
-    def setUp(self) -> None:
-        """Set up the test case by setting necessary env variables"""
-        os.environ["AMENT_PREFIX_PATH"] = (
-            "resim/ros2/resim_log_from_ros2_python_test_ament/"
-        )
-
     def test_resim_log_from_ros2_python(self) -> None:
         """Test that we can correctly convert logs to the ReSim format."""
         with tempfile.TemporaryDirectory() as testdir:
