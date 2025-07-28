@@ -20,6 +20,7 @@ class ResimLogFromRos2PythonTest(unittest.TestCase):
     """
     Unit test for pybinding of resim_log_from_ros2
     """
+
     def test_resim_log_from_ros2_python(self) -> None:
         """Test that we can correctly convert logs to the ReSim format."""
         with tempfile.TemporaryDirectory() as testdir:
