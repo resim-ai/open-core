@@ -1,0 +1,77 @@
+diff --git a/repositories/patches/rmw_implementation_library_path.patch b/repositories/patches/rmw_implementation_library_path.patch
+index cec91d4..1767948 100644
+--- a/repositories/patches/rmw_implementation_library_path.patch
++++ b/repositories/patches/rmw_implementation_library_path.patch
+@@ -1,37 +1,26 @@
+ diff --git a/rmw_implementation/src/functions.cpp b/rmw_implementation/src/functions.cpp
+-index 892eb40..fb6e391 100644
++index 892eb40..337d02a 100644
+ --- a/rmw_implementation/src/functions.cpp
+ +++ b/rmw_implementation/src/functions.cpp
+-@@ -20,7 +20,6 @@
++@@ -20,7 +20,7 @@
+  #include <stdexcept>
+  #include <string>
+- 
++
+++// THIS PATCH MODIFIED FROM ITS SOURCE AT https://github.com/mvukov/rules_ros2
+ -#include "ament_index_cpp/get_resources.hpp"
+  
+  #include "rcutils/allocator.h"
+  #include "rcutils/format_string.h"
+-@@ -82,48 +81,16 @@ load_library()
+-   // 3. If that fails, try loading all other implementations available in turn
+-   //    until one succeeds or we run out of options.
+- 
+--  std::string env_var;
+-+  const std::string library_path = RMW_LIBRARY_PATH;
+-   try {
+--    env_var = rcpputils::get_env_var("RMW_IMPLEMENTATION");
+-+    return std::make_shared<rcpputils::SharedLibrary>(library_path.c_str());
+-   } catch (const std::exception & e) {
+-     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+--      "failed to fetch RMW_IMPLEMENTATION "
+--      "from environment due to %s", e.what());
+-+      "failed to load shared library '%s' due to %s",
+-+      library_path.c_str(), e.what());
++@@ -91,38 +90,20 @@ load_library()
++       "from environment due to %s", e.what());
+      return nullptr;
+    }
+- 
+--  // User specified an RMW, attempt to load that one and only that one
+--  if (!env_var.empty()) {
++-
++   // User specified an RMW, attempt to load that one and only that one
++   if (!env_var.empty()) {
+ -    return attempt_to_load_one_rmw(env_var);
+--  }
+++    return std::make_shared<rcpputils::SharedLibrary>(env_var.c_str());
++   }
+ -
+ -  // User didn't specify, so next try to load the default RMW
+ -  std::shared_ptr<rcpputils::SharedLibrary> ret;
+@@ -54,12 +43,20 @@ index 892eb40..fb6e391 100644
+ -      }
+ -      rmw_reset_error();
+ -    }
+--  }
+--
+++  
+++  const std::string library_path = RMW_LIBRARY_PATH;
+++  try {
+++    return std::make_shared<rcpputils::SharedLibrary>(library_path.c_str());
+++  } catch (const std::exception & e) {
+++    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+++      "failed to load shared library '%s' due to %s",
+++      library_path.c_str(), e.what());
+++    return nullptr;
++   }
++ 
+ -  // If we made it here, we couldn't find an rmw to load.
+ -
+ -  RMW_SET_ERROR_MSG("failed to load any RMW implementations");
+ -
+    return nullptr;
+  }
+- 

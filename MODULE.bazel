@@ -11,7 +11,10 @@ bazel_dep(name = "com_github_mvukov_rules_ros2", version = "0.0.0-20250612-f0d04
 git_override(module_name="com_github_mvukov_rules_ros2",
              remote="https://github.com/mvukov/rules_ros2.git",
              commit="6130e8f61c1343fab7809e933c9faf47ab1e9fd4",
-             patches=["//resim/third_party/ros2:testonly.patch"], patch_strip=1)
+             patches=[
+                 "//resim/third_party/ros2:testonly.patch",
+                 "//resim/third_party/ros2:rmw_implementation_patch.patch"
+             ], patch_strip=1)
 bazel_dep(name = "cpr", version = "1.10.5")
 bazel_dep(name = "cxxopts", version = "3.0.0")
 bazel_dep(name = "eigen", version = "3.4.0.bcr.1.1", repo_name = "libeigen")
@@ -43,6 +46,7 @@ use_repo(
     "ros2_common_interfaces",
     "ros2_geometry2",
     "ros2_rcl_interfaces",
+    "ros2_rmw_cyclonedds",
     "ros2_rclcpp",
     "ros2_rcpputils",
     "ros2_rosbag2",
