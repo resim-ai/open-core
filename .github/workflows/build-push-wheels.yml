@@ -1,0 +1,86 @@
+name: Build and push python wheels
+on:
+  workflow_call:
+    inputs:
+      resim_version:
+        description: 'Version string to embed in the wheels and push to PyPI'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build Wheel (${{ matrix.python-version }}, ${{ matrix.arch }})
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        arch: ["x86_64", "aarch64"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
+      - name: Build Bazel Wheel
+        id: build_wheel
+        env:
+          RESIM_VERSION: ${{ inputs.resim_version }}
+          OUTPUT_BASE: "~/.cache/cross_output_${{ matrix.arch }}"
+        run: |
+          PY_VERSION=${{ matrix.python-version }}
+          ARCH=${{ matrix.arch }}
+          PLATFORM="//:${ARCH}_linux"
+          PY_VERSION_FLAG="--@rules_python//python/config_settings:python_version=${PY_VERSION}"
+
+          bazel --output_base $OUTPUT_BASE \
+            build --platforms ${PLATFORM} ${PY_VERSION_FLAG} \
+              //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION"
+
+          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
+            cquery --platforms ${PLATFORM} ${PY_VERSION_FLAG} \
+              //pkg:resim_wheel \
+              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+              --output files)
+          echo "wheel_path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.arch }}-${{ matrix.python-version }}
+          path: ${{ steps.build_wheel.outputs.wheel_path }}
+
+  upload_to_pypi:
+    name: Upload Wheels to PyPI
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Twine
+        run: pip install --upgrade twine
+
+      - name: Download built wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          pattern: wheel-*
+          merge-multiple: true
+  
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload dist/*.whl --skip-existing

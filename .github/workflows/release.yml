@@ -6,8 +6,8 @@ on:
         type: string
         description: "Release Tag"
 jobs:
-  draft-release:
-    name: Draft Release
+  pre_release_checks:
+    name: Pre-release checks
     runs-on: ubuntu-22.04
     container:
       image: public.ecr.aws/resim/core:latest
@@ -66,55 +66,48 @@ jobs:
           git config --global user.email "github-action@github.com"
           ./.github/workflows/add_go_bindings.sh
 
-      - name: Clean Old Artifacts
-        run: rm -rf ./bazel-bin/pkg/*
-
-      - name: Build Metrics Tools
-        run: bazel build //resim/metrics:resim_metrics_tools
-
-      - name: Build Aarch64 Wheel
-        id: build_aarch64_wheel
-        env:
-          RESIM_VERSION: ${{ github.event.inputs.tag }}
-          OUTPUT_BASE: "~/.cache/cross_output" # Purposefully avoids the cache
+      - name: Clean Old Wheels
         run: |
-          bazel --output_base $OUTPUT_BASE \
-            build --platforms //:aarch64_linux //pkg:resim_wheel \
-              --repo_env="RESIM_VERSION=$RESIM_VERSION"
-          OUTPATH=$(bazel --output_base $OUTPUT_BASE info output_path)
-          WHEELPATH=$OUTPATH/../$(bazel --output_base $OUTPUT_BASE \
-            cquery --platforms //:aarch64_linux //pkg:resim_wheel \
-              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-              --output files)
-          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+          BAZELBIN=$(bazel info --repo_env="RESIM_VERSION=$RESIM_VERSION" bazel-bin)
+          rm -rf $BAZELBIN/pkg/*
 
+        # Here, we build all the wheels in //pkg/... to be placed on the release as artifacts,
+        # instead of simply relying on build_push_wheels below to put them on PyPI. We do this for
+        # now, since not all the wheels our customers depend on are currently available on
+        # PyPI. Eventually when all of them are available there we can remove this.
       - name: Build Wheels
-        id: build_wheel
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: |
           bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
-          OUTPATH=$(bazel info output_path)
-          WHEELPATH=$OUTPATH/../$(bazel cquery //pkg:resim_wheel \
-              --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-              --output files)
-          echo "path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+
+      - name: Upload wheels as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels
+          path: bazel-bin/pkg/*.whl
+
+  build_push_wheels:
+    needs: pre_release_checks
+    uses: ./.github/workflows/build-push-wheels.yml
+    with:
+      resim_version: ${{ github.event.inputs.tag }}
+    secrets: inherit
+
+  do_release:
+    needs: [build_push_wheels, pre_release_checks]
+    name: Release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: python-wheels
 
       - name: Draft Release
         if: "${{ github.event.inputs.tag != '' }}"
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "bazel-bin/resim/metrics/resim_metrics_tools.tar.gz,bazel-bin/pkg/*.whl"
+          artifacts: "*.whl"
           generateReleaseNotes: true
           tag: ${{ github.event.inputs.tag }}
-
-        # We manually release the wheels in this way because we are releasing for different
-        # platforms, which is hard to do using the built in publish rules in rules_python
-      - name: Publish Wheels
-        env:
-          AARCH64_WHEEL: ${{ steps.build_aarch64_wheel.outputs.path }}
-          X86_64_WHEEL: ${{ steps.build_wheel.outputs.path }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          bazel run //pkg:twine upload $X86_64_WHEEL -- -u __token__ -p $PYPI_TOKEN --skip-existing
-          bazel run //pkg:twine upload $AARCH64_WHEEL -- -u __token__ -p $PYPI_TOKEN --skip-existing

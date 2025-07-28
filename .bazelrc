@@ -7,8 +7,13 @@ common --enable_bzlmod
 coverage --java_runtime_version=remotejdk_11 --nocache_test_results
 coverage --combined_report=lcov --experimental_generate_llvm_lcov --experimental_use_llvm_covmap
 
-common --registry=https://raw.githubusercontent.com/resim-ai/open-core/0ca7cc8f724a4cdb56d59766de1cb19768963f45/bazel_registry/
+common --registry=https://raw.githubusercontent.com/resim-ai/open-core/ad4e0f655eab324a45ba89624dd783a490c7115f/bazel_registry/
 common --registry=https://bcr.bazel.build
 common --incompatible_strict_action_env
 
 build --remote_cache=https://open-core-bazel-cache.resim.io
+build --@rules_python//python/config_settings:python_version=3.10
+
+build:py311 --@rules_python//python/config_settings:python_version=3.11
+build:py312 --@rules_python//python/config_settings:python_version=3.12
+build:py313 --@rules_python//python/config_settings:python_version=3.13

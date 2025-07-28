@@ -99,8 +99,17 @@ genrule(
     cmd = "cat $(SRCS) > $@",
 )
 
+PY_VERSION_TAG = select({
+    "@rules_python//python/config_settings:is_python_3.10": "cp310",
+    "@rules_python//python/config_settings:is_python_3.11": "cp311",
+    "@rules_python//python/config_settings:is_python_3.12": "cp312",
+    "@rules_python//python/config_settings:is_python_3.13": "cp313",
+    "//conditions:default": "cp310",
+})
+
 py_wheel(
     name = "resim_wheel",
+    abi = PY_VERSION_TAG,
     author = "ReSim Developers",
     classifiers = [
         "License :: OSI Approved :: MIT License",
@@ -112,7 +121,7 @@ py_wheel(
         "@platforms//cpu:aarch64": "manylinux2014_aarch64",
         "@platforms//cpu:x86_64": "manylinux2014_x86_64",
     }),
-    python_tag = "py3",
+    python_tag = PY_VERSION_TAG,
     requires_file = ":combined_requires",
     strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
     summary = "ReSim Metrics Libraries.",

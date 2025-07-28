@@ -7,7 +7,6 @@
 # Copied from https://bazel.build/tutorials/cc-toolchain-config
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test", "cc_toolchain")
-load("@rules_python//python:defs.bzl", "py_test")
 load(":cc_toolchain_config.bzl", "cc_toolchain_config", "cc_toolchain_config_amd64_aarch64_cross")
 
 cc_toolchain_config(name = "k8_toolchain_config")
@@ -115,9 +114,4 @@ cc_test(
         ":check_compiler",
         "@com_google_googletest//:gtest_main",
     ],
-)
-
-py_test(
-    name = "check_python_test",
-    srcs = ["check_python_test.py"],
 )

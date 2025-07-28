@@ -4,8 +4,9 @@
   "repository": [
     "https://github.com/ros-perception/vision_msgs"
   ],
-  "versions":[
-    "4.1.0"
+  "versions": [
+    "4.1.0",
+    "4.1.0.1"
   ],
   "yanked_versions": {}
 }
