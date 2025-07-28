@@ -109,6 +109,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim-python-client",
+        requirement("typing-extensions"),
     ],
 )
 
