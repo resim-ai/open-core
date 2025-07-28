@@ -15,3 +15,5 @@ build --remote_cache=https://open-core-bazel-cache.resim.io
 build --@rules_python//python/config_settings:python_version=3.10
 
 build:py311 --@rules_python//python/config_settings:python_version=3.11
+build:py312 --@rules_python//python/config_settings:python_version=3.12
+build:py313 --@rules_python//python/config_settings:python_version=3.13

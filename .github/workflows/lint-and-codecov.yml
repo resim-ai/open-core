@@ -36,8 +36,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Test py11
-        run: bazel test --config=py311 ...
+      - name: Test py313
+        run: bazel test --config=py313 ...
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
