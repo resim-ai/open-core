@@ -71,6 +71,10 @@ jobs:
           BAZELBIN=$(bazel info --repo_env="RESIM_VERSION=$RESIM_VERSION" bazel-bin)
           rm -rf $BAZELBIN/pkg/*
 
+        # Here, we build all the wheels in //pkg/... to be placed on the release as artifacts,
+        # instead of simply relying on build_push_wheels below to put them on PyPI. We do this for
+        # now, since not all the wheels our customers depend on are currently available on
+        # PyPI. Eventually when all of them are available there we can remove this.
       - name: Build Wheels
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
