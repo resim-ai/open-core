@@ -54,8 +54,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-#      - name: Trunk Check
-#        uses: trunk-io/trunk-action@v1
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
 
       - name: Build Go Bindings
         if: "${{ github.event.inputs.tag != '' }}"
