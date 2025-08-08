@@ -66,7 +66,7 @@ Plotly doesn't support all of the charts we previously supported, so we've added
 
 This chart is supported by the `create_state_timeline_chart` function. An example of how to use it is available in the open-core examples [here](https://github.com/resim-ai/open-core/blob/main/resim/examples/plotly_metrics.py).
 
-<img src="./state_timeline_plotly.png" width="700px" alt="An example states over time chart">
+![An example states over time chart](./state_timeline_plotly.png)
 
 ## Image Metric
 
