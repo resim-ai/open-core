@@ -5,8 +5,8 @@ A client library for accessing the ReSim Customer API. The client is generated f
 First, create a client:
 
 ```python
-from resim_python_client import AuthenticatedClient
-from resim.auth.python.device_code_client import DeviceCodeClient, UsernamePasswordClient
+from resim.auth.python.device_code_client import DeviceCodeClient
+from resim.auth.python.username_password_client import UsernamePasswordClient
 
 # If you're using your local machine, you can use the device code flow to get a token
 device_code_client = DeviceCodeClient()
