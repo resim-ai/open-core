@@ -923,7 +923,10 @@ def validate_job_metrics(job_metrics: mp.JobMetrics) -> None:
     # Use a set to check for duplicated names
     metric_data_names = set()
     for metric_data in job_metrics.metrics_data:
-        _metrics_assert(metric_data.name not in metric_data_names)
+        _metrics_assert(
+            metric_data.name not in metric_data_names,
+            f"Metric data name {metric_data.name} is not unique.",
+        )
         metric_data_names.add(metric_data.name)
         _validate_metrics_data(metric_data, metrics_data_map)
 
