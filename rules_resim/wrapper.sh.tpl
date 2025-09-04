@@ -27,6 +27,7 @@ if [[ "%{AUTO_CREATE_BRANCH}" == "true" ]]; then
   CMD+=" --auto-create-branch"
 fi
 
+CMD+=" $@"
 
 # Execute the command
 echo "Running: $CMD"
