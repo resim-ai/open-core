@@ -10,22 +10,29 @@ def _resim_version_impl(repository_ctx):
     version = repository_ctx.os.environ.get("RESIM_VERSION", default = "0.0.0")
     if version.startswith("v"):
         version = version[1:]
+    branch = repository_ctx.os.environ.get("RESIM_BRANCH", default = "main")
+
     repository_ctx.file("BUILD.bazel", executable = False)
     repository_ctx.file(
         "defs.bzl.tpl",
-        content = "RESIM_VERSION = \"{RESIM_VERSION}\"\n",
+        content = ("RESIM_VERSION = \"{RESIM_VERSION}\"\n" +
+                   "RESIM_BRANCH = \"{RESIM_BRANCH}\"\n"),
         executable = False,
     )
     repository_ctx.template(
         "defs.bzl",
         "defs.bzl.tpl",
-        substitutions = {"{RESIM_VERSION}": version},
+        substitutions = {
+            "{RESIM_VERSION}": version,
+            "{RESIM_BRANCH}": branch,
+        },
         executable = False,
     )
 
 resim_version = repository_rule(
     environ = [
         "RESIM_VERSION",
+        "RESIM_BRANCH",
     ],
     implementation = _resim_version_impl,
 )

@@ -8,6 +8,7 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_resim//:build.bzl", "resim_build")
+load("@resim_version//:defs.bzl", version = "RESIM_VERSION", branch = "RESIM_BRANCH")
 
 cc_library(
     name = "step_executor",
@@ -282,25 +283,19 @@ oci_push(
     name = "sim_build_push",
     image = ":drone-simulator",
     repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/core-sim-run",
-    remote_tags = ["4c32bd52-220e-467e-a8a0-bb706cf9670d"],
+    remote_tags = [version]
 )
+
 
 resim_build(
     name = "drone_simulator_build",
-    project = "ReSim One Project",
-    system = "multi-robot-coordination",
-    branch = "main",
-    version = "v2.1.4-f8a9b2c",
+    project = "A ReSim Drone Sandbox",
+    system = "Drone Motion Planning System",
+    version = version,
+    branch = branch,
     description = "An iLQR drone simulator",
     resim_name = "Drone Simulator",
     image_pushes = [
         ":sim_build_push",
     ],
-    build_spec_env = {
-        "ROBOT_COUNT": "8",
-        "WAREHOUSE_SIZE": "large",
-        "PATHFINDING_ALGORITHM": "a_star_optimized",
-        "METRICS_ENABLED": "true",
-        "LOG_LEVEL": "debug",
-    },
 )
