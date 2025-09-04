@@ -35,6 +35,7 @@ config_setting(
 
     build_content.append("""    }),
     out = "resim",
+    visibility = ["//visibility:public"],
 )""")
 
     rctx.file("BUILD.bazel", "\n".join(build_content))
