@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-
 %{PUSH_CMDS}
-
-
-read -r TAG < %{TAGFILE_PATH} || true # When this file is oneline this returns non-zero
-
-IMAGE_URI="%{REPOSITORY}:${TAG}"
-
 
 # Build the resim command
 CMD="%{RESIM_CLI} builds create \
@@ -17,9 +10,9 @@ CMD="%{RESIM_CLI} builds create \
   --system \"%{SYSTEM}\" \
   --branch \"%{BRANCH}\" \
   --version \"%{VERSION}\" \
-  --image \"${IMAGE_URI}\" \
-  --description \"%{DESCRIPTION}\""
-
+  --description \"%{DESCRIPTION}\" \
+  --build-spec \"%{BUILD_SPEC}\" \
+  --env-files \"%{ENV_FILE_PATH}\""
 
 if [[ "%{AUTO_CREATE_BRANCH}" == "true" ]]; then
   CMD+=" --auto-create-branch"

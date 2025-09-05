@@ -1,0 +1,12 @@
+services:
+  sender:
+    extends:
+      file: docker-compose.base.yml
+      service: sender
+    
+  receiver:
+    extends:
+      file: docker-compose.base.yml
+      service: receiver
+    labels:
+      resim.ai/isTestOrchestrator: "true"

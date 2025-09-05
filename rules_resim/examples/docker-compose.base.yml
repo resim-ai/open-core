@@ -1,0 +1,6 @@
+services:
+  sender:
+    image: 909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images:mcb_sender_${RESIM_VERSION}
+
+  receiver:
+    image: 909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images:mcb_receiver_${RESIM_VERSION}

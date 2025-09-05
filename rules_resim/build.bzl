@@ -31,14 +31,9 @@ def _get_image_uri(image_push):
     return info.repository, tag_file_list[0]
 
 def _resim_build_impl(ctx):
-    repository = ""
-    tagfile_path = ""
-    if len(ctx.attr.image_pushes) == 1 and ctx.attr.build_spec == None:
-        repository, tagfile = _get_image_uri(ctx.attr.image_pushes[0])
-        tagfile_path = tagfile.short_path
-
     out = ctx.actions.declare_file(ctx.label.name + ".sh")
     runfiles = ctx.runfiles(files = [out, ctx.executable._resim_cli])
+    runfiles = runfiles.merge(ctx.runfiles(transitive_files = depset(ctx.files.data)))
 
     push_cmds = []
     for image_push in ctx.attr.image_pushes:
@@ -47,28 +42,63 @@ def _resim_build_impl(ctx):
             runfiles = runfiles.merge(info.default_runfiles)
         if hasattr(info, "runfiles"):
             runfiles = runfiles.merge(info.runfiles)
+    
+        push_cmds.append("./" + image_push[DefaultInfo].files_to_run.executable.short_path)
 
-        push_cmds.append(image_push[DefaultInfo].files_to_run.executable.short_path)
-
-    ctx.actions.expand_template(
-        output = out,
-        template = ctx.file._wrapper_template,
-        substitutions = {
-            "%{PUSH_CMDS}": "\n".join(push_cmds),
-            "%{RESIM_CLI}": ctx.executable._resim_cli.short_path,
-            "%{TAGFILE_PATH}": tagfile_path,
-            "%{REPOSITORY}": repository,
-            "%{PROJECT}": ctx.attr.project,
-            "%{SYSTEM}": ctx.attr.system,
-            "%{BRANCH}": ctx.attr.branch,
-            "%{VERSION}": ctx.attr.version,
-            "%{RESIM_NAME}": ctx.attr.resim_name if ctx.attr.resim_name else ctx.attr.name,
-            "%{DESCRIPTION}": ctx.attr.description,
-            "%{AUTO_CREATE_BRANCH}": str(ctx.attr.auto_create_branch).lower(),
-        },
-        is_executable = True,
-    )
+    if ctx.attr.build_spec == None:
+        if len(ctx.attr.image_pushes) > 1:
+            fail("More than one image push provided for non mcb")
+            
+        repository, tagfile = _get_image_uri(ctx.attr.image_pushes[0])
+        tagfile_path = tagfile.short_path
+        ctx.actions.expand_template(
+            output = out,
+            template = ctx.file._wrapper_template,
+            substitutions = {
+                "%{PUSH_CMDS}": "\n".join(push_cmds),
+                "%{RESIM_CLI}": ctx.executable._resim_cli.short_path,
+                "%{TAGFILE_PATH}": tagfile_path,
+                "%{REPOSITORY}": repository,
+                "%{PROJECT}": ctx.attr.project,
+                "%{SYSTEM}": ctx.attr.system,
+                "%{BRANCH}": ctx.attr.branch,
+                "%{VERSION}": ctx.attr.version,
+                "%{RESIM_NAME}": ctx.attr.resim_name if ctx.attr.resim_name else ctx.attr.name,
+                "%{DESCRIPTION}": ctx.attr.description,
+                "%{AUTO_CREATE_BRANCH}": str(ctx.attr.auto_create_branch).lower(),
+            },
+            is_executable = True,
+        )
+    else:
+        env_file = ctx.actions.declare_file(ctx.label.name + ".env")
+        env_lines = ["%s=%s" % (k, v) for k, v in ctx.attr.build_spec_env.items()]
+        ctx.actions.write(
+            output = env_file,
+            content = "\n".join(env_lines) + "\n",
+        )
+        
+        runfiles = runfiles.merge(ctx.runfiles(files=[ctx.file.build_spec, env_file]))
+        
+        ctx.actions.expand_template(
+            output = out,
+            template = ctx.file._wrapper_mcb_template,
+            substitutions = {
+                "%{PUSH_CMDS}": "\n".join(push_cmds),
+                "%{RESIM_CLI}": ctx.executable._resim_cli.short_path,
+                "%{PROJECT}": ctx.attr.project,
+                "%{SYSTEM}": ctx.attr.system,
+                "%{BUILD_SPEC}": ctx.file.build_spec.short_path,
+                "%{BRANCH}": ctx.attr.branch,
+                "%{VERSION}": ctx.attr.version,
+                "%{RESIM_NAME}": ctx.attr.resim_name if ctx.attr.resim_name else ctx.attr.name,
+                "%{DESCRIPTION}": ctx.attr.description,
+                "%{AUTO_CREATE_BRANCH}": str(ctx.attr.auto_create_branch).lower(),
+                "%{ENV_FILE_PATH}": env_file.short_path,
+            },
+            is_executable = True,
+        )
     return [DefaultInfo(files = depset([out]), runfiles = runfiles, executable = out)]
+    
 
 resim_build = rule(
     implementation = _resim_build_impl,
@@ -109,12 +139,20 @@ resim_build = rule(
             doc = "List of oci image pushes",
             aspects = [print_image_aspect],
         ),
+        "data": attr.label_list(
+            allow_files = True,
+            doc = "List of data runfiles",
+        ),
         "build_spec_env": attr.string_dict(
             doc = "Environment variables to set for the build_spec",
         ),
         "_wrapper_template": attr.label(
             allow_single_file = True,
             default = ":wrapper.sh.tpl",
+        ),
+        "_wrapper_mcb_template": attr.label(
+            allow_single_file = True,
+            default = ":wrapper_mcb.sh.tpl",
         ),
         "_resim_cli": attr.label(
             allow_single_file = True,
