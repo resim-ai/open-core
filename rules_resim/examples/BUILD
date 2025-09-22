@@ -1,11 +1,11 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@resim_version//:defs.bzl", version = "RESIM_VERSION", branch = "RESIM_BRANCH")
-load("@rules_resim//:build.bzl", "resim_build")
+load("@rules_resim//:defs.bzl", "resim_build")
 
 
 ################################################################################
-# COMMON
+# Common
 
 filegroup(
     name = "greeting",
