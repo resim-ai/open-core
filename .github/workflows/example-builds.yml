@@ -34,13 +34,13 @@ jobs:
             ${{ runner.os }}-bazel-
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.ECR_RW_ROLE }}
           aws-region: us-east-1
 
       - name: Log in to ECR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.ECR_REGISTRY }}
 
