@@ -1,4 +1,4 @@
-name: Build & Push Sim Image
+name: Build & Push `rules_resim` Example Builds
 on:
   pull_request:  
   push:
