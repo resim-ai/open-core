@@ -1,3 +1,5 @@
+"""A rule for creating resim builds."""
+
 ImagePushInfo = provider(
     fields = {
         "remote_tags": "The image remote tags (list of strings)",

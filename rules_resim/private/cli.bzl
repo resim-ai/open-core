@@ -1,3 +1,5 @@
+"""Repo rule for fetching the resim CLI."""
+
 _PLATFORMS = [
     ("linux-amd64", "@platforms//os:linux", "@platforms//cpu:x86_64"),
     ("darwin-arm64", "@platforms//os:osx", "@platforms//cpu:arm64"),
