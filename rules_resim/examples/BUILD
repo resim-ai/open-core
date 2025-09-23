@@ -58,7 +58,7 @@ resim_build(
     version = version,
     branch = branch,
     description = "A simple build which greets the runner.",
-    resim_name = "Hello Build",
+    resim_name = "Simple Build",
     image_pushes = [
         ":simple_build_push",
     ],
@@ -137,7 +137,7 @@ resim_build(
     branch = branch,
     build_spec = "docker-compose.yml",
     description = "A simple multicontainer build which greets the runner.",
-    resim_name = "Hello Build",
+    resim_name = "Simple MCB Build",
     image_pushes = [
         ":multicontainer_build_receiver_push",
         ":multicontainer_build_sender_push",        
