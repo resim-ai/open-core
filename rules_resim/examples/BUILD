@@ -1,8 +1,7 @@
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
+load("@resim_version//:defs.bzl", branch = "RESIM_BRANCH", version = "RESIM_VERSION")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@resim_version//:defs.bzl", version = "RESIM_VERSION", branch = "RESIM_BRANCH")
 load("@rules_resim//:defs.bzl", "resim_build")
-
 
 ################################################################################
 # Common
@@ -47,27 +46,25 @@ oci_load(
 oci_push(
     name = "simple_build_push",
     image = ":simple_build_image",
+    remote_tags = ["simple_build_{}".format(version)],
     repository = "public.ecr.aws/resim/core",
-    remote_tags = ["simple_build_{}".format(version)]
 )
 
 resim_build(
     name = "simple_build",
-    project = "ReSim One Project",
-    system = "ReSim One System",
-    version = version,
     branch = branch,
     description = "A simple build which greets the runner.",
-    resim_name = "Simple Build",
     image_pushes = [
         ":simple_build_push",
     ],
+    project = "ReSim One Project",
+    resim_name = "Simple Build",
+    system = "ReSim One System",
+    version = version,
 )
 
 ################################################################################
 # Multi-container build
-
-
 
 sh_binary(
     name = "multicontainer_build_entrypoint",
@@ -84,16 +81,16 @@ pkg_tar(
     strip_prefix = ".",
 )
 
-
 # Sender image
 oci_image(
     name = "multicontainer_build_sender_image",
     base = "@alpine",
     entrypoint = ["./multicontainer_build_entrypoint"],
+    env = {"MCB_ROLE": "SENDER"},
     tars = [":multicontainer_build_entrypoint_layer"],
     workdir = "/multicontainer_build_entrypoint.runfiles/_main",
-    env = {"MCB_ROLE": "SENDER"},
 )
+
 oci_load(
     name = "multicontainer_build_sender_load",
     image = ":multicontainer_build_sender_image",
@@ -103,8 +100,8 @@ oci_load(
 oci_push(
     name = "multicontainer_build_sender_push",
     image = ":multicontainer_build_sender_image",
+    remote_tags = ["mcb_sender_{}".format(version)],
     repository = "public.ecr.aws/resim/core",
-    remote_tags = ["mcb_sender_{}".format(version)]
 )
 
 # Receiver image
@@ -112,10 +109,11 @@ oci_image(
     name = "multicontainer_build_receiver_image",
     base = "@alpine",
     entrypoint = ["./multicontainer_build_entrypoint"],
+    env = {"MCB_ROLE": "RECEIVER"},
     tars = [":multicontainer_build_entrypoint_layer"],
     workdir = "/multicontainer_build_entrypoint.runfiles/_main",
-    env = {"MCB_ROLE": "RECEIVER"},
 )
+
 oci_load(
     name = "multicontainer_build_receiver_load",
     image = ":multicontainer_build_receiver_image",
@@ -125,28 +123,27 @@ oci_load(
 oci_push(
     name = "multicontainer_build_receiver_push",
     image = ":multicontainer_build_receiver_image",
+    remote_tags = ["mcb_receiver_{}".format(version)],
     repository = "public.ecr.aws/resim/core",
-    remote_tags = ["mcb_receiver_{}".format(version)]
 )
 
 resim_build(
     name = "mcb_build",
-    project = "ReSim One Project",
-    system = "ReSim One System",
-    version = version,
     branch = branch,
     build_spec = "docker-compose.yml",
-    description = "A simple multicontainer build which greets the runner.",
-    resim_name = "Simple MCB Build",
-    image_pushes = [
-        ":multicontainer_build_receiver_push",
-        ":multicontainer_build_sender_push",        
-    ],
+    build_spec_env = {
+        "RESIM_VERSION": version,
+    },
     data = [
         "docker-compose.base.yml",
     ],
-    build_spec_env = {
-        "RESIM_VERSION": version
-    },
+    description = "A simple multicontainer build which greets the runner.",
+    image_pushes = [
+        ":multicontainer_build_receiver_push",
+        ":multicontainer_build_sender_push",
+    ],
+    project = "ReSim One Project",
+    resim_name = "Simple MCB Build",
+    system = "ReSim One System",
+    version = version,
 )
-

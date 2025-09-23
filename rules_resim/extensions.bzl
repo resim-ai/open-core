@@ -1,4 +1,3 @@
-
 load("@rules_resim//private:cli.bzl", "resim_cli")
 
 def _extension_impl(_):

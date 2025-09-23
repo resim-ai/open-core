@@ -23,8 +23,8 @@ def _resim_version_impl(repository_ctx):
         "defs.bzl",
         "defs.bzl.tpl",
         substitutions = {
-            "{RESIM_VERSION}": version,
             "{RESIM_BRANCH}": branch,
+            "{RESIM_VERSION}": version,
         },
         executable = False,
     )

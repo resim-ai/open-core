@@ -4,11 +4,11 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@resim_version//:defs.bzl", branch = "RESIM_BRANCH", version = "RESIM_VERSION")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_resim//:defs.bzl", "resim_build")
-load("@resim_version//:defs.bzl", version = "RESIM_VERSION", branch = "RESIM_BRANCH")
 
 cc_library(
     name = "step_executor",
@@ -282,20 +282,19 @@ oci_tarball(
 oci_push(
     name = "sim_build_push",
     image = ":drone-simulator",
+    remote_tags = [version],
     repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/core-sim-run",
-    remote_tags = [version]
 )
-
 
 resim_build(
     name = "drone_simulator_build",
-    project = "A ReSim Drone Sandbox",
-    system = "Drone Motion Planning System",
-    version = version,
     branch = branch,
     description = "An iLQR drone simulator",
-    resim_name = "Drone Simulator",
     image_pushes = [
         ":sim_build_push",
     ],
+    project = "A ReSim Drone Sandbox",
+    resim_name = "Drone Simulator",
+    system = "Drone Motion Planning System",
+    version = version,
 )
