@@ -8,6 +8,7 @@ local_path_override(
 )
 
 bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "rules_python", version = "1.6.3")
 
 
 # TODO(mikebauer) May put this in rules_resim
@@ -27,3 +28,12 @@ oci.pull(
     tag = "latest",
 )
 use_repo(oci, "alpine")
+
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    # This whole section is needed for this option that transitive deps don't set:
+    ignore_root_user_error = True,
+    python_version = "3.11"
+)
