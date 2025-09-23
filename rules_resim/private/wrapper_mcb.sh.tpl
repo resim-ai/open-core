@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 %{PUSH_CMDS}
+
+set -euo pipefail
 
 # Build the resim command
 CMD="%{RESIM_CLI} builds create \

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
 
 %{PUSH_CMDS}
 
+set -euo pipefail
 
 read -r TAG < %{TAGFILE_PATH} || true # When this file is oneline this returns non-zero
 
