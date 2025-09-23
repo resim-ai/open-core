@@ -1,3 +1,9 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 load("@resim_version//:defs.bzl", branch = "RESIM_BRANCH", version = "RESIM_VERSION")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
