@@ -270,7 +270,7 @@ oci_image(
     base = "@debian_slim",
     entrypoint = ["resim/simulator/sim_container_entrypoint"],
     tars = [":entrypoint_layer"],
-    workdir = "/sim_container_entrypoint.runfiles",
+    workdir = "/sim_container_entrypoint.runfiles/_main",
 )
 
 oci_tarball(
