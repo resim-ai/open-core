@@ -53,13 +53,13 @@ jobs:
         env:
           RESIM_VERSION: ${{ github.sha }}
           RESIM_BRANCH: ${{ github.ref_name }}
-        working-directory: rules_resim/examples          
+        working-directory: ./rules_resim/examples          
         run: bazel run //:simple_build_push
 
       - name: Create Multi-Container Build
         env:
           RESIM_VERSION: ${{ github.sha }}
           RESIM_BRANCH: ${{ github.ref_name }}
-        working-directory: rules_resim/examples          
+        working-directory: ./rules_resim/examples          
         run: bazel run //:mcb_build
         
