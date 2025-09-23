@@ -11,6 +11,8 @@ permissions:
 
 env:
   ECR_REGISTRY: "public.ecr.aws/resim"
+  RESIM_PASSWORD: ${{ secrets.RESIM_PASSWORD }}
+  RESIM_USERNAME: ${{ secrets.RESIM_USERNAME }}
 
 jobs:
   build:
