@@ -47,7 +47,7 @@ oci_load(
 oci_push(
     name = "simple_build_push",
     image = ":simple_build_image",
-    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images",
+    repository = "public.ecr.aws/resim/core",
     remote_tags = ["simple_build_{}".format(version)]
 )
 
@@ -103,7 +103,7 @@ oci_load(
 oci_push(
     name = "multicontainer_build_sender_push",
     image = ":multicontainer_build_sender_image",
-    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images",
+    repository = "public.ecr.aws/resim/core",
     remote_tags = ["mcb_sender_{}".format(version)]
 )
 
@@ -125,7 +125,7 @@ oci_load(
 oci_push(
     name = "multicontainer_build_receiver_push",
     image = ":multicontainer_build_receiver_image",
-    repository = "909785973729.dkr.ecr.us-east-1.amazonaws.com/customer-test-images",
+    repository = "public.ecr.aws/resim/core",
     remote_tags = ["mcb_receiver_{}".format(version)]
 )
 

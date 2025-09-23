@@ -1,0 +1,1 @@
+exports_files(["wrapper.sh.tpl", "wrapper_mcb.sh.tpl"])

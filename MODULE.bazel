@@ -49,7 +49,7 @@ local_path_override(
     module_name = "rules_resim",
     path = "./rules_resim",
 )
-resim_cli = use_extension("@rules_resim//:cli.bzl", "resim_cli_extension")
+resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
 use_repo(resim_cli, "resim_cli")
 
 

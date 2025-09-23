@@ -1,0 +1,63 @@
+name: Build & Push Sim Image
+on:
+  pull_request:  
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ECR_REGISTRY: "public.ecr.aws/resim"
+
+jobs:
+  build:
+    name: Build & Push `rules_resim` Example Builds
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ECR_RW_ROLE }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.ECR_REGISTRY }}
+
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
+      - name: Create Build
+        env:
+          RESIM_VERSION: ${{ github.sha }}
+          RESIM_BRANCH: ${{ github.ref_name }}
+        working-directory: rules_resim/examples          
+        run: bazel run //resim/simulator:sim_build_push
+
+      - name: Create Multi-Container Build
+        env:
+          RESIM_VERSION: ${{ github.sha }}
+          RESIM_BRANCH: ${{ github.ref_name }}
+        working-directory: rules_resim/examples          
+        run: bazel run //resim/simulator:mcb_build
+        
