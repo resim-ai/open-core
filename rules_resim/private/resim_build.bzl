@@ -1,13 +1,14 @@
 """A rule for creating resim builds."""
 
 ImagePushInfo = provider(
+    "A provider to help us get repo information from oci_push() targets",
     fields = {
         "remote_tags": "The image remote tags (list of strings)",
         "repository": "The image repository name (string)",
     },
 )
 
-def _print_image_aspect_impl(target, ctx):
+def _print_image_aspect_impl(_target, ctx):
     repo = getattr(ctx.rule.attr, "repository", None)
     tags = getattr(ctx.rule.attr, "remote_tags", [])
     return [ImagePushInfo(

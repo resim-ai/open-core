@@ -7,7 +7,6 @@ _PLATFORMS = [
 ]
 
 def _resim_cli_impl(rctx):
-    print(rctx)
     for p, _, _ in _PLATFORMS:
         rctx.download(
             url = "https://github.com/resim-ai/api-client/releases/latest/download/resim-{}".format(p),
