@@ -5,9 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 """
-# Extensions
-
-Resim-relevent bazel extensions.
+ReSim CLI repo rule definition
 """
 
 _PLATFORMS = [

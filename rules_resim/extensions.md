@@ -1,6 +1,6 @@
 <!-- Generated with Stardoc: http://skydoc.bazel.build -->
 
-Extension for the resim CLI.
+# ReSim Extensions
 
 <a id="resim_cli"></a>
 

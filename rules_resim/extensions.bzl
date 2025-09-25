@@ -4,7 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""Extension for the resim CLI."""
+"""
+# ReSim Extensions
+"""
 
 load("@rules_resim//private:cli.bzl", _resim_cli = "resim_cli")
 
