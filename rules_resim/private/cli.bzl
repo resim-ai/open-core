@@ -4,7 +4,11 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""Repo rule for fetching the resim CLI."""
+"""
+# Extensions
+
+Resim-relevent bazel extensions.
+"""
 
 _PLATFORMS = [
     ("linux-amd64", "@platforms//os:linux", "@platforms//cpu:x86_64"),
@@ -49,4 +53,21 @@ config_setting(
 
 resim_cli = repository_rule(
     implementation = _resim_cli_impl,
+    doc = """Repo rule for fetching the resim CLI.
+
+This repository rule downloads prebuilt `resim` CLI binaries for supported
+platforms (Linux and macOS, both x86_64 and arm64). It then exposes a
+`resim` target as a native binary, selectable by the host platform.
+
+For example, if you use this rule in your `MODULE.bazel`:
+```
+resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
+use_repo(resim_cli, "resim_cli")
+```
+
+You can run the CLI like so.
+```
+bazel run @resim_cli//:resim
+```
+""",
 )

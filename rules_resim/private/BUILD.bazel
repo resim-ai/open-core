@@ -3,8 +3,21 @@
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 exports_files([
     "wrapper.sh.tpl",
     "wrapper_mcb.sh.tpl",
 ])
+
+bzl_library(
+    name = "cli",
+    srcs = ["cli.bzl"],
+    visibility = ["//:__subpackages__"],
+)
+
+bzl_library(
+    name = "resim_build",
+    srcs = ["resim_build.bzl"],
+    visibility = ["//:__subpackages__"],
+)

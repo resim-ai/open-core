@@ -34,7 +34,7 @@ def _get_image_uri(image_push):
     info = image_push[ImagePushInfo]
 
     tag_file_list = info.remote_tags.files.to_list()
-    if len(tag_file_list) != 1:
+    if len(tag_file_list) == 0:
         fail("Could not determine push info for target: %s" % image_push.label)
 
     return info.repository, tag_file_list[0]

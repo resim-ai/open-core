@@ -4,7 +4,48 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""Basic rules for rules_resim()"""
+"""
+# ReSim Rules
+
+These rules are designed to make it easy to create and run ReSim builds based on oci images created
+and pushed via `rules_oci`. For instance, if you have an oci image you push with `rules_oci` like
+so:
+
+```
+load("@rules_oci//oci:defs.bzl", "oci_push")
+
+# ...
+
+oci_push(
+    name = "simple_build_push",
+    image = ":simple_build_image",
+    remote_tags = ["simple_build_{}".format(version)],
+    repository = "public.ecr.aws/resim/core",
+)
+```
+
+Then you can create a runnable target to create a single-container ReSim build for you like so:
+
+```
+resim_build(
+    name = "simple_build",
+    branch = branch,
+    description = "A simple build which greets the runner.",
+    image_pushes = [
+        ":simple_build_push",
+    ],
+    project = "My Project Name",
+    resim_name = "My Build Name",
+    system = "My System Name,
+    version = version,
+)
+```
+
+This target will automatically create a resim build based off the image and (first) remote tag
+configured in the `oci_push()` target. Builds can also be created for multicontainer builds with a
+docker compose input. See [here](https://docs.resim.ai/guides/multi-container-builds/) for more
+details on multi-container builds.
+"""
 
 load("@rules_resim//private:resim_build.bzl", _resim_build = "resim_build")
 
