@@ -6,7 +6,9 @@
 
 """Extension for the resim CLI."""
 
-load("@rules_resim//private:cli.bzl", "resim_cli")
+load("@rules_resim//private:cli.bzl", _resim_cli = "resim_cli")
+
+resim_cli = _resim_cli
 
 def _extension_impl(_):
     resim_cli(name = "resim_cli")
