@@ -14,7 +14,7 @@ ImagePushInfo = provider(
     },
 )
 
-def _print_image_aspect_impl(_target, ctx):
+def _get_image_uri_aspect_impl(_target, ctx):
     repo = getattr(ctx.rule.attr, "repository", None)
     tags = getattr(ctx.rule.attr, "remote_tags", [])
     return [ImagePushInfo(
@@ -22,9 +22,8 @@ def _print_image_aspect_impl(_target, ctx):
         remote_tags = tags,
     )]
 
-print_image_aspect = aspect(
-    implementation = _print_image_aspect_impl,
-    attr_aspects = ["image_pushes"],
+get_image_uri_aspect = aspect(
+    implementation = _get_image_uri_aspect_impl,
 )
 
 def _get_image_uri(image_push):
@@ -137,7 +136,7 @@ resim_build = rule(
         "image_pushes": attr.label_list(
             allow_files = False,
             doc = "List of oci image pushes",
-            aspects = [print_image_aspect],
+            aspects = [get_image_uri_aspect],
         ),
         "project": attr.string(
             mandatory = True,
