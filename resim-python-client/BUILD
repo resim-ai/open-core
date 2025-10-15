@@ -13,7 +13,7 @@ py_console_script_binary(
 openapi_client(
     name = "resim-python-client-gen",
     config = "openapi_python_client_config.yaml",
-    specification = "openapi.yaml",
+    specification = "@resim_api_spec",
 )
 
 py_library(
