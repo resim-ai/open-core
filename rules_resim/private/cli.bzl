@@ -59,8 +59,8 @@ platforms (Linux and macOS, both x86_64 and arm64). It then exposes a
 
 For example, if you use this rule in your `MODULE.bazel`:
 ```
-resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
-use_repo(resim_cli, "resim_cli")
+resim_extension = use_extension("@rules_resim//:extensions.bzl", "resim_extension")
+use_repo(resim_extension, "resim_cli")
 ```
 
 You can run the CLI like so.
