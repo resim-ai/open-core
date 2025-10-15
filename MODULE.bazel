@@ -134,7 +134,7 @@ use_repo(resim_version_extension, "resim_version")
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "debian_slim",
-    image = "debian",
+    image = "public.ecr.aws/debian/debian:bookworm-slim",
     platforms = [
         "linux/amd64",
         "linux/arm64/v8",
