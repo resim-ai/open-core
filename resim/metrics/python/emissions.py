@@ -24,7 +24,7 @@ def emit(
         Union[list[int], list[Timestamp], npt.NDArray[np.int_]]
     ] = None,
     event: bool = False,
-    file_path: Path = Path("/tmp/resim/outputs/emissions.ndjson"),
+    file_path: Path = Path("/tmp/resim/outputs/emissions.resim.jsonl"),
     file: Optional[TextIOWrapper] = None,
 ) -> None:
     """
