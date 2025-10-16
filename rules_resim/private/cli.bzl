@@ -8,39 +8,68 @@
 ReSim CLI repo rule definition
 """
 
+load("@bazel_tools//tools/build_defs/repo:cache.bzl", "get_default_canonical_id")
+
+_VERSION = "v0.29.0"
+
 _PLATFORMS = [
-    ("linux-amd64", "@platforms//os:linux", "@platforms//cpu:x86_64"),
-    ("darwin-arm64", "@platforms//os:osx", "@platforms//cpu:arm64"),
-    ("darwin-amd64", "@platforms//os:osx", "@platforms//cpu:x86_64"),
+    struct(
+        name = "linux-amd64",
+        os = "@platforms//os:linux",
+        cpu = "@platforms//cpu:x86_64",
+        sha256 = "fe30975f1396d4182d6bd4d297f37c2718dd4780f6d27c472958e4bc309f9ab8",
+    ),
+    struct(
+        name = "darwin-arm64",
+        os = "@platforms//os:osx",
+        cpu = "@platforms//cpu:arm64",
+        sha256 = "86bf59f407b17192a53e6a0e1f86c13188449bb8341232aae92a50e41b67117a",
+    ),
+    struct(
+        name = "darwin-amd64",
+        os = "@platforms//os:osx",
+        cpu = "@platforms//cpu:x86_64",
+        sha256 = "b0bd65d13531982ff2f4e4ae0dae61c9b8cfdf0c553cc91c0b0be266266e1ee3",
+    ),
 ]
 
 def _resim_cli_impl(rctx):
-    for p, _, _ in _PLATFORMS:
+    # Download binaries
+    for p in _PLATFORMS:
+        url = "https://github.com/resim-ai/api-client/releases/download/{}/resim-{}".format(
+            _VERSION,
+            p.name,
+        )
         rctx.download(
-            url = "https://github.com/resim-ai/api-client/releases/latest/download/resim-{}".format(p),
-            output = "resim-{}".format(p),
+            url = url,
+            output = "resim-{}".format(p.name),
             executable = True,
+            sha256 = p.sha256,
+            canonical_id = get_default_canonical_id(rctx, [url]),
         )
 
     build_content = [
         """load("@bazel_skylib//rules:native_binary.bzl", "native_binary")""",
     ]
-    for p, os, cpu in _PLATFORMS:
+
+    # Generate config_settings
+    for p in _PLATFORMS:
         build_content.append("""
 config_setting(
-     name = "{p}",
-     constraint_values = [
+    name = "{name}",
+    constraint_values = [
         "{os}",
         "{cpu}",
-     ],
-)""".format(p = p, os = os, cpu = cpu))
+    ],
+)""".format(name = p.name, os = p.os, cpu = p.cpu))
 
+    # Generate native_binary rule
     build_content.append("""native_binary(
     name = "resim",
     src = select({""")
 
-    for p, _, _ in _PLATFORMS:
-        build_content.append("""        ":{p}": "resim-{p}",""".format(p = p))
+    for p in _PLATFORMS:
+        build_content.append("""        ":{name}": "resim-{name}",""".format(name = p.name))
 
     build_content.append("""    }),
     out = "resim",
