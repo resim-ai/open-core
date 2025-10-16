@@ -106,6 +106,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("numpy"),
+        requirement("pyyaml"),
         ":metrics_utils",
     ],
 )
