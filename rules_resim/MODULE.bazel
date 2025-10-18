@@ -13,6 +13,27 @@ bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 
 resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
+resim_cli.versions(cli_version = "v0.30.0")
 use_repo(resim_cli, "resim_cli")
 
 bazel_dep(name = "stardoc", version = "0.8.0")
+
+# Used for scripts
+bazel_dep(name = "rules_python", version = "0.35.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
+PYTHON_VERSION = "3.12"
+
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = PYTHON_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "script_deps",
+    python_version = PYTHON_VERSION,
+    requirements_lock = "@rules_resim//scripts:requirements_lock.txt",
+)
+use_repo(pip, "script_deps")

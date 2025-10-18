@@ -6,6 +6,9 @@
 
 """A rule for creating resim builds."""
 
+load("@resim_cli//:defs.bzl", "RESIM_CLI_VERSION")
+load(":cli.bzl", "version_to_tuple")
+
 ImagePushInfo = provider(
     "A provider to help us get repo information from oci_push() targets",
     fields = {
@@ -39,6 +42,10 @@ def _get_image_uri(image_push):
     return info.repository, tag_file_list[0]
 
 def _resim_build_impl(ctx):
+    _, minor, _ = version_to_tuple(RESIM_CLI_VERSION)
+    if minor < 19:
+        fail("Unsupported CLI version for rule: {}".format(RESIM_CLI_VERSION))
+
     out = ctx.actions.declare_file(ctx.label.name + ".sh")
     runfiles = ctx.runfiles(files = [out, ctx.executable._resim_cli])
     runfiles = runfiles.merge(ctx.runfiles(transitive_files = depset(ctx.files.data)))

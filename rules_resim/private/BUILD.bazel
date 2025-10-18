@@ -21,3 +21,9 @@ bzl_library(
     srcs = ["resim_build.bzl"],
     visibility = ["//:__subpackages__"],
 )
+
+filegroup(
+    name = "cli_versions",
+    srcs = ["cli_versions.json"],
+    visibility = ["//:__subpackages__"],
+)

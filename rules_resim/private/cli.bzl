@@ -10,8 +10,6 @@ ReSim CLI repo rule definition
 
 load("@bazel_tools//tools/build_defs/repo:cache.bzl", "get_default_canonical_id")
 
-_VERSION = "v0.29.0"
-
 _PLATFORMS = [
     struct(
         name = "linux-amd64",
@@ -34,10 +32,16 @@ _PLATFORMS = [
 ]
 
 def _resim_cli_impl(rctx):
+    rctx.file("defs.bzl", "RESIM_CLI_VERSION = \"{}\"".format(rctx.attr.version))
+
+    # Load our JSON file with the platforms and checksums for the binaries for each version
+    platforms_by_version = json.decode(rctx.read(rctx.path(rctx.attr._cli_versions)))
+
     # Download binaries
-    for p in _PLATFORMS:
+    for p_dict in platforms_by_version[rctx.attr.version]:
+        p = struct(**p_dict)
         url = "https://github.com/resim-ai/api-client/releases/download/{}/resim-{}".format(
-            _VERSION,
+            rctx.attr.version,
             p.name,
         )
         rctx.download(
@@ -97,4 +101,70 @@ You can run the CLI like so.
 bazel run @resim_cli//:resim
 ```
 """,
+    attrs = {
+        "version": attr.string(mandatory = True, doc = "The CLI release version (e.g. v0.29.0)"),
+        "_cli_versions": attr.label(
+            allow_single_file = True,
+            default = ":cli_versions.json",
+        ),
+    },
 )
+
+def version_to_tuple(v):
+    """Convert a version number to a tuple of (major, minor, patch) (e.g. vXX.YY.ZZ -> (XX, YY, ZZ).
+
+    Args:
+        v: The version string
+
+    Returns:
+        The (major, minor, patch) tuple as integers
+    """
+    if not v or v[0] != "v":
+        fail("Invalid version: %s" % v)
+    parts = v[1:].split(".")
+    if len(parts) != 3:
+        fail("Invalid version: %s" % v)
+    return (int(parts[0]), int(parts[1]), int(parts[2]))
+
+def resolve_cli_version(module_ctx):
+    """
+    Resolves an appropriate CLI version.
+
+    Resolve different modules' CLI versions prioritizing the root module's request and falling back
+    to the highest requested version otherwise.
+
+    Args:
+        module_ctx: The module context containig modules to resolve versions over
+
+    Returns:
+        The resolved version as a string
+
+    """
+    requested_version_tuples = set()
+    root_module_version = None
+
+    for mod in module_ctx.modules:
+        versions = mod.tags.versions
+        if len(versions) > 1:
+            fail("Only one CLI version tag allowed per module in module " + mod.name)
+
+        if len(versions) == 1:
+            tag = versions[0]
+            if not tag.cli_version:
+                fail("cli_version tag attribute must not be empty in module " + mod.name)
+
+            if mod.is_root:
+                root_module_version = tag.cli_version
+            else:
+                requested_version_tuples.add(version_to_tuple(tag.cli_version))
+
+    if root_module_version:
+        print("resim_cli: Root module requested version: %s. Using it for override." % root_module_version)  # buildifier: disable=print
+        return root_module_version
+
+    if requested_version_tuples:
+        sorted_versions = sorted(list(requested_version_tuples))
+        selected_version = sorted_versions[-1]
+        return "v%s.%s.%s" % selected_version
+
+    fail("No version specified in any module ReSim for the ReSim CLI")
