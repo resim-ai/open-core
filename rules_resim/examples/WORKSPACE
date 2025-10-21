@@ -1,9 +1,14 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
 
-local_repository(
+RULES_RESIM_VERSION = "24a78761f03b9cef72eec6e7c77422a59f7ef343"
+
+RULES_RESIM_CHECKSUM = "b758830f9d9b2eb63709eb18ea1cd6834cfdfa62552c38957fa4494fd0eab8f8"
+
+http_archive(
     name = "rules_resim",
-    path = "..",
+    sha256 = RULES_RESIM_CHECKSUM,
+    strip_prefix = "open-core-{}/rules_resim".format(RULES_RESIM_VERSION),
+    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RULES_RESIM_VERSION),
 )
 
 load("@rules_resim//:workspace_deps.bzl", "rules_resim_repositories")
