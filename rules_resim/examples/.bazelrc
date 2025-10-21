@@ -1,0 +1,7 @@
+
+
+# Uncomment to use the WORKSPACE file
+# common --noenable_bzlmod
+# common --enable_workspace
+# https://github.com/bazelbuild/bazel/pull/26119
+# common --repositories_without_autoloads=bazel_features_version,bazel_features_globals

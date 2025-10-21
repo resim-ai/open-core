@@ -140,7 +140,9 @@ def resolve_cli_version(module_ctx):
         The resolved version as a string
 
     """
-    requested_version_tuples = set()
+
+    # set() doesn't exist before bazel 8.1.0 so we use a dict
+    requested_version_tuples = {}
     root_module_version = None
 
     for mod in module_ctx.modules:
@@ -156,14 +158,14 @@ def resolve_cli_version(module_ctx):
             if mod.is_root:
                 root_module_version = tag.cli_version
             else:
-                requested_version_tuples.add(version_to_tuple(tag.cli_version))
+                requested_version_tuples[version_to_tuple(tag.cli_version)] = True
 
     if root_module_version:
         print("resim_cli: Root module requested version: %s. Using it for override." % root_module_version)  # buildifier: disable=print
         return root_module_version
 
     if requested_version_tuples:
-        sorted_versions = sorted(list(requested_version_tuples))
+        sorted_versions = sorted(list(requested_version_tuples.keys()))
         selected_version = sorted_versions[-1]
         return "v%s.%s.%s" % selected_version
 

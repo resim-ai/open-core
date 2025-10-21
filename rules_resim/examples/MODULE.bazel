@@ -13,10 +13,6 @@ local_path_override(
     path = "..",
 )
 
-resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
-resim_cli.versions(cli_version = "v0.19.0")
-use_repo(resim_cli, "resim_cli")
-
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_python", version = "1.6.3")
 
