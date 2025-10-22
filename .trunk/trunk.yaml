@@ -37,6 +37,7 @@ lint:
       extra_packages:
         - types-requests
         - types-protobuf
+        - types-PyYAML
   enabled:
     - ruff@0.9.7:
         commands:
