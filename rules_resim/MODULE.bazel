@@ -20,9 +20,13 @@ use_repo(resim_cli, "resim_cli_darwin-amd64")
 bazel_dep(name = "stardoc", version = "0.8.0")
 
 # Used for scripts
-bazel_dep(name = "rules_python", version = "0.35.0")
+bazel_dep(name = "rules_python", version = "1.6.3", dev_dependency = True)
 
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python = use_extension(
+    "@rules_python//python/extensions:python.bzl",
+    "python",
+    dev_dependency = True,
+)
 
 PYTHON_VERSION = "3.12"
 
@@ -31,7 +35,11 @@ python.toolchain(
     python_version = PYTHON_VERSION,
 )
 
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip = use_extension(
+    "@rules_python//python/extensions:pip.bzl",
+    "pip",
+    dev_dependency = True,
+)
 pip.parse(
     hub_name = "script_deps",
     python_version = PYTHON_VERSION,
