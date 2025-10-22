@@ -8,7 +8,9 @@
 # ReSim Extensions
 """
 
-load("@rules_resim//private:cli.bzl", "resim_cli", "resolve_cli_version")
+load("@rules_resim//private:cli.bzl", "resolve_cli_version", _resim_cli = "resim_cli")
+
+resim_cli = _resim_cli
 
 _versions = tag_class(
     doc = """Tag class to specify the versions of fetched tools.""",

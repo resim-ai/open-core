@@ -169,7 +169,7 @@ def resim_cli(name, version, platforms):
     Args:
       name: The name of the repo to create for the resim cli.
       version: The version of the resim cli to fetch.
-      platforms: The platform structs containing name, platform, and sha information for this version.
+      platforms: The platform dicts containing name, platform, and sha information for this version.
     """
     for p_dict in platforms:
         p = struct(**p_dict)

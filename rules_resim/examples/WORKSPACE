@@ -1,8 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-RULES_RESIM_VERSION = "24a78761f03b9cef72eec6e7c77422a59f7ef343"
+RULES_RESIM_VERSION = "a5894f9f22d5defa1326508811f22df2637a7aee"
 
-RULES_RESIM_CHECKSUM = "b758830f9d9b2eb63709eb18ea1cd6834cfdfa62552c38957fa4494fd0eab8f8"
+RULES_RESIM_CHECKSUM = "ac81d705da7203b34be3e58d8de38fd8b4ee1d4db65a0beb0d4480f6545a3697"
 
 http_archive(
     name = "rules_resim",
