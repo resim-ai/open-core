@@ -21,7 +21,10 @@ _versions = tag_class(
 
 def _extension_impl(module_ctx):
     cli_version = resolve_cli_version(module_ctx)
-    resim_cli(name = "resim_cli", version = cli_version)
+    platforms_by_version = json.decode(module_ctx.read(module_ctx.path(Label("//private:cli_versions.json"))))
+    platforms = platforms_by_version[cli_version]
+
+    resim_cli(name = "resim_cli", version = cli_version, platforms = platforms)
 
 resim_cli_extension = module_extension(
     implementation = _extension_impl,
