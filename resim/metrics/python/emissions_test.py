@@ -26,7 +26,7 @@ class EmissionsTest(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test environment."""
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.temp_path = Path(self.temp_dir.name) / "emissions.ndjson"
+        self.temp_path = Path(self.temp_dir.name) / "emissions.resim.jsonl"
 
     def tearDown(self) -> None:
         """Clean up test environment."""
@@ -199,7 +199,11 @@ class EmissionsTest(unittest.TestCase):
 
         # Test with invalid file path
         with self.assertRaises(RuntimeError):
-            emit(topic_name, data, file_path=Path("/nonexistent/directory/file.ndjson"))
+            emit(
+                topic_name,
+                data,
+                file_path=Path("/nonexistent/directory/file.resim.jsonl"),
+            )
 
     def test_emit_append_to_existing_file(self) -> None:
         """Test appending emissions to an existing file."""
