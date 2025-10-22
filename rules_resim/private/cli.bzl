@@ -162,20 +162,9 @@ def resolve_cli_version(module_ctx):
 def resim_cli(name, version, platforms):
     """Macro with repo rule for fetching the resim CLI.
 
-    This macro creates respos to download prebuilt `resim` CLI binaries for supported
+    This macro creates repos to download prebuilt `resim` CLI binaries for supported
     platforms (Linux and macOS, both x86_64 and arm64). It then exposes a
     `resim` target as a native binary in an interface repo, selectable by the host platform.
-
-    For example, if you use this rule in your `MODULE.bazel`:
-    ```
-    resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
-    use_repo(resim_cli, "resim_cli")
-    ```
-
-    You can run the CLI like so.
-    ```
-    bazel run @resim_cli//:resim
-    ```
 
     Args:
       name: The name of the repo to create for the resim cli.
