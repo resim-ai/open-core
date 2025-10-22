@@ -17,7 +17,7 @@ resim_cli.versions(cli_version = "v0.30.0")
 use_repo(resim_cli, "resim_cli")
 use_repo(resim_cli, "resim_cli_darwin-amd64")
 
-bazel_dep(name = "stardoc", version = "0.8.0")
+bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True)
 
 # Used for scripts
 bazel_dep(name = "rules_python", version = "1.6.3", dev_dependency = True)
