@@ -7,17 +7,10 @@
 module(name = "rules_resim_examples")
 
 bazel_dep(name = "rules_oci", version = "2.2.6")
-
-RULES_RESIM_VERSION = "24a78761f03b9cef72eec6e7c77422a59f7ef343"
-
-RULES_RESIM_CHECKSUM = "b758830f9d9b2eb63709eb18ea1cd6834cfdfa62552c38957fa4494fd0eab8f8"
-
 bazel_dep(name = "rules_resim", version = "0.1.0")
-archive_override(
+local_path_override(
     module_name = "rules_resim",
-    sha256 = RULES_RESIM_CHECKSUM,
-    strip_prefix = "open-core-{}/rules_resim".format(RULES_RESIM_VERSION),
-    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RULES_RESIM_VERSION),
+    path = "..",
 )
 
 bazel_dep(name = "rules_pkg", version = "1.1.0")
