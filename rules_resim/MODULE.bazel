@@ -15,7 +15,6 @@ bazel_dep(name = "platforms", version = "1.0.0")
 resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
 resim_cli.versions(cli_version = "v0.30.0")
 use_repo(resim_cli, "resim_cli")
-use_repo(resim_cli, "resim_cli_darwin-amd64")
 
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True)
 

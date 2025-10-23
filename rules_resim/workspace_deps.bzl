@@ -10,7 +10,7 @@ Dependencies of rules_resim to be used in WORKSPACE files.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_archive = "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@rules_resim//:extensions.bzl", "resim_cli")
+load("@rules_resim//private:cli.bzl", "resim_cli")
 
 def http_archive(**kwargs):
     maybe(_http_archive, **kwargs)

@@ -9,8 +9,9 @@ ReSim CLI repo rule definition
 """
 
 load("@bazel_tools//tools/build_defs/repo:cache.bzl", "get_default_canonical_id")
+load("sources.bzl", "SOURCES")
 
-def _resim_cli_platform_impl(rctx):
+def _resim_cli_binary_impl(rctx):
     url = "https://github.com/resim-ai/api-client/releases/download/{}/resim-{}".format(
         rctx.attr.version,
         rctx.attr.binary_name,
@@ -30,16 +31,12 @@ native_binary(
 )
 """.format(rctx.attr.binary_name))
 
-resim_cli_platform = repository_rule(
-    implementation = _resim_cli_platform_impl,
+_resim_cli_binary = repository_rule(
+    implementation = _resim_cli_binary_impl,
     attrs = {
         "binary_name": attr.string(mandatory = True),
         "sha256": attr.string(mandatory = True, doc = "The checksum to use when fetching the cli"),
         "version": attr.string(mandatory = True, doc = "The CLI release version (e.g. v0.29.0)"),
-        "_cli_versions": attr.label(
-            allow_single_file = True,
-            default = ":cli_versions.json",
-        ),
     },
     doc = """Repo rule for pulling the resim cli for a specific version and platform.""",
 )
@@ -47,9 +44,7 @@ resim_cli_platform = repository_rule(
 def _resim_cli_impl(rctx):
     rctx.file("defs.bzl", "RESIM_CLI_VERSION = \"{}\"".format(rctx.attr.version))
 
-    # Load our JSON file with the platforms and checksums for the binaries for each version
-    platforms_by_version = json.decode(rctx.read(rctx.path(rctx.attr._cli_versions)))
-    platforms = [struct(**p) for p in platforms_by_version[rctx.attr.version]]
+    platforms = [struct(**p) for p in SOURCES[rctx.attr.version]]
 
     build_content = ["""load("@bazel_skylib//:bzl_library.bzl", "bzl_library")    
 bzl_library(
@@ -87,14 +82,10 @@ _resim_cli = repository_rule(
     implementation = _resim_cli_impl,
     doc = """Repo rule for resim cli interface repo
 This repository rule creates an interface repo that contains a `@repo_name//:resim` alias that uses
-a select() to get the right platform specific repo (defined by resim_cli_platform) for the current
+a select() to get the right platform specific repo (defined by _resim_cli_binary) for the current
 target. We delegate to these repos to fetch the cli for different versions so we can fetch lazily.""",
     attrs = {
         "version": attr.string(mandatory = True, doc = "The CLI release version (e.g. v0.29.0)"),
-        "_cli_versions": attr.label(
-            allow_single_file = True,
-            default = ":cli_versions.json",
-        ),
     },
 )
 
@@ -159,7 +150,7 @@ def resolve_cli_version(module_ctx):
 
     fail("No version specified in any module ReSim for the ReSim CLI")
 
-def resim_cli(name, version, platforms):
+def resim_cli(name, version):
     """Macro with repo rule for fetching the resim CLI.
 
     This macro creates repos to download prebuilt `resim` CLI binaries for supported
@@ -169,11 +160,10 @@ def resim_cli(name, version, platforms):
     Args:
       name: The name of the repo to create for the resim cli.
       version: The version of the resim cli to fetch.
-      platforms: The platform dicts containing name, platform, and sha information for this version.
     """
-    for p_dict in platforms:
+    for p_dict in SOURCES[version]:
         p = struct(**p_dict)
-        resim_cli_platform(
+        _resim_cli_binary(
             name = "{}_{}".format(name, p.name),
             binary_name = p.name,
             sha256 = p.sha256,

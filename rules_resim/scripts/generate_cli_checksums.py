@@ -61,11 +61,11 @@ async def main() -> None:
     assert workspace_dir, (
         "Workspace directory isn't set. Did you `bazel run` this script?"
     )
-    cli_versions_json_path_str = os.getenv("CLI_VERSIONS_JSON_PATH")
-    assert cli_versions_json_path_str, (
-        "Json path isn't set. Did you `bazel run` this script?"
+    cli_versions_bzl_path_str = os.getenv("CLI_SOURCES_BZL_PATH")
+    assert cli_versions_bzl_path_str, (
+        "Bzl path isn't set. Did you `bazel run` this script?"
     )
-    cli_versions_json_path = Path(workspace_dir) / cli_versions_json_path_str
+    cli_versions_bzl_path = Path(workspace_dir) / cli_versions_bzl_path_str
 
     all_combinations = list(itertools.product(PLATFORMS, VERSIONS))
     async with httpx.AsyncClient() as client:
@@ -84,8 +84,11 @@ async def main() -> None:
         platform["sha256"] = sha
         platforms_per_version[version].append(platform)
 
-    with open(cli_versions_json_path, "w", encoding="utf-8") as fp:
-        json.dump(platforms_per_version, fp, indent=2)
+    with open(cli_versions_bzl_path, "w", encoding="utf-8") as fp:
+        fp.write(
+            '"""Generated file containing the sources for all resim cli versions and platforms"""\n'
+        )
+        fp.write("SOURCES = {}".format(json.dumps(platforms_per_version, indent=2)))
 
 
 asyncio.run(main())

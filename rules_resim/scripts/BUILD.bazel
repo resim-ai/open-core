@@ -4,9 +4,9 @@ load("@script_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "generate_cli_checksums",
     srcs = ["generate_cli_checksums.py"],
-    data = ["//private:cli_versions"],
+    data = ["//private:sources"],
     env = {
-        "CLI_VERSIONS_JSON_PATH": "$(location //private:cli_versions)",
+        "CLI_SOURCES_BZL_PATH": "$(location //private:sources)",
     },
     deps = [
         requirement("httpx"),

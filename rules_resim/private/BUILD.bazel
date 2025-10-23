@@ -21,6 +21,7 @@ bzl_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_tools_cache",
+        ":sources",
     ],
 )
 
@@ -34,8 +35,8 @@ bzl_library(
     ],
 )
 
-filegroup(
-    name = "cli_versions",
-    srcs = ["cli_versions.json"],
+bzl_library(
+    name = "sources",
+    srcs = ["sources.bzl"],
     visibility = ["//:__subpackages__"],
 )
