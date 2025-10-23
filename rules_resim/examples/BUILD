@@ -156,6 +156,11 @@ resim_build(
 
 resim_test_suite_run(
     name = "mcb_build_run",
+    allowable_failure_percent = 70,
+    pool_labels = [
+        "foo",
+        "bar",
+    ],
     resim_build = ":mcb_build",
     test_suite = "ReSim Test Suite",
 )
