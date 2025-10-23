@@ -48,5 +48,7 @@ details on multi-container builds.
 """
 
 load("@rules_resim//private:resim_build.bzl", _resim_build = "resim_build")
+load("@rules_resim//private:resim_test_suite.bzl", _resim_test_suite_run = "resim_test_suite_run")
 
 resim_build = _resim_build
+resim_test_suite_run = _resim_test_suite_run
