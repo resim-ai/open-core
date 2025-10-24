@@ -76,4 +76,9 @@ resim_test_suite_run = rule(
         ),
     },
     executable = True,
+    doc = """A rule for running ReSim test suites easily
+
+This rule is designed to facilitate the running of ReSim test suites with a build created by the
+resim_build() rule. The label for the resim_build() target is passed to this rule to create a target
+which runs the test suite.""",
 )

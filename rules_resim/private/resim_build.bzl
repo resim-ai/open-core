@@ -183,4 +183,7 @@ resim_build = rule(
         ),
     },
     executable = True,
+    doc = """A rule for creating ReSim builds easily
+
+This rule is designed to facilitate the creation of ReSim single-container and multi-container resim builds.""",
 )
