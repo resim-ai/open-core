@@ -1,5 +1,6 @@
-name: Build & Push `rules_resim` Example Builds
+name: Build, Push, and Run `rules_resim` Example Builds
 on:
+  pull_request:
   push:
     branches:
       - 'main'
@@ -46,10 +47,10 @@ jobs:
         working-directory: ./rules_resim/examples
         run: bazel run //:simple_build
 
-      - name: Create Multi-Container Build
+      - name: Create and Run Multi-Container Build
         env:
           RESIM_VERSION: ${{ github.sha }}
           RESIM_BRANCH: ${{ github.head_ref || github.ref_name }}
         working-directory: ./rules_resim/examples
-        run: bazel run //:mcb_build
+        run: bazel run //:mcb_build_run
         
