@@ -1,0 +1,15 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@script_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "generate_cli_checksums",
+    srcs = ["generate_cli_checksums.py"],
+    data = ["//private:sources"],
+    env = {
+        "CLI_SOURCES_BZL_PATH": "$(location //private:sources)",
+    },
+    deps = [
+        requirement("httpx"),
+        requirement("tqdm"),
+    ],
+)

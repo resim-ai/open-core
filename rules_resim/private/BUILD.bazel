@@ -1,0 +1,42 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+exports_files([
+    "wrapper.sh.tpl",
+    "wrapper_mcb.sh.tpl",
+])
+
+bzl_library(
+    name = "bazel_tools_cache",
+    srcs = ["@bazel_tools//tools/build_defs/repo:cache.bzl"],
+)
+
+bzl_library(
+    name = "cli",
+    srcs = ["cli.bzl"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":bazel_tools_cache",
+        ":sources",
+    ],
+)
+
+bzl_library(
+    name = "resim_build",
+    srcs = ["resim_build.bzl"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":cli",
+        "@resim_cli//:defs",
+    ],
+)
+
+bzl_library(
+    name = "sources",
+    srcs = ["sources.bzl"],
+    visibility = ["//:__subpackages__"],
+)

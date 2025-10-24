@@ -1,0 +1,49 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@stardoc//stardoc:stardoc.bzl", "stardoc")
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//private:resim_build",
+    ],
+)
+
+bzl_library(
+    name = "extensions",
+    srcs = ["extensions.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//private:cli",
+    ],
+)
+
+stardoc(
+    name = "rules_docs",
+    out = "rules.md",
+    input = "defs.bzl",
+    deps = [":defs"],
+)
+
+stardoc(
+    name = "extensions_docs",
+    out = "extensions.md",
+    input = "extensions.bzl",
+    deps = [":extensions"],
+)
+
+sh_binary(
+    name = "update_docs",
+    srcs = ["update_docs.sh"],
+    data = [
+        ":extensions_docs",
+        ":rules_docs",
+    ],
+)

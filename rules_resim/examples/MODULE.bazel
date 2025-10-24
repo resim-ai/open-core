@@ -1,0 +1,41 @@
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+module(name = "rules_resim_examples")
+
+bazel_dep(name = "rules_oci", version = "2.2.6")
+bazel_dep(name = "rules_resim", version = "0.1.0")
+local_path_override(
+    module_name = "rules_resim",
+    path = "..",
+)
+
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "rules_python", version = "1.6.3")
+
+# TODO(mikebauer) May put this in rules_resim
+resim_version_extension = use_extension("@rules_resim_examples//:version.bzl", "resim_version_extension")
+use_repo(resim_version_extension, "resim_version")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "alpine",
+    image = "alpine",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+    tag = "latest",
+)
+use_repo(oci, "alpine")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    # This whole section is needed for transitive deps:
+    ignore_root_user_error = True,
+    python_version = "3.11",
+)
