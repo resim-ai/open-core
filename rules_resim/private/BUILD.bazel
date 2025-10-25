@@ -8,6 +8,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 exports_files([
     "wrapper.sh.tpl",
     "wrapper_mcb.sh.tpl",
+    "test_suite_wrapper.sh.tpl",
 ])
 
 bzl_library(
@@ -31,6 +32,17 @@ bzl_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":cli",
+        "@resim_cli//:defs",
+    ],
+)
+
+bzl_library(
+    name = "resim_test_suite",
+    srcs = ["resim_test_suite.bzl"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":cli",
+        ":resim_build",
         "@resim_cli//:defs",
     ],
 )

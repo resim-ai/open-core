@@ -13,6 +13,7 @@ bzl_library(
     visibility = ["//visibility:public"],
     deps = [
         "//private:resim_build",
+        "//private:resim_test_suite",
     ],
 )
 

@@ -60,10 +60,33 @@ EOF
 ```
 build --workspace_status_command=$(pwd)/workspace_status.sh
 ```
-Once this is complete, the `resim_build()` rule will infer the version and branch automatically and
-utilize them for your resim build. See [here](https://bazel.build/docs/user-manual#workspace-status)
-for more details."""
+With this setting in place the `resim_build()` rule will infer the version and branch automatically
+and utilize them for your resim build. See
+[here](https://bazel.build/docs/user-manual#workspace-status) for more details.
+
+Once you have a build, you can also run it against an existing resim test suite by defining a target
+with the `resim_test_suite_run()` rule:
+
+```
+resim_test_suite_run(
+    name = "simple_build_run",
+    resim_build = ":simple_build",
+    test_suite = "ReSim Test Suite",
+)
+```
+
+The project is inferred from the build, and some other batch parameters
+(e.g. `allowable_failure_percent` and `pool_labels`) are also configurable. With this, one can build
+the images, push them, register them as a build with ReSim, and run them against a test suite with a
+single comand:
+
+```
+bazel run //:simple_build_run # -- --other --flags --to --pass --to --the --resim --cli
+```
+"""
 
 load("@rules_resim//private:resim_build.bzl", _resim_build = "resim_build")
+load("@rules_resim//private:resim_test_suite.bzl", _resim_test_suite_run = "resim_test_suite_run")
 
 resim_build = _resim_build
+resim_test_suite_run = _resim_test_suite_run
