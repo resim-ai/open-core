@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+VERSION=$(cat "%{VERSION_FILE}")
+BRANCH=$(cat "%{BRANCH_FILE}")
+
 %{PUSH_CMDS}
 
 # Build the resim command
@@ -15,8 +18,8 @@ CMD="%{RESIM_CLI} builds create \
   --name \"%{RESIM_NAME}\" \
   --project \"%{PROJECT}\" \
   --system \"%{SYSTEM}\" \
-  --branch \"%{BRANCH}\" \
-  --version \"%{VERSION}\" \
+  --branch \"${BRANCH}\" \
+  --version \"${VERSION}\" \
   --description \"%{DESCRIPTION}\" \
   --build-spec \"%{BUILD_SPEC}\" \
   --env-files \"%{ENV_FILE_PATH}\""

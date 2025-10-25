@@ -6,6 +6,7 @@
 
 module(name = "rules_resim_examples")
 
+bazel_dep(name = "aspect_bazel_lib", version = "2.21.2")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "rules_resim", version = "0.1.0")
 local_path_override(
