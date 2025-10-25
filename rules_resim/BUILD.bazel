@@ -21,7 +21,6 @@ bzl_library(
     srcs = ["extensions.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//private:api_spec",
         "//private:cli",
     ],
 )

@@ -8,16 +8,33 @@
 # ReSim Extensions
 """
 
-load("@rules_resim//private:api_spec.bzl", _resim_api_spec = "resim_api_spec")
-load("@rules_resim//private:cli.bzl", _resim_cli = "resim_cli")
+load("@rules_resim//private:cli.bzl", "resim_cli", "resolve_cli_version")
 
-resim_cli = _resim_cli
-resim_api_spec = _resim_api_spec
+_versions = tag_class(
+    doc = """Tag class to specify the versions of fetched tools.""",
+    attrs = {
+        "cli_version": attr.string(mandatory = False, doc = "The CLI release version (e.g. v0.29.0)"),
+    },
+)
 
-def _extension_impl(_):
-    resim_cli(name = "resim_cli")
-    resim_api_spec(name = "resim_api_spec")
+def _extension_impl(module_ctx):
+    cli_version = resolve_cli_version(module_ctx)
+    resim_cli(name = "resim_cli", version = cli_version)
 
-resim_extension = module_extension(
+resim_cli_extension = module_extension(
     implementation = _extension_impl,
+    tag_classes = {
+        "versions": _versions,
+    },
+    doc = """Extension for pulling in the resim cli for multiple platforms.
+
+For example, if you use this rule in your `MODULE.bazel`:
+```
+resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
+use_repo(resim_cli, "resim_cli")
+```
+You can run the CLI like so.
+```
+bazel run @resim_cli//:resim
+```""",
 )

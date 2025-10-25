@@ -11,19 +11,32 @@ exports_files([
 ])
 
 bzl_library(
-    name = "cli",
-    srcs = ["cli.bzl"],
-    visibility = ["//:__subpackages__"],
+    name = "bazel_tools_cache",
+    srcs = ["@bazel_tools//tools/build_defs/repo:cache.bzl"],
 )
 
 bzl_library(
-    name = "api_spec",
-    srcs = ["api_spec.bzl"],
+    name = "cli",
+    srcs = ["cli.bzl"],
     visibility = ["//:__subpackages__"],
+    deps = [
+        ":bazel_tools_cache",
+        ":sources",
+    ],
 )
 
 bzl_library(
     name = "resim_build",
     srcs = ["resim_build.bzl"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":cli",
+        "@resim_cli//:defs",
+    ],
+)
+
+bzl_library(
+    name = "sources",
+    srcs = ["sources.bzl"],
     visibility = ["//:__subpackages__"],
 )

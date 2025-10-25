@@ -49,8 +49,8 @@ local_path_override(
     path = "./rules_resim",
 )
 
-resim_extension = use_extension("@rules_resim//:extensions.bzl", "resim_extension")
-use_repo(resim_extension, "resim_api_spec")
+resim_cli = use_extension("@rules_resim//:extensions.bzl", "resim_cli_extension")
+use_repo(resim_cli, "resim_cli")
 
 rules_ros2_non_module_deps = use_extension("@com_github_mvukov_rules_ros2//ros2:extensions.bzl", "non_module_deps")
 use_repo(
