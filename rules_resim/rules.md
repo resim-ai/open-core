@@ -41,6 +41,24 @@ configured in the `oci_push()` target. Builds can also be created for multiconta
 docker compose input. See [here](https://docs.resim.ai/guides/multi-container-builds/) for more
 details on multi-container builds.
 
+In order to utilize automatic git version and branch inference, you can set up a workspace status
+command in your repo like so:
+
+1. Add a `workspace_status.sh` script like so:
+```
+cat <<EOF
+STABLE_RESIM_VERSION $(git rev-parse HEAD)
+STABLE_RESIM_BRANCH $(git rev-parse --abbrev-ref HEAD)
+EOF
+```
+2. Add the following to your `.bazelrc`:
+```
+build --workspace_status_command=$(pwd)/workspace_status.sh
+```
+Once this is complete, the `resim_build()` rule will infer the version and branch automatically and
+utilize them for your resim build. See [here](https://bazel.build/docs/user-manual#workspace-status)
+for more details.
+
 <a id="resim_build"></a>
 
 ## resim_build
@@ -52,7 +70,11 @@ resim_build(<a href="#resim_build-name">name</a>, <a href="#resim_build-data">da
             <a href="#resim_build-image_pushes">image_pushes</a>, <a href="#resim_build-project">project</a>, <a href="#resim_build-resim_name">resim_name</a>, <a href="#resim_build-system">system</a>, <a href="#resim_build-version">version</a>)
 </pre>
 
-
+This rule creates a single or multi-container ReSim build when run. By default, version
+and branch information is gleaned from a workspace status command (through the
+`STABLE_RESIM_VERSION` and `STABLE_RESIM_BRANCH` variables) if it is employed. Otherwise, these
+values can be overridden using the attributes of this rule. If neither is employed, this target will
+fail to build.
 
 **ATTRIBUTES**
 
@@ -62,7 +84,7 @@ resim_build(<a href="#resim_build-name">name</a>, <a href="#resim_build-data">da
 | <a id="resim_build-name"></a>name |  A unique name for this target.   | <a href="https://bazel.build/concepts/labels#target-names">Name</a> | required |  |
 | <a id="resim_build-data"></a>data |  List of data runfiles   | <a href="https://bazel.build/concepts/labels">List of labels</a> | optional |  `[]`  |
 | <a id="resim_build-auto_create_branch"></a>auto_create_branch |  Whether to automatically create branch if it doesn't exist   | Boolean | optional |  `True`  |
-| <a id="resim_build-branch"></a>branch |  The name or ID of the branch to nest the build in, usually the associated git branch   | String | required |  |
+| <a id="resim_build-branch"></a>branch |  The name or ID of the branch to nest the build in, usually the associated git branch. Will override workspace status setting as described above.   | String | optional |  `""`  |
 | <a id="resim_build-build_spec"></a>build_spec |  Paths to main compose file (may use extends)   | <a href="https://bazel.build/concepts/labels">Label</a> | optional |  `None`  |
 | <a id="resim_build-build_spec_env"></a>build_spec_env |  Environment variables to set for the build_spec   | <a href="https://bazel.build/rules/lib/dict">Dictionary: String -> String</a> | optional |  `{}`  |
 | <a id="resim_build-description"></a>description |  The description of the build, often a commit message (can include markdown). For backwards compatibility reasons, if name is omitted, the description will be used   | String | required |  |
@@ -70,6 +92,6 @@ resim_build(<a href="#resim_build-name">name</a>, <a href="#resim_build-data">da
 | <a id="resim_build-project"></a>project |  The name or ID of the project to create the build in   | String | required |  |
 | <a id="resim_build-resim_name"></a>resim_name |  The name of the build   | String | optional |  `""`  |
 | <a id="resim_build-system"></a>system |  The name or ID of the system the build is an instance of   | String | required |  |
-| <a id="resim_build-version"></a>version |  The version of the build image, usually a commit ID   | String | required |  |
+| <a id="resim_build-version"></a>version |  The version of the build image, usually a commit ID. Will override workspace status stting as described above.   | String | optional |  `""`  |
 
 

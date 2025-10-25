@@ -40,3 +40,8 @@ bzl_library(
     srcs = ["sources.bzl"],
     visibility = ["//:__subpackages__"],
 )
+
+sh_binary(
+    name = "version_resolver",
+    srcs = ["version_resolver.sh"],
+)

@@ -46,8 +46,24 @@ def _resim_build_impl(ctx):
     if minor < 19:
         fail("Unsupported CLI version for rule: {}".format(RESIM_CLI_VERSION))
 
+    version_file = ctx.actions.declare_file(ctx.label.name + "_version.txt")
+    branch_file = ctx.actions.declare_file(ctx.label.name + "_branch.txt")
+    ctx.actions.run(
+        inputs = [ctx.info_file],
+        outputs = [version_file, branch_file],
+        mnemonic = "ResolveVersion",
+        executable = ctx.executable._version_resolver,
+        env = {
+            "BRANCH_FILE_PATH": branch_file.path,
+            "RESIM_BRANCH": ctx.attr.branch,
+            "RESIM_VERSION": ctx.attr.version,
+            "STAMP_FILE_PATH": ctx.info_file.path,
+            "VERSION_FILE_PATH": version_file.path,
+        },
+    )
+
     out = ctx.actions.declare_file(ctx.label.name + ".sh")
-    runfiles = ctx.runfiles(files = [out, ctx.executable._resim_cli])
+    runfiles = ctx.runfiles(files = [out, version_file, branch_file, ctx.executable._resim_cli])
     runfiles = runfiles.merge(ctx.runfiles(transitive_files = depset(ctx.files.data)))
 
     push_cmds = []
@@ -71,7 +87,7 @@ def _resim_build_impl(ctx):
             template = ctx.file._wrapper_template,
             substitutions = {
                 "%{AUTO_CREATE_BRANCH}": str(ctx.attr.auto_create_branch).lower(),
-                "%{BRANCH}": ctx.attr.branch,
+                "%{BRANCH_FILE}": branch_file.short_path,
                 "%{DESCRIPTION}": ctx.attr.description,
                 "%{PROJECT}": ctx.attr.project,
                 "%{PUSH_CMDS}": "\n".join(push_cmds),
@@ -80,7 +96,7 @@ def _resim_build_impl(ctx):
                 "%{RESIM_NAME}": ctx.attr.resim_name if ctx.attr.resim_name else ctx.attr.name,
                 "%{SYSTEM}": ctx.attr.system,
                 "%{TAGFILE_PATH}": tagfile_path,
-                "%{VERSION}": ctx.attr.version,
+                "%{VERSION_FILE}": version_file.short_path,
             },
             is_executable = True,
         )
@@ -99,7 +115,7 @@ def _resim_build_impl(ctx):
             template = ctx.file._wrapper_mcb_template,
             substitutions = {
                 "%{AUTO_CREATE_BRANCH}": str(ctx.attr.auto_create_branch).lower(),
-                "%{BRANCH}": ctx.attr.branch,
+                "%{BRANCH_FILE}": branch_file.short_path,
                 "%{BUILD_SPEC}": ctx.file.build_spec.short_path,
                 "%{DESCRIPTION}": ctx.attr.description,
                 "%{ENV_FILE_PATH}": env_file.short_path,
@@ -108,11 +124,11 @@ def _resim_build_impl(ctx):
                 "%{RESIM_CLI}": ctx.executable._resim_cli.short_path,
                 "%{RESIM_NAME}": ctx.attr.resim_name if ctx.attr.resim_name else ctx.attr.name,
                 "%{SYSTEM}": ctx.attr.system,
-                "%{VERSION}": ctx.attr.version,
+                "%{VERSION_FILE}": version_file.short_path,
             },
             is_executable = True,
         )
-    return [DefaultInfo(files = depset([out]), runfiles = runfiles, executable = out)]
+    return [DefaultInfo(files = depset([out, version_file, branch_file]), runfiles = runfiles, executable = out)]
 
 resim_build = rule(
     implementation = _resim_build_impl,
@@ -122,8 +138,8 @@ resim_build = rule(
             doc = "Whether to automatically create branch if it doesn't exist",
         ),
         "branch": attr.string(
-            mandatory = True,
-            doc = "The name or ID of the branch to nest the build in, usually the associated git branch",
+            default = "",
+            doc = "The name or ID of the branch to nest the build in, usually the associated git branch. Will override workspace status setting as described above.",
         ),
         "build_spec": attr.label(
             allow_single_file = True,
@@ -157,14 +173,19 @@ resim_build = rule(
             doc = "The name or ID of the system the build is an instance of",
         ),
         "version": attr.string(
-            mandatory = True,
-            doc = "The version of the build image, usually a commit ID",
+            default = "",
+            doc = "The version of the build image, usually a commit ID. Will override workspace status stting as described above.",
         ),
         "_resim_cli": attr.label(
             allow_single_file = True,
             executable = True,
             default = "@resim_cli//:resim",
             cfg = "target",
+        ),
+        "_version_resolver": attr.label(
+            executable = True,
+            default = ":version_resolver",
+            cfg = "exec",  # Run during the build
         ),
         "_wrapper_mcb_template": attr.label(
             allow_single_file = True,
@@ -176,4 +197,9 @@ resim_build = rule(
         ),
     },
     executable = True,
+    doc = """This rule creates a single or multi-container ReSim build when run. By default, version
+and branch information is gleaned from a workspace status command (through the
+`STABLE_RESIM_VERSION` and `STABLE_RESIM_BRANCH` variables) if it is employed. Otherwise, these
+values can be overridden using the attributes of this rule. If neither is employed, this target will
+fail to build.""",
 )
