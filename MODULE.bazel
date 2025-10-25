@@ -139,6 +139,9 @@ register_toolchains(
 resim_version_extension = use_extension("@resim_open_core//:version.bzl", "resim_version_extension")
 use_repo(resim_version_extension, "resim_version")
 
+resim_api_spec_extension = use_extension("@resim_open_core//resim-python-client:api_spec.bzl", "resim_api_spec_extension")
+use_repo(resim_api_spec_extension, "resim_api_spec")
+
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "debian_slim",

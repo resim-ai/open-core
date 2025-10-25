@@ -12,7 +12,7 @@ def _resim_api_spec_impl(rctx):
     rctx.download(
         url = "https://api.resim.ai/v1/openapi.yaml",
         output = "openapi.yaml",
-        sha256 = "dd75ac049361cfc8d7f16626f260fad65e02a1e84201eaff8dc798d514cdf25f",
+        sha256 = "e1942cf0c29939db1f10bb914450a62b8fd287da04b6b80a61907e1eafd3f60d",
         executable = True,
     )
     rctx.file("BUILD", rctx.read(rctx.attr._build_file))
@@ -35,4 +35,11 @@ use_repo(resim_extension, "resim_api_spec")
 ```
 You'll have a filegroup with the `openapi.yaml` available at `@resim_api_spec`.
 """,
+)
+
+def _extension_impl(_):
+    resim_api_spec(name = "resim_api_spec")
+
+resim_api_spec_extension = module_extension(
+    implementation = _extension_impl,
 )
