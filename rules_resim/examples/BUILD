@@ -7,7 +7,7 @@
 load("@resim_version//:defs.bzl", branch = "RESIM_BRANCH", version = "RESIM_VERSION")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_resim//:defs.bzl", "resim_build")
+load("@rules_resim//:defs.bzl", "resim_build", "resim_test_suite_run")
 
 ################################################################################
 # Common
@@ -152,4 +152,11 @@ resim_build(
     resim_name = "Simple MCB Build",
     system = "ReSim One System",
     version = version,
+)
+
+resim_test_suite_run(
+    name = "mcb_build_run",
+    allowable_failure_percent = 70,
+    resim_build = ":mcb_build",
+    test_suite = "ReSim Test Suite",
 )

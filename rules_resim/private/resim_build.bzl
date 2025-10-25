@@ -17,6 +17,13 @@ ImagePushInfo = provider(
     },
 )
 
+ReSimBuildInfo = provider(
+    doc = "Carries project information from build rules to other rules",
+    fields = {
+        "project": "The name or ID of the project for this build",
+    },
+)
+
 def _get_image_uri_aspect_impl(_target, ctx):
     repo = getattr(ctx.rule.attr, "repository", None)
     tags = getattr(ctx.rule.attr, "remote_tags", [])
@@ -112,7 +119,7 @@ def _resim_build_impl(ctx):
             },
             is_executable = True,
         )
-    return [DefaultInfo(files = depset([out]), runfiles = runfiles, executable = out)]
+    return [DefaultInfo(files = depset([out]), runfiles = runfiles, executable = out), ReSimBuildInfo(project = ctx.attr.project)]
 
 resim_build = rule(
     implementation = _resim_build_impl,
@@ -176,4 +183,7 @@ resim_build = rule(
         ),
     },
     executable = True,
+    doc = """A rule for creating ReSim builds easily
+
+This rule is designed to facilitate the creation of ReSim single-container and multi-container resim builds.""",
 )
