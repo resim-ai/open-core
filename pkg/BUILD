@@ -266,6 +266,47 @@ py_wheel(
     }),
 )
 
+py_package(
+    name = "sdk_package",
+    packages = [
+        "resim.metrics.proto",
+        "resim.metrics.python",
+        "resim.sdk",
+        "resim.utils.proto",
+        "resim_python_client",
+    ],
+    deps = [
+        "//resim/sdk",
+    ],
+)
+
+genrule(
+    name = "combined_sdk_requires",
+    srcs = [
+        "//resim-python-client:requirements.txt",
+        "//resim/sdk:requirements.txt",
+        ":extra_requires.txt",
+    ],
+    outs = ["combined_sdk_requirements.txt"],
+    cmd = "cat $(SRCS) > $@",
+)
+
+py_wheel(
+    name = "sdk_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_sdk",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    python_tag = PY_VERSION_TAG,
+    requires_file = ":combined_sdk_requires",
+    summary = "ReSim SDK Libraries.",
+    version = version,
+    deps = [":sdk_package"],
+)
+
 py_console_script_binary(
     name = "twine",
     pkg = "@resim_pkg_deps//twine",
