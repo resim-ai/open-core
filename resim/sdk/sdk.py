@@ -1,5 +1,7 @@
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from enum import Enum
+import mimetypes
 import os
 import tempfile
 from typing import List, Optional
@@ -17,18 +19,65 @@ from resim_python_client.models.project import Project
 
 
 @dataclass
+class Log:
+    filename: str
+    path: Path
+    size: int
+    log_type: "LogType"
+
+
+class LogType(Enum):
+    IMAGE = "image"
+    MP4 = "mp4"
+    MCAP = "mcap"
+    ZIP = "zip"
+    OTHER = "other"
+
+
+def _determine_log_type(path: Path) -> LogType:
+    mime, _ = mimetypes.guess_type(str(path))
+    suffixes = [s.lower() for s in path.suffixes]
+
+    if any(s == ".mcap" for s in suffixes):
+        return LogType.MCAP
+    if mime is not None:
+        if mime.startswith("image/"):
+            return LogType.IMAGE
+        if mime == "video/mp4":
+            return LogType.MP4
+        if mime in ("application/zip", "application/x-zip-compressed"):
+            return LogType.ZIP
+    # Fallbacks based on extensions if MIME is None or unrecognized
+    if any(s == ".mp4" for s in suffixes):
+        return LogType.MP4
+    if any(s == ".zip" for s in suffixes):
+        return LogType.ZIP
+    return LogType.OTHER
+
+
+@dataclass
 class Test(Emitter):
     name: str
     emissions_file: Path
     status: JobStatus
+    logs: list[Log] = field(default_factory=list)
 
     def __init__(self, name: str, filename: Path):
         self.name = name
         self.emissions_file = filename
+        self.logs = []
         super().__init__(output_path=filename)
 
-    def add_file(self, filename: Path):
-        raise NotImplementedError("Not implemented")
+    def add_file(self, filename: Path) -> Log:
+        path = filename if isinstance(filename, Path) else Path(filename)
+        if not path.exists() or not path.is_file():
+            raise ValueError(f"File not found or not a regular file: {path}")
+
+        size = path.stat().st_size
+        log_type = _determine_log_type(path)
+        log = Log(filename=path.name, path=path, size=size, log_type=log_type)
+        self.logs.append(log)
+        return log
 
 
 @dataclass
