@@ -61,6 +61,11 @@ components:
               $ref: '#/components/schemas/experienceTagID'
             type: array
         type: object
+    architecture:
+      enum:
+      - AMD64
+      - ARM64
+      type: string
     archived:
       type: boolean
     associatedAccount:
@@ -102,6 +107,8 @@ components:
           $ref: '#/components/schemas/batchJobStatusCounts'
         jobsMetricsStatus:
           $ref: '#/components/schemas/metricStatus'
+        lastRunTimestamp:
+          $ref: '#/components/schemas/timestamp'
         lastUpdatedTimestamp:
           $ref: '#/components/schemas/timestamp'
         metricsBuildID:
@@ -118,6 +125,8 @@ components:
           $ref: '#/components/schemas/poolLabels'
         projectID:
           $ref: '#/components/schemas/projectID'
+        runCounter:
+          $ref: '#/components/schemas/runCounter'
         status:
           $ref: '#/components/schemas/batchStatus'
         statusHistory:
@@ -354,6 +363,8 @@ components:
           $ref: '#/components/schemas/projectID'
         systemID:
           $ref: '#/components/schemas/systemID'
+        updateTimestamp:
+          $ref: '#/components/schemas/timestamp'
         userID:
           $ref: '#/components/schemas/userID'
         version:
@@ -370,6 +381,7 @@ components:
       - imageUri
       - buildSpecification
       - creationTimestamp
+      - updateTimestamp
       - userID
       - orgID
       type: object
@@ -394,6 +406,17 @@ components:
     buildVersion:
       minLength: 1
       type: string
+    bulkArchiveExperiencesInput:
+      allOf:
+      - $ref: '#/components/schemas/selectExperiencesInput'
+      - required:
+        - experienceIDs
+      - properties:
+          experienceIDs:
+            items:
+              $ref: '#/components/schemas/experienceID'
+            type: array
+        type: object
     checksum:
       type: string
     compareBatchTest:
@@ -460,6 +483,8 @@ components:
       - WARNING
       - PASSED
       type: string
+    containerName:
+      type: string
     createBranchInput:
       properties:
         branchType:
@@ -525,6 +550,9 @@ components:
       type: object
     createExperienceInput:
       properties:
+        cacheExempt:
+          description: If true, the experience will not be cached.
+          type: boolean
         containerTimeoutSeconds:
           format: int32
           type: integer
@@ -598,6 +626,8 @@ components:
       type: object
     createSystemInput:
       properties:
+        architecture:
+          $ref: '#/components/schemas/architecture'
         build_gpus:
           type: integer
         build_memory_mib:
@@ -665,6 +695,82 @@ components:
       - systemID
       - experiences
       type: object
+    createWorkflowInput:
+      properties:
+        ciWorkflowLink:
+          type: string
+        description:
+          type: string
+        name:
+          type: string
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/workflowSuiteInput'
+          type: array
+      required:
+      - name
+      - description
+      - workflowSuites
+      type: object
+    createWorkflowRunInput:
+      properties:
+        allowableFailurePercent:
+          nullable: true
+          type: integer
+        associatedAccount:
+          $ref: '#/components/schemas/associatedAccount'
+        buildID:
+          $ref: '#/components/schemas/buildID'
+        parameters:
+          $ref: '#/components/schemas/batchParameters'
+        poolLabels:
+          $ref: '#/components/schemas/poolLabels'
+        triggeredVia:
+          $ref: '#/components/schemas/triggeredVia'
+      required:
+      - buildID
+      type: object
+    createWorkflowSuiteInput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+      required:
+      - testSuiteID
+      - enabled
+      type: object
+    createWorkflowSuiteOutput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+        workflowID:
+          $ref: '#/components/schemas/workflowID'
+      required:
+      - workflowID
+      - testSuiteID
+      - enabled
+      type: object
+    createWorkflowSuitesInput:
+      properties:
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/createWorkflowSuiteInput'
+          type: array
+      required:
+      - workflowSuites
+      type: object
+    createWorkflowSuitesOutput:
+      properties:
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/createWorkflowSuiteOutput'
+          type: array
+      required:
+      - workflowSuites
+      type: object
     customMetric:
       properties:
         name:
@@ -687,6 +793,10 @@ components:
           $ref: '#/components/schemas/batchID'
         buildID:
           $ref: '#/components/schemas/buildID'
+        containers:
+          items:
+            $ref: '#/components/schemas/containerName'
+          type: array
         poolLabels:
           $ref: '#/components/schemas/poolLabels'
         testSuiteID:
@@ -705,6 +815,17 @@ components:
         namespace:
           type: string
       type: object
+    deleteWorkflowSuitesInput:
+      properties:
+        testSuiteIDs:
+          items:
+            $ref: '#/components/schemas/testSuiteID'
+          type: array
+      required:
+      - testSuiteIDs
+      type: object
+    enabled:
+      type: boolean
     environmentVariable:
       properties:
         name:
@@ -771,9 +892,22 @@ components:
         errorCode:
           description: Standardized error code (e.g., UNKNOWN_ERROR, NONZERO_EXIT_CODE)
           type: string
+        errorText:
+          description: Error text
+          type: string
         metadata:
           description: Error metadata
           type: object
+        parentID:
+          description: ID of the parent object (e.g., job ID, batch ID)
+          format: uuid
+          type: string
+        parentType:
+          description: Type of the parent object (e.g., JOB, BATCH)
+          type: string
+        runCounter:
+          description: Run counter of the error
+          type: integer
       required:
       - errorCode
       type: object
@@ -787,6 +921,8 @@ components:
     experience:
       properties:
         archived:
+          type: boolean
+        cacheExempt:
           type: boolean
         containerTimeoutSeconds:
           format: int32
@@ -836,6 +972,7 @@ components:
       - creationTimestamp
       - userID
       - orgID
+      - cacheExempt
       type: object
     experienceFilterInput:
       properties:
@@ -873,6 +1010,78 @@ components:
     experienceName:
       minLength: 1
       type: string
+    experienceSyncConfig:
+      properties:
+        experiences:
+          items:
+            $ref: '#/components/schemas/experienceSyncExperience'
+          type: array
+        managedExperienceTags:
+          items:
+            $ref: '#/components/schemas/experienceTagName'
+          type: array
+        managedTestSuites:
+          items:
+            $ref: '#/components/schemas/experienceSyncTestSuite'
+          type: array
+      required:
+      - experiences
+      - managedTestSuites
+      - managedExperienceTags
+      type: object
+    experienceSyncExperience:
+      properties:
+        archived:
+          type: boolean
+        cacheExempt:
+          type: boolean
+        containerTimeoutSeconds:
+          format: int32
+          type: integer
+        description:
+          type: string
+        environmentVariables:
+          items:
+            $ref: '#/components/schemas/environmentVariable'
+          type: array
+        experienceID:
+          $ref: '#/components/schemas/experienceID'
+        locations:
+          items:
+            type: string
+          type: array
+        name:
+          $ref: '#/components/schemas/experienceName'
+        profile:
+          $ref: '#/components/schemas/profile'
+        systems:
+          items:
+            type: string
+          type: array
+        tags:
+          items:
+            $ref: '#/components/schemas/experienceTagName'
+          type: array
+      required:
+      - name
+      - description
+      - locations
+      - tags
+      - systems
+      - archived
+      type: object
+    experienceSyncTestSuite:
+      properties:
+        experiences:
+          items:
+            $ref: '#/components/schemas/experienceName'
+          type: array
+        name:
+          $ref: '#/components/schemas/testSuiteName'
+      required:
+      - name
+      - experiences
+      type: object
     experienceTag:
       properties:
         creationTimestamp:
@@ -943,6 +1152,16 @@ components:
           format: int32
           type: integer
       type: object
+    getWorkflowSuiteOutput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+      required:
+      - testSuiteID
+      - enabled
+      type: object
     job:
       properties:
         batchID:
@@ -980,6 +1199,8 @@ components:
           $ref: '#/components/schemas/metricStatus'
         jobStatus:
           $ref: '#/components/schemas/jobStatus'
+        lastRunTimestamp:
+          $ref: '#/components/schemas/timestamp'
         lastUpdatedTimestamp:
           $ref: '#/components/schemas/timestamp'
         orgID:
@@ -990,12 +1211,16 @@ components:
           $ref: '#/components/schemas/batchParameters'
         projectID:
           $ref: '#/components/schemas/projectID'
+        runCounter:
+          $ref: '#/components/schemas/runCounter'
         statusHistory:
           $ref: '#/components/schemas/jobStatusHistory'
         systemID:
           $ref: '#/components/schemas/systemID'
         userID:
           $ref: '#/components/schemas/userID'
+        workerID:
+          type: string
       type: object
     jobID:
       format: uuid
@@ -1135,6 +1360,13 @@ components:
           type: string
         total:
           type: integer
+      type: object
+    listBatchErrorsOutput:
+      properties:
+        errors:
+          items:
+            $ref: '#/components/schemas/executionError'
+          type: array
       type: object
     listBatchLogsOutput:
       properties:
@@ -1451,6 +1683,45 @@ components:
             $ref: '#/components/schemas/viewObject'
           type: array
       type: object
+    listWorkflowRunsOutput:
+      properties:
+        nextPageToken:
+          type: string
+        total:
+          type: integer
+        workflowRuns:
+          items:
+            $ref: '#/components/schemas/workflowRun'
+          type: array
+      required:
+      - workflowRuns
+      - nextPageToken
+      - total
+      type: object
+    listWorkflowSuitesOutput:
+      properties:
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/workflowSuiteOutput'
+          type: array
+      required:
+      - workflowSuites
+      type: object
+    listWorkflowsOutput:
+      properties:
+        nextPageToken:
+          type: string
+        total:
+          type: integer
+        workflows:
+          items:
+            $ref: '#/components/schemas/workflow'
+          type: array
+      required:
+      - workflows
+      - nextPageToken
+      - total
+      type: object
     log:
       properties:
         checksum:
@@ -1663,6 +1934,7 @@ components:
       enum:
       - STANDARD
       - EXTERNAL_FILE
+      - VIDEO
       type: string
     metricsDataURL:
       format: uri
@@ -2031,6 +2303,11 @@ components:
           items:
             $ref: '#/components/schemas/jobID'
           type: array
+        syncBatch:
+          default: false
+          type: boolean
+      required:
+      - syncBatch
       type: object
     rerunBatchOutput:
       properties:
@@ -2102,6 +2379,8 @@ components:
       type: object
     system:
       properties:
+        architecture:
+          $ref: '#/components/schemas/architecture'
         archived:
           $ref: '#/components/schemas/archived'
         build_gpus:
@@ -2153,6 +2432,7 @@ components:
       - build_memory_mib
       - build_gpus
       - build_shared_memory_mb
+      - architecture
       - metrics_build_vcpus
       - metrics_build_memory_mib
       - metrics_build_gpus
@@ -2418,6 +2698,9 @@ components:
       type: object
     updateExperienceFields:
       properties:
+        cacheExempt:
+          description: If true, the experience will not be cached.
+          type: boolean
         containerTimeoutSeconds:
           format: int32
           type: integer
@@ -2500,6 +2783,8 @@ components:
       type: object
     updateSystemInput:
       properties:
+        architecture:
+          $ref: '#/components/schemas/architecture'
         build_gpus:
           type: integer
         build_memory_mib:
@@ -2520,6 +2805,57 @@ components:
           type: integer
         name:
           type: string
+      type: object
+    updateWorkflowInput:
+      properties:
+        ciWorkflowLink:
+          nullable: true
+          type: string
+        description:
+          type: string
+        name:
+          type: string
+      type: object
+    updateWorkflowSuiteInput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+      required:
+      - testSuiteID
+      - enabled
+      type: object
+    updateWorkflowSuiteOutput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+        workflowID:
+          $ref: '#/components/schemas/workflowID'
+      required:
+      - testSuiteID
+      - workflowID
+      - enabled
+      type: object
+    updateWorkflowSuitesInput:
+      properties:
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/updateWorkflowSuiteInput'
+          type: array
+      required:
+      - workflowSuites
+      type: object
+    updateWorkflowSuitesOutput:
+      properties:
+        workflowSuites:
+          items:
+            $ref: '#/components/schemas/updateWorkflowSuiteOutput'
+          type: array
+      required:
+      - workflowSuites
       type: object
     userID:
       type: string
@@ -2580,6 +2916,111 @@ components:
     viewUpdateID:
       readOnly: true
       type: integer
+    workflow:
+      properties:
+        archived:
+          $ref: '#/components/schemas/archived'
+        ciWorkflowLink:
+          nullable: true
+          type: string
+        creationTimestamp:
+          $ref: '#/components/schemas/timestamp'
+        description:
+          type: string
+        lastRunTimestamp:
+          $ref: '#/components/schemas/timestamp'
+        name:
+          type: string
+        orgID:
+          $ref: '#/components/schemas/orgID'
+        projectID:
+          $ref: '#/components/schemas/projectID'
+        updateTimestamp:
+          $ref: '#/components/schemas/timestamp'
+        userID:
+          $ref: '#/components/schemas/userID'
+        workflowID:
+          $ref: '#/components/schemas/workflowID'
+      required:
+      - workflowID
+      - projectID
+      - name
+      - description
+      - creationTimestamp
+      - userID
+      - orgID
+      - archived
+      type: object
+    workflowID:
+      format: uuid
+      type: string
+    workflowRun:
+      properties:
+        associatedAccount:
+          $ref: '#/components/schemas/associatedAccount'
+        buildID:
+          $ref: '#/components/schemas/buildID'
+        creationTimestamp:
+          $ref: '#/components/schemas/timestamp'
+        orgID:
+          $ref: '#/components/schemas/orgID'
+        triggeredVia:
+          $ref: '#/components/schemas/triggeredVia'
+        userID:
+          $ref: '#/components/schemas/userID'
+        workflowID:
+          $ref: '#/components/schemas/workflowID'
+        workflowRunID:
+          $ref: '#/components/schemas/workflowRunID'
+        workflowRunTestSuites:
+          items:
+            $ref: '#/components/schemas/workflowRunTestSuite'
+          type: array
+      required:
+      - workflowRunID
+      - workflowID
+      - creationTimestamp
+      - buildID
+      - userID
+      - orgID
+      - workflowRunTestSuites
+      type: object
+    workflowRunID:
+      format: uuid
+      type: string
+    workflowRunTestSuite:
+      properties:
+        batchID:
+          $ref: '#/components/schemas/batchID'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+      required:
+      - testSuiteID
+      - batchID
+      type: object
+    workflowSuiteInput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuiteID:
+          $ref: '#/components/schemas/testSuiteID'
+      required:
+      - testSuiteID
+      - enabled
+      type: object
+    workflowSuiteOutput:
+      properties:
+        enabled:
+          $ref: '#/components/schemas/enabled'
+        testSuite:
+          $ref: '#/components/schemas/testSuite'
+        workflowID:
+          $ref: '#/components/schemas/workflowID'
+      required:
+      - workflowID
+      - testSuite
+      - enabled
+      type: object
   securitySchemes:
     OAuth:
       description: This API uses OAuth 2
@@ -2606,6 +3047,8 @@ components:
             systems:write: Write system data.
             view:read: Read view data.
             view:write: Write view data.
+            workflows:read: Read workflow data.
+            workflows:write: Write workflow data.
           tokenUrl: https://resim.us.auth0.com/oauth/token
         clientCredentials:
           scopes:
@@ -2627,6 +3070,8 @@ components:
             systems:write: Write system data.
             view:read: Read view data.
             view:write: Write view data.
+            workflows:read: Read workflow data.
+            workflows:write: Write workflow data.
           tokenUrl: https://resim.us.auth0.com/oauth/token
         implicit:
           authorizationUrl: https://resim.us.auth0.com/authorize
@@ -2649,6 +3094,8 @@ components:
             systems:write: Write system data.
             view:read: Read view data.
             view:write: Write view data.
+            workflows:read: Read workflow data.
+            workflows:write: Write workflow data.
       type: oauth2
 info:
   title: ReRun API
@@ -2809,6 +3256,11 @@ paths:
           > "2024-01-01T00:00:00Z"
         in: query
         name: search
+        schema:
+          type: string
+      - description: Filter batches by a text string on batch name and build version
+        in: query
+        name: text
         schema:
           type: string
       - $ref: '#/components/parameters/pageSize'
@@ -3039,6 +3491,40 @@ paths:
         - batches:read
       tags:
       - batches
+  /projects/{projectID}/batches/{batchID}/errors:
+    get:
+      description: Returns the errors associated with a given batch ID
+      operationId: listBatchErrors
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: batchID
+        required: true
+        schema:
+          $ref: '#/components/schemas/batchID'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listBatchErrorsOutput'
+          description: OK
+        "204":
+          description: No errors found for batch
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - batches:read
+      tags:
+      - batches
+      - errors
   /projects/{projectID}/batches/{batchID}/jobs:
     get:
       description: List the jobs in the given batch.
@@ -4539,6 +5025,11 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/projectID'
+      - description: Filter builds by their name or description
+        in: query
+        name: text
+        schema:
+          type: string
       - $ref: '#/components/parameters/pageSize'
       - $ref: '#/components/parameters/pageToken'
       - $ref: '#/components/parameters/orderBy'
@@ -5263,6 +5754,38 @@ paths:
         - experiences:read
       tags:
       - experiences
+  /projects/{projectID}/experiences/archive:
+    post:
+      description: Archives multiple experiences in bulk.
+      operationId: bulkArchiveExperiences
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bulkArchiveExperiencesInput'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: integer
+          description: Number of experiences successfully archived
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+      security:
+      - OAuth:
+        - experiences:write
+      tags:
+      - experiences
   /projects/{projectID}/metricsBuilds:
     get:
       description: Returns the list of metrics builds.
@@ -5279,6 +5802,11 @@ paths:
         name: systemID
         schema:
           format: uuid
+          type: string
+      - description: Free text filter on the metrics build name.
+        in: query
+        name: text
+        schema:
           type: string
       - $ref: '#/components/parameters/pageSize'
       - $ref: '#/components/parameters/pageToken'
@@ -5897,15 +6425,15 @@ paths:
         schema:
           format: uuid
           type: string
+      - in: query
+        name: archived
+        schema:
+          type: boolean
       - description: Filter test suites by name
         in: query
         name: name
         schema:
           type: string
-      - in: query
-        name: archived
-        schema:
-          type: boolean
       - description: Filter test suites by a text string on name and description
         in: query
         name: text
@@ -7059,6 +7587,443 @@ paths:
         - systems:write
       tags:
       - systems
+  /projects/{projectID}/workflows:
+    get:
+      description: Lists the workflows for a project.
+      operationId: listWorkflows
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - description: Filter branches by name
+        in: query
+        name: name
+        schema:
+          type: string
+      - description: Filter test suites by a text string on name and description
+        in: query
+        name: text
+        schema:
+          type: string
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - description: Filter workflows by test suite ID
+        in: query
+        name: testSuiteID
+        schema:
+          $ref: '#/components/schemas/testSuiteID'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageToken'
+      - $ref: '#/components/parameters/orderBy'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listWorkflowsOutput'
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
+    post:
+      description: Creates a new workflow.
+      operationId: createWorkflow
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createWorkflowInput'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflow'
+          description: Created
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "409":
+          $ref: '#/components/responses/alreadyExists'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+  /projects/{projectID}/workflows/{workflowID}:
+    get:
+      description: Gets a workflow by ID.
+      operationId: getWorkflow
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflow'
+          description: OK
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
+    patch:
+      description: Updates a workflow.
+      operationId: updateWorkflow
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateWorkflowInput'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflow'
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+  /projects/{projectID}/workflows/{workflowID}/runs:
+    get:
+      description: Lists the runs for a workflow.
+      operationId: listWorkflowRuns
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageToken'
+      - $ref: '#/components/parameters/orderBy'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listWorkflowRunsOutput'
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
+    post:
+      description: Creates a new workflow run.
+      operationId: createWorkflowRun
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createWorkflowRunInput'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflowRun'
+          description: Created
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+  /projects/{projectID}/workflows/{workflowID}/runs/{workflowRunID}:
+    get:
+      description: Gets a workflow run by ID.
+      operationId: getWorkflowRun
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      - in: path
+        name: workflowRunID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowRunID'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflowRun'
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
+  /projects/{projectID}/workflows/{workflowID}/test_suites:
+    delete:
+      description: Removes test suites from a workflow.
+      operationId: deleteWorkflowSuites
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deleteWorkflowSuitesInput'
+      responses:
+        "204":
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+    get:
+      description: Lists the suites for a workflow.
+      operationId: listWorkflowSuites
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listWorkflowSuitesOutput'
+          description: OK
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
+    patch:
+      description: Updates workflow test suites.
+      operationId: updateWorkflowSuites
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateWorkflowSuitesInput'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateWorkflowSuitesOutput'
+          description: OK
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+    post:
+      description: Adds test suites to a workflow.
+      operationId: createWorkflowSuites
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createWorkflowSuitesInput'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createWorkflowSuitesOutput'
+          description: Created
+        "400":
+          $ref: '#/components/responses/badRequest'
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+        "409":
+          $ref: '#/components/responses/conflict'
+      security:
+      - OAuth:
+        - workflows:write
+      tags:
+      - workflows
+  /projects/{projectID}/workflows/{workflowID}/test_suites/{testSuiteID}:
+    get:
+      description: Gets a specific workflow test suite.
+      operationId: getWorkflowSuite
+      parameters:
+      - in: path
+        name: projectID
+        required: true
+        schema:
+          $ref: '#/components/schemas/projectID'
+      - in: path
+        name: workflowID
+        required: true
+        schema:
+          $ref: '#/components/schemas/workflowID'
+      - in: path
+        name: testSuiteID
+        required: true
+        schema:
+          $ref: '#/components/schemas/testSuiteID'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workflowSuiteOutput'
+          description: OK
+        "401":
+          $ref: '#/components/responses/unauthenticated'
+        "404":
+          $ref: '#/components/responses/notFound'
+      security:
+      - OAuth:
+        - workflows:read
+      tags:
+      - workflows
   /quota:
     get:
       description: Get current quota usage and limits

@@ -269,10 +269,9 @@ py_wheel(
 py_package(
     name = "sdk_package",
     packages = [
-        "resim.metrics.proto",
+        "resim.auth.python",
         "resim.metrics.python",
         "resim.sdk",
-        "resim.utils.proto",
         "resim_python_client",
     ],
     deps = [
@@ -285,7 +284,6 @@ genrule(
     srcs = [
         "//resim-python-client:requirements.txt",
         "//resim/sdk:requirements.txt",
-        ":extra_requires.txt",
     ],
     outs = ["combined_sdk_requirements.txt"],
     cmd = "cat $(SRCS) > $@",

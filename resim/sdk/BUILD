@@ -6,6 +6,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim-python-client",
+        "//resim/auth/python:device_code_client",
+        "//resim/auth/python:username_password_client",
         "//resim/metrics/python:emissions",
     ],
 )
