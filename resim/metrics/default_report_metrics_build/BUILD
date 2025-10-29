@@ -5,7 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 load("@aspect_bazel_lib//lib:tar.bzl", "tar")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 
 tar(
     name = "entrypoint_layer",
@@ -22,7 +22,7 @@ oci_image(
     workdir = "/resim/metrics/default_report_metrics.runfiles/_main",
 )
 
-oci_tarball(
+oci_load(
     name = "default_report_metrics_build_tarball",
     image = ":default_report_metrics_build",
     repo_tags = ["default-report-metrics-build:latest"],

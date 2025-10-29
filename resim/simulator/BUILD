@@ -6,7 +6,7 @@
 
 load("@resim_version//:defs.bzl", branch = "RESIM_BRANCH", version = "RESIM_VERSION")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load", "oci_push")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_resim//:defs.bzl", "resim_build")
 
@@ -273,7 +273,7 @@ oci_image(
     workdir = "/sim_container_entrypoint.runfiles/_main",
 )
 
-oci_tarball(
+oci_load(
     name = "sim_build_tarball",
     image = ":drone-simulator",
     repo_tags = ["drone-simulator:latest"],
