@@ -16,6 +16,9 @@ from resim_python_client.api.batches import list_batches
 from resim_python_client.api.projects import list_projects
 from resim.metrics.fetch_all_pages import fetch_all_pages
 from resim_python_client.models.project import Project
+from resim_python_client.api.test_suites import create_test_suite, list_test_suites
+from resim_python_client.models.create_test_suite_input import CreateTestSuiteInput
+from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
 
 
 @dataclass
@@ -168,14 +171,18 @@ def get_project_id(client: AuthenticatedClient, project_name: str) -> str:
 
 
 def get_auth_client() -> AuthenticatedClient:
+    api_url = "https://dev-env-pr-2455.api.dev.resim.io/v1/"
+    auth_url = "https://resim-dev.us.auth0.com"
+    client_id = "Rg1F0ZOCBmVYje4UVrS3BKIh4T2nCW9y"
+
     if os.getenv("RESIM_USERNAME") and os.getenv("RESIM_PASSWORD"):
         return UsernamePasswordClient(
             username=os.getenv("RESIM_USERNAME"),
             password=os.getenv("RESIM_PASSWORD"),
         )
     else:
-        device_code_client = DeviceCodeClient()
+        auth_client = DeviceCodeClient(domain=auth_url, client_id=client_id)
         return AuthenticatedClient(
-            base_url="https://api.resim.ai/v1/",
-            token=device_code_client.get_jwt()["access_token"],
+            token = auth_client.get_jwt()["access_token"]
+            client = AuthenticatedClient(base_url=api_url, token=token)
         )

@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 
 py_library(
     name = "sdk",
@@ -13,3 +13,9 @@ py_library(
 )
 
 exports_files(["requirements.txt"])
+
+py_binary(
+    name = "test_sdk",
+    srcs = ["test_sdk.py"],
+    deps = [":sdk"],
+)
