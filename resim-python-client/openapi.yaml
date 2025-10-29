@@ -2736,6 +2736,42 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/runs/{runCounter}/tasksAndJobs:
+    get:
+      description: Returns a list of tasks and jobs for a given run counter
+      operationId: ListTasksAndJobsForRunCounter
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: runCounter
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/runCounter"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listTasksAndJobsForRunCounterOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}/suggestions:
     get:
       description: Returns a list of suggested batches to A/B compare against
@@ -3840,50 +3876,6 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
-    post:
-      description: Adds a log.  ID should be omitted and will be returned in the response.
-      operationId: createJobLog
-      security:
-        - OAuth:
-            - batches:write
-      tags:
-        - batches
-      parameters:
-        - name: projectID
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/projectID"
-        - name: batchID
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/batchID"
-        - name: jobID
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/jobID"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/jobLog"
-      responses:
-        "200":
-          description: OK  # We already have this log and it doesn't need to be created again
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/jobLog"
-        "201":
-          description: OK # We don't already have this log and it needs to be created (most common case)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/jobLog"
-        "401":
-          $ref: "#/components/responses/unauthenticated"
   /projects/{projectID}/batches/{batchID}/jobs/{jobID}/logs/{logID}:
     get:
       description: Get an individual log file
@@ -5190,69 +5182,6 @@ components:
             workflows:read: Read workflow data.
             workflows:write: Write workflow data.
   schemas:
-    taskID:
-      type: string
-      format: uuid
-    taskStatus:
-      type: string
-      enum:
-        - ASSIGNED
-        - CREATED
-        - DOWNLOADING
-        - PENDING
-        - SUBMITTED
-        - STARTING
-        - RUNNING
-        - POSTPROCESSING
-        - ERROR
-        - SUCCEEDED
-        - CANCELLED
-    updateTaskInput:
-      type: object
-      properties:
-        status:
-          $ref: "#/components/schemas/taskStatus"
-        workerID:
-          type: string
-          nullable: true
-        output:
-          type: string
-          nullable: true
-        runError:
-          $ref: "#/components/schemas/runError"
-    runError:
-      type: object
-      nullable: true
-      properties:
-        source:
-          $ref: "#/components/schemas/runErrorSource"
-        code:
-          type: integer
-        reason:
-          type: string
-          default: No exit reason provided
-        type:
-          $ref: "#/components/schemas/runErrorType"
-        executionStep:
-          $ref: "#/components/schemas/executionStep"
-    runErrorSource:
-      type: string
-      enum:
-        - container_exit
-        - error_txt
-      x-enum-varnames:
-        - RunErrorSourceContainerExit
-        - RunErrorSourceErrorTxt
-    runErrorType:
-      type: string
-      nullable: true
-      enum:
-        - CUSTOMER_CONTAINER_TIMED_OUT
-        - CUSTOMER_WORKLOAD_ERROR
-        - NONZERO_EXIT_CODE
-        - UNKNOWN_ERROR
-        - UNKNOWN_WORKER_ERROR
-        - ""
     excludedExperienceID:
       type: string
       format: uuid
@@ -6007,6 +5936,23 @@ components:
     batchID:
       type: string
       format: uuid
+    listTasksAndJobsForRunCounterOutput:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/jobAndTask"
+    jobAndTask:
+      type: object
+      properties:
+        job:
+          $ref: "#/components/schemas/jobID"
+        task:
+          $ref: "#/components/schemas/taskID"
+    taskID:
+      type: string
+      format: uuid
     batch:
       type: object
       required:
@@ -6351,6 +6297,52 @@ components:
         - METRICS
         - BATCH_METRICS
         - REPORT
+    taskStatus:
+      type: string
+      enum:
+        - ASSIGNED
+        - CREATED
+        - DOWNLOADING
+        - PENDING
+        - SUBMITTED
+        - STARTING
+        - RUNNING
+        - POSTPROCESSING
+        - COMPLETED
+        - ERROR
+        - CANCELED
+    runError:
+      type: object
+      nullable: true
+      properties:
+        source:
+          $ref: "#/components/schemas/runErrorSource"
+        code:
+          type: integer
+        reason:
+          type: string
+          nullable: true
+          default: No exit reason provided
+        type:
+          $ref: "#/components/schemas/runErrorType"
+        executionStep:
+          $ref: "#/components/schemas/executionStep"
+    runErrorSource:
+      type: string
+      enum:
+        - container_exit
+        - error_txt
+      x-enum-varnames:
+        - RunErrorSourceContainerExit
+        - RunErrorSourceErrorTxt
+    runErrorType:
+      type: string
+      nullable: true
+      enum:
+        - CUSTOMER_CONTAINER_TIMED_OUT
+        - CUSTOMER_WORKLOAD_ERROR
+        - NONZERO_EXIT_CODE
+        - UNKNOWN_ERROR
     logType:
       type: string
       enum:
@@ -7008,6 +7000,19 @@ components:
           $ref: "#/components/schemas/updateMask"
         build:
           $ref: "#/components/schemas/updateBuildFields"
+    updateTaskInput:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/taskStatus"
+        workerID:
+          type: string
+          nullable: true
+        output:
+          type: string
+          nullable: true
+        runError:
+          $ref: "#/components/schemas/runError"
     branchID:
       type: string
       format: uuid
@@ -8110,6 +8115,7 @@ components:
       enum:
         - NORMAL
         - DEBUG_EXPERIENCE
+        - LITE
     executionError:
       type: object
       properties:
