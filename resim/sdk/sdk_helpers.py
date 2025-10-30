@@ -1,7 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Callable
+from pathlib import Path
 from uuid import UUID
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
+from resim_python_client.types import UNSET
 from resim_python_client.client import AuthenticatedClient
 
 # Projects
@@ -29,10 +31,12 @@ from resim_python_client.api.test_suites import (
     list_test_suites,
     create_test_suite,
     add_experiences_to_test_suite,
+    revise_test_suite,
 )
 from resim_python_client.models.test_suite import TestSuite
 from resim_python_client.models.create_test_suite_input import CreateTestSuiteInput
 from resim_python_client.models.select_experiences_input import SelectExperiencesInput
+from resim_python_client.models.revise_test_suite_input import ReviseTestSuiteInput
 
 # Builds
 from resim_python_client.api.builds import (
@@ -47,11 +51,12 @@ from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
 from resim_python_client.models.list_tasks_and_jobs_for_run_counter_output import (
     ListTasksAndJobsForRunCounterOutput,
 )
-
-from resim_python_client.api.batches import create_batch_for_test_suite, update_task_status
+from resim_python_client.api.batches import create_batch_for_test_suite, update_task, create_job_log
 from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
-from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
 from resim_python_client.models.update_task_input import UpdateTaskInput
+from resim_python_client.models.task_status import TaskStatus
+from resim_python_client.models.job_log import JobLog
+from resim_python_client.models.log_type import LogType
 
 def is_valid_uuid(uuid: str) -> bool:
     try:
@@ -244,9 +249,9 @@ def create_or_revise_test_suite(
     client: AuthenticatedClient,
     project_id: str,
     system_id: str,
-    metrics_set_name: Optional[str] = None,
     test_suite_name: str,
     experience_names: list[str],
+    metrics_set_name: Optional[str] = None,
 ) -> tuple[str, dict[str, str]]:
     """Create a test suite if missing or add experiences to an existing one.
 
@@ -295,20 +300,21 @@ def create_or_revise_test_suite(
                     experiences=to_add,
                 ),
             )
-            # if the metrics set name is different, update the test suite
-            if metrics_set_name is not None and metrics_set_name != getattr(update_suite_resp, "metrics_set_name", None):
-                update_suite_resp = revise_test_suite.sync(
-                    project_id,
-                    client=client,
-                    test_suite_id=suite_id,
-                    body=ReviseTestSuiteInput(
-                        metrics_set_name=metrics_set_name,
-                    ),
             if update_suite_resp is None:
                 raise RuntimeError(
                     f"Failed to add experiences to test suite {test_suite_name}"
                 )
             suite_id = update_suite_resp.test_suite_id
+        # Update metrics set name if requested
+        if metrics_set_name is not None:
+            revise_resp = revise_test_suite.sync(
+                project_id=project_id,
+                client=client,
+                test_suite_id=suite_id,
+                body=ReviseTestSuiteInput(
+                    metrics_set_name=metrics_set_name,
+                ),
+            )
 
     return suite_id, experience_map
 
@@ -319,6 +325,7 @@ def upload_logs_for_batch_jobs(
     batch_obj: "Batch",  # forward reference; accepts object with .tests list
     batch_id: str,
     run_counter: int,
+    upload_log_fn: Optional[Callable[[AuthenticatedClient, str, str, str, Path], None]] = None,
 ) -> ListTasksAndJobsForRunCounterOutput:
     tasks_and_jobs = list_tasks_and_jobs_for_run_counter.sync(
         project_id,
@@ -330,43 +337,62 @@ def upload_logs_for_batch_jobs(
         raise RuntimeError(f"Failed to list tasks and jobs for batch {batch_id}")
 
     for jobAndTask in tasks_and_jobs.tasks:
-        job = jobAndTask.job
-        task = jobAndTask.task
-        experience_name = job.experience_name
-        experience_id = job.experience_id
+        job = jobAndTask.job_id
+        task = jobAndTask.task_id
+        experience_name = jobAndTask.experience_name
+        experience_id = jobAndTask.experience_id
         test = next((t for t in batch_obj.tests if t.name == experience_name), None)
         if test is None:
             raise RuntimeError(
                 f"Test {experience_name} not found in batch object for batch {batch_id}"
             )
-        # create a log object from the emissions file
-        log = Log(filename=test.emissions_file.name, path=test.emissions_file, size=test.emissions_file.stat().st_size, log_type=test.emissions_file.suffix)
         for log in test.logs:
-            upload_log(client, project_id, experience_id, job.job_id, task.task_id, log)
-
-        update_task_status(client, project_id, experience_id, job.job_id, task.task_id))
+            upload_job_log(
+                client,
+                project_id,
+                batch_id,
+                job,
+                log.path,
+                log.log_type,
+            )
+        # Mark task succeeded by default
+        update_task_status(client, task, TaskStatus.SUCCEEDED)
 
     return tasks_and_jobs
 
-def update_task_status(client: AuthenticatedClient, project_id: str, experience_id: str, job_id: str, task_id: str) -> None:
-    update_task_input = UpdateTaskInput(
-        status=TaskStatus.COMPLETED,
-    )
-    update_task_status.sync(
-        task_id,
+def update_task_status(client: AuthenticatedClient, task_id: str, status: TaskStatus = TaskStatus.SUCCEEDED) -> None:
+    body = UpdateTaskInput(status=status)
+    update_task.sync_detailed(
+        task_id=task_id,
         client=client,
-        body=update_task_input,
+        body=body,
     )
 
-def upload_log(client: AuthenticatedClient, project_id: str, experience_id: str, job_id: str, task_id: str, emissions_file: Path) -> None:
-    CreateLogInput(
-        file_name=log.filename,
-        file_size=log.size,
-        log_type=log.log_type,
-        job_id=job_id,
-        task_id=task_id,
-        experience_id=experience_id,
+def upload_job_log(
+    client: AuthenticatedClient,
+    project_id: str,
+    batch_id: str,
+    job_id: str,
+    file_path: Path,
+    log_type: LogType = LogType.OTHER_LOG,
+    location: Optional[str] = None,
+) -> JobLog:
+    body = JobLog(
+        file_name=file_path.name,
+        file_size=file_path.stat().st_size,
+        log_type=log_type,
+        location=location if location is not None else UNSET,  # type: ignore[name-defined]
     )
+    created = create_job_log.sync(
+        project_id=project_id,
+        batch_id=batch_id,
+        job_id=job_id,
+        client=client,
+        body=body,
+    )
+    if created is None:
+        raise RuntimeError("Failed to create job log")
+    return created
 
 def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
     pool_labels= ["resim:k8s:metrics2:lite"]
@@ -374,6 +400,7 @@ def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: 
         build_id=build_id,
         pool_labels=pool_labels,
         batch_name=batch_name,
+        
     )
     created = create_batch_for_test_suite.sync(
         project_id,
@@ -381,6 +408,7 @@ def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: 
         test_suite_id=suite_id,
         body=body,
     )
+    print(f"Created batch {created}")
     if created is None:
         raise RuntimeError(f"Failed to create batch for test suite {suite_id}")
     return created

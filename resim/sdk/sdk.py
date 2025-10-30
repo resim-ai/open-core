@@ -153,9 +153,9 @@ def init(
             auth_client,
             project_id,
             system_id,
-            metrics_set_name,
             test_suite or batch,
             [t.name for t in batch_obj.tests],
+            metrics_set_name=metrics_set_name,
         )
         batch_obj.experience_name_to_id = experience_map
         print(f"Prepared test suite {suite_id} with build {build_id}")
@@ -171,13 +171,13 @@ def init(
             project_id,
             batch_obj,
             batch.batch_id,
-            batch.run_counter,
+            0,
         )
  
 
 
 def get_auth_client() -> AuthenticatedClient:
-    api_url = "https://dev-env-pr-2455.api.dev.resim.io/v1/"
+    api_url = "https://dev-env-pr-2466.api.dev.resim.io/v1/"
     auth_url = "https://resim-dev.us.auth0.com"
     client_id = "Rg1F0ZOCBmVYje4UVrS3BKIh4T2nCW9y"
 
