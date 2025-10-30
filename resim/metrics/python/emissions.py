@@ -15,7 +15,6 @@ import numpy as np
 import numpy.typing as npt
 import yaml
 import logging
-from resim.metrics.python.metrics_utils import Timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +87,8 @@ def emit(
     topic_name: str,
     data: dict[str, Any],
     *,
-    timestamp: Optional[Union[int, Timestamp]] = None,
-    timestamps: Optional[
-        Union[list[int], list[Timestamp], npt.NDArray[np.int_]]
-    ] = None,
+    timestamp: Optional[int] = None,
+    timestamps: Optional[Union[list[int], npt.NDArray[np.int_]]] = None,
     event: bool = False,
     file_path: Path = DEFAULT_EMISSIONS_PATH,
     file: Optional[TextIOWrapper] = None,
@@ -179,10 +176,7 @@ def emit(
             "$data": data,
         }
         if timestamp is not None:
-            if isinstance(timestamp, Timestamp):
-                emission["$metadata"]["timestamp"] = timestamp.to_nanos()
-            else:
-                emission["$metadata"]["timestamp"] = timestamp
+            emission["$metadata"]["timestamp"] = timestamp
         # Set event flag if event is True and this is a single timestamp emission
         if event and timestamp is not None:
             emission["$metadata"]["event"] = True
@@ -399,7 +393,7 @@ class Emitter(AbstractContextManager):
         self,
         topic_name: str,
         data: dict[str, list[Any]],
-        timestamps: Optional[Union[list[int], list[Timestamp], npt.NDArray[np.int_]]],
+        timestamps: Optional[Union[list[int], npt.NDArray[np.int_]]],
     ) -> None:
         """
         Validate a series of datapoints.
@@ -610,10 +604,10 @@ class Emitter(AbstractContextManager):
         self,
         topic_name: str,
         data: dict[str, Any],
-        timestamp: Optional[Union[int, Timestamp]] = None,
+        timestamp: Optional[int] = None,
     ) -> None:
         """
-        Emit a single datapoint with optional timestamp.
+        Emit a single datapoint with optional timestamp (in nanoseconds).
 
         Args:
             topic_name: The name of the topic to emit the data to.
@@ -636,9 +630,7 @@ class Emitter(AbstractContextManager):
         self,
         topic_name: str,
         data: dict[str, list[Any]],
-        timestamps: Optional[
-            Union[list[int], list[Timestamp], npt.NDArray[np.int_]]
-        ] = None,
+        timestamps: Optional[Union[list[int], npt.NDArray[np.int_]]] = None,
     ) -> None:
         """
         Emit a series of datapoints with optional timestamps.
@@ -665,7 +657,7 @@ class Emitter(AbstractContextManager):
         self,
         topic_name: str,
         data: dict[str, Any],
-        timestamp: Union[int, Timestamp],
+        timestamp: int,
     ) -> None:
         """
         Emit an event with a timestamp.

@@ -107,7 +107,6 @@ py_library(
     deps = [
         requirement("numpy"),
         requirement("pyyaml"),
-        ":metrics_utils",
     ],
 )
 
