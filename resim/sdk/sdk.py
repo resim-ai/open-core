@@ -42,6 +42,8 @@ from resim_python_client.api.test_suites import add_experiences_to_test_suite
 from resim_python_client.api.batches import create_batch_for_test_suite
 from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
 from resim_python_client.models.select_experiences_input import SelectExperiencesInput
+from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
+from resim_python_client.models.list_tasks_and_jobs_for_run_counter_output import ListTasksAndJobsForRunCounterOutput
 
 @dataclass
 class Log:
@@ -112,6 +114,7 @@ class Batch:
     branch: Optional[str] = None
     version: Optional[str] = None
     tests: list[Test] = field(default_factory=list)
+    experience_name_to_id: dict[str, str] = field(default_factory=dict)
 
     def __init__(
         self,
@@ -128,6 +131,7 @@ class Batch:
         self.branch = branch
         self.version = version
         self.tests = []
+        self.experience_name_to_id = {}
 
     @contextmanager
     def run_test(self, name: str):
@@ -194,6 +198,7 @@ def init(
         print(f"Created build {build_id} for branch {branch_id}")
         
         suite_id = None
+        experience_name_to_id = {}
         if test_suite is None:
             test_suite = batch
         suite_id = (
@@ -204,6 +209,13 @@ def init(
         if suite_id is None:
             # create a new test suite
             # TODO(mattc): sync metrics set and add to suite
+            experience_map = upsert_experiences_map(
+                auth_client,
+                project_id,
+                system_id,
+                [t.name for t in batch_obj.tests],
+            )
+            batch_obj.experience_name_to_id = experience_map
             new_suite_resp = create_test_suite.sync(
                 project_id,
                 client=auth_client,
@@ -211,10 +223,7 @@ def init(
                     name=test_suite,
                     description="",
                     system_id=system_id,
-                    experiences=[
-                        upsert_experience(auth_client, project_id, system_id, test.name)
-                        for test in batch_obj.tests
-                    ],
+                    experiences=list(experience_map.values()),
                 ),
             )
             if new_suite_resp is None:
@@ -225,15 +234,19 @@ def init(
             # create a new batch for this test suite, with type "LITE"
             print(f"Created test suite {suite_id} with build {build_id}")
         else:
+            experience_map = upsert_experiences_map(
+                auth_client,
+                project_id,
+                system_id,
+                [t.name for t in batch_obj.tests],
+            )
+            batch_obj.experience_name_to_id = experience_map
             update_suite_resp = add_experiences_to_test_suite.sync(
                 project_id,
                 client=auth_client,
                 test_suite_id=suite_id,
                 body=SelectExperiencesInput(
-                    experiences=[
-                        upsert_experience(auth_client, project_id, system_id, test.name)
-                        for test in batch_obj.tests
-                    ],
+                    experiences=list(experience_map.values()),
                 ),
             )
             if update_suite_resp is None:
@@ -245,27 +258,22 @@ def init(
 
         if suite_id is None:
             raise RuntimeError(f"Failed to create test suite {test_suite}") 
-        # run the test suite with the build id and the suite id, with the pool label:
-        pool_labels= ["resim:k8s:metrics2:lite"]
-        body = TestSuiteBatchInput(
-            build_id=build_id,
-            pool_labels=pool_labels,
-            batch_name=batch,
-        )
-        created = create_batch_for_test_suite.sync(
+        batch = create_the_batch(build_id, batch, suite_id, project_id, auth_client)
+        # list the jobs and tasks for this batch:
+        tasks_and_jobs = list_tasks_and_jobs_for_run_counter.sync(
             project_id,
+            batch_id=batch.batch_id,
+            run_counter=0,
             client=auth_client,
-            test_suite_id=suite_id,
-            body=body,
         )
-        if created is None:
-            raise RuntimeError(f"Failed to create batch for test suite {test_suite}")
-        batch_id = created.batch_id
-        print(f"Created batch {batch_id} for test suite {suite_id}")
-        # If it does, update the test suite with the new tests, call a rerun then upload the results
-        # if it doesn't, create a new test suite, run it and then upload the results
-        pass
-
+        if tasks_and_jobs is None:
+            raise RuntimeError(f"Failed to list tasks and jobs for batch {batch.batch_id}")
+        for jobAndTask in tasks_and_jobs.tasks:
+            job = jobAndTask.job
+            task = jobAndTask.task
+            print(f"Job {job.job_id} and task {task.task_id}")
+            # upload the emissions file for this job
+        print(f"Tasks and jobs for batch {batch.batch_id}: {tasks_and_jobs}")
 
 def is_valid_uuid(uuid: str) -> bool:
     try:
@@ -274,6 +282,22 @@ def is_valid_uuid(uuid: str) -> bool:
     except ValueError:
         return False
 
+def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
+    pool_labels= ["resim:k8s:metrics2:lite"]
+    body = TestSuiteBatchInput(
+        build_id=build_id,
+        pool_labels=pool_labels,
+        batch_name=batch_name,
+    )
+    created = create_batch_for_test_suite.sync(
+        project_id,
+        client=auth_client,
+        test_suite_id=suite_id,
+        body=body,
+    )
+    if created is None:
+        raise RuntimeError(f"Failed to create batch for test suite {test_suite}")
+    return created
 
 # TODO: add an endpoint to the customer api to do this :-(
 def get_project_id(client: AuthenticatedClient, project_name: str) -> str:
@@ -314,6 +338,26 @@ def upsert_experience(
             raise RuntimeError(f"Failed to create experience {experience_name}")
         experience = create_experience_resp
     return experience.experience_id
+
+
+def upsert_experiences_map(
+    client: AuthenticatedClient,
+    project_id: str,
+    system_id: str,
+    experience_names: list[str],
+) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    # de-duplicate while preserving order
+    seen: set[str] = set()
+    for name in experience_names:
+        if name in seen:
+            continue
+        seen.add(name)
+        exp_id = upsert_experience(client, project_id, system_id, name)
+        if exp_id is None:
+            raise RuntimeError(f"Failed to upsert experience {name}")
+        mapping[name] = exp_id
+    return mapping
 
 
 def get_system_id(
