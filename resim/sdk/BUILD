@@ -9,6 +9,7 @@ py_library(
         "//resim/auth/python:device_code_client",
         "//resim/auth/python:username_password_client",
         "//resim/metrics/python:emissions",
+        "//resim/metrics:fetch_all_pages",
     ],
 )
 
