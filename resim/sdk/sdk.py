@@ -10,7 +10,7 @@ from resim.metrics.python.emissions import Emitter
 from pathlib import Path
 from resim_python_client.models.create_system_input import CreateSystemInput
 from resim_python_client.models.job_status import JobStatus
-from resim_python_client import AuthenticatedClient
+from resim_python_client.client import AuthenticatedClient
 from resim.auth.python.device_code_client import DeviceCodeClient
 from resim.auth.python.username_password_client import UsernamePasswordClient
 from resim_python_client.api.batches import list_batches
@@ -166,12 +166,12 @@ def init(
                     build_vcpus=1,
                     build_memory_mib=1024,
                     build_gpus=0,
-                    build_shared_memory_mb=0,
+                    build_shared_memory_mb=64,
                     architecture=Architecture.AMD64,
                     metrics_build_vcpus=1,
                     metrics_build_memory_mib=1024,
                     metrics_build_gpus=0,
-                    metrics_build_shared_memory_mb=0,
+                    metrics_build_shared_memory_mb=64,
                 ),
             )
             if new_system_resp is None:
@@ -271,6 +271,7 @@ def upsert_experience(
                 name=experience_name,
                 description="",
                 system_i_ds=[system_id],
+                location=f"local-experience-{experience_name}",
             ),
         )
         if create_experience_resp is None:
@@ -323,7 +324,6 @@ def get_auth_client() -> AuthenticatedClient:
         )
     else:
         auth_client = DeviceCodeClient(domain=auth_url, client_id=client_id)
-        return AuthenticatedClient(
-            token = auth_client.get_jwt()["access_token"]
-            client = AuthenticatedClient(base_url=api_url, token=token)
-        )
+        token = auth_client.get_jwt()["access_token"]
+        client = AuthenticatedClient(base_url=api_url, token=token)
+        return client
