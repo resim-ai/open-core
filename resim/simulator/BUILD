@@ -231,6 +231,7 @@ cc_test(
 cc_binary(
     name = "resim_run",
     srcs = ["resim_run.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         ":simulate",
         "//resim/assert",
