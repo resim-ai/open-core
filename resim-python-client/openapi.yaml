@@ -3876,6 +3876,48 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+    post:
+      description: Create a log for a job
+      operationId: createJobLog
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/jobLog"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jobLog"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}/jobs/{jobID}/logs/{logID}:
     get:
       description: Get an individual log file
@@ -5228,6 +5270,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/experienceTagID"
+        experienceTagNames:
+          type: array
+          items:
+            $ref: "#/components/schemas/experienceTagName"
         cacheExempt:
           type: boolean
           description: If true, the experience will not be cached.
@@ -5946,9 +5992,13 @@ components:
     jobAndTask:
       type: object
       properties:
-        job:
+        jobID:
           $ref: "#/components/schemas/jobID"
-        task:
+        experienceID:
+          $ref: "#/components/schemas/experienceID"
+        experienceName:
+          $ref: "#/components/schemas/experienceName"
+        taskID:
           $ref: "#/components/schemas/taskID"
     taskID:
       type: string
@@ -6308,7 +6358,7 @@ components:
         - STARTING
         - RUNNING
         - POSTPROCESSING
-        - COMPLETED
+        - SUCCEEDED
         - ERROR
         - CANCELED
     runError:
@@ -7137,9 +7187,6 @@ components:
         associatedAccount:
           nullable: true
           $ref: "#/components/schemas/associatedAccount"
-      oneOf:
-        - required: [imageUri]
-        - required: [buildSpecification]
     createBuildForSystemInput:
       type: object
       required:
