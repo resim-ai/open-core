@@ -2,7 +2,6 @@ from typing import List, Optional, Callable
 from pathlib import Path
 from uuid import UUID
 import requests
-
 from resim.metrics.fetch_all_pages import fetch_all_pages
 from resim_python_client.types import UNSET
 from resim_python_client.client import AuthenticatedClient
@@ -402,14 +401,15 @@ def upload_job_log(
     )
     if created is None:
         raise RuntimeError("Failed to create job log")
-    
-    # created is a JobLog object, which has a presigned url to upload the actual log. We need to upload the log to the url.
-    upload_url = created.location
+    print(f"Created job log: {created}")
+    # created is a JobLog object, which includes a presigned URL in `log_output_location`.
+    upload_url = created.log_output_location
     print(f"Uploading log to {upload_url}")
     with open(file_path, "rb") as f:
         upload_response = requests.put(upload_url, data=f)
-        if upload_response.status_code != 200:
-            raise RuntimeError(f"Failed to upload log to {upload_url}")
+        print(f"Upload response: {upload_response.text}")
+        if upload_response.status_code not in (200, 201, 204):
+            raise RuntimeError(f"Failed to upload log to {upload_url} with status code {upload_response.status_code}")
     return created
 
 def create_or_rerun_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
