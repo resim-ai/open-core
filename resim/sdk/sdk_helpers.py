@@ -1,6 +1,7 @@
 from typing import List, Optional, Callable
 from pathlib import Path
 from uuid import UUID
+import requests
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
 from resim_python_client.types import UNSET
@@ -16,6 +17,7 @@ from resim_python_client.models.project import Project
 from resim_python_client.models.create_branch_input import CreateBranchInput
 from resim_python_client.models.branch_type import BranchType
 from resim_python_client.models.branch import Branch
+from resim_python_client.models.execution_step import ExecutionStep
 
 # Systems
 from resim_python_client.api.systems import list_systems, create_system
@@ -33,6 +35,7 @@ from resim_python_client.api.test_suites import (
     add_experiences_to_test_suite,
     revise_test_suite,
 )
+from resim_python_client.api.batches import list_batches_for_test_suite, rerun_batch
 from resim_python_client.models.test_suite import TestSuite
 from resim_python_client.models.create_test_suite_input import CreateTestSuiteInput
 from resim_python_client.models.select_experiences_input import SelectExperiencesInput
@@ -51,13 +54,13 @@ from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
 from resim_python_client.models.list_tasks_and_jobs_for_run_counter_output import (
     ListTasksAndJobsForRunCounterOutput,
 )
-from resim_python_client.api.batches import create_batch_for_test_suite, update_task, create_job_log
+from resim_python_client.api.batches import create_batch_for_test_suite, update_task, create_job_log, rerun_batch
 from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
 from resim_python_client.models.update_task_input import UpdateTaskInput
 from resim_python_client.models.task_status import TaskStatus
 from resim_python_client.models.job_log import JobLog
 from resim_python_client.models.log_type import LogType
-
+from resim_python_client.models.rerun_batch_input import RerunBatchInput
 def is_valid_uuid(uuid: str) -> bool:
     try:
         UUID(uuid)
@@ -319,7 +322,7 @@ def create_or_revise_test_suite(
     return suite_id, experience_map
 
 
-def upload_logs_for_batch_jobs(
+def upload_logs_and_update_task_status_for_batch_jobs(
     client: AuthenticatedClient,
     project_id: str,
     batch_obj: "Batch",  # forward reference; accepts object with .tests list
@@ -327,6 +330,7 @@ def upload_logs_for_batch_jobs(
     run_counter: int,
     upload_log_fn: Optional[Callable[[AuthenticatedClient, str, str, str, Path], None]] = None,
 ) -> ListTasksAndJobsForRunCounterOutput:
+    print(f"Listing tasks and jobs for batch {batch_id} with run counter {run_counter}")
     tasks_and_jobs = list_tasks_and_jobs_for_run_counter.sync(
         project_id,
         batch_id=batch_id,
@@ -337,6 +341,7 @@ def upload_logs_for_batch_jobs(
         raise RuntimeError(f"Failed to list tasks and jobs for batch {batch_id}")
 
     for jobAndTask in tasks_and_jobs.tasks:
+        print(f"Processing job {jobAndTask.job_id} with task {jobAndTask.task_id} and experience {jobAndTask.experience_name}")
         job = jobAndTask.job_id
         task = jobAndTask.task_id
         experience_name = jobAndTask.experience_name
@@ -347,6 +352,7 @@ def upload_logs_for_batch_jobs(
                 f"Test {experience_name} not found in batch object for batch {batch_id}"
             )
         for log in test.logs:
+            print(f"Uploading log {log.path} with type {log.log_type} for job {job} and task {task}")
             upload_job_log(
                 client,
                 project_id,
@@ -356,6 +362,7 @@ def upload_logs_for_batch_jobs(
                 log.log_type,
             )
         # Mark task succeeded by default
+        print(f"Marking task {task} as succeeded")
         update_task_status(client, task, TaskStatus.SUCCEEDED)
 
     return tasks_and_jobs
@@ -382,6 +389,9 @@ def upload_job_log(
         file_size=file_path.stat().st_size,
         log_type=log_type,
         location=location if location is not None else UNSET,  # type: ignore[name-defined]
+        checksum="checksum",
+        execution_step=ExecutionStep.EXPERIENCE,
+
     )
     created = create_job_log.sync(
         project_id=project_id,
@@ -392,10 +402,55 @@ def upload_job_log(
     )
     if created is None:
         raise RuntimeError("Failed to create job log")
+    
+    # created is a JobLog object, which has a presigned url to upload the actual log. We need to upload the log to the url.
+    upload_url = created.location
+    print(f"Uploading log to {upload_url}")
+    with open(file_path, "rb") as f:
+        upload_response = requests.put(upload_url, data=f)
+        if upload_response.status_code != 200:
+            raise RuntimeError(f"Failed to upload log to {upload_url}")
     return created
 
+def create_or_rerun_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
+    # list the batches for the test suite and if there are any with that name, we rerun:
+    batches = list_batches_for_test_suite.sync(
+        project_id,
+        client=auth_client,
+        test_suite_id=suite_id,
+    )
+    found_batch = False
+    if batches is not None:
+        for batch in getattr(batches, "batches", []) or []:
+            if batch.friendly_name == batch_name:
+                found_batch = True
+                rerun = rerun_the_batch(project_id, batch.batch_id, auth_client)
+                if rerun is None:
+                    raise RuntimeError(f"Failed to rerun batch {batch.batch_id}")
+                return rerun.batch_id, rerun.run_counter
+                break
+    if not found_batch:
+        created = create_the_batch(build_id, batch_name, suite_id, project_id, auth_client)
+        if created is None:
+            raise RuntimeError(f"Failed to create batch for test suite {suite_id}")
+        return created.batch_id, 0
+
+def rerun_the_batch(project_id: str, batch_id: str, auth_client: AuthenticatedClient) -> any:
+    body = RerunBatchInput(
+        sync_batch=True,
+    )
+    rerun = rerun_batch.sync(
+        project_id=project_id,
+        batch_id=batch_id,
+        client=auth_client,
+        body=body,
+    )
+    if rerun is None:
+        raise RuntimeError(f"Failed to rerun batch {batch_id}")
+    return rerun
+
 def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
-    pool_labels= ["resim:k8s:metrics2:lite"]
+    pool_labels= ["resim:metrics2:lite"]
     body = TestSuiteBatchInput(
         build_id=build_id,
         pool_labels=pool_labels,
@@ -408,7 +463,6 @@ def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: 
         test_suite_id=suite_id,
         body=body,
     )
-    print(f"Created batch {created}")
     if created is None:
         raise RuntimeError(f"Failed to create batch for test suite {suite_id}")
     return created

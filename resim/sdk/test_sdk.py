@@ -1,13 +1,13 @@
 from pathlib import Path
 import tempfile
-
+import uuid
 import resim.sdk.sdk as resim
 
 
 def main() -> None:
-    
     print("Initializing batch")
-    with resim.init(batch="example_batch", project="SDK-Test", system="TestSystem", branch="main", version="1.0.0") as batch:
+    batch_name = f"example_batch_{uuid.uuid4().hex[:8]}"
+    with resim.init(batch=batch_name, project="SDK-Test", system="TestSystem", branch="main", version="1.0.0") as batch:
         
         with batch.run_test("example_test") as test:
             # Emit a couple of example metrics (validation disabled if no config present)

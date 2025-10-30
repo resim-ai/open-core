@@ -23,8 +23,8 @@ from resim.sdk.sdk_helpers import (
     get_suite_id,
     upsert_build_id,
     create_or_revise_test_suite,
-    upload_logs_for_batch_jobs,
-    create_the_batch,
+    upload_logs_and_update_task_status_for_batch_jobs,
+    create_or_rerun_the_batch,
 )
 
 @dataclass
@@ -68,6 +68,7 @@ class Test(Emitter):
         self.name = name
         self.emissions_file = filename
         self.logs = []
+        self.add_file(filename)
         super().__init__(output_path=filename)
 
     def add_file(self, filename: Path) -> Log:
@@ -164,14 +165,14 @@ def init(
         if suite_id is None:
             raise RuntimeError(f"Failed to create test suite {test_suite}") 
         
-        batch = create_the_batch(build_id, batch, suite_id, project_id, auth_client)
-        # Upload emissions/logs for this batch's jobs using provided upload function
-        tasks_and_jobs = upload_logs_for_batch_jobs(
+        batch_id,run_counter = create_or_rerun_the_batch(build_id, batch, suite_id, project_id, auth_client)
+        print(f"Created or rerun batch {batch_id} with run counter {run_counter}")
+        tasks_and_jobs = upload_logs_and_update_task_status_for_batch_jobs(
             auth_client,
             project_id,
             batch_obj,
-            batch.batch_id,
-            0,
+            batch_id,
+            run_counter,
         )
  
 
