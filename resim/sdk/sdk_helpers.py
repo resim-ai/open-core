@@ -43,7 +43,15 @@ from resim_python_client.models.create_build_for_branch_input import (
     CreateBuildForBranchInput,
 )
 from resim_python_client.models.build import Build
+from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
+from resim_python_client.models.list_tasks_and_jobs_for_run_counter_output import (
+    ListTasksAndJobsForRunCounterOutput,
+)
 
+from resim_python_client.api.batches import create_batch_for_test_suite, update_task_status
+from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
+from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
+from resim_python_client.models.update_task_input import UpdateTaskInput
 
 def is_valid_uuid(uuid: str) -> bool:
     try:
@@ -236,6 +244,7 @@ def create_or_revise_test_suite(
     client: AuthenticatedClient,
     project_id: str,
     system_id: str,
+    metrics_set_name: Optional[str] = None,
     test_suite_name: str,
     experience_names: list[str],
 ) -> tuple[str, dict[str, str]]:
@@ -260,6 +269,7 @@ def create_or_revise_test_suite(
                 description="",
                 system_id=system_id,
                 experiences=list(experience_map.values()),
+                metrics_set_name=metrics_set_name,
             ),
         )
         if new_suite_resp is None:
@@ -285,6 +295,15 @@ def create_or_revise_test_suite(
                     experiences=to_add,
                 ),
             )
+            # if the metrics set name is different, update the test suite
+            if metrics_set_name is not None and metrics_set_name != getattr(update_suite_resp, "metrics_set_name", None):
+                update_suite_resp = revise_test_suite.sync(
+                    project_id,
+                    client=client,
+                    test_suite_id=suite_id,
+                    body=ReviseTestSuiteInput(
+                        metrics_set_name=metrics_set_name,
+                    ),
             if update_suite_resp is None:
                 raise RuntimeError(
                     f"Failed to add experiences to test suite {test_suite_name}"
@@ -292,3 +311,76 @@ def create_or_revise_test_suite(
             suite_id = update_suite_resp.test_suite_id
 
     return suite_id, experience_map
+
+
+def upload_logs_for_batch_jobs(
+    client: AuthenticatedClient,
+    project_id: str,
+    batch_obj: "Batch",  # forward reference; accepts object with .tests list
+    batch_id: str,
+    run_counter: int,
+) -> ListTasksAndJobsForRunCounterOutput:
+    tasks_and_jobs = list_tasks_and_jobs_for_run_counter.sync(
+        project_id,
+        batch_id=batch_id,
+        run_counter=run_counter,
+        client=client,
+    )
+    if tasks_and_jobs is None:
+        raise RuntimeError(f"Failed to list tasks and jobs for batch {batch_id}")
+
+    for jobAndTask in tasks_and_jobs.tasks:
+        job = jobAndTask.job
+        task = jobAndTask.task
+        experience_name = job.experience_name
+        experience_id = job.experience_id
+        test = next((t for t in batch_obj.tests if t.name == experience_name), None)
+        if test is None:
+            raise RuntimeError(
+                f"Test {experience_name} not found in batch object for batch {batch_id}"
+            )
+        # create a log object from the emissions file
+        log = Log(filename=test.emissions_file.name, path=test.emissions_file, size=test.emissions_file.stat().st_size, log_type=test.emissions_file.suffix)
+        for log in test.logs:
+            upload_log(client, project_id, experience_id, job.job_id, task.task_id, log)
+
+        update_task_status(client, project_id, experience_id, job.job_id, task.task_id))
+
+    return tasks_and_jobs
+
+def update_task_status(client: AuthenticatedClient, project_id: str, experience_id: str, job_id: str, task_id: str) -> None:
+    update_task_input = UpdateTaskInput(
+        status=TaskStatus.COMPLETED,
+    )
+    update_task_status.sync(
+        task_id,
+        client=client,
+        body=update_task_input,
+    )
+
+def upload_log(client: AuthenticatedClient, project_id: str, experience_id: str, job_id: str, task_id: str, emissions_file: Path) -> None:
+    CreateLogInput(
+        file_name=log.filename,
+        file_size=log.size,
+        log_type=log.log_type,
+        job_id=job_id,
+        task_id=task_id,
+        experience_id=experience_id,
+    )
+
+def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
+    pool_labels= ["resim:k8s:metrics2:lite"]
+    body = TestSuiteBatchInput(
+        build_id=build_id,
+        pool_labels=pool_labels,
+        batch_name=batch_name,
+    )
+    created = create_batch_for_test_suite.sync(
+        project_id,
+        client=auth_client,
+        test_suite_id=suite_id,
+        body=body,
+    )
+    if created is None:
+        raise RuntimeError(f"Failed to create batch for test suite {suite_id}")
+    return created

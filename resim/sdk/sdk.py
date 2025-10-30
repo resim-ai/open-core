@@ -12,9 +12,7 @@ from resim_python_client.models.job_status import JobStatus
 from resim_python_client.client import AuthenticatedClient
 from resim.auth.python.device_code_client import DeviceCodeClient
 from resim.auth.python.username_password_client import UsernamePasswordClient
-from resim_python_client.api.batches import create_batch_for_test_suite
-from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
-from resim_python_client.api.batches import list_tasks_and_jobs_for_run_counter
+from resim_python_client.models.log_type import LogType
 
 from resim.sdk.sdk_helpers import (
     is_valid_uuid,
@@ -25,6 +23,8 @@ from resim.sdk.sdk_helpers import (
     get_suite_id,
     upsert_build_id,
     create_or_revise_test_suite,
+    upload_logs_for_batch_jobs,
+    create_the_batch,
 )
 
 @dataclass
@@ -35,33 +35,27 @@ class Log:
     log_type: "LogType"
 
 
-class LogType(Enum):
-    IMAGE = "image"
-    MP4 = "mp4"
-    MCAP = "mcap"
-    ZIP = "zip"
-    OTHER = "other"
-
 
 def _determine_log_type(path: Path) -> LogType:
     mime, _ = mimetypes.guess_type(str(path))
     suffixes = [s.lower() for s in path.suffixes]
 
     if any(s == ".mcap" for s in suffixes):
-        return LogType.MCAP
+        return LogType.MCAP_LOG
     if mime is not None:
-        if mime.startswith("image/"):
-            return LogType.IMAGE
         if mime == "video/mp4":
-            return LogType.MP4
+            return LogType.MP4_LOG
         if mime in ("application/zip", "application/x-zip-compressed"):
-            return LogType.ZIP
+            return LogType.ZIP_LOG
+        
     # Fallbacks based on extensions if MIME is None or unrecognized
     if any(s == ".mp4" for s in suffixes):
-        return LogType.MP4
+        return LogType.MP4_LOG
     if any(s == ".zip" for s in suffixes):
-        return LogType.ZIP
-    return LogType.OTHER
+        return LogType.ZIP_LOG
+    if any(s == ".jsonl" for s in suffixes):
+        return LogType.EMISSIONS_LOG
+    return LogType.OTHER_LOG
 
 @dataclass
 class Test(Emitter):
@@ -93,6 +87,7 @@ class Batch:
     name: str
     project: str
     system: str
+    metrics_set_name: Optional[str] = None
     branch: Optional[str] = None
     version: Optional[str] = None
     tests: list[Test] = field(default_factory=list)
@@ -104,12 +99,14 @@ class Batch:
         name: str,
         project: str,
         system: str,
+        metrics_set_name: Optional[str] = None,
         branch: Optional[str] = None,
         version: Optional[str] = None,
     ):
         self.name = name
         self.project = project
         self.system = system
+        self.metrics_set_name = metrics_set_name
         self.branch = branch
         self.version = version
         self.tests = []
@@ -132,12 +129,13 @@ def init(
     batch: str,
     project: str,
     system: str,
+    metrics_set_name: Optional[str] = None,
     test_suite: Optional[str] = None,
     branch: Optional[str] = None,
     version: Optional[str] = None,
 ):
     batch_obj = Batch(
-        name=batch, project=project, system=system, branch=branch, version=version
+        name=batch, project=project, system=system, branch=branch, version=version, metrics_set_name=metrics_set_name
     )
     auth_client = get_auth_client()
     try:
@@ -155,6 +153,7 @@ def init(
             auth_client,
             project_id,
             system_id,
+            metrics_set_name,
             test_suite or batch,
             [t.name for t in batch_obj.tests],
         )
@@ -166,60 +165,14 @@ def init(
             raise RuntimeError(f"Failed to create test suite {test_suite}") 
         
         batch = create_the_batch(build_id, batch, suite_id, project_id, auth_client)
-        # list the jobs and tasks for this batch:
-        tasks_and_jobs = list_tasks_and_jobs_for_run_counter.sync(
+        # Upload emissions/logs for this batch's jobs using provided upload function
+        tasks_and_jobs = upload_logs_for_batch_jobs(
+            auth_client,
             project_id,
-            batch_id=batch.batch_id,
-            run_counter=0,
-            client=auth_client,
+            batch_obj,
+            batch.batch_id,
+            batch.run_counter,
         )
-        if tasks_and_jobs is None:
-            raise RuntimeError(f"Failed to list tasks and jobs for batch {batch.batch_id}")
-        for jobAndTask in tasks_and_jobs.tasks:
-            job = jobAndTask.job
-            task = jobAndTask.task
-            print(f"Job {job.job_id} and task {task.task_id}")
-            # upload the emissions file for this job
-        print(f"Tasks and jobs for batch {batch.batch_id}: {tasks_and_jobs}")
-
- 
-
-def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
-    pool_labels= ["resim:k8s:metrics2:lite"]
-    body = TestSuiteBatchInput(
-        build_id=build_id,
-        pool_labels=pool_labels,
-        batch_name=batch_name,
-    )
-    created = create_batch_for_test_suite.sync(
-        project_id,
-        client=auth_client,
-        test_suite_id=suite_id,
-        body=body,
-    )
-    if created is None:
-        raise RuntimeError(f"Failed to create batch for test suite {test_suite}")
-    return created
-
-# TODO: add an endpoint to the customer api to do this :-(
- 
-
-
- 
-
-
- 
-
-
- 
-
-
- 
-
- 
-
- 
-
  
 
 

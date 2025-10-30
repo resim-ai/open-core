@@ -5946,9 +5946,13 @@ components:
     jobAndTask:
       type: object
       properties:
-        job:
+        jobID:
           $ref: "#/components/schemas/jobID"
-        task:
+        experienceID:
+          $ref: "#/components/schemas/experienceID"
+        experienceName:
+          $ref: "#/components/schemas/experienceName"
+        taskID:
           $ref: "#/components/schemas/taskID"
     taskID:
       type: string
@@ -7137,9 +7141,6 @@ components:
         associatedAccount:
           nullable: true
           $ref: "#/components/schemas/associatedAccount"
-      oneOf:
-        - required: [imageUri]
-        - required: [buildSpecification]
     createBuildForSystemInput:
       type: object
       required:
