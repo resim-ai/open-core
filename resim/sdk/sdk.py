@@ -27,13 +27,13 @@ from resim.sdk.sdk_helpers import (
     create_or_rerun_the_batch,
 )
 
+
 @dataclass
 class Log:
     filename: str
     path: Path
     size: int
     log_type: "LogType"
-
 
 
 def _determine_log_type(path: Path) -> LogType:
@@ -47,7 +47,7 @@ def _determine_log_type(path: Path) -> LogType:
             return LogType.MP4_LOG
         if mime in ("application/zip", "application/x-zip-compressed"):
             return LogType.ZIP_LOG
-        
+
     # Fallbacks based on extensions if MIME is None or unrecognized
     if any(s == ".mp4" for s in suffixes):
         return LogType.MP4_LOG
@@ -56,6 +56,7 @@ def _determine_log_type(path: Path) -> LogType:
     if any(s == ".jsonl" for s in suffixes):
         return LogType.EMISSIONS_LOG
     return LogType.OTHER_LOG
+
 
 @dataclass
 class Test(Emitter):
@@ -136,7 +137,12 @@ def init(
     version: Optional[str] = None,
 ):
     batch_obj = Batch(
-        name=batch, project=project, system=system, branch=branch, version=version, metrics_set_name=metrics_set_name
+        name=batch,
+        project=project,
+        system=system,
+        branch=branch,
+        version=version,
+        metrics_set_name=metrics_set_name,
     )
     auth_client = get_auth_client()
     try:
@@ -146,10 +152,14 @@ def init(
         project_id = get_project_id(auth_client, project)
         system_id = upsert_system_id(auth_client, project_id, system)
         # Ensure branch exists (upsert behavior)
-        branch_id = upsert_branch_id(auth_client, project_id, branch) if branch else None
-        build_id = upsert_build_id(auth_client, project_id, branch_id, version, system, system_id)
+        branch_id = (
+            upsert_branch_id(auth_client, project_id, branch) if branch else None
+        )
+        build_id = upsert_build_id(
+            auth_client, project_id, branch_id, version, system, system_id
+        )
         print(f"Created build {build_id} for branch {branch_id}")
-        
+
         suite_id, experience_map = create_or_revise_test_suite(
             auth_client,
             project_id,
@@ -160,12 +170,13 @@ def init(
         )
         batch_obj.experience_name_to_id = experience_map
         print(f"Prepared test suite {suite_id} with build {build_id}")
-        
 
         if suite_id is None:
-            raise RuntimeError(f"Failed to create test suite {test_suite}") 
-        
-        batch_id,run_counter = create_or_rerun_the_batch(build_id, batch, suite_id, project_id, auth_client)
+            raise RuntimeError(f"Failed to create test suite {test_suite}")
+
+        batch_id, run_counter = create_or_rerun_the_batch(
+            build_id, batch, suite_id, project_id, auth_client
+        )
         print(f"Created or rerun batch {batch_id} with run counter {run_counter}")
         tasks_and_jobs = upload_logs_and_update_task_status_for_batch_jobs(
             auth_client,
@@ -174,11 +185,10 @@ def init(
             batch_id,
             run_counter,
         )
- 
 
 
 def get_auth_client() -> AuthenticatedClient:
-    api_url = "https://dev-env-pr-2467.api.dev.resim.io/v1/"
+    api_url = "https://dev-env-pr-2466.api.dev.resim.io/v1/"
     auth_url = "https://resim-dev.us.auth0.com"
     client_id = "Rg1F0ZOCBmVYje4UVrS3BKIh4T2nCW9y"
 
