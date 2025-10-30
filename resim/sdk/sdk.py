@@ -14,7 +14,12 @@ from resim_python_client.client import AuthenticatedClient
 from resim.auth.python.device_code_client import DeviceCodeClient
 from resim.auth.python.username_password_client import UsernamePasswordClient
 from resim_python_client.api.batches import list_batches
-from resim_python_client.api.projects import list_projects
+from resim_python_client.api.builds import list_builds_for_branches, create_build_for_branch
+from resim_python_client.api.projects import (
+    list_projects,
+    create_branch_for_project,
+    list_branches_for_project,
+)
 from resim_python_client.api.systems import list_systems
 from resim_python_client.api.test_suites import list_test_suites
 from resim_python_client.api.test_suites import create_test_suite
@@ -24,12 +29,18 @@ from resim_python_client.models.system import System
 from resim_python_client.models.architecture import Architecture
 from resim_python_client.models.test_suite import TestSuite
 from resim_python_client.models.create_test_suite_input import CreateTestSuiteInput
+from resim_python_client.models.create_branch_input import CreateBranchInput
+from resim_python_client.models.create_build_for_branch_input import CreateBuildForBranchInput
+from resim_python_client.models.branch_type import BranchType
+from resim_python_client.models.branch import Branch
 from resim_python_client.api.systems import create_system
 from resim_python_client.api.experiences import list_experiences
 from resim_python_client.models.experience import Experience
 from resim_python_client.api.experiences import create_experience
 from resim_python_client.models.create_experience_input import CreateExperienceInput
 from resim_python_client.api.test_suites import add_experiences_to_test_suite
+from resim_python_client.api.batches import create_batch_for_test_suite
+from resim_python_client.models.test_suite_batch_input import TestSuiteBatchInput
 from resim_python_client.models.select_experiences_input import SelectExperiencesInput
 
 @dataclass
@@ -177,6 +188,12 @@ def init(
             if new_system_resp is None:
                 raise RuntimeError(f"Failed to create system {system}")
             system_id = new_system_resp.system_id
+        # Ensure branch exists (upsert behavior)
+        branch_id = upsert_branch_id(auth_client, project_id, branch) if branch else None
+        build_id = upsert_build_id(auth_client, project_id, branch_id, version, system, system_id)
+        print(f"Created build {build_id} for branch {branch_id}")
+        
+        suite_id = None
         if test_suite is None:
             test_suite = batch
         suite_id = (
@@ -202,7 +219,11 @@ def init(
             )
             if new_suite_resp is None:
                 raise RuntimeError(f"Failed to create test suite {test_suite}")
+            
             suite_id = new_suite_resp.test_suite_id
+
+            # create a new batch for this test suite, with type "LITE"
+            print(f"Created test suite {suite_id} with build {build_id}")
         else:
             update_suite_resp = add_experiences_to_test_suite.sync(
                 project_id,
@@ -220,12 +241,27 @@ def init(
                     f"Failed to add experiences to test suite {test_suite}"
                 )
             suite_id = update_suite_resp.test_suite_id
-        # check if the batch exists
-        batches_resp = fetch_all_pages(
-            list_batches.sync, project_id, text=batch, client=auth_client
-        )
-        batches = [b for page in batches_resp for b in getattr(page, "batches", [])]
+        
 
+        if suite_id is None:
+            raise RuntimeError(f"Failed to create test suite {test_suite}") 
+        # run the test suite with the build id and the suite id, with the pool label:
+        pool_labels= ["resim:k8s:metrics2:lite"]
+        body = TestSuiteBatchInput(
+            build_id=build_id,
+            pool_labels=pool_labels,
+            batch_name=batch,
+        )
+        created = create_batch_for_test_suite.sync(
+            project_id,
+            client=auth_client,
+            test_suite_id=suite_id,
+            body=body,
+        )
+        if created is None:
+            raise RuntimeError(f"Failed to create batch for test suite {test_suite}")
+        batch_id = created.batch_id
+        print(f"Created batch {batch_id} for test suite {suite_id}")
         # If it does, update the test suite with the new tests, call a rerun then upload the results
         # if it doesn't, create a new test suite, run it and then upload the results
         pass
@@ -295,6 +331,61 @@ def get_system_id(
         return None
     return system.system_id
 
+def upsert_branch_id(
+    client: AuthenticatedClient, project_id: str, branch_name: str, branch_type: BranchType = BranchType.MAIN
+) -> str:
+    branches: List[Branch] = [
+        b
+        for page in fetch_all_pages(
+            list_branches_for_project.sync, project_id, client=client, name=branch_name
+        )
+        for b in getattr(page, "branches", [])
+    ]
+    branch = next((b for b in branches if b.name == branch_name), None)
+    if branch is not None:
+        return branch.branch_id
+
+    created = create_branch_for_project.sync(
+        project_id,
+        client=client,
+        body=CreateBranchInput(
+            name=branch_name,
+            branch_type=branch_type,
+        ),
+    )
+    if created is None:
+        raise RuntimeError(f"Failed to create branch {branch_name}")
+    return created.branch_id
+
+def upsert_build_id(
+    client: AuthenticatedClient, project_id: str, branch_id: str, build_version: str, system_name: str, system_id: str
+) -> str:
+    builds: List[Build] = [
+        b
+        for page in fetch_all_pages(
+            list_builds_for_branches.sync, project_id, branch_id, client=client
+        )
+        for b in getattr(page, "builds", [])
+    ]
+    build = next((b for b in builds if b.version == build_version), None)
+    if build is not None:
+        return build.build_id
+    created = create_build_for_branch.sync(
+        project_id,
+        client=client,
+        branch_id=branch_id,
+        body=CreateBuildForBranchInput(
+            version=build_version,
+            system_id=system_id,
+            name=system_name,
+            description="An automated build created by the ReSim SDK",
+            image_uri="public.ecr.aws/docker/library/hello-world:latest"
+        ),
+    )
+    if created is None:
+        raise RuntimeError(f"Failed to create build {build_version}")
+    return created.build_id
+    
 
 def get_suite_id(
     client: AuthenticatedClient, project_id: str, test_suite_name: str

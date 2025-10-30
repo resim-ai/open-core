@@ -7132,14 +7132,9 @@ components:
           $ref: "#/components/schemas/buildVersion"
         imageUri:
           $ref: "#/components/schemas/buildImageUri"
-        buildSpecification:
-          $ref: "#/components/schemas/buildSpecificationInput"
         associatedAccount:
           nullable: true
           $ref: "#/components/schemas/associatedAccount"
-      oneOf:
-        - required: [imageUri]
-        - required: [buildSpecification]
     createBuildForSystemInput:
       type: object
       required:
