@@ -2,7 +2,7 @@ load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 
 py_library(
     name = "sdk",
-    srcs = ["sdk.py"],
+    srcs = ["sdk.py", "sdk_helpers.py"],
     visibility = ["//visibility:public"],
     deps = [
         "//resim-python-client",
