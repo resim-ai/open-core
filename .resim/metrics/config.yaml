@@ -1,0 +1,182 @@
+version: 1
+
+topics:
+  individual_rating:
+    schema:
+      chilli_name: string
+      person_name: string
+      visual: int
+      aroma: int
+      texture: int
+      taste: int
+      spice_level: int
+      overall_score: int
+
+metrics:
+  # TEST-LEVEL METRICS (Per Chilli)
+  
+  Scores by Person:
+    type: test
+    description: All ratings for this chilli recipe, one row per person
+    query_string: |
+      SELECT 
+        person_name AS "Person",
+        overall_score AS "Score"
+      FROM individual_rating
+      ORDER BY overall_score DESC;
+    template_type: system
+    template: table
+  
+  Scores by Category:
+    type: test
+    description: Average score for each category for this chilli recipe
+    query_string: |
+      SELECT category AS "Category", avg_score AS "Average Score"
+      FROM (
+        SELECT 'Visual' AS category, AVG(visual) AS avg_score FROM individual_rating
+        UNION ALL
+        SELECT 'Aroma', AVG(aroma) FROM individual_rating
+        UNION ALL
+        SELECT 'Texture', AVG(texture) FROM individual_rating
+        UNION ALL
+        SELECT 'Taste', AVG(taste) FROM individual_rating
+        UNION ALL
+        SELECT 'Spice Level', AVG(spice_level) FROM individual_rating
+      )
+      ORDER BY 
+        CASE category
+          WHEN 'Visual' THEN 1
+          WHEN 'Aroma' THEN 2
+          WHEN 'Texture' THEN 3
+          WHEN 'Taste' THEN 4
+          WHEN 'Spice Level' THEN 5
+        END;
+    template_type: system
+    template: table
+  
+  Overall Average:
+    type: test
+    description: Overall average score for this chilli recipe
+    query_string: |
+      SELECT AVG(overall_score) AS value
+      FROM individual_rating;
+    template_type: system
+    template: scalar
+  
+  # BATCH-LEVEL METRICS (All Chillies)
+  
+  Rankings by Person:
+    type: batch
+    description: Each person's ranking of all chilli recipes
+    query_string: |
+      SELECT 
+        person_name AS "Person",
+        chilli_name AS "Chilli",
+        overall_score AS "Score",
+        RANK() OVER (PARTITION BY person_name ORDER BY overall_score DESC) AS "Rank"
+      FROM individual_rating
+      ORDER BY person_name, "Rank";
+    template_type: system
+    template: table
+  
+  Winner by Average Placement:
+    type: batch
+    description: Overall winner determined by average placement
+    query_string: |
+      WITH rankings AS (
+        SELECT 
+          chilli_name,
+          RANK() OVER (PARTITION BY person_name ORDER BY overall_score DESC) AS rank
+        FROM individual_rating
+      )
+      SELECT 
+        chilli_name AS "Chilli",
+        AVG(CAST(rank AS DOUBLE)) AS "Avg Placement"
+      FROM rankings
+      GROUP BY chilli_name
+      ORDER BY "Avg Placement";
+    template_type: system
+    template: table
+  
+  Category Winners:
+    type: batch
+    description: Best chilli recipe for each category (5 rows)
+    query_string: |
+      WITH category_avgs AS (
+        SELECT chilli_name, 'Visual' AS category, AVG(visual) AS score FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Aroma', AVG(aroma) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Texture', AVG(texture) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Taste', AVG(taste) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Spice Level', AVG(spice_level) FROM individual_rating GROUP BY chilli_name
+      ),
+      ranked AS (
+        SELECT 
+          category,
+          chilli_name,
+          score,
+          RANK() OVER (PARTITION BY category ORDER BY score DESC) AS rank
+        FROM category_avgs
+      )
+      SELECT 
+        category AS "Category",
+        chilli_name AS "Winner",
+        score AS "Score"
+      FROM ranked
+      WHERE rank = 1
+      ORDER BY 
+        CASE category
+          WHEN 'Visual' THEN 1
+          WHEN 'Aroma' THEN 2
+          WHEN 'Texture' THEN 3
+          WHEN 'Taste' THEN 4
+          WHEN 'Spice Level' THEN 5
+        END;
+    template_type: system
+    template: table
+  
+  Overall Scores:
+    type: batch
+    description: Average overall score per chilli recipe (3 rows)
+    query_string: |
+      SELECT 
+        chilli_name AS "Chilli",
+        AVG(overall_score) AS "Average Score"
+      FROM individual_rating
+      GROUP BY chilli_name
+      ORDER BY "Average Score" DESC;
+    template_type: system
+    template: table
+  
+  Category Performance:
+    type: batch
+    description: Line chart showing each chilli recipe across categories
+    query_string: |
+      SELECT 
+        chilli_name AS group_name,
+        category AS x,
+        avg_score AS y
+      FROM (
+        SELECT chilli_name, 'Visual' AS category, AVG(visual) AS avg_score FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Aroma', AVG(aroma) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Texture', AVG(texture) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Taste', AVG(taste) FROM individual_rating GROUP BY chilli_name
+        UNION ALL
+        SELECT chilli_name, 'Spice', AVG(spice_level) FROM individual_rating GROUP BY chilli_name
+      )
+      ORDER BY group_name, 
+        CASE category
+          WHEN 'Visual' THEN 1
+          WHEN 'Aroma' THEN 2
+          WHEN 'Texture' THEN 3
+          WHEN 'Taste' THEN 4
+          WHEN 'Spice' THEN 5
+        END;
+    template_type: system
+    template: line

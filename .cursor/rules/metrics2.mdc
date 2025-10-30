@@ -1,0 +1,126 @@
+---
+description: When a user wants to add emissions or metrics to their robotics system.
+alwaysApply: false
+---
+
+## Overview
+ReSim Metrics 2.0 is an exciting new feature that allows you to emit and dynamically query metrics from your system.
+Metrics are emitted as JSON objects and stored in an `emissions.ndjson` file.
+Topics and metrics are defined in the `.resim/metrics/config.yml` file.
+
+## Topics
+Topics define the data that is emitted from your system. They may contain a timestamp.
+Items in the schema can have the following types:
+- float
+- string
+- int
+- image
+- status
+- string[]
+- metric[]
+
+Here are some example topics:
+```
+topics:
+  time_to_goal:
+    schema:
+      time_s: float
+      goal_name: string
+  pose_difference:
+    schema:
+      position_diff_m: float
+```
+
+## Event topics
+Event topics are marked by having the `event: true` field in the config.yml file.
+The event topic always must have a schema like this:
+```
+schema:
+name: string
+description: string
+status: status
+tags: string[]
+```
+The status field is one of the following:
+- PASSED
+- FAIL_WARN
+- FAIL_BLOCK
+- NO_STATUS_REPORTED
+
+## Metrics
+
+Metrics are how we consume the data from the topics. Their primary components are a query and a template.
+Here is an example of a metric:
+```
+metrics:
+  Localization Error:
+    type: test
+    description: Difference in position between odometry and AMCL localization poses over time.
+    query_string: SELECT 'Error', timestamp / 1E9 AS "Time (s)", position_diff_m as "Position Difference (m)" FROM pose_difference
+    template_type: system
+    template: line
+```
+The `query_string` is a SQL query in the Athena dialect. The template defines how the plot is rendered.
+
+### Template Types and Column Requirements
+
+#### `table` Template
+The `system` `table` template displays data in a tabular format. The query can return any number of columns:
+- Column names (using `AS "Column Name"`) become the table headers
+- Each row in the query result becomes a row in the table
+- Columns are displayed in the order they appear in the SELECT statement
+
+Example:
+```
+metrics:
+  Robot Performance:
+    type: test
+    description: Performance metrics for each robot
+    query_string: |
+      SELECT 
+        robot_id AS "Robot ID",
+        avg_speed AS "Average Speed (m/s)",
+        total_distance AS "Total Distance (m)",
+        battery_level AS "Battery (%)"
+      FROM robot_metrics
+      ORDER BY robot_id;
+    template_type: system
+    template: table
+```
+
+This would produce a table like:
+| Robot ID | Average Speed (m/s) | Total Distance (m) | Battery (%) |
+|----------|---------------------|-------------------|-------------|
+| robot_1  | 2.5                 | 150.3             | 85          |
+| robot_2  | 3.1                 | 200.7             | 72          |
+
+#### `line` and `bar` Templates
+The `system` `line` and `bar` charts expect the query to return exactly 3 columns in this order:
+1. `group_name` (first column) - Used to create multiple series/groups
+2. `x` (second column) - X-axis values
+3. `y` (third column) - Y-axis values
+
+The column names can be anything, but they must be in the order of `group_name`, `x`, `y`. To display multiple series in the chart, you need emissions with different `group_name` values.
+
+Example:
+```
+metrics:
+  Speed Over Time:
+    type: test
+    query_string: SELECT robot_id, timestamp / 1E9 AS "Time (s)", speed_mps AS "Speed (m/s)" FROM robot_speed
+    template_type: system
+    template: line
+```
+
+#### `scalar` Template
+The `system` `scalar` chart expects the query to return exactly 1 column named `value`. This displays a single numeric value.
+
+Example:
+```
+metrics:
+  Total Distance:
+    type: test
+    query_string: SELECT SUM(distance_m) AS value FROM robot_metrics
+    template_type: system
+    template: scalar
+```
