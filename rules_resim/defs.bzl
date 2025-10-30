@@ -46,6 +46,24 @@ configured in the `oci_push()` target. Builds can also be created for multiconta
 docker compose input. See [here](https://docs.resim.ai/guides/multi-container-builds/) for more
 details on multi-container builds.
 
+In order to utilize automatic git version and branch inference, you can set up a workspace status
+command in your repo like so:
+
+1. Add a `workspace_status.sh` script like so:
+```
+cat <<EOF
+STABLE_RESIM_VERSION $(git rev-parse HEAD)
+STABLE_RESIM_BRANCH $(git rev-parse --abbrev-ref HEAD)
+EOF
+```
+2. Add the following to your `.bazelrc`:
+```
+build --workspace_status_command=$(pwd)/workspace_status.sh
+```
+With this setting in place the `resim_build()` rule will infer the version and branch automatically
+and utilize them for your resim build. See
+[here](https://bazel.build/docs/user-manual#workspace-status) for more details.
+
 Once you have a build, you can also run it against an existing resim test suite by defining a target
 with the `resim_test_suite_run()` rule:
 
