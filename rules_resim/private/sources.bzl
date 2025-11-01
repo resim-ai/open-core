@@ -1320,6 +1320,46 @@ SOURCES = {
             "sha256": "6f17796c23a79419d7ab93460b5eb1f66866d5043ce591a576b0656b8d09a334",
         },
     ],
+    "v0.31.0": [
+        {
+            "cpu": "@platforms//cpu:x86_64",
+            "name": "linux-amd64",
+            "os": "@platforms//os:linux",
+            "sha256": "4d4c9cdee14e2cb12a68d2db4e394d5515960363e8b758d0ed0da0cd7313d8eb",
+        },
+        {
+            "cpu": "@platforms//cpu:arm64",
+            "name": "darwin-arm64",
+            "os": "@platforms//os:osx",
+            "sha256": "6095a0853de47634c1b213559f8ce27bfc92cd82978b62bc697c246ed9aaa4c8",
+        },
+        {
+            "cpu": "@platforms//cpu:x86_64",
+            "name": "darwin-amd64",
+            "os": "@platforms//os:osx",
+            "sha256": "749f4847b4665f52bdcbc524dee78fd52c506707f7ac123cd8267f6c8dafc3ad",
+        },
+    ],
+    "v0.32.0": [
+        {
+            "cpu": "@platforms//cpu:x86_64",
+            "name": "linux-amd64",
+            "os": "@platforms//os:linux",
+            "sha256": "c237d018fccfe7718674663737326c2ff706bce63373286f07f6a64ceea82759",
+        },
+        {
+            "cpu": "@platforms//cpu:arm64",
+            "name": "darwin-arm64",
+            "os": "@platforms//os:osx",
+            "sha256": "90f88fd8d76fc318c1200f0618d1060aff7bc49b005d4117e9904cfe0012833c",
+        },
+        {
+            "cpu": "@platforms//cpu:x86_64",
+            "name": "darwin-amd64",
+            "os": "@platforms//os:osx",
+            "sha256": "6c670ce36932144060d7629dd9f3df75df50c38856205abeb9542b3a51ef8c80",
+        },
+    ],
     "v0.4.0": [
         {
             "cpu": "@platforms//cpu:x86_64",
