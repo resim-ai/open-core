@@ -21,6 +21,6 @@ namespace resim::actor {
 // @param[in] dynamic_behavior - The dynamic behavior config containing the
 //                               actors.
 std::vector<std::unique_ptr<Actor>> factory(
-    const experiences::DynamicBehavior &dynamic_behavior);
+    experiences::DynamicBehavior &dynamic_behavior);
 
 }  // namespace resim::actor
