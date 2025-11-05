@@ -6,11 +6,24 @@ def _openapi_client_impl(ctx):
     """Generate an openapi client without the ruff post hook"""
     output_dir = ctx.actions.declare_directory(ctx.attr.name)
 
+    # Filter the specification file to remove lines that cause issues with the
+    # generator.
+    filtered_specification = ctx.actions.declare_file(ctx.attr.name + ".filtered.yaml")
+    specification_file = ctx.attr.specification.files.to_list()[0]
+    ctx.actions.run_shell(
+        inputs = [specification_file],
+        outputs = [filtered_specification],
+        command = "cat {src} | sed '/format: uuid/d' > {out}".format(
+            src = specification_file.path,
+            out = filtered_specification.path,
+        ),
+    )
+
     args = ctx.actions.args()
     args.add("generate")
 
     args.add("--path")
-    specification = ctx.attr.specification.files.to_list()[0].path
+    specification = filtered_specification.path
     args.add(specification)
 
     args.add("--config")
@@ -29,7 +42,7 @@ def _openapi_client_impl(ctx):
         mnemonic = "GeneratePythonClient",
         executable = generator,
         arguments = [args],
-        inputs = depset([], transitive = [ctx.attr.specification.files, ctx.attr.config.files]),
+        inputs = depset([filtered_specification], transitive = [ctx.attr.config.files]),
         outputs = [output_dir],
     )
 
