@@ -403,7 +403,7 @@ def upload_job_log(
         raise RuntimeError("Failed to create job log")
     print(f"Created job log: {created}")
     # created is a JobLog object, which includes a presigned URL in `log_output_location`.
-    upload_url = created.log_output_location
+    upload_url = created.location
     print(f"Uploading log to {upload_url}")
     with open(file_path, "rb") as f:
         upload_response = requests.put(upload_url, data=f)

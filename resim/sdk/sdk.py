@@ -178,7 +178,7 @@ def init(
 
 
 def get_auth_client() -> AuthenticatedClient:
-    api_url = "https://dev-env-pr-2467.api.dev.resim.io/v1/"
+    api_url = "https://dev-env-pr-2466.api.dev.resim.io/v1/"
     auth_url = "https://resim-dev.us.auth0.com"
     client_id = "Rg1F0ZOCBmVYje4UVrS3BKIh4T2nCW9y"
 
