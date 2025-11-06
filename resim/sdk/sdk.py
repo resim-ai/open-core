@@ -122,7 +122,14 @@ class Batch:
             emissions_file = Path(temp_file.name)
             test = Test(name, emissions_file)
             self.tests.append(test)
-            yield test
+            try:
+                yield test
+            finally:
+                # Ensure emitter file buffer is flushed and closed before upload
+                try:
+                    test.close()
+                except Exception:
+                    pass
 
 
 @contextmanager
@@ -150,6 +157,8 @@ def init(
         build_id = upsert_build_id(auth_client, project_id, branch_id, version, system, system_id)
         print(f"Created build {build_id} for branch {branch_id}")
         
+        # we need to sync the metrics config with that branch:
+        config_location = "~/.resim/metrics_config.json"
         suite_id, experience_map = create_or_revise_test_suite(
             auth_client,
             project_id,
@@ -165,7 +174,9 @@ def init(
         if suite_id is None:
             raise RuntimeError(f"Failed to create test suite {test_suite}") 
         
-        batch_id,run_counter = create_or_rerun_the_batch(build_id, batch, suite_id, project_id, auth_client)
+        batch_id,run_counter = create_or_rerun_the_batch(
+            build_id, batch, suite_id, project_id, auth_client
+        )
         print(f"Created or rerun batch {batch_id} with run counter {run_counter}")
         tasks_and_jobs = upload_logs_and_update_task_status_for_batch_jobs(
             auth_client,
@@ -178,7 +189,7 @@ def init(
 
 
 def get_auth_client() -> AuthenticatedClient:
-    api_url = "https://dev-env-pr-2466.api.dev.resim.io/v1/"
+    api_url = "https://dev-env-pr-2475.api.dev.resim.io/v1/"
     auth_url = "https://resim-dev.us.auth0.com"
     client_id = "Rg1F0ZOCBmVYje4UVrS3BKIh4T2nCW9y"
 

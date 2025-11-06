@@ -6358,9 +6358,9 @@ components:
         - STARTING
         - RUNNING
         - POSTPROCESSING
-        - SUCCEEDED
         - ERROR
-        - CANCELED
+        - SUCCEEDED
+        - CANCELLED
     runError:
       type: object
       nullable: true
@@ -6437,6 +6437,23 @@ components:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
+        s3ObjectTags:
+          $ref: "#/components/schemas/s3ObjectTags"
+        requiredHeaders:
+          $ref: "#/components/schemas/requiredHeaders"
+    s3ObjectTags:
+      type: object
+      description: S3 object tags to apply on upload (used for presigned urls)
+      additionalProperties:
+        type: string
+        maxLength: 256
+        pattern: ^[A-Za-z0-9 +\-=._:/@]*$
+      maxProperties: 10
+    requiredHeaders:
+      type: object
+      additionalProperties:
+        type: string
+      description: Headers the client MUST include. Includes x-amz-tagging when tags were provided.
     jobLog:
       allOf:
         - $ref: "#/components/schemas/log"

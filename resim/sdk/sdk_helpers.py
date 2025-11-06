@@ -2,6 +2,7 @@ from typing import List, Optional, Callable
 from pathlib import Path
 from uuid import UUID
 import requests
+from urllib.parse import quote
 from resim.metrics.fetch_all_pages import fetch_all_pages
 from resim_python_client.types import UNSET
 from resim_python_client.client import AuthenticatedClient
@@ -315,6 +316,7 @@ def create_or_revise_test_suite(
                 test_suite_id=suite_id,
                 body=ReviseTestSuiteInput(
                     metrics_set_name=metrics_set_name,
+                    update_metrics_build=False,
                 ),
             )
 
@@ -402,14 +404,46 @@ def upload_job_log(
     if created is None:
         raise RuntimeError("Failed to create job log")
     print(f"Created job log: {created}")
-    # created is a JobLog object, which includes a presigned URL in `log_output_location`.
-    upload_url = created.location
+    # Pick a PUT-capable presigned URL if present; otherwise fall back to the provided location
+    candidates = [getattr(created, "log_output_location", None), getattr(created, "location", None)]
+    upload_url = next((u for u in candidates if u and "x-id=PutObject" in u), None) or next((u for u in candidates if u), None)
     print(f"Uploading log to {upload_url}")
+
+    # Collect required headers from the API response (model may expose required_headers)
+    headers: dict[str, str] = {}
+    try:
+        # Newer clients: dedicated attribute with map of headers
+        rh = getattr(created, "required_headers", None)
+        rh_map = getattr(rh, "additional_properties", None)
+        if isinstance(rh_map, dict):
+            for k, v in rh_map.items():
+                headers[str(k)] = str(v)
+        else:
+            # Older clients: fallback to additional_properties
+            required_headers = getattr(created, "additional_properties", {}).get("requiredHeaders")
+            if isinstance(required_headers, dict):
+                for k, v in required_headers.items():
+                    headers[str(k)] = str(v)
+            elif getattr(created, "additional_properties", {}).get("s3ObjectTags"):
+                # Synthesize x-amz-tagging if tags provided but requiredHeaders missing
+                tags = created.additional_properties.get("s3ObjectTags")
+                if isinstance(tags, dict) and tags:
+                    tag_str = "&".join(
+                        f"{quote(str(k), safe='-_.:/@')}={quote(str(v), safe='-_.:/@')}" for k, v in tags.items()
+                    )
+                    headers["x-amz-tagging"] = tag_str
+    except Exception:
+        pass
+
+    # Read file fully to avoid chunked Transfer-Encoding; set explicit Content-Length
     with open(file_path, "rb") as f:
-        upload_response = requests.put(upload_url, data=f)
-        print(f"Upload response: {upload_response.text}")
-        if upload_response.status_code not in (200, 201, 204):
-            raise RuntimeError(f"Failed to upload log to {upload_url} with status code {upload_response.status_code}")
+        data_bytes = f.read()
+    headers["Content-Length"] = str(len(data_bytes))
+
+    upload_response = requests.put(upload_url, data=data_bytes, headers=headers if headers else None)
+    print(f"Upload response: {upload_response.text}")
+    if upload_response.status_code not in (200, 201, 204):
+        raise RuntimeError(f"Failed to upload log to {upload_url} with status code {upload_response.status_code}")
     return created
 
 def create_or_rerun_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
@@ -424,12 +458,14 @@ def create_or_rerun_the_batch(build_id: str, batch_name: str, suite_id: str, pro
         for batch in getattr(batches, "batches", []) or []:
             if batch.friendly_name == batch_name:
                 found_batch = True
+                print(f"Rerunning batch {batch.batch_id}")
                 rerun = rerun_the_batch(project_id, batch.batch_id, auth_client)
                 if rerun is None:
                     raise RuntimeError(f"Failed to rerun batch {batch.batch_id}")
                 return rerun.batch_id, rerun.run_counter
                 break
     if not found_batch:
+        print(f"Creating new batch {batch_name}")
         created = create_the_batch(build_id, batch_name, suite_id, project_id, auth_client)
         if created is None:
             raise RuntimeError(f"Failed to create batch for test suite {suite_id}")
@@ -450,7 +486,7 @@ def rerun_the_batch(project_id: str, batch_id: str, auth_client: AuthenticatedCl
     return rerun
 
 def create_the_batch(build_id: str, batch_name: str, suite_id: str, project_id: str, auth_client: AuthenticatedClient) -> any:
-    pool_labels= ["resim:metrics2:lite"]
+    pool_labels= ["resim:k8s:metrics2:lite"]
     body = TestSuiteBatchInput(
         build_id=build_id,
         pool_labels=pool_labels,
