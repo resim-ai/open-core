@@ -162,7 +162,8 @@ def _signature_parameters_match(subject: Signature, mock: Signature) -> bool:
         elif param.annotation != mock_param.annotation:
             print(f"Parameter {name} annotation mismatch: {param.annotation} != {mock_param.annotation}")
             return False
-    if subject.return_annotation is not mock.return_annotation:
+
+    if subject.return_annotation != mock.return_annotation:
         print(f"Return annotation mismatch: {subject.return_annotation} != {mock.return_annotation}")
         return False
     return True
