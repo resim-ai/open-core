@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from inspect import Signature, signature
 from string import ascii_lowercase
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, TypeVar
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
@@ -140,13 +140,14 @@ def get_mock_client(state: MockState) -> MagicMock:
 
 def _signature_parameters_match(subject: Signature, mock: Signature) -> bool:
     """Helper to check that two signatures match."""
-
     for p in mock.parameters:
         if p not in subject.parameters:
+            print(f"Parameter {p} not in subject")
             return False
 
     for name, param in subject.parameters.items():
         if name not in mock.parameters:
+            print(f"Parameter {name} not in mock")
             return False
         mock_param = mock.parameters[name]
 
@@ -156,10 +157,22 @@ def _signature_parameters_match(subject: Signature, mock: Signature) -> bool:
                 param.annotation is not AuthenticatedClient
                 or mock_param.annotation is not MagicMock
             ):
+                print(
+                    f"Parameter {name} client annotation mismatch: {param.annotation} != {mock_param.annotation}"
+                )
                 return False
-        elif param.annotation is not mock_param.annotation:
+        elif param.annotation != mock_param.annotation:
+            print(
+                f"Parameter {name} annotation mismatch: {param.annotation} != {mock_param.annotation}"
+            )
             return False
-    return subject.return_annotation is mock.return_annotation
+
+    if subject.return_annotation != mock.return_annotation:
+        print(
+            f"Return annotation mismatch: {subject.return_annotation} != {mock.return_annotation}"
+        )
+        return False
+    return True
 
 
 def mocks_endpoint(subject: Callable) -> Callable:
@@ -186,7 +199,7 @@ async def get_batch_asyncio(
     batch_id: str,
     *,
     client: MagicMock,
-) -> Optional[Union[Any, Batch]]:
+) -> Any | Batch | None:
     batch = client.state.batches[UUID(batch_id)]
     if project_id != batch.project_id:
         raise ValueError("Project id mismatch!")
@@ -199,7 +212,7 @@ async def get_test_suite_asyncio(
     test_suite_id: str,
     *,
     client: MagicMock,
-) -> Optional[Union[Any, TestSuite]]:
+) -> Any | TestSuite | None:
     test_suite = client.state.test_suites[UUID(test_suite_id)]
     if project_id != test_suite.project_id:
         raise ValueError("Project id mismatch!")
@@ -212,7 +225,7 @@ async def create_report_asyncio(
     *,
     client: MagicMock,
     body: ReportInput,
-) -> Optional[Union[Any, Report]]:
+) -> Any | Report | None:
     report_id = uuid4()
     # TODO(michael) Enforce some consistency requirements
     report = Report(
