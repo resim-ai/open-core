@@ -49,7 +49,7 @@ rules_resim_repositories()
 ## Updating the CLI Versions and Sums
 
 To update the checksums for the available versions, run the following script after ensuring any new
-versions are added to it. This will update the `//private:cli_versions.json` file.
+versions are added to it. This will update the `//private:sources.bzl` file.
 ```bash
 bazel run //scripts:generate_cli_checksums
 ```
