@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from inspect import Signature, signature
 from string import ascii_lowercase
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, TypeVar
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
@@ -157,14 +157,20 @@ def _signature_parameters_match(subject: Signature, mock: Signature) -> bool:
                 param.annotation is not AuthenticatedClient
                 or mock_param.annotation is not MagicMock
             ):
-                print(f"Parameter {name} client annotation mismatch: {param.annotation} != {mock_param.annotation}")
+                print(
+                    f"Parameter {name} client annotation mismatch: {param.annotation} != {mock_param.annotation}"
+                )
                 return False
         elif param.annotation != mock_param.annotation:
-            print(f"Parameter {name} annotation mismatch: {param.annotation} != {mock_param.annotation}")
+            print(
+                f"Parameter {name} annotation mismatch: {param.annotation} != {mock_param.annotation}"
+            )
             return False
 
     if subject.return_annotation != mock.return_annotation:
-        print(f"Return annotation mismatch: {subject.return_annotation} != {mock.return_annotation}")
+        print(
+            f"Return annotation mismatch: {subject.return_annotation} != {mock.return_annotation}"
+        )
         return False
     return True
 
