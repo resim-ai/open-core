@@ -17,8 +17,7 @@ from typing import Any
 import numpy as np
 import yaml
 
-from resim.metrics.python.emissions import Emitter, emit
-from resim.metrics.python.metrics_utils import Timestamp
+from resim.sdk.metrics.emissions import Emitter, emit
 
 
 class EmissionsTest(unittest.TestCase):
@@ -67,23 +66,6 @@ class EmissionsTest(unittest.TestCase):
             self.assertEqual(emission["$data"], data)
             self.assertEqual(emission["$metadata"]["timestamp"], timestamp)
 
-    def test_emit_with_timestamp_object(self) -> None:
-        """Test emission with Timestamp object."""
-        topic_name = "test_topic"
-        data = {"value": 42}
-        timestamp = Timestamp(secs=12, nanos=345)
-        expected_timestamp = 12 * 1_000_000_000 + 345
-
-        emit(topic_name, data, timestamp=timestamp, file_path=self.temp_path)
-
-        with open(self.temp_path, "r", encoding="utf8") as f:
-            content = f.read().strip()
-            emission = json.loads(content)
-
-            self.assertEqual(emission["$metadata"]["topic"], topic_name)
-            self.assertEqual(emission["$data"], data)
-            self.assertEqual(emission["$metadata"]["timestamp"], expected_timestamp)
-
     def test_emit_with_timestamps_array(self) -> None:
         """Test emission with timestamps array."""
         topic_name = "test_topic"
@@ -102,31 +84,6 @@ class EmissionsTest(unittest.TestCase):
                 self.assertEqual(emission["$data"]["values"], data["values"][i])
                 self.assertEqual(emission["$data"]["labels"], data["labels"][i])
                 self.assertEqual(emission["$metadata"]["timestamp"], timestamps[i])
-
-    def test_emit_with_timestamp_objects_array(self) -> None:
-        """Test emission with array of Timestamp objects."""
-        topic_name = "test_topic"
-        data = {"values": [1, 2, 3]}
-        timestamps = [
-            Timestamp(secs=1, nanos=0),
-            Timestamp(secs=2, nanos=0),
-            Timestamp(secs=3, nanos=0),
-        ]
-        expected_timestamps = [1 * 1_000_000_000, 2 * 1_000_000_000, 3 * 1_000_000_000]
-
-        emit(topic_name, data, timestamps=timestamps, file_path=self.temp_path)
-
-        with open(self.temp_path, "r", encoding="utf8") as f:
-            content = f.readlines()
-            self.assertEqual(len(content), 3)
-
-            for i, line in enumerate(content):
-                emission = json.loads(line)
-                self.assertEqual(emission["$metadata"]["topic"], topic_name)
-                self.assertEqual(emission["$data"]["values"], data["values"][i])
-                self.assertEqual(
-                    emission["$metadata"]["timestamp"], expected_timestamps[i]
-                )
 
     def test_emit_with_numpy_timestamps(self) -> None:
         """Test emission with numpy array of timestamps."""

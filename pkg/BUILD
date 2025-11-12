@@ -65,6 +65,7 @@ py_package(
         "//resim/msg:primitives_proto_py",
         "//resim/msg:transform_proto_py",
         "//resim/orchestration:kickoff_report",
+        "//resim/sdk",
         "//resim/transforms/proto:framed_vector_3_proto_py",
         "//resim/transforms/python:geodetic_python.so",
         "//resim/transforms/python:quaternion.so",
@@ -264,6 +265,47 @@ py_wheel(
         "//:nocross": ["//resim/ros2:ros2_py_package_stubs"],
         "//conditions:default": [],
     }),
+)
+
+genrule(
+    name = "combined_sdk_requires",
+    srcs = [
+        "//resim-python-client:requirements.txt",
+        "//resim/sdk:requirements.txt",
+    ],
+    outs = ["combined_sdk_requirements.txt"],
+    cmd = "cat $(SRCS) > $@",
+)
+
+
+py_package(
+    name = "sdk_package",
+    packages = [
+        "resim",
+        "resim_python_client",
+    ],
+    deps = [
+        "//resim/sdk",
+        "//resim-python-client",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_wheel(
+    name = "sdk_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_sdk",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    python_tag = PY_VERSION_TAG,
+    requires_file = ":combined_sdk_requires",
+    strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
+    summary = "ReSim SDK Libraries.",
+    version = version,
+    deps = [":sdk_package"],
 )
 
 py_console_script_binary(

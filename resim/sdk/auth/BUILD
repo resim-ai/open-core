@@ -4,15 +4,13 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+load("@resim_python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 py_library(
     name = "const",
     srcs = ["const.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//resim/sdk/auth:const",
-    ],
 )
 
 py_library(
@@ -20,7 +18,18 @@ py_library(
     srcs = ["device_code_client.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:device_code_client",
+        requirement("polling2"),
+        requirement("requests"),
+        ":check_expiration",
+        ":const",
+    ],
+)
+
+py_test(
+    name = "device_code_client_test",
+    srcs = ["device_code_client_test.py"],
+    deps = [
+        ":device_code_client",
     ],
 )
 
@@ -29,7 +38,18 @@ py_library(
     srcs = ["username_password_client.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:username_password_client",
+        requirement("httpx"),
+        ":check_expiration",
+        ":const",
+        "//resim-python-client",
+    ],
+)
+
+py_test(
+    name = "username_password_client_test",
+    srcs = ["username_password_client_test.py"],
+    deps = [
+        ":username_password_client",
     ],
 )
 
@@ -37,19 +57,23 @@ py_library(
     name = "check_expiration",
     srcs = ["check_expiration.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//resim/sdk/auth:check_expiration",
-    ],
+    deps = [],
 )
 
 py_test(
-    name = "imports_test",
-    srcs = ["imports_test.py"],
+    name = "check_expiration_test",
+    srcs = ["check_expiration_test.py"],
+    deps = [
+        ":check_expiration",
+    ],
+)
+
+py_library(
+    name = "auth",
+    srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":const",
         ":device_code_client",
         ":username_password_client",
-        ":check_expiration",
     ],
 )

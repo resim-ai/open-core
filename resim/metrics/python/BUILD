@@ -101,25 +101,6 @@ py_test(
 )
 
 py_library(
-    name = "emissions",
-    srcs = ["emissions.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        requirement("numpy"),
-        requirement("pyyaml"),
-        ":metrics_utils",
-    ],
-)
-
-py_test(
-    name = "emissions_test",
-    srcs = ["emissions_test.py"],
-    deps = [
-        ":emissions",
-    ],
-)
-
-py_library(
     name = "plotly_helpers",
     srcs = ["plotly_helpers.py"],
     visibility = ["//visibility:public"],
@@ -127,5 +108,14 @@ py_library(
         requirement("plotly"),
         requirement("pandas"),
         "//resim/metrics:resim_style",
+    ],
+)
+
+py_library(
+    name = "emissions",
+    srcs = ["emissions.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/sdk/metrics:emissions",
     ],
 )

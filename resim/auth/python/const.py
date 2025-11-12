@@ -1,7 +1,15 @@
-import pathlib
+# Copyright 2025 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
 
-DEFAULT_BASE_URL = "https://api.resim.ai/v1"
-DEFAULT_DOMAIN = "https://resim.us.auth0.com"
-DEFAULT_SCOPE = "offline_access"
-DEFAULT_AUDIENCE = "https://api.resim.ai"
-DEFAULT_CACHE_LOCATION = pathlib.Path.home() / ".resim" / "token.json"
+from resim.sdk.auth.const import DEFAULT_BASE_URL, DEFAULT_DOMAIN, DEFAULT_SCOPE, DEFAULT_AUDIENCE, DEFAULT_CACHE_LOCATION
+
+__all__ = [
+    "DEFAULT_BASE_URL",
+    "DEFAULT_DOMAIN",
+    "DEFAULT_SCOPE",
+    "DEFAULT_AUDIENCE",
+    "DEFAULT_CACHE_LOCATION",
+]
