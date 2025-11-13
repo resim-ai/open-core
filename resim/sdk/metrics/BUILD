@@ -1,11 +1,11 @@
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("@resim_python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 py_library(
     name = "emissions",
     srcs = [
         "__init__.py",
-        "emissions.py"
+        "emissions.py",
     ],
     visibility = ["//visibility:public"],
     deps = [

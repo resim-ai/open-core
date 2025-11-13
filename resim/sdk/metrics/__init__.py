@@ -1,4 +1,4 @@
-from .emissions import Emitter, emit, ReSimValidationError
+from resim.sdk.metrics.emissions import Emitter, emit, ReSimValidationError
 
 __all__ = [
     "Emitter",

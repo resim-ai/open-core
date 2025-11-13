@@ -277,18 +277,17 @@ genrule(
     cmd = "cat $(SRCS) > $@",
 )
 
-
 py_package(
     name = "sdk_package",
     packages = [
         "resim",
         "resim_python_client",
     ],
-    deps = [
-        "//resim/sdk",
-        "//resim-python-client",
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//resim-python-client",
+        "//resim/sdk",
+    ],
 )
 
 py_wheel(

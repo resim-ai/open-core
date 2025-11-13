@@ -663,7 +663,7 @@ class EmitterTest(unittest.TestCase):
             with self.assertRaises(ValueError) as context:
                 emitter.emit_series(
                     "drone_speed",
-                    {"speed_int": 42, "speeds": 3.14},  # type: ignore
+                    {"speed_int": 42, "speeds": 3.14},
                     timestamps=[1000],
                 )
             self.assertIn("must be lists", str(context.exception))

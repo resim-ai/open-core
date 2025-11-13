@@ -47,9 +47,9 @@ py_test(
     srcs = ["imports_test.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":check_expiration",
         ":const",
         ":device_code_client",
         ":username_password_client",
-        ":check_expiration",
     ],
 )

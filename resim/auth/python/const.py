@@ -4,7 +4,13 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from resim.sdk.auth.const import DEFAULT_BASE_URL, DEFAULT_DOMAIN, DEFAULT_SCOPE, DEFAULT_AUDIENCE, DEFAULT_CACHE_LOCATION
+from resim.sdk.auth.const import (
+    DEFAULT_BASE_URL,
+    DEFAULT_DOMAIN,
+    DEFAULT_SCOPE,
+    DEFAULT_AUDIENCE,
+    DEFAULT_CACHE_LOCATION,
+)
 
 __all__ = [
     "DEFAULT_BASE_URL",
