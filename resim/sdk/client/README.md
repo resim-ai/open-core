@@ -5,9 +5,9 @@ A client library for accessing the ReSim Customer API. The client is generated f
 First, create a client:
 
 ```python
-from resim_python_client import AuthenticatedClient
-from resim.auth.python.device_code_client import DeviceCodeClient
-from resim.auth.python.username_password_client import UsernamePasswordClient
+from resim.sdk.client import AuthenticatedClient
+from resim.sdk.auth.device_code_client import DeviceCodeClient
+from resim.sdk.auth.username_password_client import UsernamePasswordClient
 
 # If you're using your local machine, you can use the device code flow to get a token
 device_code_client = DeviceCodeClient()
@@ -25,9 +25,9 @@ client = UsernamePasswordClient(
 Now call your endpoint and use the generated models:
 
 ```python
-from resim_python_client.models import Batch, ListBatchesOutput
-from resim_python_client.api.batches import list_batches
-from resim_python_client.types import Response
+from resim.sdk.client.models import Batch, ListBatchesOutput
+from resim.sdk.client.api.batches import list_batches
+from resim.sdk.client.types import Response
 
 with client as client:
     # to fetch without any extra information about the response
@@ -49,9 +49,9 @@ with client as client:
 Or do the same thing with an async version:
 
 ```python
-from resim_python_client.models import Batch
-from resim_python_client.api.batches import list_batches
-from resim_python_client.types import Response
+from resim.sdk.client.models import Batch
+from resim.sdk.client.api.batches import list_batches
+from resim.sdk.client.types import Response
 
 async with client as client:
     my_batches: ListBatchesOutput = await list_batches.asyncio(project_id="ca3b7ce3-0242-4da7-bf51-1eb1945c7de3", client=client)
@@ -72,15 +72,15 @@ Things to know:
 
 1. All path/query params, and bodies become method arguments.
 1. If your endpoint had any tags on it, the first tag will be used as a module name for the function (`batches` above)
-1. Any endpoint which did not have a tag is in `resim_python_client.api.default`
+1. Any endpoint which did not have a tag is in `resim.sdk.client.api.default`
 
 ### Example: updating an experience
 
-If you are looking to update an experience, browse to the [updateExperience endpoint](https://redocly.github.io/redoc/?url=https://api.resim.ai#tag/experiences/operation/updateExperience) and you'll see that it has a tag of `experiences`. This means that the generated module will be `resim_python_client.api.experiences.update_experience`. A quick usage example:
+If you are looking to update an experience, browse to the [updateExperience endpoint](https://redocly.github.io/redoc/?url=https://api.resim.ai#tag/experiences/operation/updateExperience) and you'll see that it has a tag of `experiences`. This means that the generated module will be `resim.sdk.client.api.experiences.update_experience`. A quick usage example:
 
 ```python
-from resim_python_client.models import UpdateExperienceInput, Experience
-from resim_python_client.api.experiences import update_experience
+from resim.sdk.client.models import UpdateExperienceInput, Experience
+from resim.sdk.client.api.experiences import update_experience
 
 with client as client:
     updated_experience: Experience = update_experience.sync(
@@ -96,7 +96,7 @@ with client as client:
 There are more settings on the generated `Client` class which let you control more runtime behavior, check out the docstring on that class for more info. You can also customize the underlying `httpx.Client` or `httpx.AsyncClient` (depending on your use-case):
 
 ```python
-from resim_python_client import Client
+from resim.sdk.client import Client
 
 def log_request(request):
     print(f"Request event hook: {request.method} {request.url} - Waiting for response")
@@ -117,7 +117,7 @@ You can even set the httpx client directly, but beware that this will override a
 
 ```python
 import httpx
-from resim_python_client import Client
+from resim.sdk.client import Client
 
 client = Client(
     base_url="https://api.example.com",

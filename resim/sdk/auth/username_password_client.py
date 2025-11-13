@@ -16,7 +16,7 @@ import pathlib
 from typing import Any, Optional
 
 import httpx
-from resim_python_client import AuthenticatedClient
+from resim.sdk.client import AuthenticatedClient
 
 import resim.sdk.auth.check_expiration as check_exp
 from resim.sdk.auth.const import (

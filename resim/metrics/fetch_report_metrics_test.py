@@ -11,13 +11,13 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock, patch
 
-from resim_python_client.api.batches import list_batches, list_jobs
-from resim_python_client.models.batch import Batch
-from resim_python_client.models.list_batches_output import ListBatchesOutput
-from resim_python_client.models.list_jobs_output import ListJobsOutput
-from resim_python_client.models.metric_status import MetricStatus
-from resim_python_client.models.report import Report
-from resim_python_client.models.report_status import ReportStatus
+from resim.sdk.client.api.batches import list_batches, list_jobs
+from resim.sdk.client.models.batch import Batch
+from resim.sdk.client.models.list_batches_output import ListBatchesOutput
+from resim.sdk.client.models.list_jobs_output import ListJobsOutput
+from resim.sdk.client.models.metric_status import MetricStatus
+from resim.sdk.client.models.report import Report
+from resim.sdk.client.models.report_status import ReportStatus
 
 import resim.metrics.fetch_report_metrics as frp
 

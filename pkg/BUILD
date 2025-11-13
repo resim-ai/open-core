@@ -281,11 +281,9 @@ py_package(
     name = "sdk_package",
     packages = [
         "resim",
-        "resim_python_client",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim-python-client",
         "//resim/sdk",
     ],
 )

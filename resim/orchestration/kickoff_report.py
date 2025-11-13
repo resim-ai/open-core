@@ -9,11 +9,11 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-from resim_python_client.api.batches import get_batch
-from resim_python_client.api.reports import create_report
-from resim_python_client.api.test_suites import get_test_suite
-from resim_python_client.client import AuthenticatedClient
-from resim_python_client.models import Report, ReportInput
+from resim.sdk.client.api.batches import get_batch
+from resim.sdk.client.api.reports import create_report
+from resim.sdk.client.api.test_suites import get_test_suite
+from resim.sdk.client import AuthenticatedClient
+from resim.sdk.client.models import Report, ReportInput
 
 logger = logging.getLogger(__name__)
 

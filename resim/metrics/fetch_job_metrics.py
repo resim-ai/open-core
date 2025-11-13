@@ -15,9 +15,9 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 import requests
-from resim_python_client.api.batches import list_jobs
-from resim_python_client.models import Job
-from resim_python_client.client import AuthenticatedClient
+from resim.sdk.client.api.batches import list_jobs
+from resim.sdk.client.models import Job
+from resim.sdk.client import AuthenticatedClient
 
 import resim.metrics.proto.metrics_pb2 as mp
 from resim.metrics import fetch_metrics_urls

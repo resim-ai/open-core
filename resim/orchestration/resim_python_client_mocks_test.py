@@ -6,7 +6,7 @@
 
 
 """
-Test for resim_python_client_mocks
+Test for resim.sdk.client_mocks
 """
 
 import unittest
@@ -14,10 +14,10 @@ from datetime import datetime
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
-from resim_python_client.client import AuthenticatedClient
-from resim_python_client.models import Batch, Report, ReportInput, TestSuite
+from resim.sdk.client import AuthenticatedClient
+from resim.sdk.client.models import Batch, Report, ReportInput, TestSuite
 
-import resim.orchestration.resim_python_client_mocks as mocks
+import resim.orchestration.resim.sdk.client_mocks as mocks
 
 
 class ReSimPythonClientMocksTest(unittest.IsolatedAsyncioTestCase):
