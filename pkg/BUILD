@@ -93,7 +93,7 @@ genrule(
     name = "combined_requires",
     srcs = [
         "//:requirements.txt",
-        "//resim-python-client:requirements.txt",
+        "//resim/sdk:requirements.txt",
         ":extra_requires.txt",
     ],
     outs = ["combined_requirements.txt"],
@@ -124,7 +124,6 @@ py_wheel(
     }),
     python_tag = PY_VERSION_TAG,
     requires_file = ":combined_requires",
-    strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
     summary = "ReSim Metrics Libraries.",
     twine = "@resim_pkg_deps//twine",
     version = version,
@@ -267,16 +266,6 @@ py_wheel(
     }),
 )
 
-genrule(
-    name = "combined_sdk_requires",
-    srcs = [
-        "//resim-python-client:requirements.txt",
-        "//resim/sdk:requirements.txt",
-    ],
-    outs = ["combined_sdk_requirements.txt"],
-    cmd = "cat $(SRCS) > $@",
-)
-
 py_package(
     name = "sdk_package",
     packages = [
@@ -298,8 +287,7 @@ py_wheel(
     homepage = "https://www.resim.ai/",
     license = LICENSE,
     python_tag = PY_VERSION_TAG,
-    requires_file = ":combined_sdk_requires",
-    strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
+    requires_file = "//resim/sdk:combined_requires",
     summary = "ReSim SDK Libraries.",
     version = version,
     deps = [":sdk_package"],

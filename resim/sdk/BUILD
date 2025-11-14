@@ -1,6 +1,6 @@
 load("@resim_python_client_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library")
-load("//resim/sdk/client:openapi_client.bzl", "openapi_client")
+load("//bazel:openapi_client.bzl", "openapi_client")
 
 py_library(
     name = "sdk",
@@ -8,19 +8,18 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/sdk/auth",
-        "//resim/sdk/client",
+        "//resim/sdk:client",
         "//resim/sdk/metrics",
     ],
 )
 
-exports_files(["requirements.txt"])
-
 ## Python API Client
+# Ideally, this would live in the client folder, but otherwise we end up with a bunch of horrid nested folders
 openapi_client(
     name = "client-gen",
     package_name = "client",
-    config = "//resim/sdk/client:openapi_python_client_config.yaml",
-    specification = "//resim/sdk/client:openapi.yaml",
+    config = "//resim/sdk/client_generator:openapi_python_client_config.yaml",
+    specification = "//resim/sdk/client_generator:openapi.yaml",
 )
 
 py_library(
@@ -33,4 +32,15 @@ py_library(
         requirement("attrs"),
         requirement("python-dateutil"),
     ],
+)
+
+genrule(
+    name = "combined_requires",
+    srcs = [
+        "//resim/sdk/client_generator:requirements.txt",
+        ":requirements.txt",
+    ],
+    outs = ["combined_sdk_requirements.txt"],
+    cmd = "cat $(SRCS) > $@",
+    visibility = ["//visibility:public"],
 )

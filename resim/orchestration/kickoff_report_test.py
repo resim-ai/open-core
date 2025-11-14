@@ -19,7 +19,7 @@ from resim.sdk.client.models import Batch, Report
 from resim.sdk.client.types import UNSET
 
 import resim.orchestration.kickoff_report as kr
-import resim.orchestration.resim.sdk.client_mocks as mocks
+import resim.orchestration.resim_python_client_mocks as mocks
 
 GET_BATCH_FUNCTION = "resim.orchestration.kickoff_report.get_batch.asyncio"
 GET_TEST_SUITE_FUNCTION = "resim.orchestration.kickoff_report.get_test_suite.asyncio"

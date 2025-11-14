@@ -39,7 +39,7 @@ Currently, the libraries are divided up into:
  - [Planning](resim/planning): Tools for high-level planning and optimal
    control.
  - [Simulator](resim/simulator): Our core simulator libraries. 
- - [Python API Client](resim-python-client): An auto-generated Python client for the ReSim API.
+ - [Python API Client](resim/sdk/client_generator): An auto-generated Python client for the ReSim API.
 
 ## Development
 

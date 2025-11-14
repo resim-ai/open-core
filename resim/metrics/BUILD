@@ -108,7 +108,7 @@ py_library(
     srcs = ["fetch_all_pages.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim-python-client",
+        "//resim/sdk:client",
         requirement("typing-extensions"),
     ],
 )
@@ -127,7 +127,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -137,7 +137,7 @@ py_test(
     deps = [
         ":fetch_all_pages",
         ":fetch_metrics_urls",
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -168,7 +168,7 @@ py_library(
         ":fetch_all_pages",
         ":fetch_metrics_urls",
         ":get_metrics_proto",
-        "//resim-python-client",
+        "//resim/sdk:client",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/python:unpack_metrics",
     ],
@@ -189,7 +189,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -199,7 +199,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("plotly"),
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -208,7 +208,7 @@ py_test(
     srcs = ["fetch_report_metrics_test.py"],
     deps = [
         ":fetch_report_metrics",
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -234,7 +234,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "//resim-python-client",
+        "//resim/sdk:client",
         "//resim/auth/python:device_code_client",
         requirement("pandas"),
     ],

@@ -41,7 +41,7 @@ py_library(
         requirement("httpx"),
         ":check_expiration",
         ":const",
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
