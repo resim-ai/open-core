@@ -93,7 +93,7 @@ genrule(
     name = "combined_requires",
     srcs = [
         "//:requirements.txt",
-        "//resim/sdk:requirements.txt",
+        "//resim/sdk:combined_requires",
         ":extra_requires.txt",
     ],
     outs = ["combined_requirements.txt"],
