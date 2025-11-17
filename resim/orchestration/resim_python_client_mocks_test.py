@@ -6,7 +6,7 @@
 
 
 """
-Test for resim.sdk.client_mocks
+Test for resim_python_client_mocks
 """
 
 import unittest
