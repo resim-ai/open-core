@@ -26,8 +26,8 @@ py_library(
     srcs = ["kickoff_report.py"],
     visibility = ["//pkg:__subpackages__"],
     deps = [
-        "//resim/sdk:client",
         "//resim/msg:detection_proto_py",
+        "//resim/sdk:client",
     ],
 )
 

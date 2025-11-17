@@ -7,8 +7,8 @@ py_library(
     srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth",
         "//resim/sdk:client",
+        "//resim/sdk/auth",
         "//resim/sdk/metrics",
     ],
 )

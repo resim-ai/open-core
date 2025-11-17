@@ -168,9 +168,9 @@ py_library(
         ":fetch_all_pages",
         ":fetch_metrics_urls",
         ":get_metrics_proto",
-        "//resim/sdk:client",
         "//resim/metrics/proto:metrics_proto_py",
         "//resim/metrics/python:unpack_metrics",
+        "//resim/sdk:client",
     ],
 )
 
@@ -234,8 +234,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":fetch_all_pages",
-        "//resim/sdk:client",
         "//resim/auth/python:device_code_client",
+        "//resim/sdk:client",
         requirement("pandas"),
     ],
 )
