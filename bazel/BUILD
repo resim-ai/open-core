@@ -11,3 +11,8 @@ py_console_script_binary(
     pkg = "@resim_pkg_deps//pybind11_stubgen",
     visibility = ["//visibility:public"],
 )
+
+py_console_script_binary(
+    name = "openapi-python-client",
+    pkg = "@resim_python_client_dev_deps//openapi_python_client",
+)

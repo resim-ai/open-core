@@ -11,7 +11,7 @@ from unittest.mock import ANY, patch
 
 import httpx
 
-from resim.auth.python.username_password_client import UsernamePasswordClient
+from resim.sdk.auth.username_password_client import UsernamePasswordClient
 
 
 class UsernamePasswordClientTest(unittest.TestCase):

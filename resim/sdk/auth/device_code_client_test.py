@@ -18,7 +18,7 @@ import unittest
 import unittest.mock
 from http import HTTPStatus
 
-import resim.auth.python.device_code_client as dcc
+import resim.sdk.auth.device_code_client as dcc
 
 DOMAIN = "https://resim.us.auth0.com"
 CLIENT_ID = "U6EHPrmAIJf8QUUzldGa4cN26XP58I2a"

@@ -112,7 +112,7 @@ use_repo(pip, "resim_pkg_deps")
     pip.parse(
         hub_name = "resim_python_client_deps",
         python_version = python_version,
-        requirements_lock = "@resim_open_core//resim-python-client:requirements_lock.txt",
+        requirements_lock = "@resim_open_core//resim/sdk/client_generator:requirements_lock.txt",
     )
     for python_version in _PYTHON_VERSIONS
 ]
@@ -123,7 +123,7 @@ use_repo(pip, "resim_python_client_deps")
     pip.parse(
         hub_name = "resim_python_client_dev_deps",
         python_version = python_version,
-        requirements_lock = "@resim_open_core//resim-python-client:requirements-dev_lock.txt",
+        requirements_lock = "@resim_open_core//resim/sdk/client_generator:requirements-dev_lock.txt",
     )
     for python_version in _PYTHON_VERSIONS
 ]

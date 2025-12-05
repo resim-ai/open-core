@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import resim.auth.python.check_expiration as check_exp
+import resim.sdk.auth.check_expiration as check_exp
 
 
 class CheckExpirationTest(unittest.TestCase):

@@ -15,8 +15,8 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
-from resim_python_client.models import Batch, Report
-from resim_python_client.types import UNSET
+from resim.sdk.client.models import Batch, Report
+from resim.sdk.client.types import UNSET
 
 import resim.orchestration.kickoff_report as kr
 import resim.orchestration.resim_python_client_mocks as mocks

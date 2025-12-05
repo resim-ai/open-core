@@ -18,20 +18,20 @@ from typing import Awaitable, Hashable
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from resim_python_client.api.batches import list_batch_metrics, list_metrics_for_job
-from resim_python_client.api.builds import get_build
-from resim_python_client.api.experiences import list_experience_tags_for_experience
-from resim_python_client.client import AuthenticatedClient
-from resim_python_client.models.batch import Batch
-from resim_python_client.models.batch_metric import BatchMetric
-from resim_python_client.models.batch_status import BatchStatus
-from resim_python_client.models.conflated_job_status import ConflatedJobStatus
-from resim_python_client.models.job import Job
-from resim_python_client.models.job_metric import JobMetric
-from resim_python_client.models.metric_status import MetricStatus
-from resim_python_client.models.metric_type import MetricType
+from resim.sdk.client.api.batches import list_batch_metrics, list_metrics_for_job
+from resim.sdk.client.api.builds import get_build
+from resim.sdk.client.api.experiences import list_experience_tags_for_experience
+from resim.sdk.client import AuthenticatedClient
+from resim.sdk.client.models.batch import Batch
+from resim.sdk.client.models.batch_metric import BatchMetric
+from resim.sdk.client.models.batch_status import BatchStatus
+from resim.sdk.client.models.conflated_job_status import ConflatedJobStatus
+from resim.sdk.client.models.job import Job
+from resim.sdk.client.models.job_metric import JobMetric
+from resim.sdk.client.models.metric_status import MetricStatus
+from resim.sdk.client.models.metric_type import MetricType
 
-from resim_python_client.models import (
+from resim.sdk.client.models import (
     ListJobMetricsOutput,
     ListBatchMetricsOutput,
     ListExperiencesOutput,

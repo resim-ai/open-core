@@ -12,14 +12,14 @@ metrics data.
 
 import uuid
 
-from resim_python_client.api.batches import (
+from resim.sdk.client.api.batches import (
     list_metrics_data_for_job,
     list_metrics_for_job,
 )
-from resim_python_client.client import AuthenticatedClient
-from resim_python_client.models.metrics_data import MetricsData
-from resim_python_client.models.metrics_data_type import MetricsDataType
-from resim_python_client.models import ListJobMetricsOutput
+from resim.sdk.client import AuthenticatedClient
+from resim.sdk.client.models.metrics_data import MetricsData
+from resim.sdk.client.models.metrics_data_type import MetricsDataType
+from resim.sdk.client.models import ListJobMetricsOutput
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
 

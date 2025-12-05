@@ -65,6 +65,7 @@ py_package(
         "//resim/msg:primitives_proto_py",
         "//resim/msg:transform_proto_py",
         "//resim/orchestration:kickoff_report",
+        "//resim/sdk",
         "//resim/transforms/proto:framed_vector_3_proto_py",
         "//resim/transforms/python:geodetic_python.so",
         "//resim/transforms/python:quaternion.so",
@@ -92,7 +93,7 @@ genrule(
     name = "combined_requires",
     srcs = [
         "//:requirements.txt",
-        "//resim-python-client:requirements.txt",
+        "//resim/sdk:combined_requires",
         ":extra_requires.txt",
     ],
     outs = ["combined_requirements.txt"],
@@ -123,7 +124,6 @@ py_wheel(
     }),
     python_tag = PY_VERSION_TAG,
     requires_file = ":combined_requires",
-    strip_path_prefixes = ["resim-python-client/resim-python-client-gen"],
     summary = "ReSim Metrics Libraries.",
     twine = "@resim_pkg_deps//twine",
     version = version,
@@ -264,6 +264,33 @@ py_wheel(
         "//:nocross": ["//resim/ros2:ros2_py_package_stubs"],
         "//conditions:default": [],
     }),
+)
+
+py_package(
+    name = "sdk_package",
+    packages = [
+        "resim",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resim/sdk",
+    ],
+)
+
+py_wheel(
+    name = "sdk_wheel",
+    author = "ReSim Developers",
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+    ],
+    distribution = "resim_sdk",
+    homepage = "https://www.resim.ai/",
+    license = LICENSE,
+    python_tag = PY_VERSION_TAG,
+    requires_file = "//resim/sdk:combined_requires",
+    summary = "ReSim SDK Libraries.",
+    version = version,
+    deps = [":sdk_package"],
 )
 
 py_console_script_binary(

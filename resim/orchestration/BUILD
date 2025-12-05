@@ -11,7 +11,7 @@ py_library(
     testonly = True,
     srcs = ["resim_python_client_mocks.py"],
     deps = [
-        "//resim-python-client",
+        "//resim/sdk:client",
     ],
 )
 
@@ -26,8 +26,8 @@ py_library(
     srcs = ["kickoff_report.py"],
     visibility = ["//pkg:__subpackages__"],
     deps = [
-        "//resim-python-client",
         "//resim/msg:detection_proto_py",
+        "//resim/sdk:client",
     ],
 )
 
