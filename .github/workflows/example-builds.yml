@@ -38,6 +38,12 @@ jobs:
         uses: ./.github/actions/setup-bazel-cache-auth
         with:
           bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+  
+      - name: Workaround for Custom Docker Image
+        # Trunk makes use of git and we will get permissions issues (i.e.
+        # detected dubious ownership) if we don't make the repo a safe
+        # directory.
+        run: git config --global --add safe.directory /__w/open-core/open-core
 
       - name: Create Build
         env:

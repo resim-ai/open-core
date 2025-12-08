@@ -8,7 +8,7 @@ on:
 jobs:
   coverage:
     name: Lint & Generate Coverage Report
-    runs-on: ubuntu-22.04
+    runs-on: gha-large
     container:
       image: public.ecr.aws/resim/core:latest
     steps:

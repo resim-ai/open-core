@@ -286,11 +286,15 @@ py_wheel(
     distribution = "resim_sdk",
     homepage = "https://www.resim.ai/",
     license = LICENSE,
-    python_tag = PY_VERSION_TAG,
+    python_tag = "py3",
     requires_file = "//resim/sdk:combined_requires",
     summary = "ReSim SDK Libraries.",
+    twine = "@resim_pkg_deps//twine",
     version = version,
-    deps = [":sdk_package"],
+    deps = [
+        ":sdk_package",
+        "//resim:py_typed_marker",
+    ],
 )
 
 py_console_script_binary(

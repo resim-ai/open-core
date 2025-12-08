@@ -18,10 +18,10 @@ py_library(
     srcs = ["device_code_client.py"],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("polling2"),
-        requirement("requests"),
+        requirement("httpx"),
         ":check_expiration",
         ":const",
+        "//resim/sdk:client",
     ],
 )
 

@@ -115,3 +115,13 @@ py_binary(
         "//resim/metrics/python:plotly_helpers",
     ],
 )
+
+py_binary(
+    name = "auth_example",
+    srcs = ["auth_example.py"],
+    deps = [
+        "//resim/sdk:client",
+        "//resim/sdk/auth:device_code_client",
+        "//resim/sdk/auth:username_password_client",
+    ],
+)

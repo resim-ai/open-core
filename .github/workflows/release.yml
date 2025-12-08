@@ -5,10 +5,15 @@ on:
       tag:
         type: string
         description: "Release Tag"
+      push_to_pypi_dev:
+        type: boolean
+        description: "Push to Test PyPI instead of production PyPI"
+        default: false
+
 jobs:
   pre_release_checks:
     name: Pre-release checks
-    runs-on: ubuntu-22.04
+    runs-on: gha-large
     container:
       image: public.ecr.aws/resim/core:latest
     steps:
@@ -16,6 +21,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate push_to_pypi_dev input
+        if: github.ref != 'refs/heads/main' && github.event.inputs.push_to_pypi_dev == 'false'
+        run: |
+          echo "Error: push_to_pypi_dev can only be false on the main branch"
+          exit 1
 
       - name: Workaround for Custom Docker Image
         # Trunk makes use of git and we will get permissions issues (i.e.
@@ -28,15 +39,6 @@ jobs:
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: ./.github/workflows/check_tags_available.sh
-
-      - name: Cache Bazel
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-
 
       - name: Setup Bazel Cache Auth
         uses: ./.github/actions/setup-bazel-cache-auth
@@ -92,6 +94,7 @@ jobs:
     uses: ./.github/workflows/build-push-wheels.yml
     with:
       resim_version: ${{ github.event.inputs.tag }}
+      push_to_pypi_dev: ${{ github.event.inputs.push_to_pypi_dev == 'true' }}
     secrets: inherit
 
   do_release:

@@ -19,7 +19,7 @@ openapi_client(
     name = "client-gen",
     package_name = "client",
     config = "//resim/sdk/client_generator:openapi_python_client_config.yaml",
-    specification = "//resim/sdk/client_generator:openapi.yaml",
+    specification = "//resim/sdk/client_generator:customerapi.yaml",
 )
 
 py_library(
