@@ -5,6 +5,11 @@ on:
       tag:
         type: string
         description: "Release Tag"
+      push_to_pypi_dev:
+        type: boolean
+        description: "Push to Test PyPI instead of production PyPI"
+        default: false
+
 jobs:
   pre_release_checks:
     name: Pre-release checks
@@ -16,6 +21,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate push_to_pypi_dev input
+        if: github.ref != 'refs/heads/main' && github.event.inputs.push_to_pypi_dev == 'false'
+        run: |
+          echo "Error: push_to_pypi_dev can only be false on the main branch"
+          exit 1
 
       - name: Workaround for Custom Docker Image
         # Trunk makes use of git and we will get permissions issues (i.e.
@@ -92,6 +103,7 @@ jobs:
     uses: ./.github/workflows/build-push-wheels.yml
     with:
       resim_version: ${{ github.event.inputs.tag }}
+      push_to_pypi_dev: ${{ github.event.inputs.push_to_pypi_dev }}
     secrets: inherit
 
   do_release:
