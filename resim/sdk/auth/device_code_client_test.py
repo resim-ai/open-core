@@ -183,6 +183,20 @@ class DeviceCodeClientTest(unittest.TestCase):
             self.assertEqual(server.num_device_code_requests, 0)
             self.assertEqual(server.num_token_requests, 0)
 
+            # Test getting it if file is empty [must reauth]
+            with open(pathlib.Path(tmpdir) / "token.json", "w") as f:
+                f.write("")
+            server = MockServer(testcase=self)
+            client = dcc.DeviceCodeClient(
+                domain=DOMAIN,
+                client_id=CLIENT_ID,
+                cache_location=pathlib.Path(tmpdir) / "token.json",
+            )
+            token = client.get_jwt()
+            self.assertEqual(token["access_token"], TOKEN)
+            self.assertEqual(server.num_device_code_requests, 1)
+            self.assertEqual(server.num_token_requests, 2)
+
             # Test resetting (was refreshing)
             server = MockServer(testcase=self)
             client.reset()
