@@ -118,7 +118,7 @@ jobs:
           merge-multiple: true
 
       - name: Upload to Test PyPI
-        if: inputs.push_to_pypi_dev
+        if: ${{ inputs.push_to_pypi_dev }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
@@ -126,7 +126,7 @@ jobs:
           twine upload --repository testpypi dist/*.whl --skip-existing
 
       - name: Upload to PyPI
-        if: !inputs.push_to_pypi_dev
+        if: ${{ !inputs.push_to_pypi_dev }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
