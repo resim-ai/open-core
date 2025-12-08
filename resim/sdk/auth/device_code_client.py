@@ -12,24 +12,26 @@ ReSim's API (https://api.resim.ai) via the device code flow.
 
 import json
 import pathlib
+import time
 import typing
 from http import HTTPStatus
 
-import polling2
-import requests
+import httpx
 
 import resim.sdk.auth.check_expiration as check_exp
 from resim.sdk.auth.const import (
     DEFAULT_AUDIENCE,
+    DEFAULT_BASE_URL,
     DEFAULT_CACHE_LOCATION,
     DEFAULT_DOMAIN,
     DEFAULT_SCOPE,
 )
+from resim.sdk.client import AuthenticatedClient
 
 DEVICE_CODE_CLIENT_ID = "gTp1Y0kOyQ7QzIo2lZm0auGM6FJZZVvy"
 
 
-class DeviceCodeClient:
+class DeviceCodeClient(AuthenticatedClient):
     """
     The client class which manages the token as well as other
     configuration data for authentication.
@@ -38,11 +40,13 @@ class DeviceCodeClient:
     def __init__(
         self,
         *,
+        base_url: str = DEFAULT_BASE_URL,
         domain: str = DEFAULT_DOMAIN,
         client_id: str = DEVICE_CODE_CLIENT_ID,
         scope: str = DEFAULT_SCOPE,
         audience: str = DEFAULT_AUDIENCE,
         cache_location: pathlib.Path = DEFAULT_CACHE_LOCATION,
+        **kwargs: typing.Any,
     ):
         self._token: typing.Optional[dict[str, typing.Any]] = None
         self._client_id = client_id
@@ -51,7 +55,13 @@ class DeviceCodeClient:
         self._scope = scope
         self._audience = audience
 
-    def refresh(self) -> None:
+        super().__init__(
+            token=self.get_jwt()["access_token"],
+            base_url=base_url,
+            **kwargs,
+        )
+
+    def reset(self) -> None:
         """Clear the local token cache and the internal token."""
         self._token = None
         if self._cache_location.exists():
@@ -63,8 +73,11 @@ class DeviceCodeClient:
             assert self._cache_location.is_file(), (
                 "Directory detected in cache location!"
             )
-            with open(self._cache_location, "r", encoding="utf-8") as cache:
-                self._token = json.load(cache)
+            try:
+                with open(self._cache_location, "r", encoding="utf-8") as cache:
+                    self._token = json.load(cache)
+            except json.JSONDecodeError:
+                self._token = None
 
         if self._token is None or check_exp.is_expired(token_data=self._token):
             self._token = _get_new_token(
@@ -88,7 +101,7 @@ def _get_new_token(
         "audience": audience,
     }
 
-    device_code_response = requests.post(domain + "/oauth/device/code", data=payload)
+    device_code_response = httpx.post(domain + "/oauth/device/code", data=payload)
 
     if device_code_response.status_code != HTTPStatus.OK:
         raise RuntimeError("Failed to fetch device code!")
@@ -111,14 +124,14 @@ Please navigate to: {device_code_data["verification_uri_complete"]}
         "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
     }
 
-    def poll_once() -> typing.Optional[requests.Response]:
-        token_response = requests.post(domain + "/oauth/token", data=payload)
-        return token_response if token_response.status_code == HTTPStatus.OK else None
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        token_response = httpx.post(domain + "/oauth/token", data=payload)
+        if token_response.status_code == HTTPStatus.OK:
+            token_data: dict[str, typing.Any] = token_response.json()
+            check_exp.add_expiration_time(token_data=token_data)
+            return token_data
 
-    token_response = polling2.poll(poll_once, step=polling_interval, timeout=timeout)
+        time.sleep(polling_interval)
 
-    token_data: dict[str, typing.Any] = token_response.json()
-
-    check_exp.add_expiration_time(token_data=token_data)
-
-    return token_data
+    raise RuntimeError("Timed out waiting for device code authentication")

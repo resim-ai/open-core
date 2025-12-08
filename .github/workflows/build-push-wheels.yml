@@ -3,9 +3,14 @@ on:
   workflow_call:
     inputs:
       resim_version:
-        description: 'Version string to embed in the wheels and push to PyPI'
+        description: "Version string to embed in the wheels and push to PyPI"
         required: true
         type: string
+      push_to_pypi_dev:
+        description: "Whether to push to Test PyPI"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -56,9 +61,43 @@ jobs:
           name: wheel-${{ matrix.arch }}-${{ matrix.python-version }}
           path: ${{ steps.build_wheel.outputs.wheel_path }}
 
+  build_sdk_wheel:
+    name: Build SDK Wheel
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
+      - name: Build SDK Wheel
+        id: build_sdk_wheel
+        env:
+          RESIM_VERSION: ${{ inputs.resim_version }}
+        run: |
+          bazel build //pkg:sdk_wheel \
+            --repo_env="RESIM_VERSION=$RESIM_VERSION"
+
+          OUTPATH=$(bazel info output_path)
+          WHEELPATH=$OUTPATH/../$(bazel cquery \
+            //pkg:sdk_wheel \
+            --repo_env="RESIM_VERSION=$RESIM_VERSION" \
+            --output files)
+          echo "wheel_path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-sdk
+          path: ${{ steps.build_sdk_wheel.outputs.wheel_path }}
+
   upload_to_pypi:
     name: Upload Wheels to PyPI
-    needs: build
+    needs: [build, build_sdk_wheel]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +105,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Twine
         run: pip install --upgrade twine
@@ -77,8 +116,17 @@ jobs:
           path: dist/
           pattern: wheel-*
           merge-multiple: true
-  
+
+      - name: Upload to Test PyPI
+        if: inputs.push_to_pypi_dev
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
+        run: |
+          twine upload --repository testpypi dist/*.whl --skip-existing
+
       - name: Upload to PyPI
+        if: !inputs.push_to_pypi_dev
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
