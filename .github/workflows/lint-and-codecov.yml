@@ -12,12 +12,6 @@ jobs:
     container:
       image: public.ecr.aws/resim/core:latest
     steps:
-      - name: Disk Cleanup
-        run: |
-          cd /opt
-          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
-          rm -rf /opt/hostedtoolcache
-
       - name: Checkout
         uses: actions/checkout@v3
 
