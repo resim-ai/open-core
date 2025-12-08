@@ -40,15 +40,6 @@ jobs:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: ./.github/workflows/check_tags_available.sh
 
-      - name: Cache Bazel
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-
-
       - name: Setup Bazel Cache Auth
         uses: ./.github/actions/setup-bazel-cache-auth
         with:
