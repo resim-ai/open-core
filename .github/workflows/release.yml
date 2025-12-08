@@ -13,7 +13,7 @@ on:
 jobs:
   pre_release_checks:
     name: Pre-release checks
-    runs-on: ubuntu-22.04
+    runs-on: gha-large
     container:
       image: public.ecr.aws/resim/core:latest
     steps:
@@ -100,7 +100,7 @@ jobs:
     uses: ./.github/workflows/build-push-wheels.yml
     with:
       resim_version: ${{ github.event.inputs.tag }}
-      push_to_pypi_dev: ${{ github.event.inputs.push_to_pypi_dev }}
+      push_to_pypi_dev: ${{ github.event.inputs.push_to_pypi_dev == 'true' }}
     secrets: inherit
 
   do_release:
