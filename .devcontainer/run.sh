@@ -9,6 +9,7 @@ DIRPATH="/workspaces/${PWD##*/}"
 docker run -it \
        --platform linux/amd64 \
        -p 8080:8080 \
+       -p 8484:8484 \
        -p 443:443 \
        --volume $(pwd):$DIRPATH \
        --volume root-home:/root \
