@@ -19,7 +19,7 @@ namespace resim::simulator {
 // @param[in] mcap_path - The path of the MCAP file to log the simulation
 // results to.
 void simulate(
-    const experiences::Experience &experience,
+    experiences::Experience &experience,
     const std::filesystem::path &mcap_path);
 
 }  // namespace resim::simulator

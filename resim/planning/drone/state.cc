@@ -21,6 +21,7 @@ State operator+(const State &x, const typename State::Vec &dx) {
           x.angular_velocity +
           get_block<State::Partition, State::ANGULAR_VELOCITY>(dx),
       .velocity = x.velocity + get_block<State::Partition, State::VELOCITY>(dx),
+      .time = x.time + get_block<State::Partition, State::TIME>(dx),
   };
 }
 
@@ -34,6 +35,7 @@ typename State::Vec operator-(const State &x, const State &y) {
       x.angular_velocity - y.angular_velocity;
   get_block<State::Partition, State::VELOCITY>(result) =
       x.velocity - y.velocity;
+  get_block<State::Partition, State::TIME>(result) = x.time - y.time;
   return result;
 }
 

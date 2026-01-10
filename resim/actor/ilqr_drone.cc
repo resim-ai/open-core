@@ -4,11 +4,11 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include "resim/actor/ilqr_drone.hh"
-
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
+#include "resim/actor/ilqr_drone.hh"
 #include "resim/actor/state/rigid_body_state.hh"
 #include "resim/math/vector_partition.hh"
 #include "resim/planning/cost_building_blocks.hh"
@@ -20,6 +20,7 @@
 #include "resim/transforms/se3.hh"
 #include "resim/transforms/so3.hh"
 #include "resim/utils/nullable_reference.hh"
+#include "state/observable_state.hh"
 
 namespace resim::actor {
 
@@ -42,7 +43,10 @@ using math::get_block;
 // velocity regularization cost functions.
 // @param[in] goal_position - The goal we're navigating to.
 // @param[in] velocity_cost - The penalty weight to apply to non-zero velocity.
-CostFunctionRegistry make_cost(Vec3 goal_position, const double velocity_cost) {
+CostFunctionRegistry make_cost(
+    Vec3 goal_position,
+    const double velocity_cost,
+    std::vector<state::ObservableState> *avoidance_states) {
   CostFunctionRegistry registry;
   using State = planning::drone::State;
   using Control = planning::drone::Control;
@@ -125,14 +129,50 @@ CostFunctionRegistry make_cost(Vec3 goal_position, const double velocity_cost) {
         return cost_result.cost;
       };
 
-  registry["velocity_cost"] =
-      [velocity_cost](
+  registry["avoidance_cost"] =
+      [avoidance_states, velocity_cost](
           const State &x,
           NullableReference<const Control> u,
           NullableReference<planning::CostDiffs<State, Control>> diffs) {
+        double cost = 0.0;
+
+        for (const auto &state : *avoidance_states) {
+          const double HEIGHT = std::sqrt(0.01 / velocity_cost);
+
+          const double WEIGHT = 2.0 * (0.5 - HEIGHT * HEIGHT);
+          Vec3 forcast_position = state.state.ref_from_body().translation();
+
+          if (state.state.body_linear_velocity_mps().norm() > 0.1) {
+            forcast_position += state.state.ref_from_body().rotation() *
+                                state.state.body_linear_velocity_mps();
+          }
+          auto cost_result = avoidance_cost<3>(
+              x.position - forcast_position,
+              (Vec3{1.0, 1.0, 0.5} * WEIGHT).asDiagonal(),
+              HEIGHT,
+              diffs.has_value() ? ComputeDiffs::YES : ComputeDiffs::NO);
+
+          if (diffs.has_value()) {
+            get_block<State::Partition, State::POSITION>(diffs->cost_x) +=
+                *cost_result.dcost_dx;
+            get_block<
+                State::Partition,
+                State::POSITION,
+                State::Partition,
+                State::POSITION>(diffs->cost_xx) += *cost_result.d2cost_dx2;
+          }
+          cost += cost_result.cost;
+        }
+        return cost;
+      };
+
+  registry["velocity_cost"] =
+      [](const State &x,
+         NullableReference<const Control> u,
+         NullableReference<planning::CostDiffs<State, Control>> diffs) {
         auto cost_result = quadratic_cost<3>(
             x.velocity,
-            velocity_cost * Eigen::Matrix3d::Identity(),
+            0.1 * Eigen::Matrix3d::Identity(),
             diffs.has_value() ? ComputeDiffs::YES : ComputeDiffs::NO);
 
         if (diffs.has_value()) {
@@ -227,12 +267,16 @@ ILQRDrone::ILQRDrone(
     double velocity_cost)
     : Actor{id},
       state_{make_initial_state(std::move(initial_position))},
+      avoidance_states_{},
       ilqr_{
           PLANNING_STEPS,
           planning::drone::Dynamics{
               PLANNING_DT_S,
               GRAVITATIONAL_ACCELERATION_MPSS},
-          make_cost(std::move(goal_position), velocity_cost)},
+          make_cost(
+              std::move(goal_position),
+              velocity_cost,
+              &avoidance_states_)},
       control_trajectory_{
           default_control_trajectory(),
           default_control_trajectory()} {}
@@ -263,6 +307,7 @@ void ILQRDrone::replan() {
   }
   last_plan_time_ = current_time_;
   constexpr int MAX_ITERATIONS = 100;
+  state_.time.x() = 0.0;
   auto result = ilqr_.optimize_controls(
       state_,
       control_trajectory_.current(),
@@ -336,5 +381,18 @@ state::ObservableState ILQRDrone::observable_state() const {
 };
 
 time::Timestamp ILQRDrone::current_time() const { return current_time_; }
+
+void ILQRDrone::observe_states(
+    const std::vector<state::ObservableState> &states) {
+  avoidance_states_.clear();
+  std::copy_if(
+      states.cbegin(),
+      states.cend(),
+      std::back_inserter(avoidance_states_),
+      [this](const state::ObservableState &state) -> bool {
+        // Only observe other actors!
+        return state.id != this->id();
+      });
+}
 
 }  // namespace resim::actor

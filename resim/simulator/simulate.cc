@@ -27,23 +27,16 @@
 namespace resim::simulator {
 
 void simulate(
-    const experiences::Experience &experience,
+    experiences::Experience &experience,
     const std::filesystem::path &mcap_path) {
   const time::Timestamp time_limit{
-      experience.dynamic_behavior.completion_criteria.time_limit};
+      2 * experience.dynamic_behavior.completion_criteria.time_limit};
 
   REASSERT(time_limit > time::Timestamp(), "Time limit must be positive!");
 
   // Setup logger
   std::shared_ptr<LoggerInterface> logger{
       std::make_shared<McapLogger>(mcap_path)};
-
-  // Log the experience
-  experiences::proto::Experience experience_msg;
-  pack(experience, &experience_msg);
-  constexpr time::Timestamp ZERO;
-  logger->add_proto_channel<experiences::proto::Experience>("/experience");
-  logger->log_proto("/experience", ZERO, experience_msg);
 
   // Setup units
   ExecutorBuilder executor_builder;
@@ -61,6 +54,13 @@ void simulate(
   std::vector<std::unique_ptr<actor::ActorUnit>> actor_units;
   std::vector<std::unique_ptr<actor::Actor>> actors{
       actor::factory(experience.dynamic_behavior)};
+
+  // Log the experience
+  experiences::proto::Experience experience_msg;
+  pack(experience, &experience_msg);
+  constexpr time::Timestamp ZERO;
+  logger->add_proto_channel<experiences::proto::Experience>("/experience");
+  logger->log_proto("/experience", ZERO, experience_msg);
 
   // TODO(tknowles): For now, add an actor metrics unit for the first actor
   if (not actors.empty()) {
