@@ -21,12 +21,12 @@ bazel run //:update_docs
 
 With `MODULE.bazel`:
 ```
-bazel_dep(name = "rules_resim", version = "0.1.0")
+bazel_dep(name = "rules_resim", version = "0.2.0")
 archive_override(
     module_name = "rules_resim",
-    sha256 = RULES_RESIM_CHECKSUM,
-    strip_prefix = "open-core-{}/rules_resim".format(RULES_RESIM_VERSION),
-    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RULES_RESIM_VERSION),
+    sha256 = RESIM_OPEN_CORE_CHECKSUM,
+    strip_prefix = "open-core-{}/rules_resim".format(RESIM_OPEN_CORE_VERSION),
+    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RESIM_OPEN_CORE_VERSION),
 )
 ```
 
@@ -36,9 +36,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "rules_resim",
-    sha256 = RULES_RESIM_CHECKSUM,
-    strip_prefix = "open-core-{}/rules_resim".format(RULES_RESIM_VERSION),
-    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RULES_RESIM_VERSION),
+    sha256 = RESIM_OPEN_CORE_CHECKSUM,
+    strip_prefix = "open-core-{}/rules_resim".format(RESIM_OPEN_CORE_VERSION),
+    url = "https://github.com/resim-ai/open-core/archive/{}.zip".format(RESIM_OPEN_CORE_VERSION),
 )
 
 load("@rules_resim//:workspace_deps.bzl", "rules_resim_repositories")

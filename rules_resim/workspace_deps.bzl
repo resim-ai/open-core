@@ -15,11 +15,11 @@ load("@rules_resim//private:cli.bzl", "resim_cli")
 def http_archive(**kwargs):
     maybe(_http_archive, **kwargs)
 
-def rules_resim_repositories(cli_version = "v0.30.0"):
+def rules_resim_repositories(cli_version = "v0.43.0"):
     """Bring in repositories that rules_resim() depends on.
 
     Args:
-        cli_version: The version of the CLI to use. Defaults to v0.30.0.
+        cli_version: The version of the CLI to use. Defaults to v0.43.0.
     """
 
     resim_cli(name = "resim_cli", version = cli_version)
