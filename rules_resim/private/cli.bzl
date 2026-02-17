@@ -65,16 +65,32 @@ config_setting(
 )""".format(name = p.name, os = p.os, cpu = p.cpu))
 
     # Generate an alias to the correct platform
-    build_content.append("""alias(
-    name = "resim",
-    actual = select({""")
+    platform_names = [p.name for p in platforms]
+    no_match_msg = (
+        "No matching platform for ReSim CLI version {version}. " +
+        "Supported platforms for this version: {platforms}. " +
+        "Note: linux-arm64 requires v0.43.0 or higher."
+    ).format(
+        version = rctx.attr.version,
+        platforms = ", ".join(platform_names),
+    )
 
+    select_entries = []
     for p in platforms:
-        build_content.append("""        ":{name}": "@resim_cli_{name}//:resim",""".format(name = p.name))
+        select_entries.append("""        ":{name}": "@resim_cli_{name}//:resim",""".format(name = p.name))
 
-    build_content.append("""    }),
-    visibility = ["//visibility:public"],
-)""")
+    build_content.append("\n".join([
+        """alias(""",
+        """    name = "resim",""",
+        """    actual = select(""",
+        """        {""",
+    ] + select_entries + [
+        """        },""",
+        """        no_match_error = "%s",""" % no_match_msg,
+        """    ),""",
+        """    visibility = ["//visibility:public"],""",
+        """)""",
+    ]))
 
     rctx.file("BUILD.bazel", "\n".join(build_content))
 

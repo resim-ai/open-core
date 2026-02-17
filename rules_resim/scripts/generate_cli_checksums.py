@@ -22,7 +22,7 @@ VERSIONS = [
     "v0.19.0", "v0.20.0", "v0.21.0", "v0.22.0", "v0.23.0", "v0.23.1", "v0.23.2", "v0.24.0",
     "v0.25.0", "v0.26.0", "v0.27.0", "v0.27.1", "v0.27.2", "v0.28.0", "v0.29.0", "v0.30.0",
     "v0.31.0", "v0.32.0", "v0.33.0", "v0.33.1", "v0.34.0", "v0.35.0", "v0.36.0", "v0.37.0", 
-    "v0.38.0", "v0.39.0",
+    "v0.38.0", "v0.39.0", "v0.40.0", "v0.41.0", "v0.42.0", "v0.43.0", 
 ]
 # fmt: on
 
@@ -31,6 +31,11 @@ PLATFORMS = [
         "name": "linux-amd64",
         "os": "@platforms//os:linux",
         "cpu": "@platforms//cpu:x86_64",
+    },
+    {
+        "name": "linux-arm64",
+        "os": "@platforms//os:linux",
+        "cpu": "@platforms//cpu:arm64",
     },
     {
         "name": "darwin-arm64",
@@ -43,14 +48,42 @@ PLATFORMS = [
         "cpu": "@platforms//cpu:x86_64",
     },
 ]
+
+# Minimum CLI version required for each platform. Platforms not listed here are
+# assumed to be available for all versions.
+PLATFORM_MIN_VERSION: dict[str, str] = {
+    "linux-arm64": "v0.43.0",
+}
+
 URL_TEMPLATE = "https://github.com/resim-ai/api-client/releases/download/{}/resim-{}"
+
+TRANSPORT_RETRIES = 3
 
 sem = asyncio.Semaphore(8)
 
 
-async def compute_hash(client: httpx.AsyncClient, url: str, pbar: tqdm) -> str:
+def version_to_tuple(v: str) -> tuple[int, int, int]:
+    """Convert a version string like 'vX.Y.Z' to an (X, Y, Z) integer tuple."""
+    assert v.startswith("v"), f"Invalid version: {v}"
+    parts = v[1:].split(".")
+    assert len(parts) == 3, f"Invalid version: {v}"
+    return (int(parts[0]), int(parts[1]), int(parts[2]))
+
+
+def is_platform_supported(platform_name: str, version: str) -> bool:
+    """Return True if the given platform is available for the given version."""
+    min_version = PLATFORM_MIN_VERSION.get(platform_name)
+    if min_version is None:
+        return True
+    return version_to_tuple(version) >= version_to_tuple(min_version)
+
+
+async def compute_hash(client: httpx.AsyncClient, url: str, pbar: tqdm) -> str | None:
     async with sem:
         response = await client.get(url, follow_redirects=True)
+        if response.status_code == 404:
+            pbar.update(1)
+            return None
         response.raise_for_status()
         sha256_hash = hashlib.sha256()
         sha256_hash.update(response.content)
@@ -69,8 +102,13 @@ async def main() -> None:
     )
     cli_versions_bzl_path = Path(workspace_dir) / cli_versions_bzl_path_str
 
-    all_combinations = list(itertools.product(PLATFORMS, VERSIONS))
-    async with httpx.AsyncClient() as client:
+    all_combinations = [
+        (p, v)
+        for p, v in itertools.product(PLATFORMS, VERSIONS)
+        if is_platform_supported(p["name"], v)
+    ]
+    transport = httpx.AsyncHTTPTransport(retries=TRANSPORT_RETRIES)
+    async with httpx.AsyncClient(transport=transport) as client:
         with tqdm(total=len(all_combinations)) as pbar:
             all_hashes = await asyncio.gather(
                 *(
@@ -81,6 +119,8 @@ async def main() -> None:
 
     platforms_per_version = defaultdict(list)
     for combination, sha in zip(all_combinations, all_hashes):
+        if sha is None:
+            continue
         platform, version = combination
         platform = copy(platform)
         platform["sha256"] = sha
