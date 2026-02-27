@@ -235,6 +235,7 @@ class Emitter(AbstractContextManager):
 
     # Type mapping from schema types to Python types
     TYPE_MAPPING = {
+        "boolean": bool,
         "string": str,
         "int": int,
         "float": float,

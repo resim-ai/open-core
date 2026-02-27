@@ -897,6 +897,7 @@ class EmitterTest(unittest.TestCase):
                     "topics": {
                         "all_types": {
                             "schema": {
+                                "bool_field": "boolean",
                                 "str_field": "string",
                                 "int_field": "int",
                                 "float_field": "float",
@@ -913,6 +914,7 @@ class EmitterTest(unittest.TestCase):
             emitter.emit(
                 "all_types",
                 {
+                    "bool_field": True,
                     "str_field": "test",
                     "int_field": 42,
                     "float_field": 3.14,
@@ -924,6 +926,7 @@ class EmitterTest(unittest.TestCase):
         with open(self.temp_path, "r", encoding="utf8") as f:
             content = f.read().strip()
             emission = json.loads(content)
+            self.assertEqual(emission["$data"]["bool_field"], True)
             self.assertEqual(emission["$data"]["str_field"], "test")
             self.assertEqual(emission["$data"]["int_field"], 42)
             self.assertEqual(emission["$data"]["float_field"], 3.14)
