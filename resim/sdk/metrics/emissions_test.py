@@ -297,7 +297,7 @@ class EmitterTest(unittest.TestCase):
         """Set up test environment."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_path = Path(self.temp_dir.name) / "emissions.resim.jsonl"
-        self.config_path = Path(self.temp_dir.name) / "config.yaml"
+        self.config_path = Path(self.temp_dir.name) / "config.resim.yaml"
 
         # Create a sample configuration file
         config = {
@@ -468,7 +468,7 @@ class EmitterTest(unittest.TestCase):
 
     def test_emitter_config_no_topics(self) -> None:
         """Test that emitter works without topics section (validation disabled)."""
-        config_path = Path(self.temp_dir.name) / "bad_config.yaml"
+        config_path = Path(self.temp_dir.name) / "bad_config.resim.yaml"
         with open(config_path, "w", encoding="utf8") as f:
             yaml.dump({"version": 1}, f)
 
@@ -546,7 +546,7 @@ class EmitterTest(unittest.TestCase):
 
     def test_emitter_with_nonexistent_config_file(self) -> None:
         """Test emitter with nonexistent config file - validation disabled."""
-        nonexistent_path = Path(self.temp_dir.name) / "nonexistent_config.yaml"
+        nonexistent_path = Path(self.temp_dir.name) / "nonexistent_config.resim.yaml"
 
         with Emitter(
             config_path=nonexistent_path, output_path=self.temp_path
@@ -722,7 +722,7 @@ class EmitterTest(unittest.TestCase):
         """Test emit_series with numpy array timestamps and mismatched lengths."""
         # Test that validation works when timestamps is a numpy array.
         # This test checks that mismatched lengths between values and timestamps raise ValueError.
-        config_path = Path(self.temp_dir.name) / "numpy_test_config.yaml"
+        config_path = Path(self.temp_dir.name) / "numpy_test_config.resim.yaml"
         with open(config_path, "w", encoding="utf8") as f:
             yaml.dump({"topics": {"test_numpy": {"schema": {"values": "int"}}}}, f)
 
@@ -777,7 +777,7 @@ class EmitterTest(unittest.TestCase):
 
     def test_emitter_config_corrupted_yaml(self) -> None:
         """Test that emitter handles corrupted YAML gracefully."""
-        config_path = Path(self.temp_dir.name) / "corrupted.yaml"
+        config_path = Path(self.temp_dir.name) / "corrupted.resim.yaml"
         config_path.write_text("{ invalid yaml content [")
 
         # Should work without error - validation will be disabled
@@ -792,7 +792,7 @@ class EmitterTest(unittest.TestCase):
 
     def test_validate_value_unknown_type(self) -> None:
         """Test that unknown type in schema raises ValueError."""
-        config_path = Path(self.temp_dir.name) / "unknown_type_config.yaml"
+        config_path = Path(self.temp_dir.name) / "unknown_type_config.resim.yaml"
         with open(config_path, "w", encoding="utf8") as f:
             yaml.dump(
                 {"topics": {"test_topic": {"schema": {"field": "unknown_type"}}}}, f
@@ -843,7 +843,7 @@ class EmitterTest(unittest.TestCase):
 
     def test_emitter_validation_no_schema_defined(self) -> None:
         """Test that topic without schema raises ValueError."""
-        config_path = Path(self.temp_dir.name) / "no_schema_config.yaml"
+        config_path = Path(self.temp_dir.name) / "no_schema_config.resim.yaml"
         with open(config_path, "w", encoding="utf8") as f:
             yaml.dump(
                 {
@@ -862,7 +862,7 @@ class EmitterTest(unittest.TestCase):
     def test_emit_validation_disabled_with_config(self) -> None:
         """Test that validation can be disabled even with a config."""
         # This tests the validation_enabled flag when config is malformed
-        config_path = Path(self.temp_dir.name) / "empty.yaml"
+        config_path = Path(self.temp_dir.name) / "empty.resim.yaml"
         config_path.write_text("")  # Empty YAML file
 
         with Emitter(config_path=config_path, output_path=self.temp_path) as emitter:
@@ -890,13 +890,14 @@ class EmitterTest(unittest.TestCase):
 
     def test_emitter_all_scalar_types(self) -> None:
         """Test all scalar types for comprehensive coverage."""
-        config_path = Path(self.temp_dir.name) / "all_types_config.yaml"
+        config_path = Path(self.temp_dir.name) / "all_types_config.resim.yaml"
         with open(config_path, "w", encoding="utf8") as f:
             yaml.dump(
                 {
                     "topics": {
                         "all_types": {
                             "schema": {
+                                "bool_field": "boolean",
                                 "str_field": "string",
                                 "int_field": "int",
                                 "float_field": "float",
@@ -913,6 +914,7 @@ class EmitterTest(unittest.TestCase):
             emitter.emit(
                 "all_types",
                 {
+                    "bool_field": True,
                     "str_field": "test",
                     "int_field": 42,
                     "float_field": 3.14,
@@ -924,6 +926,7 @@ class EmitterTest(unittest.TestCase):
         with open(self.temp_path, "r", encoding="utf8") as f:
             content = f.read().strip()
             emission = json.loads(content)
+            self.assertEqual(emission["$data"]["bool_field"], True)
             self.assertEqual(emission["$data"]["str_field"], "test")
             self.assertEqual(emission["$data"]["int_field"], 42)
             self.assertEqual(emission["$data"]["float_field"], 3.14)

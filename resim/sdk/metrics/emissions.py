@@ -208,13 +208,13 @@ class Emitter(AbstractContextManager):
     Examples:
         Simple usage (auto-open, auto-close)::
 
-            emitter = Emitter(config_path="config.yaml")
+            emitter = Emitter(config_path="config.resim.yaml")
             emitter.emit("drone_speed", {"speed_int": 42, "speeds": 3.14})
             # File automatically closed when emitter goes out of scope
 
         Context manager::
 
-            with Emitter(config_path="config.yaml") as emitter:
+            with Emitter(config_path="config.resim.yaml") as emitter:
                 emitter.emit("drone_speed", {"speed_int": 42, "speeds": 3.14})
                 emitter.emit_series(
                     "drone_speed",
@@ -227,7 +227,7 @@ class Emitter(AbstractContextManager):
 
             class MyProcessor:
                 def __init__(self):
-                    self.emitter = Emitter(config_path="config.yaml")
+                    self.emitter = Emitter(config_path="config.resim.yaml")
 
                 def process(self, data):
                     self.emitter.emit("processed", data)
@@ -235,6 +235,7 @@ class Emitter(AbstractContextManager):
 
     # Type mapping from schema types to Python types
     TYPE_MAPPING = {
+        "boolean": bool,
         "string": str,
         "int": int,
         "float": float,
@@ -328,7 +329,7 @@ class Emitter(AbstractContextManager):
         It is safe to call multiple times (idempotent).
 
         Example:
-            emitter = Emitter(config_path="config.yaml")
+            emitter = Emitter(config_path="config.resim.yaml")
             emitter.emit("topic", {"field": "value"})
             emitter.close()  # Optional - will be called automatically anyway
         """
