@@ -297,7 +297,7 @@ class Emitter(AbstractContextManager):
                             f"Config file {self.config_path} has no 'topics' key. Validation disabled."
                         )
                         self.validation_enabled = False
-                except (yaml.resim.yamlError, IOError, OSError) as e:
+                except (yaml.YAMLError, IOError, OSError) as e:
                     # If loading fails, continue without validation but log the error
                     logger.warning(
                         f"Failed to load config file {self.config_path}: {e}. Validation disabled."
