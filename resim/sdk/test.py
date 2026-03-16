@@ -10,7 +10,11 @@ from resim.sdk.batch import Batch
 from resim.sdk.client import AuthenticatedClient
 from resim.sdk.client.types import Unset
 from resim.sdk.metrics.emissions import Emitter
-from resim.sdk.client.api.light_batches import create_job_for_batch, create_job_log, close_job
+from resim.sdk.client.api.light_batches import (
+    create_job_for_batch,
+    create_job_log,
+    close_job,
+)
 from resim.sdk.client.models.create_job_for_batch_input import CreateJobForBatchInput
 from resim.sdk.client.models.create_job_log_input import CreateJobLogInput
 from resim.sdk.client.models.log_type import LogType
