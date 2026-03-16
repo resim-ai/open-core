@@ -3187,7 +3187,7 @@ paths:
         - OAuth:
             - batches:write
       tags:
-        - batches
+        - light batches
       parameters:
         - name: projectID
           in: path
@@ -3373,7 +3373,7 @@ paths:
         - OAuth:
             - batches:write
       tags:
-        - batches
+        - light batches
       parameters:
         - name: projectID
           in: path
@@ -3868,7 +3868,7 @@ paths:
         - OAuth:
             - batches:write
       tags:
-        - batches
+        - light batches
       parameters:
         - name: projectID
           in: path
@@ -3982,7 +3982,7 @@ paths:
         - OAuth:
             - batches:write
       tags:
-        - batches
+        - light batches
       parameters:
         - name: projectID
           in: path
@@ -4563,7 +4563,7 @@ paths:
         - OAuth:
             - batches:write
       tags:
-        - batches
+        - light batches
       parameters:
         - name: projectID
           in: path
@@ -7200,11 +7200,13 @@ components:
         branchID:
           $ref: "#/components/schemas/branchID"
         metricsSetName:
-          nullable: true
           $ref: "#/components/schemas/metricsSetName"
         batchName:
           nullable: true
           $ref: "#/components/schemas/name"
+        version:
+          type: string
+          description: A version string representing your build. For example, this could be a commit sha or semver number
     createJobForBatchInput:
       type: object
       properties:
@@ -7246,14 +7248,6 @@ components:
           description: Presigned S3 URL for uploading the log file via HTTP PUT.
         requiredHeaders:
           $ref: "#/components/schemas/requiredHeaders"
-    s3ObjectTags:
-      type: object
-      description: S3 object tags to apply on upload.
-      additionalProperties:
-        type: string
-        maxLength: 256
-        pattern: ^[A-Za-z0-9 +\-=._:/@]*$
-      maxProperties: 10
     requiredHeaders:
       type: object
       additionalProperties:

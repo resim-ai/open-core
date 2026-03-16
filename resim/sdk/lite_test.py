@@ -16,7 +16,7 @@ from resim.sdk.auth.username_password_client import UsernamePasswordClient
 
 # === dev app 2869 ===
 RERUN_API_BASE_URL = "https://dev-env-pr-2869.api.dev.resim.io/v1"
-PROJECT_ID = "f4019641-2c17-4f24-9e98-fef809b23519"  # 2869 dev app
+PROJECT_ID = "ba5ad3fb-91ff-40c1-828d-2517b1157112"  # 2869 dev app
 
 
 def main() -> None:

@@ -2,7 +2,7 @@ from contextlib import AbstractContextManager
 from types import TracebackType
 from resim.sdk.client.api.projects import list_branches_for_project
 from resim.sdk.client import AuthenticatedClient
-from resim.sdk.client.api.batches import create_light_batch, close_batch
+from resim.sdk.client.api.light_batches import create_light_batch, close_batch
 from resim.sdk.client.models import Batch as ApiBatch
 from resim.sdk.client.models.light_batch_input import LightBatchInput
 from resim.sdk.bff_client import metrics
@@ -15,6 +15,7 @@ class Batch(AbstractContextManager):
         project_id: str,
         branch: str,
         name: str | None = None,
+        version: str | None = None,
         metrics_set_name: str | None = None,
         metrics_config_path: str | None = None,
     ):
@@ -22,11 +23,10 @@ class Batch(AbstractContextManager):
         self.project_id = project_id
         self.batch: ApiBatch | None = None
         self._name = name
+        self._version = version
         self._branch = branch
         self._metrics_set_name = metrics_set_name
         self.metrics_config_path = metrics_config_path
-
-        self._branch_id = self.__get_branch_id(branch)
 
     def __enter__(self) -> "Batch":
         if self.metrics_config_path:
@@ -37,11 +37,15 @@ class Batch(AbstractContextManager):
                 config_path=self.metrics_config_path,
             )
 
+        self._branch_id = self.__get_branch_id(self._branch)
+
         body = LightBatchInput(branch_id=self._branch_id)
         if self._name:
             body.batch_name = self._name
         if self._metrics_set_name:
             body.metrics_set_name = self._metrics_set_name
+        if self._version:
+            body.version = self._version
         response = create_light_batch.sync_detailed(
             self.project_id,
             client=self._client,
@@ -85,7 +89,7 @@ class Batch(AbstractContextManager):
         branches = list_branches_for_project.sync(
             self.project_id, client=self._client, name=name
         )
-        assert branches is not None and branches.branches, "failed to fetch branches"
+        assert branches is not None, "failed to fetch branches"
 
         # Since we're filtering branches by name, we're not bothering paging thru
         # all results.
