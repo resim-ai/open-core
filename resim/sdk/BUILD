@@ -62,20 +62,3 @@ genrule(
     cmd = "cat $(SRCS) > $@",
     visibility = ["//visibility:public"],
 )
-
-# TODO: remove this and file when done
-py_binary(
-    name = "lite_test",
-    srcs = [
-        "batch.py",
-        "lite_test.py",
-        "test.py",
-    ],
-    data = [".resim/metrics/config.resim.yml"],
-    deps = [
-        ":client",
-        "//resim/sdk/auth",
-        "//resim/sdk/bff_client",
-        "//resim/sdk/metrics",
-    ],
-)
