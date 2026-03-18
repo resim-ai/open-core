@@ -1,0 +1,35 @@
+version: 1
+
+topics:
+  position:
+    schema:
+      x: int
+      y: int
+  images:
+    schema:
+      img: image
+
+metrics:
+  y over time:
+    type: test
+    query_string: select 'y',timestamp,y from position order by timestamp
+    description: y over time
+    template_type: system
+    template: line
+  images:
+    type: test
+    query_string: select img from images
+    template_type: system
+    template: image
+  static value:
+    type: batch
+    query_string: select avg(y) from position
+    template_type: system
+    template: scalar
+
+metrics sets:
+  my metrics:
+    metrics:
+      - y over time
+      - images
+      - static value
