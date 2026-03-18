@@ -3976,7 +3976,7 @@ paths:
           $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}/jobs/{jobID}/close:
     post:
-      description: Closes a job in a light batch, marking it as succeeded.
+      description: Closes a job in a light batch, marking it as succeeded or errored.
       operationId: closeJob
       security:
         - OAuth:
@@ -3999,6 +3999,11 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/jobID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/closeJobInput"
       responses:
         "204":
           description: OK
@@ -7218,6 +7223,18 @@ components:
         description:
           type: string
           description: Optional description for the job and experience.
+    lightJobStatus:
+      type: string
+      enum:
+        - SUCCEEDED
+        - ERROR
+    closeJobInput:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: "#/components/schemas/lightJobStatus"
     createJobLogInput:
       type: object
       required:
@@ -7456,6 +7473,7 @@ components:
         - ERROR_LOG
         - SERVICE_LOG
         - EMISSIONS_LOG
+        - SYSTEM_LOG
     logID:
       type: string
       format: uuid
@@ -7485,6 +7503,13 @@ components:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
+        filePath:
+          type: string
+          description: The directory path relative to the output root (empty for root-level files)
+        fullPath:
+          type: string
+          readOnly: true
+          description: The fully qualified path (filePath/fileName) of the log file
     jobLog:
       allOf:
         - $ref: "#/components/schemas/log"
@@ -9111,6 +9136,13 @@ components:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
+        filePath:
+          type: string
+          description: The directory path relative to the output root (empty for root-level files)
+        fullPath:
+          type: string
+          readOnly: true
+          description: The fully qualified path (filePath/fileName) of the log file
     name:
       type: string
     listReportsOutput:
