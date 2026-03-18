@@ -7235,6 +7235,9 @@ components:
       properties:
         status:
           $ref: "#/components/schemas/lightJobStatus"
+        errorMessage:
+          type: string
+          description: Optional user-provided error message for the job. Only used when status is ERROR.
     createJobLogInput:
       type: object
       required:

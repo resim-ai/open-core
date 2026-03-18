@@ -4,7 +4,7 @@ import tempfile
 import traceback
 import httpx
 from types import TracebackType
-from typing import Any, Optional, Union
+from typing import Optional
 
 from pathlib import Path
 from resim.sdk.batch import Batch
@@ -137,10 +137,14 @@ class Test(Emitter):
                 os.unlink(tmp_path)
         self.close(
             status=status,
-            error="Test threw an exception during run. See stacktrace under logs.",
+            error=repr(exc_value) if exc_value is not None else None,
         )
 
-    def close(self, status: LightJobStatus = LightJobStatus.SUCCEEDED, error: str | Unset = Unset()) -> None:  # type: ignore[override]
+    def close(
+        self,
+        status: LightJobStatus = LightJobStatus.SUCCEEDED,
+        error: str | None = None,
+    ) -> None:
         if self.file is None:
             return
         super().close()
@@ -150,6 +154,8 @@ class Test(Emitter):
             file_name="emissions.resim.jsonl",
         )
         body = CloseJobInput(status=status)
+        if error:
+            body.error_message = error
         response = close_job.sync_detailed(
             self._batch.project_id,
             self._batch.id,

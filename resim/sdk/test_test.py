@@ -52,8 +52,9 @@ class TestTest(unittest.TestCase):
         # mock_open returns the same value on every read(), so iter(f.read, b"") would
         # loop forever. Give read() a side_effect that returns data once then b"" (EOF).
         m.return_value.__enter__.return_value.read.side_effect = [
-            emissions_content, b"",  # SHA256 chunked read in attach_log
-            emissions_content,       # httpx.put content read in attach_log
+            emissions_content,
+            b"",  # SHA256 chunked read in attach_log
+            emissions_content,  # httpx.put content read in attach_log
         ]
         with (
             patch("builtins.open", m),
@@ -109,10 +110,12 @@ class TestTest(unittest.TestCase):
         # sentinel b"") and once for the httpx.put upload. Two attach_log calls total:
         # first for the explicit attach, second for the emissions file on close.
         m.return_value.__enter__.return_value.read.side_effect = [
-            extra_log_content, b"",  # SHA256 for extra log
-            extra_log_content,       # httpx.put upload for extra log
-            emissions_content, b"",  # SHA256 for emissions
-            emissions_content,       # httpx.put upload for emissions
+            extra_log_content,
+            b"",  # SHA256 for extra log
+            extra_log_content,  # httpx.put upload for extra log
+            emissions_content,
+            b"",  # SHA256 for emissions
+            emissions_content,  # httpx.put upload for emissions
         ]
         with (
             patch("builtins.open", m),
