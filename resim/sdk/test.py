@@ -149,7 +149,7 @@ class Test(Emitter):
             LogType.EMISSIONS_LOG,
             file_name="emissions.resim.jsonl",
         )
-        body = CloseJobInput(status=status, error_message=error)
+        body = CloseJobInput(status=status)
         response = close_job.sync_detailed(
             self._batch.project_id,
             self._batch.id,
