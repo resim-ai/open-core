@@ -3,11 +3,8 @@ import os
 import tempfile
 import traceback
 import httpx
-import numpy as np
-import numpy.typing as npt
 from types import TracebackType
 from typing import Any, Optional, Union
-from contextlib import AbstractContextManager
 
 from pathlib import Path
 from resim.sdk.batch import Batch
@@ -28,7 +25,7 @@ from resim.sdk.client.models.log_type import LogType
 __all__ = ["Test", "LogType"]
 
 
-class Test(AbstractContextManager):
+class Test(Emitter):
     def __init__(self, client: AuthenticatedClient, batch: Batch, name: str):
         self._client = client
         self._batch = batch
@@ -48,7 +45,7 @@ class Test(AbstractContextManager):
 
         self._test = response.parsed
         emissions_file_path = Path(f"emissions_{self._test.job_id}.resim.jsonl")
-        self._emitter = Emitter(
+        super().__init__(
             config_path=self._batch.metrics_config_path,
             output_path=emissions_file_path,
         )
@@ -143,14 +140,15 @@ class Test(AbstractContextManager):
             error="Test threw an exception during run. See stacktrace under logs.",
         )
 
-    def close(self, status: LightJobStatus, error: str | Unset) -> None:
-        self._emitter.close()
+    def close(self, status: LightJobStatus = LightJobStatus.SUCCEEDED, error: str | Unset = Unset()) -> None:  # type: ignore[override]
+        if self.file is None:
+            return
+        super().close()
         self.attach_log(
-            str(self._emitter.output_path),
+            str(self.output_path),
             LogType.EMISSIONS_LOG,
             file_name="emissions.resim.jsonl",
         )
-        print(f"CLOSING JOB {status} {error}")
         body = CloseJobInput(status=status, error_message=error)
         response = close_job.sync_detailed(
             self._batch.project_id,
@@ -163,19 +161,3 @@ class Test(AbstractContextManager):
             raise Exception(
                 f"failed to close test. Expected 204 response, got {response.status_code} instead"
             )
-
-    def emit(
-        self, topic_name: str, data: dict[str, Any], timestamp: Optional[int] = None
-    ) -> None:
-        self._emitter.emit(topic_name, data, timestamp)
-
-    def emit_series(
-        self,
-        topic_name: str,
-        data: dict[str, list[Any]],
-        timestamps: Optional[Union[list[int], npt.NDArray[np.int_]]] = None,
-    ) -> None:
-        self._emitter.emit_series(topic_name, data, timestamps)
-
-    def emit_event(self, topic_name: str, data: dict[str, Any], timestamp: int) -> None:
-        self._emitter.emit_event(topic_name, data, timestamp)

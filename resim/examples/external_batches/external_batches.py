@@ -37,7 +37,7 @@ def main() -> None:
 
             # Emit an image
             test.attach_log("robot.png")
-            test.emit("images", {"img": "arm.gif"}, time.time_ns())
+            test.emit("images", {"img": "robot.png"}, time.time_ns())
 
     print("Batch done!")
 

@@ -17,10 +17,8 @@ class TestTest(unittest.TestCase):
     @patch("resim.sdk.test.close_job")
     @patch("resim.sdk.test.create_job_log")
     @patch("resim.sdk.test.create_job_for_batch")
-    @patch("resim.sdk.test.Emitter")
     def test_happy_path(
         self,
-        mock_emitter_cls: Any,
         mock_create_job: Any,
         mock_create_log: Any,
         mock_close_job: Any,
@@ -51,6 +49,12 @@ class TestTest(unittest.TestCase):
 
         emissions_content = b"fake emissions data"
         m = mock_open(read_data=emissions_content)
+        # mock_open returns the same value on every read(), so iter(f.read, b"") would
+        # loop forever. Give read() a side_effect that returns data once then b"" (EOF).
+        m.return_value.__enter__.return_value.read.side_effect = [
+            emissions_content, b"",  # SHA256 chunked read in attach_log
+            emissions_content,       # httpx.put content read in attach_log
+        ]
         with (
             patch("builtins.open", m),
             patch("os.path.getsize", return_value=len(emissions_content)),
@@ -58,10 +62,7 @@ class TestTest(unittest.TestCase):
             with Test(mock_client, mock_batch, TEST_NAME) as test:
                 self.assertEqual(test.name, TEST_NAME)
 
-        mock_emitter_cls.assert_called_once_with(
-            config_path=CONFIG_PATH,
-            output_path=test._emissions_output_path,
-        )
+        self.assertEqual(str(test.config_path), CONFIG_PATH)
         mock_create_job.sync_detailed.assert_called_once()
         mock_create_log.sync_detailed.assert_called_once()
         mock_httpx.put.assert_called_once()
@@ -71,10 +72,8 @@ class TestTest(unittest.TestCase):
     @patch("resim.sdk.test.close_job")
     @patch("resim.sdk.test.create_job_log")
     @patch("resim.sdk.test.create_job_for_batch")
-    @patch("resim.sdk.test.Emitter")
     def test_attach_log(
         self,
-        mock_emitter_cls: Any,
         mock_create_job: Any,
         mock_create_log: Any,
         mock_close_job: Any,
@@ -106,12 +105,20 @@ class TestTest(unittest.TestCase):
         emissions_content = b"fake emissions data"
         extra_log_content = b"fake image data"
         m = mock_open(read_data=emissions_content)
+        # Each attach_log call reads the file twice: once for SHA256 (chunked, needs EOF
+        # sentinel b"") and once for the httpx.put upload. Two attach_log calls total:
+        # first for the explicit attach, second for the emissions file on close.
+        m.return_value.__enter__.return_value.read.side_effect = [
+            extra_log_content, b"",  # SHA256 for extra log
+            extra_log_content,       # httpx.put upload for extra log
+            emissions_content, b"",  # SHA256 for emissions
+            emissions_content,       # httpx.put upload for emissions
+        ]
         with (
             patch("builtins.open", m),
             patch("os.path.getsize", return_value=len(emissions_content)),
         ):
             with Test(mock_client, mock_batch, TEST_NAME) as test:
-                m.return_value.read.return_value = extra_log_content
                 test.attach_log("some_image.jpeg", LogType.MP4_LOG)
 
         # Two create_job_log calls: one for the extra log, one for emissions on exit
