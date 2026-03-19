@@ -96,8 +96,11 @@ def random_test_suite(state: MockState) -> Batch:
     """Get a random test suite consistent with the current state."""
     test_suite_id = uuid4()
     metrics_build = _random_dict_value(state.metrics_builds)
+    user_id = f"{_random_string()}@{state.org_id}"
     return TestSuite(
         creation_timestamp=datetime.now(tz=timezone.utc),
+        update_timestamp=datetime.now(tz=timezone.utc),
+        update_user_id=user_id,
         description=_random_string(),
         experiences=[],
         name=f"test suite {test_suite_id}",
@@ -106,7 +109,7 @@ def random_test_suite(state: MockState) -> Batch:
         system_id=str(uuid4()),
         test_suite_id=str(test_suite_id),
         test_suite_revision=random.randint(1, 100),
-        user_id=f"{_random_string()}@{state.org_id}",
+        user_id=user_id,
         metrics_build_id=metrics_build.metrics_build_id,
         show_on_summary=_random_bool(),
         archived=False,

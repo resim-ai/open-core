@@ -1,15 +1,33 @@
 load("@resim_python_client_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//bazel:openapi_client.bzl", "openapi_client")
 
 py_library(
     name = "sdk",
-    srcs = ["__init__.py"],
+    srcs = [
+        "__init__.py",
+        "batch.py",
+        "test.py",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//resim/sdk:client",
         "//resim/sdk/auth",
+        "//resim/sdk/bff_client",
         "//resim/sdk/metrics",
+    ],
+)
+
+py_test(
+    name = "sdk_test",
+    size = "small",
+    srcs = [
+        "batch_test.py",
+        "sdk_test.py",
+        "test_test.py",
+    ],
+    deps = [
+        ":sdk",
     ],
 )
 

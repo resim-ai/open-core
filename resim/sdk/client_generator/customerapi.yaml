@@ -909,6 +909,12 @@ paths:
           description: Filter experiences by archived status
           schema:
             type: boolean
+        - name: includeCustomFields
+          in: query
+          description: If true, includes customFields in the response. Defaults to false to avoid performance issues when listing many experiences.
+          schema:
+            type: boolean
+            default: false
         - $ref: "#/components/parameters/pageSize"
         - $ref: "#/components/parameters/pageToken"
       responses:
@@ -1718,6 +1724,471 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+  /projects/{projectID}/assets:
+    get:
+      description: Returns the list of assets at their latest revision
+      operationId: listAssets
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+        - name: name
+          in: query
+          description: Filter assets by name
+          schema:
+            type: string
+        - name: text
+          in: query
+          description: Filter assets by name or description
+          schema:
+            type: string
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageToken"
+        - $ref: "#/components/parameters/orderBy"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listAssetsOutput"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+    post:
+      description: Creates a new asset for a project.
+      operationId: createAsset
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createAssetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/asset"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "409":
+          $ref: "#/components/responses/alreadyExists"
+  /projects/{projectID}/assets/{assetID}:
+    get:
+      description: Returns the latest revision of a specific asset.
+      operationId: getAsset
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/asset"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+    patch:
+      description: Updates the name and/or description of an asset across all revisions.
+      operationId: updateAsset
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateAssetInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/asset"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/assets/{assetID}/revisions:
+    get:
+      description: Returns all the revisions of a specific asset.
+      operationId: listAssetRevisions
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listAssetRevisionsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+    post:
+      description: Creates a new asset revision.
+      operationId: reviseAsset
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/reviseAssetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/asset"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/assets/{assetID}/revisions/{assetRevision}:
+    get:
+      description: Returns a specified revision of an asset.
+      operationId: getAssetRevision
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+        - name: assetRevision
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetRevision"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/asset"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/assets/{assetID}/archive:
+    post:
+      description: Archives an asset.
+      operationId: archiveAsset
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/assets/{assetID}/restore:
+    post:
+      description: Restores an archived asset.
+      operationId: restoreAsset
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/builds/{buildID}/assets:
+    get:
+      description: Lists the assets attached to a build.
+      operationId: listAssetsForBuild
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: buildID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/buildID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listBuildAssetsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+    post:
+      description: Add one or more assets to a build.
+      operationId: addAssetsToBuild
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: buildID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/buildID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/addAssetsToBuildInput"
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "409":
+          $ref: "#/components/responses/conflict"
+    delete:
+      description: Remove one or more assets from a build.
+      operationId: removeAssetsFromBuild
+      security:
+        - OAuth:
+            - assets:write
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: buildID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/buildID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/removeAssetsFromBuildInput"
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+  /projects/{projectID}/assets/{assetID}/builds:
+    get:
+      description: Lists the builds referencing a given asset.
+      operationId: listBuildsForAsset
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listAssetBuildsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+  /projects/{projectID}/assets/{assetID}/revisions/{assetRevision}/builds:
+    get:
+      description: Lists the builds referencing a given asset revision.
+      operationId: listBuildsForAssetRevision
+      security:
+        - OAuth:
+            - assets:read
+      tags:
+        - assets
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: assetID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetID"
+        - name: assetRevision
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/assetRevision"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageToken"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listAssetBuildsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
   /projects/{projectID}/suites/{testSuiteID}/revisions/{revision}/batches:
     post:
       description: Creates a batch for that test suite revision
@@ -1998,6 +2469,13 @@ paths:
           in: query
           schema:
             type: boolean
+            default: false
+        - name: includeCustomFields
+          in: query
+          description: If true, includes customFields in the response. Defaults to false to avoid performance issues when listing many experiences.
+          schema:
+            type: boolean
+            default: false
         - $ref: "#/components/parameters/pageSizeUnbounded"
         - $ref: "#/components/parameters/pageToken"
         - $ref: "#/components/parameters/orderBy"
@@ -2044,6 +2522,39 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "409":
           $ref: "#/components/responses/alreadyExists"
+  /projects/{projectID}/experiences/customfields:
+    get:
+      description: Returns all custom field definitions with unique values for the project. Useful for populating filter dropdowns.
+      operationId: listExperienceCustomFields
+      security:
+        - OAuth:
+            - experiences:read
+      tags:
+        - experiences
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: type
+          in: query
+          required: false
+          explode: false
+          description: List of custom field types to filter by.
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/customFieldValueType"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listExperienceCustomFieldsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
   /projects/{projectID}/experiences/{experienceID}:
     get:
       description: Returns a specific experience.
@@ -2076,7 +2587,7 @@ paths:
         "404":
           $ref: "#/components/responses/notFound"
     patch:
-      description: Updates the experience. When updating environment variables, the entire array is replaced.
+      description: Updates the experience. When updating environment variables or custom fields, the entire array is replaced.
       operationId: updateExperience
       security:
         - OAuth:
@@ -2668,6 +3179,68 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "402":
           $ref: "#/components/responses/insufficientQuota"
+  /projects/{projectID}/batches/light:
+    post:
+      description: Creates a light batch with no jobs, intended for externally-run batches.
+      operationId: CreateLightBatch
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - light batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/lightBatchInput"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/batch"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "402":
+          $ref: "#/components/responses/insufficientQuota"
+  /projects/{projectID}/batches/lookup/name/{friendlyName}/:
+    get:
+      description: Looks up a batch by friendly name. Returns the most recent batch with the given name.
+      operationId: lookupLatestBatchByName
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: friendlyName
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/friendlyName"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/batchID"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}:
     get:
       description: Returns a batch.
@@ -2788,6 +3361,35 @@ paths:
       responses:
         "200":
           description: OK
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/close:
+    post:
+      description: Closes a light batch, marking batch metrics tasks as pending.
+      operationId: closeBatch
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - light batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+      responses:
+        "204":
+          description: OK
+        "400":
+          $ref: "#/components/responses/badRequest"
         "401":
           $ref: "#/components/responses/unauthenticated"
         "404":
@@ -3259,6 +3861,41 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+    post:
+      description: Creates a job within a light batch. The batch must be of type LIGHT. Either a name (to get-or-create an experience) or an experienceID must be provided.
+      operationId: createJobForBatch
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - light batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createJobForBatchInput"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/job"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
   /projects/{projectID}/batches/{batchID}/jobs/{jobID}:
     get:
       description: Retrieve the given job.
@@ -3331,6 +3968,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/job"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/jobs/{jobID}/close:
+    post:
+      description: Closes a job in a light batch, marking it as succeeded or errored.
+      operationId: closeJob
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - light batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/closeJobInput"
+      responses:
+        "204":
+          description: OK
         "400":
           $ref: "#/components/responses/badRequest"
         "401":
@@ -3412,6 +4088,51 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/jobID"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageToken"
+        - $ref: "#/components/parameters/orderBy"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listJobMetricsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/jobs/{jobID}/eventMetrics:
+    get:
+      description: Lists the metrics for a given job. Does not return associated data.
+      operationId: listEventMetricsForJob
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+        - metrics
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+        - name: text
+          in: query
+          description: Filter metrics by a text string on name and description
+          schema:
+            type: string
         - $ref: "#/components/parameters/pageSize"
         - $ref: "#/components/parameters/pageToken"
         - $ref: "#/components/parameters/orderBy"
@@ -3840,6 +4561,48 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+    post:
+      description: Creates a log entry for a job and returns a presigned S3 upload URL. The batch must be of type LIGHT and the job must be in EXPERIENCE_RUNNING status.
+      operationId: createJobLog
+      security:
+        - OAuth:
+            - batches:write
+      tags:
+        - light batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createJobLogInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/createJobLogOutput"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}/jobs/{jobID}/logs/{logID}:
     get:
       description: Get an individual log file
@@ -3917,6 +4680,84 @@ paths:
           $ref: "#/components/responses/unauthenticated"
         "404":
           $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/jobs/{jobID}/logStream/{logName}:
+    get:
+      description: Streams a log for a given job/container
+      operationId: getLogStream
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+        - name: logName
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/fileName"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/jobs/{jobID}/containerStatus:
+    get:
+      description: Gets the current container statuses for a running job
+      operationId: getContainerStatus
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/jobID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getContainerStatusOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
   /projects/{projectID}/batches/{batchID}/logs:
     get:
       description: List the logs associated with a given batch
@@ -3946,6 +4787,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/listBatchLogsOutput"
+        "401":
+          $ref: "#/components/responses/unauthenticated"
+        "404":
+          $ref: "#/components/responses/notFound"
+  /projects/{projectID}/batches/{batchID}/logs/streams:
+    get:
+      description: Get the active log streams for a given batch
+      operationId: listBatchLogStreams
+      security:
+        - OAuth:
+            - batches:read
+      tags:
+        - batches
+      parameters:
+        - name: projectID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/projectID"
+        - name: batchID
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/batchID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listBatchLogStreamsOutput"
         "401":
           $ref: "#/components/responses/unauthenticated"
         "404":
@@ -5043,6 +5915,7 @@ paths:
           $ref: "#/components/responses/forbidden"
         "404":
           $ref: "#/components/responses/notFound"
+
 components:
   securitySchemes:
     OAuth:
@@ -5064,6 +5937,8 @@ components:
             projects:write: Write project data.
             builds:read: Read build data.
             builds:write: Write build data.
+            assets:read: Read asset data.
+            assets:write: Write asset data.
             view:read: Read view data.
             view:write: Write view data.
             systems:read: Read system data.
@@ -5087,6 +5962,8 @@ components:
             projects:write: Write project data.
             builds:read: Read build data.
             builds:write: Write build data.
+            assets:read: Read asset data.
+            assets:write: Write asset data.
             view:read: Read view data.
             view:write: Write view data.
             systems:read: Read system data.
@@ -5110,6 +5987,8 @@ components:
             projects:write: Write project data.
             builds:read: Read build data.
             builds:write: Write build data.
+            assets:read: Read asset data.
+            assets:write: Write asset data.
             view:read: Read view data.
             view:write: Write view data.
             systems:read: Read system data.
@@ -5170,6 +6049,11 @@ components:
         cacheExempt:
           type: boolean
           description: If true, the experience will not be cached.
+        customFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/customFieldDefinition"
+          description: Custom field key/value pairs to associate with the experience. Field names are case-insensitive. Each field can have multiple values.
     profile:
       type: string
     environmentVariable:
@@ -5182,6 +6066,29 @@ components:
           type: string
         value:
           type: string
+    customFieldValueType:
+      type: string
+      enum:
+        - text
+        - number
+        - timestamp
+        - json
+    customFieldDefinition:
+      type: object
+      required:
+        - name
+        - values
+        - type
+      properties:
+        name:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+          description: Array of field values. For 'text' type, use plain strings. For 'number' type, use string representations of numbers (e.g., "32"). For 'timestamp' type, use ISO 8601 format strings. For 'json' type, use JSON string representations of objects or arrays.
+        type:
+          $ref: "#/components/schemas/customFieldValueType"
     experience:
       type: object
       required:
@@ -5196,9 +6103,12 @@ components:
         - profile
         - environmentVariables
         - creationTimestamp
+        - updateTimestamp
+        - updateUserID
         - userID
         - orgID
         - cacheExempt
+        - customFields
       properties:
         experienceID:
           $ref: "#/components/schemas/experienceID"
@@ -5227,6 +6137,10 @@ components:
             $ref: "#/components/schemas/environmentVariable"
         creationTimestamp:
           $ref: "#/components/schemas/timestamp"
+        updateTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        updateUserID:
+          $ref: "#/components/schemas/userID"
         userID:
           $ref: "#/components/schemas/userID"
         orgID:
@@ -5235,6 +6149,11 @@ components:
           type: boolean
         cacheExempt:
           type: boolean
+        customFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/customFieldDefinition"
+          description: Custom field key/value pairs associated with the experience.
     tagID:
       type: string
       format: uuid
@@ -5384,6 +6303,11 @@ components:
         cacheExempt:
           type: boolean
           description: If true, the experience will not be cached.
+        customFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/customFieldDefinition"
+          description: Custom field key/value pairs to associate with the experience. Field names are case-insensitive. Each field can have multiple values. When updating, this replaces all existing custom fields.
     experienceTagID:
       type: string
       format: uuid
@@ -5433,6 +6357,15 @@ components:
             $ref: "#/components/schemas/experienceTag"
         nextPageToken:
           type: string
+    listExperienceCustomFieldsOutput:
+      type: object
+      required:
+        - customFields
+      properties:
+        customFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/customFieldDefinition"
     updateExperienceTagFields:
       type: object
       properties:
@@ -5453,6 +6386,9 @@ components:
         location:
           type: string
           format: uri
+        projectId:
+          type: string
+          format: uuid
     experienceLocationContents:
       type: object
       properties:
@@ -5464,6 +6400,9 @@ components:
             type: string
         objectCount:
           type: integer
+        totalSizeBytes:
+          type: integer
+          format: int64
     testSuiteID:
       type: string
       format: uuid
@@ -5489,6 +6428,8 @@ components:
         - userID
         - orgID
         - creationTimestamp
+        - updateTimestamp
+        - updateUserID
         - showOnSummary
       properties:
         archived:
@@ -5520,10 +6461,220 @@ components:
           $ref: "#/components/schemas/orgID"
         creationTimestamp:
           $ref: "#/components/schemas/timestamp"
+        updateTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        updateUserID:
+          $ref: "#/components/schemas/userID"
         showOnSummary:
           type: boolean
         summaryReferenceDate:
           $ref: "#/components/schemas/timestamp"
+    assetID:
+      type: string
+      format: uuid
+    assetRevision:
+      type: integer
+      format: int64
+    asset:
+      type: object
+      required:
+        - assetID
+        - assetRevision
+        - name
+        - description
+        - mountFolder
+        - locations
+        - version
+        - projectID
+        - userID
+        - orgID
+        - creationTimestamp
+        - updateTimestamp
+        - updateUserID
+        - archived
+        - cacheExempt
+        - numBuilds
+      properties:
+        assetID:
+          $ref: "#/components/schemas/assetID"
+        assetRevision:
+          $ref: "#/components/schemas/assetRevision"
+        name:
+          type: string
+        description:
+          type: string
+        mountFolder:
+          type: string
+        locations:
+          type: array
+          items:
+            type: string
+        version:
+          type: string
+        projectID:
+          $ref: "#/components/schemas/projectID"
+        userID:
+          $ref: "#/components/schemas/userID"
+        orgID:
+          $ref: "#/components/schemas/orgID"
+        creationTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        updateTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        updateUserID:
+          $ref: "#/components/schemas/userID"
+        archived:
+          type: boolean
+        cacheExempt:
+          type: boolean
+          description: If true, the asset will not be cached.
+        numBuilds:
+          type: integer
+          description: Number of builds this asset revision is linked to.
+    createAssetInput:
+      type: object
+      required:
+        - name
+        - description
+        - mountFolder
+        - locations
+        - version
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        mountFolder:
+          type: string
+        locations:
+          type: array
+          items:
+            type: string
+        cacheExempt:
+          type: boolean
+          description: If true, the asset will not be cached.
+        version:
+          type: string
+    updateAssetInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    reviseAssetInput:
+      type: object
+      required:
+        - locations
+        - version
+      properties:
+        mountFolder:
+          type: string
+        locations:
+          type: array
+          items:
+            type: string
+        version:
+          type: string
+    listAssetsOutput:
+      type: object
+      required:
+        - assets
+        - nextPageToken
+        - total
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/asset"
+        nextPageToken:
+          type: string
+        total:
+          type: integer
+    listAssetRevisionsOutput:
+      type: object
+      required:
+        - assets
+        - nextPageToken
+        - total
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/asset"
+        nextPageToken:
+          type: string
+        total:
+          type: integer
+    buildAssetLink:
+      type: object
+      required:
+        - asset
+        - buildID
+        - linkCreationTimestamp
+      properties:
+        asset:
+          $ref: "#/components/schemas/asset"
+        buildID:
+          $ref: "#/components/schemas/buildID"
+        linkCreationTimestamp:
+          $ref: "#/components/schemas/timestamp"
+    listBuildAssetsOutput:
+      type: array
+      items:
+        $ref: "#/components/schemas/buildAssetLink"
+    assetBuildReference:
+      type: object
+      properties:
+        buildID:
+          $ref: "#/components/schemas/buildID"
+        assetRevision:
+          $ref: "#/components/schemas/assetRevision"
+    listAssetBuildsOutput:
+      type: object
+      required:
+        - builds
+        - nextPageToken
+        - total
+      properties:
+        builds:
+          type: array
+          items:
+            $ref: "#/components/schemas/assetBuildReference"
+        nextPageToken:
+          type: string
+        total:
+          type: integer
+    assetBuildLinkInput:
+      type: object
+      required:
+        - assetID
+        - assetRevision
+      properties:
+        assetID:
+          $ref: "#/components/schemas/assetID"
+        assetRevision:
+          $ref: "#/components/schemas/assetRevision"
+    addAssetsToBuildInput:
+      type: object
+      required:
+        - assets
+      properties:
+        assets:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/assetBuildLinkInput"
+    removeAssetsFromBuildInput:
+      type: object
+      required:
+        - assets
+      properties:
+        assets:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/assetBuildLinkInput"
     testSuiteSummaryOutput:
       type: object
       required:
@@ -6046,6 +7197,82 @@ components:
         - BOTH_PASSING
         - BOTH_FAILING
         - ONE_FAILING
+    lightBatchInput:
+      type: object
+      required:
+        - branchID
+      properties:
+        branchID:
+          $ref: "#/components/schemas/branchID"
+        metricsSetName:
+          $ref: "#/components/schemas/metricsSetName"
+        batchName:
+          nullable: true
+          $ref: "#/components/schemas/name"
+        version:
+          type: string
+          description: A version string representing your build. For example, this could be a commit sha or semver number
+    createJobForBatchInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name for the experience. Either name or experienceID must be provided, but not both.
+        experienceID:
+          $ref: "#/components/schemas/experienceID"
+        description:
+          type: string
+          description: Optional description for the job and experience.
+    lightJobStatus:
+      type: string
+      enum:
+        - SUCCEEDED
+        - ERROR
+    closeJobInput:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: "#/components/schemas/lightJobStatus"
+        errorMessage:
+          type: string
+          description: Optional user-provided error message for the job. Only used when status is ERROR.
+    createJobLogInput:
+      type: object
+      required:
+        - fileName
+        - fileSize
+        - checksum
+        - logType
+      properties:
+        fileName:
+          $ref: "#/components/schemas/fileName"
+        fileSize:
+          $ref: "#/components/schemas/fileSize"
+        checksum:
+          $ref: "#/components/schemas/checksum"
+        logType:
+          $ref: "#/components/schemas/logType"
+    createJobLogOutput:
+      type: object
+      required:
+        - logID
+        - uploadURL
+      properties:
+        logID:
+          $ref: "#/components/schemas/logID"
+        uploadURL:
+          type: string
+          format: uri
+          description: Presigned S3 URL for uploading the log file via HTTP PUT.
+        requiredHeaders:
+          $ref: "#/components/schemas/requiredHeaders"
+    requiredHeaders:
+      type: object
+      additionalProperties:
+        type: string
+      description: Headers the client MUST include when uploading. Includes x-amz-tagging when tags were provided.
     batchInput:
       type: object
       properties:
@@ -6249,6 +7476,7 @@ components:
         - ERROR_LOG
         - SERVICE_LOG
         - EMISSIONS_LOG
+        - SYSTEM_LOG
     logID:
       type: string
       format: uuid
@@ -6278,6 +7506,13 @@ components:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
+        filePath:
+          type: string
+          description: The directory path relative to the output root (empty for root-level files)
+        fullPath:
+          type: string
+          readOnly: true
+          description: The fully qualified path (filePath/fileName) of the log file
     jobLog:
       allOf:
         - $ref: "#/components/schemas/log"
@@ -6963,6 +8198,7 @@ components:
         - buildSpecification
         - creationTimestamp
         - updateTimestamp
+        - updateUserID
         - userID
         - orgID
       properties:
@@ -6974,6 +8210,9 @@ components:
           $ref: "#/components/schemas/projectID"
         systemID:
           $ref: "#/components/schemas/systemID"
+        numAssets:
+          type: integer
+          description: Number of assets linked to this build.
         description:
           $ref: "#/components/schemas/buildDescription"
         version:
@@ -6989,6 +8228,8 @@ components:
         associatedAccount:
           $ref: "#/components/schemas/associatedAccount"
         userID:
+          $ref: "#/components/schemas/userID"
+        updateUserID:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
@@ -7304,6 +8545,8 @@ components:
         - numMetricsBuilds
         - numBatches
         - creationTimestamp
+        - updateTimestamp
+        - updateUserID
         - userID
         - orgID
         - archived
@@ -7346,6 +8589,10 @@ components:
           type: integer
         creationTimestamp:
           $ref: "#/components/schemas/timestamp"
+        updateTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        updateUserID:
+          $ref: "#/components/schemas/userID"
         userID:
           $ref: "#/components/schemas/userID"
         orgID:
@@ -7373,6 +8620,8 @@ components:
         - description
         - creationTimestamp
         - userID
+        - updateTimestamp
+        - updateUserID
         - orgID
         - archived
       properties:
@@ -7391,6 +8640,8 @@ components:
           $ref: "#/components/schemas/timestamp"
         updateTimestamp:
           $ref: "#/components/schemas/timestamp"
+        updateUserID:
+          $ref: "#/components/schemas/userID"
         userID:
           $ref: "#/components/schemas/userID"
         orgID:
@@ -7720,10 +8971,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/batchID"
-        batchFriendlyNames:
-          type: array
-          items:
-            $ref: "#/components/schemas/friendlyName"
         userID:
           $ref: "#/components/schemas/userID"
         orgID:
@@ -7892,6 +9139,13 @@ components:
           $ref: "#/components/schemas/userID"
         orgID:
           $ref: "#/components/schemas/orgID"
+        filePath:
+          type: string
+          description: The directory path relative to the output root (empty for root-level files)
+        fullPath:
+          type: string
+          readOnly: true
+          description: The fully qualified path (filePath/fileName) of the log file
     name:
       type: string
     listReportsOutput:
@@ -8003,6 +9257,7 @@ components:
       enum:
         - NORMAL
         - DEBUG_EXPERIENCE
+        - LIGHT
     executionError:
       type: object
       properties:
@@ -8025,6 +9280,10 @@ components:
         metadata:
           type: object
           description: Error metadata
+        exitCode:
+          type: integer
+          nullable: true
+          description: Container exit code when applicable
       required:
         - errorCode
     containerName:
@@ -8107,6 +9366,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/experienceTagName"
+        customFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/customFieldDefinition"
         systems:
           type: array
           items:
@@ -8162,6 +9425,54 @@ components:
         - experiences
         - managedTestSuites
         - managedExperienceTags
+    listBatchLogStreamsOutput:
+      type: object
+      required:
+        - logStreams
+      properties:
+        logStreams:
+          type: array
+          items:
+            $ref: "#/components/schemas/logStream"
+    logStream:
+      type: object
+      required:
+        - batchID
+        - logName
+      properties:
+        batchID:
+          $ref: "#/components/schemas/batchID"
+        jobID:
+          # If jobID is empty, we assume this is a BATCHMETRICS log
+          $ref: "#/components/schemas/jobID"
+        logName:
+          $ref: "#/components/schemas/fileName"
+    getContainerStatusOutput:
+      type: object
+      required:
+        - containerStatuses
+      properties:
+        containerStatuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/containerStatusLine"
+    containerStatusLine:
+      type: object
+      required:
+        - containerName
+        - status
+        - statusChangedTimestamp
+      properties:
+        containerName:
+          type: string
+        status:
+          $ref: "#/components/schemas/containerStatus"
+        statusChangedTimestamp:
+          $ref: "#/components/schemas/timestamp"
+        exitCode:
+          type: integer
+    containerStatus:
+      type: string
   parameters:
     pageSize:
       name: pageSize
