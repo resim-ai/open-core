@@ -10,7 +10,22 @@ def sync_config(
     config_path: str = ".resim/metrics/config.resim.yml",
     templates: list[dict[str, str]] = [],
 ) -> None:
-    """Syncs your metrics config with ReSim."""
+    """
+    Syncs your metrics config with ReSim.
+
+    Args:
+        client: An authenticated ReSim API client.
+        project_id: The ID of the project to sync the config for.
+        branch_name: The branch to associate the config with.
+        config_path: Path to the metrics config file. Defaults to
+            ".resim/metrics/config.resim.yml".
+        templates: Optional list of template files to include, each a dict
+            with string keys and values.
+
+    Raises:
+        Exception: If the server returns a non-200 status code or the
+            response contains GraphQL errors.
+    """
     mutation = """
         mutation UpdateMetricsConfig(
             $projectId: String!,
