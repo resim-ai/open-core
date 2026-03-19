@@ -1,5 +1,5 @@
 load("@resim_python_client_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//bazel:openapi_client.bzl", "openapi_client")
 
 py_library(
