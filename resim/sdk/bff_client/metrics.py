@@ -1,13 +1,19 @@
 import base64
+from collections.abc import Sequence
+from typing import Union
+
+import yaml
 from httpx import URL
+
 from resim.sdk.client import AuthenticatedClient
+from resim.sdk.metrics.emissions import merge_metrics_config_files, normalize_metrics_config_paths
 
 
 def sync_config(
     client: AuthenticatedClient,
     project_id: str,
     branch_name: str,
-    config_path: str = ".resim/metrics/config.resim.yml",
+    config_path: Union[str, Sequence[str]] = ".resim/metrics/config.resim.yml",
     templates: list[dict[str, str]] = [],
 ) -> None:
     """
@@ -17,12 +23,16 @@ def sync_config(
         client: An authenticated ReSim API client.
         project_id: The ID of the project to sync the config for.
         branch_name: The branch to associate the config with.
-        config_path: Path to the metrics config file. Defaults to
+        config_path: Path to one metrics config file, or a sequence of paths.
+            Multiple files are merged (each topic must appear in only one file);
+            the combined YAML is uploaded. Defaults to
             ".resim/metrics/config.resim.yml".
         templates: Optional list of template files to include, each a dict
             with string keys and values.
 
     Raises:
+        FileNotFoundError: If a config path does not exist (when multiple paths are given).
+        ValueError: If ``config_path`` is empty or topics conflict across files.
         Exception: If the server returns a non-200 status code or the
             response contains GraphQL errors.
     """
@@ -40,12 +50,23 @@ def sync_config(
             )
         }
     """
+    paths = normalize_metrics_config_paths(config_path)
+    if not paths:
+        raise ValueError("config_path must not be empty")
+    if len(paths) == 1:
+        config_bytes = paths[0].read_bytes()
+    else:
+        merged = merge_metrics_config_files(paths)
+        config_bytes = yaml.safe_dump(
+            merged, sort_keys=False, allow_unicode=True
+        ).encode("utf-8")
+
     body = {
         "query": mutation,
         "operationName": "UpdateMetricsConfig",
         "variables": {
             "projectId": project_id,
-            "config": base64.b64encode(open(config_path, mode="rb").read()).decode(),
+            "config": base64.b64encode(config_bytes).decode(),
             "templateFiles": templates,
             "branch": branch_name,
         },

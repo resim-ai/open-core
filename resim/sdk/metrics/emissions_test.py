@@ -17,7 +17,12 @@ from typing import Any
 import numpy as np
 import yaml
 
-from resim.sdk.metrics.emissions import Emitter, emit
+from resim.sdk.metrics.emissions import (
+    Emitter,
+    emit,
+    merge_metrics_config_files,
+    merge_metrics_configs,
+)
 
 
 class EmissionsTest(unittest.TestCase):
@@ -561,6 +566,83 @@ class EmitterTest(unittest.TestCase):
             self.assertEqual(emission["$metadata"]["topic"], "any_topic")
             self.assertEqual(emission["$data"], {"any_field": "value"})
 
+    def test_emitter_multiple_configs_merge_topics(self) -> None:
+        """Test that multiple config files merge: topics from both are available."""
+        config2_path = Path(self.temp_dir.name) / "config2.resim.yaml"
+        with open(config2_path, "w", encoding="utf8") as f:
+            yaml.dump(
+                {
+                    "topics": {
+                        "extra_topic": {
+                            "schema": {"value": "int"},
+                        }
+                    }
+                },
+                f,
+            )
+
+        with Emitter(
+            config_path=[self.config_path, config2_path],
+            output_path=self.temp_path,
+        ) as emitter:
+            emitter.emit("drone_speed", {"speed_int": 1, "speeds": 1.0})
+            emitter.emit("extra_topic", {"value": 99})
+
+        with open(self.temp_path, "r", encoding="utf8") as f:
+            lines = f.readlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(json.loads(lines[0])["$metadata"]["topic"], "drone_speed")
+        self.assertEqual(json.loads(lines[1])["$metadata"]["topic"], "extra_topic")
+        self.assertEqual(json.loads(lines[1])["$data"]["value"], 99)
+
+    def test_emitter_multiple_configs_conflict_raises(self) -> None:
+        """Test that duplicate topic in multiple configs raises an error."""
+        config2_path = Path(self.temp_dir.name) / "config2.resim.yaml"
+        with open(config2_path, "w", encoding="utf8") as f:
+            yaml.dump(
+                {
+                    "topics": {
+                        "drone_speed": {
+                            "schema": {"speed_int": "string", "speeds": "float"},
+                        }
+                    }
+                },
+                f,
+            )
+
+        with self.assertRaises(ValueError) as ctx:
+            Emitter(
+                config_path=[self.config_path, config2_path],
+                output_path=self.temp_path,
+            )
+        self.assertIn("drone_speed", str(ctx.exception))
+        self.assertIn("duplicate topic name", str(ctx.exception))
+
+    def test_merge_metrics_config_files(self) -> None:
+        """merge_metrics_config_files matches merge_metrics_configs semantics."""
+        p1 = Path(self.temp_dir.name) / "m1.resim.yaml"
+        p2 = Path(self.temp_dir.name) / "m2.resim.yaml"
+        p1.write_text(
+            "version: 1\ntopics:\n  a:\n    schema:\n      x: int\n",
+            encoding="utf8",
+        )
+        p2.write_text(
+            "version: 1\ntopics:\n  b:\n    schema:\n      y: float\n",
+            encoding="utf8",
+        )
+        merged = merge_metrics_config_files([p1, p2])
+        self.assertEqual(merged["version"], 1)
+        self.assertEqual(set(merged["topics"].keys()), {"a", "b"})
+
+    def test_merge_metrics_config_files_conflict_raises(self) -> None:
+        p1 = Path(self.temp_dir.name) / "c1.resim.yaml"
+        p2 = Path(self.temp_dir.name) / "c2.resim.yaml"
+        p1.write_text("topics:\n  dup:\n    schema:\n      x: int\n", encoding="utf8")
+        p2.write_text("topics:\n  dup:\n    schema:\n      x: float\n", encoding="utf8")
+        with self.assertRaises(ValueError) as ctx:
+            merge_metrics_config_files([p1, p2])
+        self.assertIn("duplicate topic name", str(ctx.exception))
+
     def test_emitter_event_without_validation(self) -> None:
         """Test that event emissions work without validation."""
         with Emitter(output_path=self.temp_path) as emitter:
@@ -1082,6 +1164,83 @@ class EmitterTest(unittest.TestCase):
                 emitter.emit("snapshots", {"name": 123, "picture": "img.png"})
             self.assertIn("expected type str", str(context.exception))
             self.assertIn("got int", str(context.exception))
+
+
+class MergeMetricsConfigsTest(unittest.TestCase):
+    """CLI-parity tests for merge_metrics_configs (see Go MetricsConfig merge tests)."""
+
+    def test_single_config_returned_as_is(self) -> None:
+        cfg = {
+            "version": 1,
+            "topics": {"topic_a": {"type": "float"}},
+            "metrics": {"metric_a": {"topic": "topic_a"}},
+            "metrics sets": {
+                "set_a": {"metrics": ["metric_a"]},
+            },
+        }
+        out = merge_metrics_configs([cfg])
+        self.assertEqual(out, cfg)
+
+    def test_disjoint_merge(self) -> None:
+        a = {
+            "version": 1,
+            "topics": {"topic_a": "val_a"},
+            "metrics": {"metric_a": "val_a"},
+        }
+        b = {
+            "version": 1,
+            "topics": {"topic_b": "val_b"},
+            "metrics": {"metric_b": "val_b"},
+            "metrics sets": {"set_b": "val_b"},
+        }
+        expected = {
+            "version": 1,
+            "topics": {"topic_a": "val_a", "topic_b": "val_b"},
+            "metrics": {"metric_a": "val_a", "metric_b": "val_b"},
+            "metrics sets": {"set_b": "val_b"},
+        }
+        self.assertEqual(merge_metrics_configs([a, b]), expected)
+
+    def test_duplicate_topic_errors(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            merge_metrics_configs(
+                [{"topics": {"dup_topic": "a"}}, {"topics": {"dup_topic": "b"}}]
+            )
+        self.assertIn("duplicate topic name", str(ctx.exception))
+
+    def test_duplicate_metric_errors(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            merge_metrics_configs(
+                [{"metrics": {"dup_metric": "a"}}, {"metrics": {"dup_metric": "b"}}]
+            )
+        self.assertIn("duplicate metric name", str(ctx.exception))
+
+    def test_duplicate_metrics_set_errors(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            merge_metrics_configs(
+                [
+                    {"metrics sets": {"dup_set": "a"}},
+                    {"metrics sets": {"dup_set": "b"}},
+                ]
+            )
+        self.assertIn("duplicate metrics set name", str(ctx.exception))
+
+    def test_mismatched_versions(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            merge_metrics_configs([{"version": 1}, {"version": 3}])
+        self.assertIn("conflicting versions", str(ctx.exception))
+
+    def test_same_version_empty_sections(self) -> None:
+        expected = {
+            "version": 1,
+            "topics": {},
+            "metrics": {},
+            "metrics sets": {},
+        }
+        self.assertEqual(
+            merge_metrics_configs([{"version": 1}, {"version": 1}]),
+            expected,
+        )
 
 
 if __name__ == "__main__":

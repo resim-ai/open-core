@@ -10,6 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import yaml
 from httpx import URL
 
 from resim.sdk.bff_client.metrics import sync_config
@@ -61,6 +62,33 @@ class SyncConfigTest(unittest.TestCase):
             variables["config"],
             base64.b64encode(self.config_contents).decode(),
         )
+
+    def test_metrics_sync_multiple_paths_merged(self) -> None:
+        path2 = Path(self.temp_dir.name) / "config2.resim.yml"
+        self.config_path.write_text(
+            "version: 1\ntopics:\n  t1:\n    schema:\n      a: float\n",
+            encoding="utf8",
+        )
+        path2.write_text(
+            "version: 1\ntopics:\n  t2:\n    schema:\n      b: int\n",
+            encoding="utf8",
+        )
+        sync_config(
+            client=self.mock_client,
+            project_id="proj-123",
+            branch_name="main",
+            config_path=[str(self.config_path), str(path2)],
+        )
+
+        self.mock_httpx.post.assert_called_once()
+        body = self.mock_httpx.post.call_args.kwargs["json"]
+        variables = body["variables"]
+        decoded = base64.b64decode(variables["config"])
+        loaded = yaml.safe_load(decoded)
+        self.assertEqual(loaded["version"], 1)
+        self.assertEqual(set(loaded["topics"].keys()), {"t1", "t2"})
+        self.assertEqual(loaded["metrics"], {})
+        self.assertEqual(loaded["metrics sets"], {})
 
     def test_raises_on_non_200_status(self) -> None:
         self.mock_response.status_code = 403

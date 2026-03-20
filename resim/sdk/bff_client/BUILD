@@ -7,6 +7,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//resim/sdk:client",
+        "//resim/sdk/metrics:emissions",
     ],
 )
 

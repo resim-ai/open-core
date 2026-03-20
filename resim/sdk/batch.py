@@ -1,5 +1,7 @@
+from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
+from typing import Union
 from resim.sdk.client.api.projects import list_branches_for_project
 from resim.sdk.client import AuthenticatedClient
 from resim.sdk.client.api.light_batches import create_light_batch, close_batch
@@ -9,6 +11,12 @@ from resim.sdk.bff_client import metrics
 
 
 class Batch(AbstractContextManager):
+    """Light batch lifecycle; optionally syncs metrics config before creation.
+
+    ``metrics_config_path`` may be a single file path or a sequence of paths. Multiple
+    files are merged (each topic must appear in only one file) before upload.
+    """
+
     def __init__(
         self,
         client: AuthenticatedClient,
@@ -17,7 +25,7 @@ class Batch(AbstractContextManager):
         name: str | None = None,
         version: str | None = None,
         metrics_set_name: str | None = None,
-        metrics_config_path: str | None = None,
+        metrics_config_path: Union[str, Sequence[str], None] = None,
     ):
         self._client = client
         self.project_id = project_id
