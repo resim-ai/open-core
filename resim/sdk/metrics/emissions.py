@@ -127,6 +127,8 @@ def merge_metrics_configs(
                 merged_version = v
             elif merged_version != v:
                 raise ValueError("conflicting versions")
+        else:
+            raise ValueError("version is required")
 
         topics = _get_subdict(data, "topics", label="topics")
         if topics:
