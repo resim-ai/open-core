@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch, mock_open
 
@@ -64,7 +65,7 @@ class TestTest(unittest.TestCase):
             with Test(mock_client, mock_batch, TEST_NAME) as test:
                 self.assertEqual(test.name, TEST_NAME)
 
-        self.assertEqual(str(test.config_path), CONFIG_PATH)
+        self.assertEqual(test.config_paths, [Path(CONFIG_PATH)])
         mock_create_job.sync_detailed.assert_called_once()
         mock_create_log.sync_detailed.assert_called_once()
         mock_httpx.put.assert_called_once()

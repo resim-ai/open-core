@@ -112,6 +112,50 @@ class BatchTest(unittest.TestCase):
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_syncs_multiple_metrics_config_paths(
+        self,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+        mock_metrics: Any,
+    ) -> None:
+        mock_client = MagicMock()
+
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.parsed.batch_id = BATCH_ID
+        mock_response.parsed.friendly_name = BATCH_FRIENDLY_NAME
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_batch.sync_detailed.return_value = mock_close_response
+
+        config_paths = ("/fake/a.resim.yml", "/fake/b.resim.yml")
+        with Batch(
+            mock_client,
+            PROJECT_ID,
+            BRANCH_NAME,
+            metrics_config_path=config_paths,
+        ) as batch:
+            self.assertEqual(batch.id, BATCH_ID)
+
+        mock_metrics.sync_config.assert_called_once_with(
+            mock_client,
+            PROJECT_ID,
+            BRANCH_NAME,
+            config_path=config_paths,
+        )
+
+    @patch("resim.sdk.batch.metrics")
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch_skips_metrics_sync_when_no_config(
         self,
         mock_list_branches: Any,

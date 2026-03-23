@@ -4,11 +4,12 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import copy
 import json
 from io import TextIOWrapper
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Optional, Type, Union
+from typing import Any, Iterable, Optional, Type, Union
 from contextlib import AbstractContextManager
 
 import numpy as np
@@ -26,7 +27,182 @@ __all__ = [
     "emit",
     "Emitter",
     "ReSimValidationError",
+    "merge_metrics_config_files",
+    "merge_metrics_configs",
+    "normalize_metrics_config_paths",
 ]
+
+# Top-level YAML keys that participate in merge (not last-wins across files).
+_MERGE_SECTION_KEYS = frozenset({"topics", "metrics", "metrics sets", "version"})
+
+
+def normalize_metrics_config_paths(
+    config_path: Optional[Union[str, Path, Iterable[Union[str, Path]]]],
+) -> list[Path]:
+    """Normalize ``config_path`` to a list of :class:`Path` (same rules as :class:`Emitter`)."""
+    if config_path is None:
+        return []
+    if isinstance(config_path, (str, Path)):
+        return [Path(config_path)]
+    return [Path(p) for p in config_path]
+
+
+def _merge_disjoint_maps(
+    existing: dict[str, Any],
+    new: dict[str, Any],
+    *,
+    duplicate_phrase: str,
+    new_path: Optional[Path] = None,
+) -> dict[str, Any]:
+    """Merge string-keyed maps; duplicate keys raise :exc:`ValueError` (CLI-compatible messages)."""
+    result = dict(existing)
+    for name, val in new.items():
+        if name in result:
+            path_hint = f" ({new_path})" if new_path else ""
+            raise ValueError(f"duplicate {duplicate_phrase} '{name}'{path_hint}")
+        result[name] = val
+    return result
+
+
+def _get_subdict(data: dict[str, Any], key: str, *, label: str) -> dict[str, Any]:
+    raw = data.get(key)
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError(
+            f"Metrics config '{label}' must be a mapping, got {type(raw).__name__}"
+        )
+    return raw
+
+
+def _get_metrics_sets_dict(data: dict[str, Any]) -> dict[str, Any]:
+    raw = data.get("metrics sets")
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError(
+            f"Metrics config 'metrics sets' must be a mapping, got {type(raw).__name__}"
+        )
+    return raw
+
+
+def merge_metrics_configs(
+    configs: list[dict[str, Any]],
+    paths: Optional[list[Path]] = None,
+) -> dict[str, Any]:
+    """Merge multiple metrics config dicts (same rules as the ReSim CLI).
+
+    - A single config is returned unchanged (deep-copied).
+    - For multiple configs: ``topics``, ``metrics``, and ``metrics sets`` are merged with
+      disjoint keys only; duplicates raise ``duplicate …`` errors.
+    - ``version`` must match across configs when present; otherwise :exc:`ValueError`
+      (``conflicting versions``).
+    - Other top-level keys use last-wins ordering.
+
+    Args:
+        configs: Parsed YAML mappings (e.g. from :func:`yaml.safe_load`).
+        paths: Optional parallel list of file paths (for error messages).
+
+    Raises:
+        ValueError: Invalid structure, conflicting versions, or duplicate names.
+    """
+    if not configs:
+        raise ValueError("at least one metrics config is required")
+    if paths is not None and len(paths) != len(configs):
+        raise ValueError("paths must have the same length as configs when provided")
+    if len(configs) == 1:
+        return copy.deepcopy(configs[0])
+
+    merged_topics: dict[str, Any] = {}
+    merged_metrics: dict[str, Any] = {}
+    merged_metrics_sets: dict[str, Any] = {}
+    merged_version: Optional[Any] = None
+    other_top_level: dict[str, Any] = {}
+
+    for i, data in enumerate(configs):
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Metrics config must be a mapping, got {type(data).__name__}"
+            )
+        path_hint = paths[i] if paths is not None else None
+        if "version" in data:
+            v = data["version"]
+            if merged_version is None:
+                merged_version = v
+            elif merged_version != v:
+                raise ValueError("conflicting versions")
+        else:
+            raise ValueError("version is required")
+
+        topics = _get_subdict(data, "topics", label="topics")
+        if topics:
+            merged_topics = _merge_disjoint_maps(
+                merged_topics,
+                topics,
+                duplicate_phrase="topic name",
+                new_path=path_hint,
+            )
+
+        metrics = _get_subdict(data, "metrics", label="metrics")
+        if metrics:
+            merged_metrics = _merge_disjoint_maps(
+                merged_metrics,
+                metrics,
+                duplicate_phrase="metric name",
+                new_path=path_hint,
+            )
+
+        msets = _get_metrics_sets_dict(data)
+        if msets:
+            merged_metrics_sets = _merge_disjoint_maps(
+                merged_metrics_sets,
+                msets,
+                duplicate_phrase="metrics set name",
+                new_path=path_hint,
+            )
+
+        for k, v in data.items():
+            if k in _MERGE_SECTION_KEYS:
+                continue
+            other_top_level[k] = v
+
+    out = dict(other_top_level)
+    if merged_version is not None:
+        out["version"] = merged_version
+    out["topics"] = merged_topics
+    out["metrics"] = merged_metrics
+    out["metrics sets"] = merged_metrics_sets
+    return out
+
+
+def merge_metrics_config_files(paths: Iterable[Union[str, Path]]) -> dict[str, Any]:
+    """Load YAML metrics config files and merge (see :func:`merge_metrics_configs`).
+
+    Args:
+        paths: Paths to YAML files. Each must exist and be a regular file.
+
+    Raises:
+        FileNotFoundError: If any path is not a regular file.
+        ValueError: Same as :func:`merge_metrics_configs`.
+    """
+    path_list = [Path(p) for p in paths]
+    for p in path_list:
+        if not p.is_file():
+            raise FileNotFoundError(f"Metrics config file not found: {p}")
+
+    configs: list[dict[str, Any]] = []
+    for path in path_list:
+        with open(path, "r", encoding="utf8") as f:
+            data = yaml.safe_load(f)
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Metrics config must be a YAML mapping, got {type(data).__name__} in {path}"
+            )
+        configs.append(data)
+
+    return merge_metrics_configs(configs, paths=path_list)
 
 
 # Custom exception class for better error handling
@@ -197,8 +373,12 @@ class Emitter(AbstractContextManager):
     """Emitter for metrics with optional validation against a YAML configuration.
 
     The Emitter automatically opens its output file on construction and closes it when
-    destroyed or used as a context manager. If a config file exists, emissions are
-    validated against the schema. If not, validation is disabled.
+    destroyed or used as a context manager. If config file(s) exist, emissions are
+    validated against the merged schema. If not, validation is disabled.
+
+    You may pass a single config path or a list of paths. Merging follows the same rules
+    as the ReSim CLI: disjoint ``topics``, ``metrics``, and ``metrics sets`` keys,
+    matching ``version`` when present, and errors on duplicates.
 
     Methods:
         emit(): Emit a single datapoint with optional timestamp
@@ -247,7 +427,7 @@ class Emitter(AbstractContextManager):
 
     def __init__(
         self,
-        config_path: Optional[Union[str, Path]] = None,
+        config_path: Optional[Union[str, Path, Iterable[Union[str, Path]]]] = None,
         output_path: Union[str, Path] = DEFAULT_EMISSIONS_PATH,
     ):
         """
@@ -257,17 +437,34 @@ class Emitter(AbstractContextManager):
         automatically closed when the object is garbage collected or when close() is called.
 
         Args:
-            config_path: Optional path to the YAML metrics configuration file. If the file doesn't exist, validation is disabled.
+            config_path: Optional path(s) to YAML metrics configuration file(s). May be a
+                single path or an iterable of paths. Configs are loaded in order; topics from
+                each file are added. If the same topic is defined in more than one file, an
+                error is raised. If a file doesn't exist, it is skipped with a warning. If no
+                config path is provided or no files exist, validation is disabled.
             output_path: Path to the output file for emissions. Defaults to /tmp/resim/outputs/emissions.resim.jsonl.
         """
-        self.config_path = Path(config_path) if config_path is not None else None
+        self.config_paths: list[Path] = normalize_metrics_config_paths(config_path)
         self.output_path = Path(output_path)
-        self.topics: dict[str, dict[str, Any]] = {}
+        self.topics: dict[str, Any] = {}
         self.file: Optional[TextIOWrapper] = None
         self.validation_enabled = False
 
         # Automatically open the emitter
         self._initialize()
+
+    @staticmethod
+    def _load_config_file(path: Path) -> dict[str, Any]:
+        """Load a single YAML config file. Returns dict with 'topics' or empty dict on failure."""
+        if not path.is_file():
+            return {}
+        try:
+            with open(path, "r", encoding="utf8") as f:
+                data = yaml.safe_load(f)
+            return data if isinstance(data, dict) else {}
+        except (yaml.YAMLError, IOError, OSError) as e:
+            logger.warning(f"Failed to load config file {path}: {e}.")
+            return {}
 
     def _initialize(self) -> None:
         """
@@ -275,42 +472,36 @@ class Emitter(AbstractContextManager):
 
         Called automatically by __init__.
         """
-        # Try to load configuration if config_path is provided
-        if self.config_path is not None:
-            if self.config_path.is_file():
-                logger.info(f"Loading config file {self.config_path} for validation.")
-                try:
-                    # Load and parse the YAML configuration file
-                    with open(self.config_path, "r", encoding="utf8") as config_file:
-                        config = yaml.safe_load(config_file)
+        if self.config_paths:
+            loaded_configs: list[dict[str, Any]] = []
+            loaded_paths: list[Path] = []
+            for path in self.config_paths:
+                if not path.is_file():
+                    logger.warning(f"Config file {path} not found. Skipping.")
+                    continue
+                logger.info(f"Loading config file {path} for validation.")
+                config = self._load_config_file(path)
+                if not config:
+                    continue
+                loaded_configs.append(config)
+                loaded_paths.append(path)
 
-                    # Extract topics from the configuration
-                    # Note: yaml.safe_load() returns None for empty files
-                    if config is not None and "topics" in config:
-                        self.topics = config["topics"]
-                        self.validation_enabled = True
-                        logger.info(
-                            f"Validation enabled with {len(self.topics)} topic(s) from config."
-                        )
-                    else:
-                        logger.warning(
-                            f"Config file {self.config_path} has no 'topics' key. Validation disabled."
-                        )
-                        self.validation_enabled = False
-                except (yaml.YAMLError, IOError, OSError) as e:
-                    # If loading fails, continue without validation but log the error
-                    logger.warning(
-                        f"Failed to load config file {self.config_path}: {e}. Validation disabled."
+            if loaded_configs:
+                merged = merge_metrics_configs(loaded_configs, paths=loaded_paths)
+                raw_topics = merged.get("topics")
+                self.topics = raw_topics if isinstance(raw_topics, dict) else {}
+                if self.topics:
+                    self.validation_enabled = True
+                    logger.info(
+                        f"Validation enabled with {len(self.topics)} topic(s) from config."
                     )
+                else:
+                    logger.debug("No topics in merged config. Validation disabled.")
                     self.validation_enabled = False
             else:
-                # Config file path provided but doesn't exist - disable validation
-                logger.warning(
-                    f"Config file {self.config_path} not found. Validation disabled."
-                )
+                logger.debug("No config files could be loaded. Validation disabled.")
                 self.validation_enabled = False
         else:
-            # No config file provided - validation intentionally disabled
             logger.debug("No config file provided. Validation disabled.")
             self.validation_enabled = False
 
