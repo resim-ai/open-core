@@ -572,11 +572,12 @@ class EmitterTest(unittest.TestCase):
         with open(config2_path, "w", encoding="utf8") as f:
             yaml.dump(
                 {
+                    "version": 1,
                     "topics": {
                         "extra_topic": {
                             "schema": {"value": "int"},
                         }
-                    }
+                    },
                 },
                 f,
             )
@@ -601,11 +602,12 @@ class EmitterTest(unittest.TestCase):
         with open(config2_path, "w", encoding="utf8") as f:
             yaml.dump(
                 {
+                    "version": 1,
                     "topics": {
                         "drone_speed": {
                             "schema": {"speed_int": "string", "speeds": "float"},
                         }
-                    }
+                    },
                 },
                 f,
             )
@@ -637,8 +639,14 @@ class EmitterTest(unittest.TestCase):
     def test_merge_metrics_config_files_conflict_raises(self) -> None:
         p1 = Path(self.temp_dir.name) / "c1.resim.yaml"
         p2 = Path(self.temp_dir.name) / "c2.resim.yaml"
-        p1.write_text("topics:\n  dup:\n    schema:\n      x: int\n", encoding="utf8")
-        p2.write_text("topics:\n  dup:\n    schema:\n      x: float\n", encoding="utf8")
+        p1.write_text(
+            "version: 1\ntopics:\n  dup:\n    schema:\n      x: int\n",
+            encoding="utf8",
+        )
+        p2.write_text(
+            "version: 1\ntopics:\n  dup:\n    schema:\n      x: float\n",
+            encoding="utf8",
+        )
         with self.assertRaises(ValueError) as ctx:
             merge_metrics_config_files([p1, p2])
         self.assertIn("duplicate topic name", str(ctx.exception))
@@ -1204,14 +1212,20 @@ class MergeMetricsConfigsTest(unittest.TestCase):
     def test_duplicate_topic_errors(self) -> None:
         with self.assertRaises(ValueError) as ctx:
             merge_metrics_configs(
-                [{"topics": {"dup_topic": "a"}}, {"topics": {"dup_topic": "b"}}]
+                [
+                    {"version": 1, "topics": {"dup_topic": "a"}},
+                    {"version": 1, "topics": {"dup_topic": "b"}},
+                ]
             )
         self.assertIn("duplicate topic name", str(ctx.exception))
 
     def test_duplicate_metric_errors(self) -> None:
         with self.assertRaises(ValueError) as ctx:
             merge_metrics_configs(
-                [{"metrics": {"dup_metric": "a"}}, {"metrics": {"dup_metric": "b"}}]
+                [
+                    {"version": 1, "metrics": {"dup_metric": "a"}},
+                    {"version": 1, "metrics": {"dup_metric": "b"}},
+                ]
             )
         self.assertIn("duplicate metric name", str(ctx.exception))
 
@@ -1219,8 +1233,8 @@ class MergeMetricsConfigsTest(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             merge_metrics_configs(
                 [
-                    {"metrics sets": {"dup_set": "a"}},
-                    {"metrics sets": {"dup_set": "b"}},
+                    {"version": 1, "metrics sets": {"dup_set": "a"}},
+                    {"version": 1, "metrics sets": {"dup_set": "b"}},
                 ]
             )
         self.assertIn("duplicate metrics set name", str(ctx.exception))
