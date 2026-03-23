@@ -69,7 +69,9 @@ def _get_subdict(data: dict[str, Any], key: str, *, label: str) -> dict[str, Any
     if raw is None:
         return {}
     if not isinstance(raw, dict):
-        raise ValueError(f"Metrics config '{label}' must be a mapping, got {type(raw).__name__}")
+        raise ValueError(
+            f"Metrics config '{label}' must be a mapping, got {type(raw).__name__}"
+        )
     return raw
 
 
@@ -119,7 +121,9 @@ def merge_metrics_configs(
 
     for i, data in enumerate(configs):
         if not isinstance(data, dict):
-            raise ValueError(f"Metrics config must be a mapping, got {type(data).__name__}")
+            raise ValueError(
+                f"Metrics config must be a mapping, got {type(data).__name__}"
+            )
         path_hint = paths[i] if paths is not None else None
         if "version" in data:
             v = data["version"]

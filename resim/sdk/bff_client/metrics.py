@@ -6,7 +6,10 @@ import yaml
 from httpx import URL
 
 from resim.sdk.client import AuthenticatedClient
-from resim.sdk.metrics.emissions import merge_metrics_config_files, normalize_metrics_config_paths
+from resim.sdk.metrics.emissions import (
+    merge_metrics_config_files,
+    normalize_metrics_config_paths,
+)
 
 
 def sync_config(
