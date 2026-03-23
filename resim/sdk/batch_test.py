@@ -5,6 +5,7 @@ from resim.sdk.client.models.light_batch_input import LightBatchInput
 from resim.sdk.batch import Batch
 
 PROJECT_ID = "project-123"
+PROJECT_NAME = "my-project"
 BRANCH_NAME = "main"
 BRANCH_ID = "branch-456"
 BATCH_ID = "batch-789"
@@ -37,8 +38,8 @@ class BatchTest(unittest.TestCase):
 
         with Batch(
             mock_client,
-            PROJECT_ID,
             BRANCH_NAME,
+            project_id=PROJECT_ID,
             name="hello-world",
             metrics_set_name="metrics",
             version="1.0.2",
@@ -63,6 +64,127 @@ class BatchTest(unittest.TestCase):
         mock_close_batch.sync_detailed.assert_called_once_with(
             PROJECT_ID, BATCH_ID, client=mock_client
         )
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    @patch("resim.sdk.batch.list_projects")
+    def test_batch_resolves_project_by_name(
+        self,
+        mock_list_projects: Any,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+
+        mock_project = MagicMock()
+        mock_project.name = PROJECT_NAME
+        mock_project.project_id = PROJECT_ID
+        mock_list_projects.sync.return_value = MagicMock(
+            projects=[mock_project], next_page_token=None
+        )
+
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.parsed.batch_id = BATCH_ID
+        mock_response.parsed.friendly_name = BATCH_FRIENDLY_NAME
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_batch.sync_detailed.return_value = mock_close_response
+
+        with Batch(
+            mock_client,
+            BRANCH_NAME,
+            project_name=PROJECT_NAME,
+        ) as batch:
+            self.assertEqual(batch.project_id, PROJECT_ID)
+            self.assertEqual(batch.id, BATCH_ID)
+
+        mock_list_projects.sync.assert_called_once_with(client=mock_client)
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    @patch("resim.sdk.batch.list_projects")
+    def test_batch_resolves_project_by_name_across_pages(
+        self,
+        mock_list_projects: Any,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+
+        mock_project = MagicMock()
+        mock_project.name = PROJECT_NAME
+        mock_project.project_id = PROJECT_ID
+        page_token = "next-page-token"
+        mock_list_projects.sync.side_effect = [
+            MagicMock(projects=[], next_page_token=page_token),
+            MagicMock(projects=[mock_project], next_page_token=None),
+        ]
+
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.parsed.batch_id = BATCH_ID
+        mock_response.parsed.friendly_name = BATCH_FRIENDLY_NAME
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_batch.sync_detailed.return_value = mock_close_response
+
+        with Batch(mock_client, BRANCH_NAME, project_name=PROJECT_NAME) as batch:
+            self.assertEqual(batch.project_id, PROJECT_ID)
+
+        self.assertEqual(mock_list_projects.sync.call_count, 2)
+        mock_list_projects.sync.assert_any_call(client=mock_client)
+        mock_list_projects.sync.assert_any_call(
+            client=mock_client, page_token=page_token
+        )
+
+    @patch("resim.sdk.batch.list_projects")
+    def test_batch_raises_if_project_name_not_found(
+        self, mock_list_projects: Any
+    ) -> None:
+        mock_client = MagicMock()
+        other_project = MagicMock()
+        other_project.name = "other-project"
+        mock_list_projects.sync.return_value = MagicMock(
+            projects=[other_project], next_page_token=None
+        )
+
+        with self.assertRaises(Exception, msg=f"project {PROJECT_NAME!r} not found"):
+            with Batch(mock_client, BRANCH_NAME, project_name=PROJECT_NAME):
+                pass
+
+    def test_batch_raises_if_neither_project_id_nor_name(self) -> None:
+        mock_client = MagicMock()
+        with self.assertRaises(ValueError):
+            Batch(mock_client, BRANCH_NAME)
+
+    def test_batch_raises_if_both_project_id_and_name(self) -> None:
+        mock_client = MagicMock()
+        with self.assertRaises(ValueError):
+            Batch(
+                mock_client,
+                BRANCH_NAME,
+                project_id=PROJECT_ID,
+                project_name=PROJECT_NAME,
+            )
 
     @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
@@ -95,8 +217,8 @@ class BatchTest(unittest.TestCase):
         config_path = "/fake/path/config.resim.yml"
         with Batch(
             mock_client,
-            PROJECT_ID,
             BRANCH_NAME,
+            project_id=PROJECT_ID,
             metrics_config_path=config_path,
         ) as batch:
             self.assertEqual(batch.id, BATCH_ID)
@@ -139,8 +261,8 @@ class BatchTest(unittest.TestCase):
         config_paths = ("/fake/a.resim.yml", "/fake/b.resim.yml")
         with Batch(
             mock_client,
-            PROJECT_ID,
             BRANCH_NAME,
+            project_id=PROJECT_ID,
             metrics_config_path=config_paths,
         ) as batch:
             self.assertEqual(batch.id, BATCH_ID)
@@ -179,7 +301,7 @@ class BatchTest(unittest.TestCase):
         mock_close_response.status_code = 204
         mock_close_batch.sync_detailed.return_value = mock_close_response
 
-        with Batch(mock_client, PROJECT_ID, BRANCH_NAME):
+        with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
             pass
 
         mock_metrics.sync_config.assert_not_called()
@@ -190,7 +312,7 @@ class BatchTest(unittest.TestCase):
         mock_list_branches.sync.return_value = MagicMock(branches=[])
 
         with self.assertRaises(Exception, msg=f"branch {BRANCH_NAME} does not exist"):
-            with Batch(mock_client, PROJECT_ID, BRANCH_NAME):
+            with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
                 pass
 
 
