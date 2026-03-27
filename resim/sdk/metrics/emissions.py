@@ -420,7 +420,7 @@ class Emitter(AbstractContextManager):
         "int": int,
         "float": float,
         "image": str,  # image & video references are stored as strings
-        "video": str,  
+        "video": str,
         "status": str,  # status values are stored as strings
         "string[]": list,
         "metric[]": list,
