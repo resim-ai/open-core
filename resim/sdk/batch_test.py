@@ -10,9 +10,35 @@ BRANCH_NAME = "main"
 BRANCH_ID = "branch-456"
 BATCH_ID = "batch-789"
 BATCH_FRIENDLY_NAME = "friendly-batch"
+SYSTEM_NAME = "my-system"
+SYSTEM_ID = "system-abc"
+TEST_SUITE_NAME = "my-test-suite"
+TEST_SUITE_ID = "suite-def"
+TEST_SUITE_REVISION = 3
 
 
 class BatchTest(unittest.TestCase):
+    def _make_standard_mocks(
+        self,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.parsed.batch_id = BATCH_ID
+        mock_response.parsed.friendly_name = BATCH_FRIENDLY_NAME
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_batch.sync_detailed.return_value = mock_close_response
+
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
@@ -312,6 +338,245 @@ class BatchTest(unittest.TestCase):
         mock_list_branches.sync.return_value = MagicMock(branches=[])
 
         with self.assertRaises(Exception, msg=f"branch {BRANCH_NAME} does not exist"):
+            with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
+                pass
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_systems")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_with_system(
+        self,
+        mock_list_branches: Any,
+        mock_list_systems: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+        self._make_standard_mocks(
+            mock_list_branches, mock_create_batch, mock_close_batch
+        )
+
+        mock_system = MagicMock()
+        mock_system.name = SYSTEM_NAME
+        mock_system.system_id = SYSTEM_ID
+        mock_list_systems.sync.return_value = MagicMock(systems=[mock_system])
+
+        with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID, system=SYSTEM_NAME):
+            pass
+
+        mock_list_systems.sync.assert_called_once_with(
+            PROJECT_ID, client=mock_client, name=SYSTEM_NAME
+        )
+        body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
+        self.assertEqual(body.system_id, SYSTEM_ID)
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_test_suites")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_with_test_suite(
+        self,
+        mock_list_branches: Any,
+        mock_list_test_suites: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+        self._make_standard_mocks(
+            mock_list_branches, mock_create_batch, mock_close_batch
+        )
+
+        mock_suite = MagicMock()
+        mock_suite.name = TEST_SUITE_NAME
+        mock_suite.test_suite_id = TEST_SUITE_ID
+        mock_list_test_suites.sync.return_value = MagicMock(test_suites=[mock_suite])
+
+        with Batch(
+            mock_client, BRANCH_NAME, project_id=PROJECT_ID, test_suite=TEST_SUITE_NAME
+        ):
+            pass
+
+        mock_list_test_suites.sync.assert_called_once_with(
+            PROJECT_ID, client=mock_client, name=TEST_SUITE_NAME
+        )
+        body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
+        self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_test_suites")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_with_test_suite_and_revision(
+        self,
+        mock_list_branches: Any,
+        mock_list_test_suites: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+        self._make_standard_mocks(
+            mock_list_branches, mock_create_batch, mock_close_batch
+        )
+
+        mock_suite = MagicMock()
+        mock_suite.name = TEST_SUITE_NAME
+        mock_suite.test_suite_id = TEST_SUITE_ID
+        mock_list_test_suites.sync.return_value = MagicMock(test_suites=[mock_suite])
+
+        with Batch(
+            mock_client,
+            BRANCH_NAME,
+            project_id=PROJECT_ID,
+            test_suite=TEST_SUITE_NAME,
+            test_suite_revision=TEST_SUITE_REVISION,
+        ):
+            pass
+
+        body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
+        self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
+        self.assertEqual(body.test_suite_revision, TEST_SUITE_REVISION)
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_systems")
+    @patch("resim.sdk.batch.list_test_suites")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_with_system_and_test_suite(
+        self,
+        mock_list_branches: Any,
+        mock_list_test_suites: Any,
+        mock_list_systems: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+    ) -> None:
+        mock_client = MagicMock()
+        self._make_standard_mocks(
+            mock_list_branches, mock_create_batch, mock_close_batch
+        )
+
+        mock_system = MagicMock()
+        mock_system.name = SYSTEM_NAME
+        mock_system.system_id = SYSTEM_ID
+        mock_list_systems.sync.return_value = MagicMock(systems=[mock_system])
+
+        mock_suite = MagicMock()
+        mock_suite.name = TEST_SUITE_NAME
+        mock_suite.test_suite_id = TEST_SUITE_ID
+        mock_list_test_suites.sync.return_value = MagicMock(test_suites=[mock_suite])
+
+        with Batch(
+            mock_client,
+            BRANCH_NAME,
+            project_id=PROJECT_ID,
+            system=SYSTEM_NAME,
+            test_suite=TEST_SUITE_NAME,
+        ):
+            pass
+
+        body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
+        self.assertEqual(body.system_id, SYSTEM_ID)
+        self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
+
+    @patch("resim.sdk.batch.list_systems")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_raises_if_system_not_found(
+        self, mock_list_branches: Any, mock_list_systems: Any
+    ) -> None:
+        mock_client = MagicMock()
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        other_system = MagicMock()
+        other_system.name = "other-system"
+        mock_list_systems.sync.return_value = MagicMock(systems=[other_system])
+
+        with self.assertRaises(Exception, msg=f"system {SYSTEM_NAME!r} not found"):
+            with Batch(
+                mock_client, BRANCH_NAME, project_id=PROJECT_ID, system=SYSTEM_NAME
+            ):
+                pass
+
+    @patch("resim.sdk.batch.list_test_suites")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_raises_if_test_suite_not_found(
+        self, mock_list_branches: Any, mock_list_test_suites: Any
+    ) -> None:
+        mock_client = MagicMock()
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        other_suite = MagicMock()
+        other_suite.name = "other-suite"
+        mock_list_test_suites.sync.return_value = MagicMock(test_suites=[other_suite])
+
+        with self.assertRaises(
+            Exception, msg=f"test suite {TEST_SUITE_NAME!r} not found"
+        ):
+            with Batch(
+                mock_client,
+                BRANCH_NAME,
+                project_id=PROJECT_ID,
+                test_suite=TEST_SUITE_NAME,
+            ):
+                pass
+
+    def test_batch_raises_if_revision_without_test_suite(self) -> None:
+        mock_client = MagicMock()
+        with self.assertRaises(ValueError):
+            Batch(
+                mock_client,
+                BRANCH_NAME,
+                project_id=PROJECT_ID,
+                test_suite_revision=TEST_SUITE_REVISION,
+            )
+
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_raises_if_create_fails(
+        self, mock_list_branches: Any, mock_create_batch: Any
+    ) -> None:
+        mock_client = MagicMock()
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        with self.assertRaises(Exception, msg="Failed to create batch"):
+            with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
+                pass
+
+    @patch("resim.sdk.batch.close_batch")
+    @patch("resim.sdk.batch.create_light_batch")
+    @patch("resim.sdk.batch.list_branches_for_project")
+    def test_batch_raises_if_close_fails(
+        self, mock_list_branches: Any, mock_create_batch: Any, mock_close_batch: Any
+    ) -> None:
+        mock_client = MagicMock()
+        mock_branch = MagicMock()
+        mock_branch.name = BRANCH_NAME
+        mock_branch.branch_id = BRANCH_ID
+        mock_list_branches.sync.return_value = MagicMock(branches=[mock_branch])
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.parsed.batch_id = BATCH_ID
+        mock_response.parsed.friendly_name = BATCH_FRIENDLY_NAME
+        mock_create_batch.sync_detailed.return_value = mock_response
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 500
+        mock_close_batch.sync_detailed.return_value = mock_close_response
+
+        with self.assertRaises(Exception, msg="Failed to close batch"):
             with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
                 pass
 

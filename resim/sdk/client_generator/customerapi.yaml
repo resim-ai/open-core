@@ -7211,7 +7211,25 @@ components:
           $ref: "#/components/schemas/name"
         version:
           type: string
-          description: A version string representing your build. For example, this could be a commit sha or semver number
+          description: >
+            Optional. When provided, the latest existing build matching
+            (branchID, systemID, version) is reused; a new build is created only
+            if none is found. When omitted, a new build is always created with
+            version "n/a".
+        systemID:
+          $ref: "#/components/schemas/systemID"
+          description: >
+            Optional. Use this system for the build. When omitted, the placeholder
+            resim-sdk system is used.
+        testSuiteID:
+          $ref: "#/components/schemas/testSuiteID"
+          description: >
+            Optional. Attach the batch to this test suite instead of creating an ad-hoc one.
+        testSuiteRevision:
+          $ref: "#/components/schemas/testSuiteRevision"
+          description: >
+            Optional. Pin to this revision of the test suite. Requires testSuiteID.
+            If omitted, uses the latest revision.
     createJobForBatchInput:
       type: object
       properties:

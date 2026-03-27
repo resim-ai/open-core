@@ -3,6 +3,8 @@ from contextlib import AbstractContextManager
 from types import TracebackType
 from typing import Union
 from resim.sdk.client.api.projects import list_branches_for_project, list_projects
+from resim.sdk.client.api.systems import list_systems
+from resim.sdk.client.api.test_suites import list_test_suites
 from resim.sdk.client import AuthenticatedClient
 from resim.sdk.client.api.light_batches import create_light_batch, close_batch
 from resim.sdk.client.models import Batch as ApiBatch
@@ -27,6 +29,9 @@ class Batch(AbstractContextManager):
         version: str | None = None,
         metrics_set_name: str | None = None,
         metrics_config_path: Union[str, Sequence[str], None] = None,
+        system: str | None = None,
+        test_suite: str | None = None,
+        test_suite_revision: int | None = None,
     ):
         """Create a Batch context manager.
 
@@ -42,11 +47,16 @@ class Batch(AbstractContextManager):
             version: Optional version string to associate with the batch, such as a commit SHA or semver.
             metrics_set_name: Optional name of the metrics set to use, from your config file.
             metrics_config_path: Optional path to a metrics config file to sync before creating the batch.
+            system: Optional name of the system to use for the build.
+            test_suite: Optional name of the test suite to attach the batch to.
+            test_suite_revision: Optional revision of the test suite to pin to. Requires test_suite.
         """
         if project_id is None and project_name is None:
             raise ValueError("Either project_id or project_name must be provided")
         if project_id is not None and project_name is not None:
             raise ValueError("Only one of project_id or project_name may be provided")
+        if test_suite_revision is not None and test_suite is None:
+            raise ValueError("test_suite_revision requires test_suite to be provided")
         self._client = client
         self.project_id: str | None = project_id
         self._project_name = project_name
@@ -56,6 +66,9 @@ class Batch(AbstractContextManager):
         self._branch = branch
         self._metrics_set_name = metrics_set_name
         self.metrics_config_path = metrics_config_path
+        self._system = system
+        self._test_suite = test_suite
+        self._test_suite_revision = test_suite_revision
 
     def __enter__(self) -> "Batch":
         if self.project_id is None and self._project_name is not None:
@@ -78,6 +91,13 @@ class Batch(AbstractContextManager):
             body.metrics_set_name = self._metrics_set_name
         if self._version:
             body.version = self._version
+        if self._system:
+            body.system_id = self.__get_system_id(self._system)
+        if self._test_suite:
+            body.test_suite_id = self.__get_test_suite_id(self._test_suite)
+            if self._test_suite_revision is not None:
+                body.test_suite_revision = self._test_suite_revision
+
         response = create_light_batch.sync_detailed(
             self.project_id,
             client=self._client,
@@ -85,7 +105,7 @@ class Batch(AbstractContextManager):
         )
         if response.status_code != 201:
             raise Exception(
-                f"Failed to create batch: {response.status_code} {response.content}"
+                f"Failed to create batch. Received a {response.status_code} response from API: {response.content}"
             )
         self.batch = response.parsed
 
@@ -114,7 +134,7 @@ class Batch(AbstractContextManager):
         )
         if response.status_code != 204:
             raise Exception(
-                f"Failed to close batch. Expected 204 response, got {response.status_code} instead"
+                f"Failed to close batch. Expected 204 response, got {response.status_code} instead: {response.content}"
             )
 
     def __resolve_project_id(self, name: str) -> str:
@@ -148,3 +168,21 @@ class Batch(AbstractContextManager):
         raise Exception(
             f"branch {name} does not exist. Did you sync your metrics config?"
         )
+
+    def __get_system_id(self, name: str) -> str:
+        response = list_systems.sync(self.project_id, client=self._client, name=name)
+        assert response is not None, "failed to fetch systems"
+        for system in response.systems:
+            if system.name == name:
+                return str(system.system_id)
+        raise Exception(f"system {name!r} not found")
+
+    def __get_test_suite_id(self, name: str) -> str:
+        response = list_test_suites.sync(
+            self.project_id, client=self._client, name=name
+        )
+        assert response is not None, "failed to fetch test suites"
+        for test_suite in response.test_suites:
+            if test_suite.name == name:
+                return str(test_suite.test_suite_id)
+        raise Exception(f"test suite {name!r} not found")
