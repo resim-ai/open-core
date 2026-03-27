@@ -419,7 +419,8 @@ class Emitter(AbstractContextManager):
         "string": str,
         "int": int,
         "float": float,
-        "image": str,  # image references are stored as strings
+        "image": str,  # image & video references are stored as strings
+        "video": str,  
         "status": str,  # status values are stored as strings
         "string[]": list,
         "metric[]": list,
@@ -728,7 +729,7 @@ class Emitter(AbstractContextManager):
                     field=field_name,
                 )
         else:
-            # For other scalar types (string, image, status), validate the type directly
+            # For other scalar types (string, image, video, status), validate the type directly
             expected_type = self.TYPE_MAPPING[expected_type_str]
             if not isinstance(value, expected_type):
                 raise ReSimValidationError(
