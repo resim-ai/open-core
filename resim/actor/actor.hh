@@ -40,6 +40,9 @@ class Actor {
   // compute it when requested.
   virtual state::ObservableState observable_state() const = 0;
 
+  virtual void observe_states(
+      const std::vector<state::ObservableState> &states) {}
+
   // Get the current time of this actor (i.e. the last time with which
   // simulate_forward was called.
   virtual time::Timestamp current_time() const = 0;
