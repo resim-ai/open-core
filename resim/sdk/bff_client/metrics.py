@@ -1,5 +1,6 @@
 import base64
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Union
 
 import yaml
@@ -17,7 +18,7 @@ def sync_config(
     project_id: str,
     branch_name: str,
     config_path: Union[str, Sequence[str]] = ".resim/metrics/config.resim.yml",
-    templates: list[dict[str, str]] = [],
+    templates_path: Union[str, Path, None] = ".resim/metrics/templates",
 ) -> None:
     """
     Syncs your metrics config with ReSim.
@@ -30,8 +31,10 @@ def sync_config(
             Multiple files are merged (each topic must appear in only one file);
             the combined YAML is uploaded. Defaults to
             ".resim/metrics/config.resim.yml".
-        templates: Optional list of template files to include, each a dict
-            with string keys and values.
+        templates_path: Path to a directory of custom metric ``.liquid`` template
+            files to sync alongside the config. Defaults to
+            ``".resim/metrics/templates"``. If the directory does not exist,
+            no templates are uploaded. Pass ``None`` to disable template syncing.
 
     Raises:
         FileNotFoundError: If a config path does not exist (when multiple paths are given).
@@ -57,7 +60,12 @@ def sync_config(
     if not paths:
         raise ValueError("config_path must not be empty")
     if len(paths) == 1:
-        config_bytes = paths[0].read_bytes()
+        try:
+            config_bytes = paths[0].read_bytes()
+        except FileNotFoundError as e:
+            raise FileNotFoundError(
+                f"Metrics config not found at '{paths[0]}'. "
+            ) from e
     else:
         merged = merge_metrics_config_files(paths)
         config_bytes = yaml.safe_dump(
@@ -70,7 +78,7 @@ def sync_config(
         "variables": {
             "projectId": project_id,
             "config": base64.b64encode(config_bytes).decode(),
-            "templateFiles": templates,
+            "templateFiles": read_templates(templates_path),
             "branch": branch_name,
         },
     }
@@ -84,6 +92,38 @@ def sync_config(
         )
     if "errors" in response.json():
         raise Exception(response.json()["errors"])
+
+
+def read_templates(path: Union[str, Path, None]) -> list[dict[str, str]]:
+    """Read Liquid template files from a directory for use with sync_config.
+
+    Scans the given directory for ``*.liquid`` files and returns them as a list
+    of dicts with ``name`` (filename) and ``contents`` (base64-encoded bytes),
+    matching the format expected by the ``UpdateMetricsConfig`` mutation.
+
+    Args:
+        path: Directory containing ``.liquid`` template files. If ``None`` or
+            the directory does not exist, an empty list is returned.
+
+    Returns:
+        A list of ``{"name": str, "contents": str}`` dicts, one per ``.liquid``
+        file found, sorted by filename for deterministic ordering.
+    """
+    if path is None:
+        return []
+    directory = Path(path)
+    if not directory.is_dir():
+        return []
+    templates = []
+    for entry in sorted(directory.iterdir()):
+        if entry.is_file() and entry.suffix.lower() == ".liquid":
+            templates.append(
+                {
+                    "name": entry.name,
+                    "contents": base64.b64encode(entry.read_bytes()).decode(),
+                }
+            )
+    return templates
 
 
 def _get_bff_url(api_base_url: URL) -> str:

@@ -39,11 +39,16 @@ class BatchTest(unittest.TestCase):
         mock_close_response.status_code = 204
         mock_close_batch.sync_detailed.return_value = mock_close_response
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch(
-        self, mock_list_branches: Any, mock_create_batch: Any, mock_close_batch: Any
+        self,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
 
@@ -91,6 +96,7 @@ class BatchTest(unittest.TestCase):
             PROJECT_ID, BATCH_ID, client=mock_client
         )
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
@@ -101,6 +107,7 @@ class BatchTest(unittest.TestCase):
         mock_list_branches: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
 
@@ -136,6 +143,7 @@ class BatchTest(unittest.TestCase):
 
         mock_list_projects.sync.assert_called_once_with(client=mock_client)
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
@@ -146,6 +154,7 @@ class BatchTest(unittest.TestCase):
         mock_list_branches: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
 
@@ -254,6 +263,7 @@ class BatchTest(unittest.TestCase):
             PROJECT_ID,
             BRANCH_NAME,
             config_path=config_path,
+            templates_path=".resim/metrics/templates",
         )
 
     @patch("resim.sdk.batch.metrics")
@@ -298,6 +308,7 @@ class BatchTest(unittest.TestCase):
             PROJECT_ID,
             BRANCH_NAME,
             config_path=config_paths,
+            templates_path=".resim/metrics/templates",
         )
 
     @patch("resim.sdk.batch.metrics")
@@ -327,13 +338,18 @@ class BatchTest(unittest.TestCase):
         mock_close_response.status_code = 204
         mock_close_batch.sync_detailed.return_value = mock_close_response
 
-        with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
+        with Batch(
+            mock_client, BRANCH_NAME, project_id=PROJECT_ID, metrics_config_path=None
+        ):
             pass
 
         mock_metrics.sync_config.assert_not_called()
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.list_branches_for_project")
-    def test_batch_raises_if_branch_is_missing(self, mock_list_branches: Any) -> None:
+    def test_batch_raises_if_branch_is_missing(
+        self, mock_list_branches: Any, _mock_metrics: Any
+    ) -> None:
         mock_client = MagicMock()
         mock_list_branches.sync.return_value = MagicMock(branches=[])
 
@@ -341,6 +357,7 @@ class BatchTest(unittest.TestCase):
             with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
                 pass
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_systems")
@@ -351,6 +368,7 @@ class BatchTest(unittest.TestCase):
         mock_list_systems: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
         self._make_standard_mocks(
@@ -371,6 +389,7 @@ class BatchTest(unittest.TestCase):
         body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
         self.assertEqual(body.system_id, SYSTEM_ID)
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_test_suites")
@@ -381,6 +400,7 @@ class BatchTest(unittest.TestCase):
         mock_list_test_suites: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
         self._make_standard_mocks(
@@ -403,6 +423,7 @@ class BatchTest(unittest.TestCase):
         body = mock_create_batch.sync_detailed.call_args.kwargs["body"]
         self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_test_suites")
@@ -413,6 +434,7 @@ class BatchTest(unittest.TestCase):
         mock_list_test_suites: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
         self._make_standard_mocks(
@@ -437,6 +459,7 @@ class BatchTest(unittest.TestCase):
         self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
         self.assertEqual(body.test_suite_revision, TEST_SUITE_REVISION)
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_systems")
@@ -449,6 +472,7 @@ class BatchTest(unittest.TestCase):
         mock_list_systems: Any,
         mock_create_batch: Any,
         mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
         self._make_standard_mocks(
@@ -478,10 +502,11 @@ class BatchTest(unittest.TestCase):
         self.assertEqual(body.system_id, SYSTEM_ID)
         self.assertEqual(body.test_suite_id, TEST_SUITE_ID)
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.list_systems")
     @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch_raises_if_system_not_found(
-        self, mock_list_branches: Any, mock_list_systems: Any
+        self, mock_list_branches: Any, mock_list_systems: Any, _mock_metrics: Any
     ) -> None:
         mock_client = MagicMock()
         mock_branch = MagicMock()
@@ -499,10 +524,11 @@ class BatchTest(unittest.TestCase):
             ):
                 pass
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.list_test_suites")
     @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch_raises_if_test_suite_not_found(
-        self, mock_list_branches: Any, mock_list_test_suites: Any
+        self, mock_list_branches: Any, mock_list_test_suites: Any, _mock_metrics: Any
     ) -> None:
         mock_client = MagicMock()
         mock_branch = MagicMock()
@@ -535,10 +561,11 @@ class BatchTest(unittest.TestCase):
                 test_suite_revision=TEST_SUITE_REVISION,
             )
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch_raises_if_create_fails(
-        self, mock_list_branches: Any, mock_create_batch: Any
+        self, mock_list_branches: Any, mock_create_batch: Any, _mock_metrics: Any
     ) -> None:
         mock_client = MagicMock()
         mock_branch = MagicMock()
@@ -554,11 +581,16 @@ class BatchTest(unittest.TestCase):
             with Batch(mock_client, BRANCH_NAME, project_id=PROJECT_ID):
                 pass
 
+    @patch("resim.sdk.batch.metrics")
     @patch("resim.sdk.batch.close_batch")
     @patch("resim.sdk.batch.create_light_batch")
     @patch("resim.sdk.batch.list_branches_for_project")
     def test_batch_raises_if_close_fails(
-        self, mock_list_branches: Any, mock_create_batch: Any, mock_close_batch: Any
+        self,
+        mock_list_branches: Any,
+        mock_create_batch: Any,
+        mock_close_batch: Any,
+        _mock_metrics: Any,
     ) -> None:
         mock_client = MagicMock()
         mock_branch = MagicMock()
