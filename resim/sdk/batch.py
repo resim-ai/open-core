@@ -29,6 +29,7 @@ class Batch(AbstractContextManager):
         version: str | None = None,
         metrics_set_name: str | None = None,
         metrics_config_path: Union[str, Sequence[str], None] = None,
+        templates_path: str | None = None,
         system: str | None = None,
         test_suite: str | None = None,
         test_suite_revision: int | None = None,
@@ -47,6 +48,8 @@ class Batch(AbstractContextManager):
             version: Optional version string to associate with the batch, such as a commit SHA or semver.
             metrics_set_name: Optional name of the metrics set to use, from your config file.
             metrics_config_path: Optional path to a metrics config file to sync before creating the batch.
+            templates_path: Optional path to a directory of custom metric ``.liquid`` template files to sync alongside
+                the metrics config. Ignored if ``metrics_config_path`` is not set.
             system: Optional name of the system to use for the build.
             test_suite: Optional name of the test suite to attach the batch to.
             test_suite_revision: Optional revision of the test suite to pin to. Requires test_suite.
@@ -66,6 +69,7 @@ class Batch(AbstractContextManager):
         self._branch = branch
         self._metrics_set_name = metrics_set_name
         self.metrics_config_path = metrics_config_path
+        self._templates_path = templates_path
         self._system = system
         self._test_suite = test_suite
         self._test_suite_revision = test_suite_revision
@@ -80,6 +84,7 @@ class Batch(AbstractContextManager):
                 self.project_id,
                 self._branch,
                 config_path=self.metrics_config_path,
+                templates_path=self._templates_path,
             )
 
         self._branch_id = self.__get_branch_id(self._branch)
