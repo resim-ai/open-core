@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 import yaml
 from httpx import URL
 
-from resim.sdk.bff_client.metrics import sync_config
+from resim.sdk.bff_client.metrics import read_templates, sync_config
 
 
 class SyncConfigTest(unittest.TestCase):
@@ -57,7 +57,9 @@ class SyncConfigTest(unittest.TestCase):
         variables = body["variables"]
         self.assertEqual(variables["projectId"], "proj-123")
         self.assertEqual(variables["branch"], "main")
-        self.assertEqual(variables["templateFiles"], [])
+        self.assertEqual(
+            variables["templateFiles"], []
+        )  # default templates dir doesn't exist → empty
         self.assertEqual(
             variables["config"],
             base64.b64encode(self.config_contents).decode(),
@@ -104,6 +106,19 @@ class SyncConfigTest(unittest.TestCase):
 
         self.assertIn("403", str(ctx.exception))
 
+    def test_raises_on_missing_config_file(self) -> None:
+        missing = str(Path(self.temp_dir.name) / "nonexistent.yml")
+
+        with self.assertRaises(FileNotFoundError) as ctx:
+            sync_config(
+                client=self.mock_client,
+                project_id="proj-123",
+                branch_name="main",
+                config_path=missing,
+            )
+
+        self.assertIn("nonexistent.yml", str(ctx.exception))
+
     def test_raises_on_graphql_errors(self) -> None:
         self.mock_response.json.return_value = {"errors": ["something went wrong"]}
 
@@ -116,6 +131,117 @@ class SyncConfigTest(unittest.TestCase):
             )
 
         self.assertEqual(ctx.exception.args[0], ["something went wrong"])
+
+
+class ReadTemplatesTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.templates_dir = Path(self.temp_dir.name)
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def test_none_path_returns_empty(self) -> None:
+        self.assertEqual(read_templates(None), [])
+
+    def test_missing_directory_returns_empty(self) -> None:
+        self.assertEqual(read_templates(self.templates_dir / "nonexistent"), [])
+
+    def test_empty_directory_returns_empty(self) -> None:
+        self.assertEqual(read_templates(self.templates_dir), [])
+
+    def test_liquid_files_are_read(self) -> None:
+        (self.templates_dir / "a.liquid").write_bytes(b"template a")
+        (self.templates_dir / "b.liquid").write_bytes(b"template b")
+
+        result = read_templates(self.templates_dir)
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["name"], "a.liquid")
+        self.assertEqual(
+            result[0]["contents"], base64.b64encode(b"template a").decode()
+        )
+        self.assertEqual(result[1]["name"], "b.liquid")
+        self.assertEqual(
+            result[1]["contents"], base64.b64encode(b"template b").decode()
+        )
+
+    def test_non_liquid_files_are_ignored(self) -> None:
+        (self.templates_dir / "template.liquid").write_bytes(b"liquid")
+        (self.templates_dir / "readme.md").write_bytes(b"docs")
+        (self.templates_dir / "data.yaml").write_bytes(b"yaml")
+
+        result = read_templates(self.templates_dir)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["name"], "template.liquid")
+
+    def test_accepts_string_path(self) -> None:
+        (self.templates_dir / "t.liquid").write_bytes(b"content")
+        result = read_templates(str(self.templates_dir))
+        self.assertEqual(len(result), 1)
+
+    def test_sorted_by_filename(self) -> None:
+        for name in ["c.liquid", "a.liquid", "b.liquid"]:
+            (self.templates_dir / name).write_bytes(b"x")
+        result = read_templates(self.templates_dir)
+        self.assertEqual(
+            [r["name"] for r in result], ["a.liquid", "b.liquid", "c.liquid"]
+        )
+
+
+class SyncConfigWithTemplatesTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.config_path = Path(self.temp_dir.name) / "config.resim.yml"
+        self.config_path.write_bytes(b"metrics_config: true\n")
+        self.templates_dir = Path(self.temp_dir.name) / "templates"
+        self.templates_dir.mkdir()
+
+        self.mock_response = MagicMock()
+        self.mock_response.status_code = 200
+        self.mock_response.json.return_value = {"data": {"updateMetricsConfig": None}}
+
+        self.mock_httpx = MagicMock()
+        self.mock_httpx._base_url = URL("https://api.resim.ai/v1/")
+        self.mock_httpx.post.return_value = self.mock_response
+
+        self.mock_client = MagicMock()
+        self.mock_client.get_httpx_client.return_value = self.mock_httpx
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def test_templates_path_read_and_passed_to_mutation(self) -> None:
+        (self.templates_dir / "dashboard.liquid").write_bytes(b"hello {{ name }}")
+
+        sync_config(
+            client=self.mock_client,
+            project_id="proj-123",
+            branch_name="main",
+            config_path=str(self.config_path),
+            templates_path=self.templates_dir,
+        )
+
+        body = self.mock_httpx.post.call_args.kwargs["json"]
+        template_files = body["variables"]["templateFiles"]
+        self.assertEqual(len(template_files), 1)
+        self.assertEqual(template_files[0]["name"], "dashboard.liquid")
+        self.assertEqual(
+            template_files[0]["contents"],
+            base64.b64encode(b"hello {{ name }}").decode(),
+        )
+
+    def test_no_templates_path_sends_empty_list(self) -> None:
+        sync_config(
+            client=self.mock_client,
+            project_id="proj-123",
+            branch_name="main",
+            config_path=str(self.config_path),
+        )
+
+        body = self.mock_httpx.post.call_args.kwargs["json"]
+        self.assertEqual(body["variables"]["templateFiles"], [])
 
 
 if __name__ == "__main__":
