@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch, mock_open
 
 from resim.sdk.test import Test, LogType
 from resim.sdk.client.models.light_job_status import LightJobStatus
+from resim.sdk.client.types import Unset
 
 PROJECT_ID = "project-123"
 BATCH_ID = "batch-789"
@@ -132,6 +133,123 @@ class TestTest(unittest.TestCase):
 
         first_call_body = mock_create_log.sync_detailed.call_args_list[0].kwargs["body"]
         self.assertEqual(first_call_body.log_type, LogType.MP4_LOG)
+
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_attach_log_without_log_type(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> None:
+        mock_client = MagicMock()
+
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        mock_create_response = MagicMock()
+        mock_create_response.status_code = 201
+        mock_create_response.parsed.job_id = JOB_ID
+        mock_create_job.sync_detailed.return_value = mock_create_response
+
+        mock_log_response = MagicMock()
+        mock_log_response.status_code = 201
+        mock_log_response.parsed.upload_url = UPLOAD_URL
+        mock_create_log.sync_detailed.return_value = mock_log_response
+
+        mock_httpx.put.return_value = MagicMock(status_code=200)
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_job.sync_detailed.return_value = mock_close_response
+
+        emissions_content = b"fake emissions data"
+        extra_log_content = b"fake image data"
+        m = mock_open(read_data=emissions_content)
+        m.return_value.__enter__.return_value.read.side_effect = [
+            extra_log_content,
+            b"",  # SHA256 for extra log
+            extra_log_content,  # httpx.put upload for extra log
+            emissions_content,
+            b"",  # SHA256 for emissions
+            emissions_content,  # httpx.put upload for emissions
+        ]
+        with (
+            patch("builtins.open", m),
+            patch("os.path.getsize", return_value=len(emissions_content)),
+        ):
+            with Test(mock_client, mock_batch, TEST_NAME) as test:
+                test.attach_log("some_image.jpeg")
+
+        # Omitting log_type leaves it off the request body so the server can
+        # infer it from the file name.
+        first_call_body = mock_create_log.sync_detailed.call_args_list[0].kwargs["body"]
+        self.assertIsInstance(first_call_body.log_type, Unset)
+        self.assertNotIn("logType", first_call_body.to_dict())
+
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_attach_system_log(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> None:
+        mock_client = MagicMock()
+
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        mock_create_response = MagicMock()
+        mock_create_response.status_code = 201
+        mock_create_response.parsed.job_id = JOB_ID
+        mock_create_job.sync_detailed.return_value = mock_create_response
+
+        mock_log_response = MagicMock()
+        mock_log_response.status_code = 201
+        mock_log_response.parsed.upload_url = UPLOAD_URL
+        mock_create_log.sync_detailed.return_value = mock_log_response
+
+        mock_httpx.put.return_value = MagicMock(status_code=200)
+
+        mock_close_response = MagicMock()
+        mock_close_response.status_code = 204
+        mock_close_job.sync_detailed.return_value = mock_close_response
+
+        emissions_content = b"fake emissions data"
+        system_log_content = b"fake system log data"
+        m = mock_open(read_data=emissions_content)
+        m.return_value.__enter__.return_value.read.side_effect = [
+            system_log_content,
+            b"",  # SHA256 for system log
+            system_log_content,  # httpx.put upload for system log
+            emissions_content,
+            b"",  # SHA256 for emissions
+            emissions_content,  # httpx.put upload for emissions
+        ]
+        with (
+            patch("builtins.open", m),
+            patch("os.path.getsize", return_value=len(system_log_content)),
+        ):
+            with Test(mock_client, mock_batch, TEST_NAME) as test:
+                test.attach_system_log("logs/run.log", file_name="robot.log")
+
+        # System logs are always uploaded as SYSTEM_LOG, and the file_name
+        # override is passed through.
+        self.assertEqual(mock_create_log.sync_detailed.call_count, 2)
+        first_call_body = mock_create_log.sync_detailed.call_args_list[0].kwargs["body"]
+        self.assertEqual(first_call_body.log_type, LogType.SYSTEM_LOG)
+        self.assertEqual(first_call_body.file_name, "robot.log")
 
     @patch("resim.sdk.test.os.unlink")
     @patch("resim.sdk.test.tempfile.NamedTemporaryFile")

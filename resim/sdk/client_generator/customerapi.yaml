@@ -4562,7 +4562,7 @@ paths:
         "404":
           $ref: "#/components/responses/notFound"
     post:
-      description: Creates a log entry for a job and returns a presigned S3 upload URL. The batch must be of type LIGHT and the job must be in EXPERIENCE_RUNNING status.
+      description: Creates a log entry for a job and returns a presigned S3 upload URL. The batch must be of type LIGHT and the job must be in EXPERIENCE_RUNNING status. When logType is omitted, it is inferred from the file name.
       operationId: createJobLog
       security:
         - OAuth:
@@ -7262,7 +7262,6 @@ components:
         - fileName
         - fileSize
         - checksum
-        - logType
       properties:
         fileName:
           $ref: "#/components/schemas/fileName"

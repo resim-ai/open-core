@@ -9,7 +9,7 @@ from typing import Optional
 from pathlib import Path
 from resim.sdk.batch import Batch
 from resim.sdk.client import AuthenticatedClient
-from resim.sdk.client.types import Unset
+from resim.sdk.client.types import UNSET, Unset
 from resim.sdk.metrics.emissions import Emitter
 from resim.sdk.client.api.light_batches import (
     create_job_for_batch,
@@ -53,14 +53,15 @@ class Test(Emitter):
     def attach_log(
         self,
         file_path: str,
-        log_type: LogType = LogType.OTHER_LOG,
+        log_type: Optional[LogType] = None,
         file_name: Optional[str] = None,
     ) -> None:
         """Upload a local file as a log attachment for this test.
 
         Args:
             file_path: Path to the local file to upload.
-            log_type: The log type classification. Defaults to LogType.OTHER_LOG.
+            log_type: The log type classification. Defaults to None, which lets
+                ReSim infer the log type from the file name.
             file_name: Override the filename used when uploading. Defaults to
                 the basename of file_path.
         """
@@ -76,7 +77,7 @@ class Test(Emitter):
             file_name=file_name,
             file_size=os.path.getsize(file_path),
             checksum=h.hexdigest(),
-            log_type=log_type,
+            log_type=log_type if log_type is not None else UNSET,
         )
         response = create_job_log.sync_detailed(
             self._batch.project_id,
@@ -104,6 +105,20 @@ class Test(Emitter):
             raise Exception(
                 f"failed to upload log {file_name}. Got response {r.status_code}: {r.content}"
             )
+
+    def attach_system_log(
+        self,
+        file_path: str,
+        file_name: Optional[str] = None,
+    ) -> None:
+        """Upload a local file as a system log for this test.
+
+        Args:
+            file_path: Path to the local file to upload.
+            file_name: Override the filename used when uploading. Defaults to
+                the basename of file_path.
+        """
+        self.attach_log(file_path, log_type=LogType.SYSTEM_LOG, file_name=file_name)
 
     def __enter__(self) -> "Test":
         return self
