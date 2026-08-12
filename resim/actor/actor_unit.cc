@@ -68,6 +68,14 @@ ActorUnit::ActorUnit(
         validate_observable_state(*actor_, state, actor_->current_time());
         return state;
       });
+
+  executor_builder->add_task<state::ObservableState>(
+      "observe_actor_states",
+      simulator::ACTOR_STATES_TOPIC,
+      simulator::NULL_TOPIC,
+      [this](const std::vector<actor::state::ObservableState> &states) {
+        actor_->observe_states(states);
+      });
 };
 
 ActorLoggerUnit::ActorLoggerUnit(

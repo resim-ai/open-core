@@ -15,6 +15,7 @@
 #include "resim/experiences/actor.hh"
 #include "resim/experiences/storyboard.hh"
 #include "resim/utils/match.hh"
+#include "resim/utils/uuid.hh"
 
 namespace resim::actor {
 
@@ -35,9 +36,30 @@ std::unordered_map<ActorId, experiences::MovementModel> make_movement_model_map(
 }  // namespace
 
 std::vector<std::unique_ptr<Actor>> factory(
-    const experiences::DynamicBehavior &dynamic_behavior) {
-  const std::unordered_map<ActorId, experiences::MovementModel>
-      movement_model_map{make_movement_model_map(dynamic_behavior.storyboard)};
+    experiences::DynamicBehavior &dynamic_behavior2) {
+  auto &dynamic_behavior = dynamic_behavior2;
+  auto seed_actor = dynamic_behavior.actors.at(0);
+
+  std::unordered_map<ActorId, experiences::MovementModel> movement_model_map{
+      make_movement_model_map(dynamic_behavior.storyboard)};
+
+  for (const Eigen::Vector3d &xi : {
+           Eigen::Vector3d{1.0, 1.0, 0.0},
+           Eigen::Vector3d{-1.0, 1.0, 0.0},
+           Eigen::Vector3d{1.0, -1.0, 0.0},
+           Eigen::Vector3d{-1.0, -1.0, 0.0},
+       }) {
+    auto new_actor = seed_actor;
+    const auto new_id = UUID::new_uuid();
+    new_actor.id = new_id;
+    auto new_movement_model = movement_model_map.at(seed_actor.id);
+    new_movement_model.actor_reference = new_id;
+    std::get<experiences::ILQRDrone>(new_movement_model.model)
+        .initial_position += 3.0 * xi;
+    dynamic_behavior.actors.push_back(new_actor);
+    dynamic_behavior.storyboard.movement_models.push_back(new_movement_model);
+  }
+  movement_model_map = make_movement_model_map(dynamic_behavior.storyboard);
 
   std::vector<std::unique_ptr<Actor>> actors;
   for (const auto &actor : dynamic_behavior.actors) {
