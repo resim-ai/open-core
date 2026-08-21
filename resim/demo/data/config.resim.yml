@@ -430,21 +430,24 @@ metrics:
     template_type: system
     template: bar
 
-  Pass Rate by Build Version:
+  Test Outcomes by Build Version:
     type: dashboard
     description: >
-      Share of tests each build of the stack passed. Click a bar to open a batch
+      How each build's tests turned out, one bar per outcome. Blockers growing
+      from one build to the next is a regression. Click a bar to open a batch
       that build ran in.
     query_string: |
       SELECT
-        'Pass Rate' AS group_name,
+        job_conflated_status AS group_name,
         build_version AS "Build Version",
-        100.0 * COUNT_IF(job_conflated_status = 'PASSED') / COUNT(*) AS "Pass Rate (%)",
+        COUNT(*) AS "Tests",
         '/projects/' || ARBITRARY(project_id) || '/batches/' || ARBITRARY(batch_id) AS link_path
       FROM metadata
       WHERE build_version IS NOT NULL
-      GROUP BY build_version
-      ORDER BY build_version;
+        AND job_conflated_status IS NOT NULL
+      GROUP BY job_conflated_status, build_version
+      ORDER BY build_version, job_conflated_status;
+    skip_if_no_data: true
     template_type: system
     template: bar
 
@@ -483,7 +486,7 @@ metrics sets:
   Demo Trends:
     metrics:
       - Localization Error by Build Version
-      - Pass Rate by Build Version
+      - Test Outcomes by Build Version
       - Tests Run
 
 dashboards:
