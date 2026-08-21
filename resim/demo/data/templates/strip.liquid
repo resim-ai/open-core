@@ -1,0 +1,131 @@
+{% assign colors = "#D6B9FC,#D3FAA3,#93B1FE,#FACB92,#F8A7C4,#8FE6D2" | split: "," %}
+{% assign goals = group_name | uniq %}
+{
+  "data": [
+    {% for goal in goals %}
+    {% assign color_index = forloop.index0 | modulo: colors.size %}
+    {% capture goal_x_values %}
+      {% assign goal_x_started = false %}
+      {% for value in x_values %}
+        {% if group_name[forloop.index0] == goal %}
+          {% if goal_x_started %}, {% endif %}{{ value | json }}
+          {% assign goal_x_started = true %}
+        {% endif %}
+      {% endfor %}
+    {% endcapture %}
+    {% capture goal_customdata %}
+      {% assign goal_customdata_started = false %}
+      {% for value in customdata %}
+        {% if group_name[forloop.index0] == goal %}
+          {% if goal_customdata_started %}, {% endif %}"{{ value }}"
+          {% assign goal_customdata_started = true %}
+        {% endif %}
+      {% endfor %}
+    {% endcapture %}
+    {
+      "type": "box",
+      "orientation": "h",
+      "boxpoints": "all",
+      "hoveron": "points",
+      "hovertemplate": "{{ y_title[0] }}=%{fullData.name}<br>{{ x_title[0] }}=%{x}<br>%{customdata}<extra></extra>",
+      "x": [{{ goal_x_values | strip }}],
+      "customdata": [{{ goal_customdata | strip }}], 
+      "pointpos": 0,
+      "line": {"color": "rgba(255,255,255,0)"},
+      "fillcolor": "rgba(255,255,255,0)",
+      "marker": {"color": "{{ colors[color_index] }}"},
+      "name": "{{ goal }}",
+      "legendgroup": "{{ goal }}",
+      "alignmentgroup": "true",
+      "offsetgroup": "{{ goal }}",
+      "showlegend": false,
+      "xaxis": "x",
+      "yaxis": "y"
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "layout": {
+    "autosize": true,
+    "font": {
+      "family": "Foundry Gridnik Medium",
+      "color": "#f2f5fa"
+    },
+    "xaxis": {
+      "automargin": true,
+      "title": {
+        "text": "{{ x_title[0] }}",
+        "font": {
+          "family": "Foundry Gridnik Medium"
+        },
+        "standoff": 15
+      },
+      "gridcolor": "#3A3A44",
+      "tickcolor": "rgba(0, 0, 0, 0)",
+      "ticklen": 10,
+      "ticks": "outside",
+      "tickwidth": 0.1,
+      "showgrid": true,
+      "zeroline": true,
+      "zerolinewidth": 2
+    },
+    "yaxis": {
+      "automargin": true,
+      "title": {
+        "text": "{{ y_title[0] }}",
+        "font": {
+          "family": "Foundry Gridnik Medium"
+        },
+        "standoff": 15
+      },
+      "type": "category",
+      "gridcolor": "#3A3A44",
+      "tickcolor": "rgba(0, 0, 0, 0)",
+      "ticklen": 10,
+      "ticks": "outside",
+      "tickwidth": 0.1,
+      "showgrid": true,
+      "zeroline": true,
+      "zerolinewidth": 2
+    },
+    "hoverlabel": {
+      "font": {
+        "family": "Foundry Gridnik Medium"
+      },
+      "align": "left"
+    },
+    "plot_bgcolor": "rgba(0, 0, 0, 0)",
+    "paper_bgcolor": "rgba(0, 0, 0, 0)",
+    "margin": {
+      "l": 0,
+      "r": 0,
+      "b": 0,
+      "t": 0
+    },
+    "legend": {
+      "y": 1,
+      "yanchor": "bottom",
+      "xanchor": "center",
+      "x": 0.5,
+      "orientation": "h",
+      "font": {"family": "Foundry Gridnik Medium", "color": "#f2f5fa"}
+    },
+    "showlegend": false,
+    "hovermode": "closest",
+    "modebar": {"activecolor": "#D3FAA3", "orientation": "v"},
+    "boxmode": "group"
+  },
+  "config": {
+    "responsive": true,
+    "displaylogo": false,
+    "scrollZoom": true,
+    "modeBarButtonsToRemove": [
+      "sendDataToCloud",
+      "autoScale2d",
+      "hoverClosestCartesian",
+      "hoverCompareCartesian",
+      "lasso2d",
+      "select2d",
+      "toImage"
+    ]
+  }
+}

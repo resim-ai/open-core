@@ -39,6 +39,7 @@ py_package(
         "//resim/actor/state/proto:observable_state_proto_py",
         "//resim/auth/python:device_code_client",
         "//resim/auth/python:username_password_client",
+        "//resim/demo",
         "//resim/experiences/proto:experience_proto_py",
         "//resim/geometry/python:polygon_distance_python.so",
         "//resim/metrics:default_report_metrics",
@@ -116,6 +117,7 @@ py_wheel(
         "License :: OSI Approved :: MIT License",
     ],
     distribution = "resim-open-core",
+    entry_points = {"console_scripts": ["resim-demo = resim.demo.__main__:main"]},
     homepage = "https://www.resim.ai/",
     license = LICENSE,
     platform = select({
@@ -273,6 +275,7 @@ py_package(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//resim/demo",
         "//resim/sdk",
     ],
 )
@@ -284,6 +287,7 @@ py_wheel(
         "License :: OSI Approved :: MIT License",
     ],
     distribution = "resim_sdk",
+    entry_points = {"console_scripts": ["resim-demo = resim.demo.__main__:main"]},
     homepage = "https://www.resim.ai/",
     license = LICENSE,
     python_tag = "py3",

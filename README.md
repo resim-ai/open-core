@@ -14,6 +14,25 @@ These are distributed as part of our [Python package](https://pypi.org/project/r
 pip install resim-open-core
 ```
 
+### Try the demo
+To see what the platform does before wiring up your own system, run the demo. It
+creates two comparable batches of tests in a ReSim project, along with a
+dashboard that trends them, and prints links to the results:
+
+```bash
+resim-demo
+```
+
+Or from Python:
+```python
+from resim.demo import run
+
+run()
+```
+
+See the [SDK demo tutorial](https://docs.resim.ai/tutorials/sdk-demo/) for what
+it creates and how to read the results.
+
 ## Structure
 Currently, the libraries are divided up into:
 

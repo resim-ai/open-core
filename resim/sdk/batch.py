@@ -66,6 +66,7 @@ class Batch(AbstractContextManager):
         self._client = client
         self.project_id: str | None = project_id
         self._project_name = project_name
+        self._branch_id: str | None = None
         self.batch: ApiBatch | None = None
         self._name = name
         self._version = version
@@ -123,6 +124,11 @@ class Batch(AbstractContextManager):
     def id(self) -> str:
         assert self.batch is not None and self.batch.batch_id, "Batch not created"
         return str(self.batch.batch_id)
+
+    @property
+    def branch_id(self) -> str:
+        assert self._branch_id is not None, "Batch not created"
+        return self._branch_id
 
     @property
     def friendly_name(self) -> str:

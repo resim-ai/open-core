@@ -1,0 +1,494 @@
+# Metrics config for the ReSim SDK demo (resim.demo.run).
+#
+# Topics describe the data the demo replays; metrics are SQL queries over that
+# data, each rendered by a template. Between them these metrics exercise every
+# system template ReSim ships, plus custom Liquid templates, status checks that
+# decide pass/fail, and a dashboard that trends results across batches.
+#
+# This is a real config from a real project. Copy it, point the topics at your
+# own data, and delete what you do not need.
+version: 1
+
+topics:
+  # Robot velocity, sampled from the drive stack.
+  odom_linear_velocity:
+    schema:
+      x: float
+      y: float
+      z: float
+
+  # Distance to each named goal, over the course of the run.
+  goal_distance:
+    schema:
+      goal_name: string
+      distance_m: float
+
+  # Wall-clock time taken to reach each goal.
+  time_to_goal:
+    schema:
+      goal_name: string
+      time_s: float
+
+  # How many goals this run was asked to reach. Lets a metric tell "reached
+  # every goal" apart from "reached the ones it got to".
+  goal_count:
+    schema:
+      count: int
+
+  # What the navigation stack was doing, as a discrete state.
+  goal_status:
+    schema:
+      state: string
+
+  # Distance to the nearest tracked person. Only emitted in scenarios that
+  # have pedestrians in them.
+  nearest_human_distance:
+    schema:
+      person_name: string
+      distance_m: float
+
+  # Gap between wheel odometry and the localizer's pose estimate.
+  pose_difference:
+    schema:
+      position_diff_m: float
+
+  # The localizer's own confidence in that estimate.
+  localization_uncertainty:
+    schema:
+      cov_x: float
+      cov_xy: float
+      cov_y: float
+      cov_yaw: float
+      position_uncertainty_m: float
+      yaw_uncertainty_rad: float
+
+  # Whether that confidence is honest: is the true error consistent with the
+  # covariance the localizer reported?
+  covariance_accuracy:
+    schema:
+      mahalanobis_distance: float
+      normalized_innovation_squared: float
+      normalized_x: float
+      normalized_y: float
+      normalized_yaw: float
+      position_error_m: float
+      within_1_sigma: int
+      within_2_sigma: int
+      within_3_sigma: int
+      yaw_error_rad: float
+
+  # A pre-rendered Plotly figure, passed through by a custom template.
+  robot_trajectory:
+    schema:
+      raw_metric: string
+
+  # Camera recordings. Image and video columns cannot share a topic, so the
+  # still frame and the clip are emitted separately.
+  camera_video:
+    schema:
+      camera_name: string
+      filename: video
+
+  camera_frame:
+    schema:
+      camera_name: string
+      filename: image
+
+  # Events show up on their own tab, pinned to a moment in the run.
+  goal_reached:
+    event: true
+    schema:
+      name: string
+      description: string
+      status: status
+      tags: string[]
+
+metrics:
+  # ---------------------------------------------------------------- test level
+  Robot Speed:
+    type: test
+    description: Ground speed of the robot over the course of the run.
+    query_string: |
+      SELECT
+        'Speed' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        SQRT(POWER(x, 2) + POWER(y, 2)) AS "Speed (m/s)"
+      FROM odom_linear_velocity;
+    template_type: system
+    template: line
+
+  Speed Distribution:
+    type: test
+    description: How much of the run was spent at each speed.
+    query_string: |
+      SELECT SQRT(POWER(x, 2) + POWER(y, 2)) AS "Speed (m/s)"
+      FROM odom_linear_velocity;
+    template_type: system
+    template: histogram
+
+  Time in Speed Band:
+    type: test
+    description: Share of samples spent stopped, creeping, or at cruise.
+    query_string: |
+      SELECT
+        CASE
+          WHEN SQRT(POWER(x, 2) + POWER(y, 2)) < 0.05 THEN 'Stopped'
+          WHEN SQRT(POWER(x, 2) + POWER(y, 2)) < 0.3 THEN 'Creeping'
+          ELSE 'Cruising'
+        END AS "Band",
+        COUNT(*) AS "Samples"
+      FROM odom_linear_velocity
+      GROUP BY 1;
+    template_type: system
+    template: pie
+
+  Distance to Goal:
+    type: test
+    description: Distance to each goal over time. One line per goal.
+    query_string: |
+      SELECT
+        goal_name AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        distance_m AS "Distance to Goal (m)"
+      FROM goal_distance;
+    template_type: system
+    template: line
+
+  Goal Status:
+    type: test
+    description: What the navigation stack was doing, over time.
+    query_string: |
+      SELECT
+        'Navigation' AS "System",
+        timestamp,
+        state
+      FROM goal_status;
+    template_type: system
+    template: state_timeline
+
+  Localization Error:
+    type: test
+    description: Gap between odometry and the localizer's pose estimate.
+    query_string: |
+      SELECT
+        'Error' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        position_diff_m AS "Position Difference (m)"
+      FROM pose_difference;
+    template_type: system
+    template: line
+
+  Uncertainty vs Actual Error:
+    type: test
+    description: >
+      Predicted uncertainty against the error actually observed. A localizer
+      whose uncertainty tracks its error is one you can trust.
+    query_string: |
+      SELECT 'Predicted Uncertainty (m)' AS group_name, timestamp / 1E9 AS "Time (s)", position_uncertainty_m AS "Distance (m)"
+      FROM localization_uncertainty
+      UNION ALL
+      SELECT 'Actual Error (m)' AS group_name, timestamp / 1E9 AS "Time (s)", position_error_m AS "Distance (m)"
+      FROM covariance_accuracy
+      UNION ALL
+      SELECT 'Mahalanobis Distance' AS group_name, timestamp / 1E9 AS "Time (s)", mahalanobis_distance AS "Distance (m)"
+      FROM covariance_accuracy;
+    template_type: system
+    template: line
+
+  Covariance Calibration:
+    type: test
+    description: >
+      Whether the localizer's uncertainty estimates are realistic. Low NIS
+      means overconfidence, high NIS means underconfidence.
+    query_string: |
+      SELECT "Metric", "Value" FROM (
+        SELECT 1 AS sort_order, 'Total Samples' AS "Metric", CAST(COUNT(*) AS VARCHAR) AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 2 AS sort_order, 'Within 1 sigma (target ~68%)' AS "Metric", CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN within_1_sigma = 1 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 3 AS sort_order, 'Within 2 sigma (target ~95%)' AS "Metric", CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN within_2_sigma = 1 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 4 AS sort_order, 'Within 3 sigma (target ~99.7%)' AS "Metric", CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN within_3_sigma = 1 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 5 AS sort_order, 'NIS Median (target ~2.0)' AS "Metric", CAST(ROUND(APPROX_PERCENTILE(normalized_innovation_squared, 0.5), 2) AS VARCHAR) AS "Value"
+        FROM covariance_accuracy
+        ORDER BY sort_order
+      );
+    template_type: system
+    template: table
+
+  Nearest-Human Distance:
+    type: test
+    description: >
+      Distance to the nearest person. Warns inside 1m, blocks inside 0.5m.
+      Only emitted by scenarios that have pedestrians.
+    query_string: |
+      SELECT
+        'Nearest Human' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        distance_m AS "Distance to Nearest Human (m)"
+      FROM nearest_human_distance;
+    skip_if_no_data: true
+    status:
+      query_string: SELECT 1 FROM nearest_human_distance WHERE distance_m < ? LIMIT 1
+      block: 0.5
+      warn: 1
+    template_type: system
+    template: line
+
+  Time to Reach Final Goal:
+    type: test
+    description: >
+      Time from the first goal to the last one reached. Blocks when the run
+      does not reach every goal it was given.
+    query_string: |
+      WITH expected AS (
+        SELECT COALESCE(MAX(count), 0) AS expected_goal_count
+        FROM goal_count
+      )
+      SELECT
+        CASE
+          WHEN (SELECT expected_goal_count FROM expected) = 0 THEN 75
+          WHEN (SELECT COUNT(*) FROM time_to_goal) != (SELECT expected_goal_count FROM expected) THEN 75
+          ELSE SUM(time_s)
+        END
+      FROM time_to_goal;
+    status:
+      query_string: |
+        WITH expected AS (
+          SELECT COALESCE(MAX(count), 0) AS expected_goal_count
+          FROM goal_count
+        )
+        SELECT '1'
+        FROM expected
+        WHERE CASE
+          WHEN expected_goal_count = 0 THEN 1
+          WHEN (SELECT COUNT(*) FROM time_to_goal) != expected_goal_count THEN 1
+          ELSE 0
+        END = ?;
+      block: 1
+    template_type: system
+    template: scalar
+    units: seconds
+
+  Camera Feed:
+    type: test
+    description: Onboard camera during the run.
+    query_string: SELECT filename FROM camera_video;
+    skip_if_no_data: true
+    template_type: system
+    template: video
+
+  Camera Frame:
+    type: test
+    description: A single frame from the onboard camera.
+    query_string: SELECT filename FROM camera_frame;
+    skip_if_no_data: true
+    template_type: system
+    template: image
+
+  Robot Trajectory:
+    type: test
+    description: >
+      Top-down view of the path the robot took. Rendered by a custom Liquid
+      template from a Plotly figure the test emitted directly.
+    query_string: SELECT raw_metric FROM robot_trajectory;
+    template_type: custom
+    template_file: raw.liquid
+
+  # --------------------------------------------------------------- batch level
+  Mean Localization Error by Experience:
+    type: batch
+    description: Average localizer error in each scenario, across the batch.
+    query_string: |
+      SELECT
+        'Mean' AS group_name,
+        m.experience_name AS "Experience",
+        AVG(pd.position_diff_m) AS "Mean Localization Error (m)"
+      FROM pose_difference pd
+      JOIN metadata m ON pd.job_id = m.job_id
+      GROUP BY m.experience_name
+      ORDER BY m.experience_name;
+    template_type: system
+    template: bar
+
+  Localization Error Spread:
+    type: batch
+    description: >
+      Worst localizer error per scenario, drawn as a strip plot by a custom
+      Liquid template.
+    query_string: |
+      SELECT
+        'Maximum' AS group_name,
+        'Type' AS y_title,
+        'Localization Error (m)' AS x_title,
+        MAX(pd.position_diff_m) AS x_values,
+        m.experience_name AS customdata
+      FROM pose_difference pd
+      JOIN metadata m ON pd.job_id = m.job_id
+      GROUP BY m.experience_name
+      ORDER BY m.experience_name;
+    template_type: custom
+    template_file: strip.liquid
+
+  Covariance Calibration Summary:
+    type: batch
+    description: Calibration of the localizer's uncertainty across the whole batch.
+    query_string: |
+      SELECT "Metric", "Value" FROM (
+        SELECT 1 AS sort_order, 'Total Samples' AS "Metric", CAST(COUNT(*) AS VARCHAR) AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 2 AS sort_order, 'Within 1 sigma (target ~68%)' AS "Metric", CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN within_1_sigma = 1 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 3 AS sort_order, 'Within 2 sigma (target ~95%)' AS "Metric", CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN within_2_sigma = 1 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
+        FROM covariance_accuracy
+        UNION ALL
+        SELECT 4 AS sort_order, 'NIS Median (target ~2.0)' AS "Metric", CAST(ROUND(APPROX_PERCENTILE(normalized_innovation_squared, 0.5), 2) AS VARCHAR) AS "Value"
+        FROM covariance_accuracy
+        ORDER BY sort_order
+      );
+    template_type: system
+    template: table
+
+  Pedestrian Proximity Incidents:
+    type: batch
+    description: >
+      For each tracked person, how many scenarios brought the robot within
+      0.5m (a hit) or 0.5-1m (too close). At most one count per scenario.
+    query_string: |
+      WITH per_experience AS (
+        SELECT job_id, person_name,
+          COUNT_IF(distance_m < 0.5) > 0 AS was_hit,
+          COUNT_IF(distance_m >= 0.5 AND distance_m < 1) > 0 AS was_too_close
+        FROM nearest_human_distance
+        GROUP BY job_id, person_name
+      )
+      SELECT 'Hit (<0.5 m)' AS group_name, person_name AS "Person", COUNT_IF(was_hit) AS "Scenarios"
+      FROM per_experience
+      GROUP BY person_name
+      UNION ALL
+      SELECT 'Too close (0.5-1 m)' AS group_name, person_name AS "Person", COUNT_IF(was_too_close) AS "Scenarios"
+      FROM per_experience
+      GROUP BY person_name
+      ORDER BY group_name, "Person";
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Total Time to Reach Final Goal:
+    type: batch
+    description: Time to complete every scenario in the batch, added up.
+    query_string: |
+      WITH per_job AS (
+        SELECT
+          gc.job_id,
+          MAX(gc.count) AS expected_goal_count,
+          COUNT(ttg.time_s) AS completed_goal_count,
+          COALESCE(SUM(ttg.time_s), 0) AS total_time
+        FROM goal_count gc
+        LEFT JOIN time_to_goal ttg ON gc.job_id = ttg.job_id
+        GROUP BY gc.job_id
+      )
+      SELECT SUM(
+        CASE
+          WHEN completed_goal_count != expected_goal_count THEN 75
+          ELSE total_time
+        END
+      )
+      FROM per_job;
+    template_type: system
+    template: scalar
+    units: seconds
+
+  # ----------------------------------------------------------- dashboard level
+  # Dashboard metrics query every job on the branch inside the dashboard's day
+  # range, so they can see across batches. Grouping by build version is what
+  # turns that into a comparison between versions of the stack rather than a
+  # snapshot of one run.
+  Localization Error by Build Version:
+    type: dashboard
+    description: >
+      Mean localizer error for each build of the stack. A line that climbs from
+      one build to the next is a regression, and it aggregates every run of that
+      build inside the dashboard's window.
+    query_string: |
+      SELECT
+        'Mean' AS group_name,
+        m.build_version AS "Build Version",
+        AVG(pd.position_diff_m) AS "Mean Localization Error (m)"
+      FROM pose_difference pd
+      JOIN metadata m ON pd.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY m.build_version
+      ORDER BY m.build_version;
+    template_type: system
+    template: line
+
+  Pass Rate by Build Version:
+    type: dashboard
+    description: >
+      Share of tests each build of the stack passed. Click a bar to open a batch
+      that build ran in.
+    query_string: |
+      SELECT
+        'Pass Rate' AS group_name,
+        build_version AS "Build Version",
+        100.0 * COUNT_IF(job_conflated_status = 'PASSED') / COUNT(*) AS "Pass Rate (%)",
+        '/projects/' || ARBITRARY(project_id) || '/batches/' || ARBITRARY(batch_id) AS link_path
+      FROM metadata
+      WHERE build_version IS NOT NULL
+      GROUP BY build_version
+      ORDER BY build_version;
+    template_type: system
+    template: bar
+
+  Tests Run:
+    type: dashboard
+    description: Tests that have run on this branch inside the dashboard's window.
+    query_string: SELECT COUNT(DISTINCT job_id) FROM metadata;
+    template_type: system
+    template: scalar
+
+metrics sets:
+  # Run against each batch. Test metrics land on each test, batch metrics on
+  # the batch as a whole.
+  Demo Metrics:
+    metrics:
+      - Robot Speed
+      - Speed Distribution
+      - Time in Speed Band
+      - Distance to Goal
+      - Goal Status
+      - Localization Error
+      - Uncertainty vs Actual Error
+      - Covariance Calibration
+      - Nearest-Human Distance
+      - Time to Reach Final Goal
+      - Camera Feed
+      - Camera Frame
+      - Robot Trajectory
+      - Mean Localization Error by Experience
+      - Localization Error Spread
+      - Covariance Calibration Summary
+      - Pedestrian Proximity Incidents
+      - Total Time to Reach Final Goal
+
+  # Powers the dashboard, which spans batches rather than sitting inside one.
+  Demo Trends:
+    metrics:
+      - Localization Error by Build Version
+      - Pass Rate by Build Version
+      - Tests Run
+
+dashboards:
+  SDK Demo Trends:
+    metrics_set: Demo Trends
+    description: How each scenario trends across runs of the SDK demo.
+    refresh: auto
+    day_range: 30
