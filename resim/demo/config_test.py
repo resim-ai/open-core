@@ -43,7 +43,9 @@ BUILTIN_TABLES = frozenset({"metadata", "container_performance", "test_length_se
 
 def _load() -> dict[str, Any]:
     config = resources.files("resim.demo") / "data" / "config.resim.yml"
-    return yaml.safe_load(config.read_text(encoding="utf8"))
+    loaded = yaml.safe_load(config.read_text(encoding="utf8"))
+    assert isinstance(loaded, dict), "the metrics config must be a YAML mapping"
+    return loaded
 
 
 def _templates() -> set[str]:

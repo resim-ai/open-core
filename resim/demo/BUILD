@@ -37,6 +37,7 @@ py_test(
         "config_test.py",
         "demo_test.py",
         "links_test.py",
+        "main_test.py",
         "run_test.py",
     ],
     deps = [

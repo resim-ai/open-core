@@ -7,6 +7,7 @@
 import hashlib
 import io
 import json
+import os
 import tarfile
 import tempfile
 import unittest
@@ -51,6 +52,25 @@ def _valid_tarball() -> bytes:
             "a/x/emissions.resim.jsonl": b'{"$metadata": {"topic": "t"}}\n',
         }
     )
+
+
+class CacheDirTest(unittest.TestCase):
+    def test_honours_xdg_cache_home(self) -> None:
+        with patch.dict(os.environ, {"XDG_CACHE_HOME": "/somewhere/cache"}):
+            self.assertEqual(
+                bundle.cache_dir(),
+                Path("/somewhere/cache") / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+            )
+
+    def test_falls_back_to_dot_cache(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                bundle.cache_dir(),
+                Path.home() / ".cache" / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+            )
+
+    def test_is_versioned_so_a_stale_bundle_is_never_reused(self) -> None:
+        self.assertIn(bundle.BUNDLE_VERSION, str(bundle.cache_dir()))
 
 
 class LoadTest(unittest.TestCase):

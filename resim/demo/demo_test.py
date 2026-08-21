@@ -9,6 +9,7 @@ import unittest
 from resim.demo.bundle_test import *  # noqa: F401,F403
 from resim.demo.config_test import *  # noqa: F401,F403
 from resim.demo.links_test import *  # noqa: F401,F403
+from resim.demo.main_test import *  # noqa: F401,F403
 from resim.demo.run_test import *  # noqa: F401,F403
 
 if __name__ == "__main__":

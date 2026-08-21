@@ -15,6 +15,7 @@ fails here.
 """
 
 import json
+import os
 import tempfile
 import unittest
 from importlib import import_module, resources
@@ -290,7 +291,7 @@ class RunTest(unittest.TestCase):
 
     def test_looks_the_dashboard_up_by_name(self) -> None:
         self._run()
-        run_module.find_dashboard_id.assert_called_with(  # type: ignore[attr-defined]
+        run_module.find_dashboard_id.assert_called_with(
             unittest.mock.ANY, "project-1", "branch-1", DASHBOARD_NAME
         )
 
@@ -335,6 +336,52 @@ class RunTest(unittest.TestCase):
         with self.assertRaises(DemoDataError) as ctx:
             self._run()
         self.assertIn(":1", str(ctx.exception))
+
+
+class DefaultClientTest(unittest.TestCase):
+    """The env overrides decide which deployment is hit and which token cache is
+    written, so both are pinned: a staging login must not overwrite the token a
+    production session relies on."""
+
+    def setUp(self) -> None:
+        for key in (
+            run_module.ENV_API_URL,
+            run_module.ENV_AUTH_DOMAIN,
+            run_module.ENV_CLIENT_ID,
+        ):
+            os.environ.pop(key, None)
+
+    def test_no_overrides_uses_the_sdk_defaults(self) -> None:
+        with patch.object(run_module, "DeviceCodeClient") as client:
+            run_module.default_client()
+        client.assert_called_once_with()
+
+    def test_api_url_override_is_passed_through(self) -> None:
+        os.environ[run_module.ENV_API_URL] = "https://api.example.io/v1"
+        with patch.object(run_module, "DeviceCodeClient") as client:
+            run_module.default_client()
+        self.assertEqual(
+            client.call_args.kwargs["base_url"], "https://api.example.io/v1"
+        )
+
+    def test_a_non_default_deployment_gets_its_own_token_cache(self) -> None:
+        os.environ[run_module.ENV_API_URL] = "https://api.example.io/v1"
+        with patch.object(run_module, "DeviceCodeClient") as client:
+            run_module.default_client()
+
+        cache = client.call_args.kwargs["cache_location"]
+        self.assertEqual(cache.name, "token-api.example.io.json")
+        self.assertNotEqual(cache, run_module.DEFAULT_CACHE_LOCATION)
+
+    def test_unset_overrides_fall_back_to_the_defaults(self) -> None:
+        os.environ[run_module.ENV_CLIENT_ID] = "some-client"
+        with patch.object(run_module, "DeviceCodeClient") as client:
+            run_module.default_client()
+
+        kwargs = client.call_args.kwargs
+        self.assertEqual(kwargs["client_id"], "some-client")
+        self.assertEqual(kwargs["base_url"], run_module.DEFAULT_BASE_URL)
+        self.assertEqual(kwargs["domain"], run_module.DEFAULT_DOMAIN)
 
 
 class ResolveProjectTest(unittest.TestCase):
