@@ -320,6 +320,22 @@ class RunTest(unittest.TestCase):
             self._run()
         self.assertIn("emissions", str(ctx.exception))
 
+    def test_authenticates_for_the_caller_when_no_client_is_given(self) -> None:
+        # The library form takes an optional client; the CLI relies on this
+        # branch to authenticate interactively.
+        with patch.object(
+            run_module, "default_client", return_value=fake_client()
+        ) as default:
+            run(data_dir=self.root, quiet=True)
+        default.assert_called_once_with()
+
+    def test_blank_lines_in_the_emissions_file_are_skipped(self) -> None:
+        # Trailing newlines are normal in JSONL; they are not malformed data.
+        for path in self.root.rglob("emissions.resim.jsonl"):
+            path.write_text(path.read_text() + "\n\n", encoding="utf8")
+
+        self._run()
+
     def test_leaves_no_emissions_files_behind(self) -> None:
         # Test writes its emissions next to the working directory; the demo is
         # responsible for not leaving 70-odd of them lying around.

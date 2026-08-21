@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import shutil
+import sys
 import tarfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -174,11 +175,11 @@ def _extract(archive: Path, destination: Path) -> None:
         with tarfile.open(archive, "r:gz") as tar:
             for member in tar.getmembers():
                 _check_member(member)
-            # Python 3.12 deprecates extractall without a filter and 3.14
-            # changes its default, so pass one where the runtime has it. The
-            # checks above are what covers 3.10 and 3.11.
-            if hasattr(tarfile, "data_filter"):
-                tar.extractall(staging, filter="data")
+            # 3.12 deprecates extractall without a filter and 3.14 changes
+            # its default, so ask for one where the parameter exists. The member
+            # checks above are what covers 3.10 and 3.11, where it does not.
+            if sys.version_info >= (3, 12):
+                tar.extractall(staging, filter="data")  # pragma: no cover
             else:
                 tar.extractall(staging)
     except (tarfile.TarError, OSError) as e:

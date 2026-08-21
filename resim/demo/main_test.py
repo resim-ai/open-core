@@ -13,7 +13,7 @@ and exit codes are worth pinning: a demo that exits 0 on a failure, or ignores
 
 import unittest
 from importlib import import_module
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from resim.demo.bundle import DemoDataError
 from resim.demo.run import DEFAULT_BRANCH, DEFAULT_PROJECT_NAME
@@ -22,7 +22,7 @@ main_module = import_module("resim.demo.__main__")
 
 
 class MainTest(unittest.TestCase):
-    def _main(self, *argv: str) -> tuple[int, object]:
+    def _main(self, *argv: str) -> tuple[int, MagicMock]:
         with (
             patch.object(main_module, "run") as run,
             patch("sys.argv", ["resim-demo", *argv]),

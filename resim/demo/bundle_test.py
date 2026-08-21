@@ -13,7 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Optional
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from resim.demo import bundle
 from resim.demo.bundle import Bundle, DemoDataError
@@ -161,6 +161,33 @@ class ExtractTest(unittest.TestCase):
             bundle._extract(self.archive, self.destination)
         self.assertIn("not a regular file", str(ctx.exception))
 
+    def test_a_stale_partial_directory_is_cleared_first(self) -> None:
+        # A .partial left by an interrupted run must not leak its contents into
+        # the next extraction.
+        staging = self.destination.with_name(self.destination.name + ".partial")
+        staging.mkdir()
+        (staging / "leftover.txt").write_text("old")
+        self.archive.write_bytes(_valid_tarball())
+
+        bundle._extract(self.archive, self.destination)
+
+        self.assertFalse((self.destination / "leftover.txt").exists())
+        self.assertTrue((self.destination / "manifest.json").is_file())
+
+    def test_an_extraction_failure_is_reported_and_cleaned_up(self) -> None:
+        self.archive.write_bytes(_valid_tarball())
+        staging = self.destination.with_name(self.destination.name + ".partial")
+
+        with patch.object(
+            tarfile.TarFile, "extractall", side_effect=tarfile.TarError("bad member")
+        ):
+            with self.assertRaises(DemoDataError) as ctx:
+                bundle._extract(self.archive, self.destination)
+
+        self.assertIn("could not extract", str(ctx.exception))
+        self.assertFalse(staging.exists())
+        self.assertFalse(self.destination.exists())
+
     def test_replaces_an_existing_extraction(self) -> None:
         self.destination.mkdir()
         (self.destination / "stale.txt").write_text("old")
@@ -168,6 +195,54 @@ class ExtractTest(unittest.TestCase):
         bundle._extract(self.archive, self.destination)
         self.assertFalse((self.destination / "stale.txt").exists())
         self.assertTrue((self.destination / "manifest.json").is_file())
+
+
+class DownloadTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.destination = Path(self.temp.name) / "out.tar.gz"
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def _response(self, chunks: list[bytes]) -> MagicMock:
+        response = MagicMock()
+        response.iter_bytes.return_value = iter(chunks)
+        response.raise_for_status.return_value = None
+        stream = MagicMock()
+        stream.__enter__.return_value = response
+        stream.__exit__.return_value = False
+        return stream
+
+    def test_streams_the_body_to_disk(self) -> None:
+        with patch("httpx.stream", return_value=self._response([b"abc", b"def"])):
+            bundle._download("https://example/x.tar.gz", self.destination)
+
+        self.assertEqual(self.destination.read_bytes(), b"abcdef")
+
+    def test_raises_for_status_before_writing(self) -> None:
+        stream = self._response([])
+        stream.__enter__.return_value.raise_for_status.side_effect = __import__(
+            "httpx"
+        ).HTTPStatusError("403", request=MagicMock(), response=MagicMock())
+
+        with patch("httpx.stream", return_value=stream):
+            with self.assertRaises(DemoDataError) as ctx:
+                bundle._download("https://example/x.tar.gz", self.destination)
+
+        self.assertIn("https://example/x.tar.gz", str(ctx.exception))
+
+    def test_a_partial_download_is_not_left_behind(self) -> None:
+        # A half-written archive that survived a failure would fail its checksum
+        # forever after, so the failure path removes it.
+        self.destination.write_bytes(b"stale")
+        with patch(
+            "httpx.stream", side_effect=__import__("httpx").ConnectError("nope")
+        ):
+            with self.assertRaises(DemoDataError):
+                bundle._download("https://example/x.tar.gz", self.destination)
+
+        self.assertFalse(self.destination.exists())
 
 
 class VerifyTest(unittest.TestCase):
