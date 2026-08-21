@@ -9,6 +9,8 @@
 import argparse
 import sys
 
+import httpx
+
 from resim.demo.bundle import DemoDataError
 from resim.demo.run import DEFAULT_BRANCH, DEFAULT_PROJECT_NAME, run
 
@@ -58,6 +60,17 @@ def main() -> int:
         )
     except DemoDataError as e:
         print(f"resim-demo: {e}", file=sys.stderr)
+        return 1
+    except httpx.HTTPError as e:
+        # Uploads retry on their own; reaching here means the network stayed
+        # down. Report it rather than dumping a traceback on someone who is
+        # only trying to look at the product.
+        print(
+            f"resim-demo: lost contact with ReSim ({e!r}).\n"
+            "Any batches already created are in the app; re-run to start a "
+            "fresh pair.",
+            file=sys.stderr,
+        )
         return 1
     return 0
 

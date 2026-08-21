@@ -139,9 +139,14 @@ def run(
                     dashboard_id = find_dashboard_id(
                         client, project_id, batch.branch_id, DASHBOARD_NAME
                     )
-                for job in jobs:
-                    replay_job(client, batch, data, job)
-                    say(f"  {job.get('experience_name')}")
+                tests: list[Test] = []
+                try:
+                    for job in jobs:
+                        tests.append(replay_job(client, batch, data, job))
+                        say(f"  {job.get('experience_name')}")
+                finally:
+                    for test in tests:
+                        test.close()
 
     urls = _urls(client, project_id, batch_ids, dashboard_id)
     if not quiet:
@@ -211,36 +216,36 @@ def replay_job(
     batch: Batch,
     data: Bundle,
     job: dict[str, Any],
-) -> None:
-    """Replay one captured job into a new test in ``batch``.
+) -> Test:
+    """Replay one captured job into a new test, uploaded but not yet closed.
 
     Emissions are replayed through the typed ``Test`` methods rather than by
     uploading the captured file verbatim, so they are validated against the
     demo's config on the way through. If the data and the config ever drift
     apart, that fails here rather than showing up as an empty chart.
+
+    The caller closes the returned test once every test has been uploaded.
     """
     job_dir = data.root / str(job["directory"])
-    scratch: Optional[Path] = None
-    try:
-        with Test(client, batch, str(job["experience_name"])) as test:
-            # Test writes its emissions to a file in the working directory and
-            # leaves it there. One per test would litter the directory the demo
-            # was run from, so remember it and clean it up once it is uploaded.
-            scratch = Path(test.output_path)
-            for file_name in job.get("media") or []:
-                test.attach_log(str(job_dir / file_name))
-            for topic, payload, timestamp, is_event in _emissions(
-                job_dir / str(job["emissions"])
-            ):
-                if is_event and timestamp is not None:
-                    test.emit_event(topic, payload, timestamp)
-                elif timestamp is not None:
-                    test.emit(topic, payload, timestamp)
-                else:
-                    test.emit(topic, payload)
-    finally:
-        if scratch is not None:
-            scratch.unlink(missing_ok=True)
+    test = Test(client, batch, str(job["experience_name"]))
+    for file_name in job.get("media") or []:
+        test.attach_log(str(job_dir / file_name))
+    for topic, payload, timestamp, is_event in _emissions(
+        job_dir / str(job["emissions"])
+    ):
+        if is_event and timestamp is not None:
+            test.emit_event(topic, payload, timestamp)
+        elif timestamp is not None:
+            test.emit(topic, payload, timestamp)
+        else:
+            test.emit(topic, payload)
+
+    scratch = Path(test.output_path)
+    test.upload_emissions()
+    # Test leaves its emissions file in the working directory; one per test
+    # would litter the directory the demo was run from.
+    scratch.unlink(missing_ok=True)
+    return test
 
 
 def _emissions(

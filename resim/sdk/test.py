@@ -1,6 +1,7 @@
 import hashlib
 import os
 import tempfile
+import time
 import traceback
 import httpx
 from types import TracebackType
@@ -24,12 +25,19 @@ from resim.sdk.client.models.log_type import LogType
 
 __all__ = ["Test", "LogType"]
 
+# Uploads go to a presigned URL over the open internet, so a transient failure
+# is expected rather than exceptional.
+_UPLOAD_ATTEMPTS = 4
+_UPLOAD_BACKOFF_SECONDS = 0.5
+_UPLOAD_TIMEOUT_SECONDS = 120.0
+
 
 class Test(Emitter):
     def __init__(self, client: AuthenticatedClient, batch: Batch, name: str):
         self._client = client
         self._batch = batch
         self.name = name
+        self._closed = False
 
         body = CreateJobForBatchInput(name=self.name)
         response = create_job_for_batch.sync_detailed(
@@ -99,12 +107,32 @@ class Test(Emitter):
             upload_headers = log_output.required_headers.to_dict()
 
         with open(file_path, "rb") as f:
-            r = httpx.put(upload_url, headers=upload_headers, content=f.read())
+            body = f.read()
 
-        if r.status_code != 200:
-            raise Exception(
-                f"failed to upload log {file_name}. Got response {r.status_code}: {r.content}"
-            )
+        # A presigned PUT is idempotent, and a dropped connection partway
+        # through a run of tests would otherwise lose the whole run's work, so
+        # transient transport failures and 5xx are retried.
+        last_error: Optional[str] = None
+        for attempt in range(_UPLOAD_ATTEMPTS):
+            try:
+                r = httpx.put(
+                    upload_url,
+                    headers=upload_headers,
+                    content=body,
+                    timeout=_UPLOAD_TIMEOUT_SECONDS,
+                )
+            except httpx.TransportError as e:
+                last_error = repr(e)
+            else:
+                if r.status_code == 200:
+                    return
+                last_error = f"{r.status_code}: {r.content!r}"
+                if r.status_code < 500:
+                    break
+            if attempt + 1 < _UPLOAD_ATTEMPTS:
+                time.sleep(_UPLOAD_BACKOFF_SECONDS * 2**attempt)
+
+        raise Exception(f"failed to upload log {file_name}. Last error {last_error}")
 
     def attach_system_log(
         self,
@@ -155,19 +183,34 @@ class Test(Emitter):
             error=repr(exc_value) if exc_value is not None else None,
         )
 
-    def close(
-        self,
-        status: LightJobStatus = LightJobStatus.SUCCEEDED,
-        error: str | None = None,
-    ) -> None:
+    def upload_emissions(self) -> None:
+        """Finish the emissions file and upload it, leaving the job open.
+
+        ``close`` calls this for you. Call it directly to upload a test's data
+        before ending the job. Safe to call more than once.
+        """
         if self.file is None:
             return
-        super().close()
+        Emitter.close(self)
         self.attach_log(
             str(self.output_path),
             LogType.EMISSIONS_LOG,
             file_name="emissions.resim.jsonl",
         )
+
+    def close(
+        self,
+        status: LightJobStatus = LightJobStatus.SUCCEEDED,
+        error: str | None = None,
+    ) -> None:
+        """Upload any remaining emissions and close the job, starting metrics.
+
+        Safe to call more than once.
+        """
+        if self._closed:
+            return
+        self.upload_emissions()
+        self._closed = True
         body = CloseJobInput(status=status)
         if error:
             body.error_message = error

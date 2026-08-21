@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch, mock_open
 
+import httpx
+
 from resim.sdk.test import Test, LogType
 from resim.sdk.client.models.light_job_status import LightJobStatus
 from resim.sdk.client.types import Unset
@@ -16,6 +18,42 @@ UPLOAD_URL = "https://upload.example.com/emissions"
 
 
 class TestTest(unittest.TestCase):
+    def _make_test(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> Test:
+        """A Test whose API calls are stubbed, ready to upload or close."""
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        create = MagicMock(status_code=201)
+        create.parsed.job_id = JOB_ID
+        mock_create_job.sync_detailed.return_value = create
+
+        log = MagicMock(status_code=201)
+        log.parsed.upload_url = UPLOAD_URL
+        mock_create_log.sync_detailed.return_value = log
+
+        mock_httpx.put.return_value = MagicMock(status_code=200)
+        mock_close_job.sync_detailed.return_value = MagicMock(status_code=204)
+
+        return Test(MagicMock(), mock_batch, TEST_NAME)
+
+    def _patched_open(self) -> Any:
+        content = b"fake emissions data"
+        m = mock_open(read_data=content)
+        m.return_value.__enter__.return_value.read.side_effect = [
+            content,
+            b"",
+            content,
+        ]
+        return patch("builtins.open", m)
+
     @patch("resim.sdk.test.httpx")
     @patch("resim.sdk.test.close_job")
     @patch("resim.sdk.test.create_job_log")
@@ -333,6 +371,167 @@ class TestTest(unittest.TestCase):
 
         # Temp file should be cleaned up
         mock_unlink.assert_called_once_with(STACKTRACE_PATH)
+
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_upload_emissions_leaves_the_job_open(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> None:
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+
+        with self._patched_open():
+            test.upload_emissions()
+
+        mock_httpx.put.assert_called_once()
+        mock_close_job.sync_detailed.assert_not_called()
+
+        # A second upload is a no-op, and close still closes the job once.
+        with self._patched_open():
+            test.upload_emissions()
+            test.close()
+            test.close()
+
+        mock_httpx.put.assert_called_once()
+        mock_close_job.sync_detailed.assert_called_once()
+
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_uploads_when_upload_emissions_was_not_called(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> None:
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+
+        with self._patched_open():
+            test.close()
+
+        mock_httpx.put.assert_called_once()
+        mock_close_job.sync_detailed.assert_called_once()
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_upload_retries_a_dropped_connection(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # A presigned PUT is idempotent, so a reset connection is retried
+        # rather than losing the run's work.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_httpx.TransportError = httpx.TransportError
+        mock_httpx.put.side_effect = [
+            httpx.ConnectError("reset by peer"),
+            MagicMock(status_code=200),
+        ]
+
+        with self._patched_open():
+            test.upload_emissions()
+
+        self.assertEqual(mock_httpx.put.call_count, 2)
+        mock_sleep.assert_called_once()
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_upload_retries_a_server_error(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_httpx.TransportError = httpx.TransportError
+        mock_httpx.put.side_effect = [
+            MagicMock(status_code=503, content=b"slow down"),
+            MagicMock(status_code=200),
+        ]
+
+        with self._patched_open():
+            test.upload_emissions()
+
+        self.assertEqual(mock_httpx.put.call_count, 2)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_upload_does_not_retry_a_client_error(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # An expired or malformed presigned URL will not fix itself.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_httpx.TransportError = httpx.TransportError
+        mock_httpx.put.return_value = MagicMock(status_code=403, content=b"expired")
+
+        with self._patched_open():
+            with self.assertRaises(Exception) as ctx:
+                test.upload_emissions()
+
+        self.assertEqual(mock_httpx.put.call_count, 1)
+        self.assertIn("403", str(ctx.exception))
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_upload_gives_up_after_the_last_attempt(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_httpx.TransportError = httpx.TransportError
+        mock_httpx.put.side_effect = httpx.ConnectError("down")
+
+        with self._patched_open():
+            with self.assertRaises(Exception) as ctx:
+                test.upload_emissions()
+
+        self.assertEqual(mock_httpx.put.call_count, 4)
+        self.assertIn("ConnectError", str(ctx.exception))
 
 
 if __name__ == "__main__":

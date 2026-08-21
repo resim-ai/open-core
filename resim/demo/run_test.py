@@ -161,10 +161,13 @@ class FakeTest(Emitter):
 
     started: list[tuple[str, str]] = []
     attached: list[str] = []
+    events: list[tuple[str, str, str]] = []
     output_dir: Path = Path()
 
     def __init__(self, client: Any, batch: Any, name: str) -> None:
         self.name = name
+        self.batch_id = batch.id
+        self._closed = False
         FakeTest.started.append((batch.id, name))
         output = FakeTest.output_dir / f"{batch.id}-{len(FakeTest.started)}.jsonl"
         super().__init__(config_path=batch.metrics_config_path, output_path=output)
@@ -172,6 +175,19 @@ class FakeTest(Emitter):
     def attach_log(self, file_path: str, *args: Any, **kwargs: Any) -> None:
         assert Path(file_path).is_file(), f"{file_path} does not exist"
         FakeTest.attached.append(Path(file_path).name)
+
+    def upload_emissions(self) -> None:
+        if self.file is None:
+            return
+        FakeTest.events.append((self.batch_id, "upload", self.name))
+        Emitter.close(self)
+
+    def close(self, *args: Any, **kwargs: Any) -> None:
+        if self._closed:
+            return
+        self.upload_emissions()
+        self._closed = True
+        FakeTest.events.append((self.batch_id, "close", self.name))
 
     def __enter__(self) -> "FakeTest":
         return self
@@ -197,6 +213,7 @@ class RunTest(unittest.TestCase):
         FakeBatch.closed = []
         FakeTest.started = []
         FakeTest.attached = []
+        FakeTest.events = []
         FakeTest.output_dir = self.root / "emitted"
         FakeTest.output_dir.mkdir()
 
@@ -335,6 +352,39 @@ class RunTest(unittest.TestCase):
             path.write_text(path.read_text() + "\n\n", encoding="utf8")
 
         self._run()
+
+    def test_a_batch_uploads_every_test_before_closing_any(self) -> None:
+        # Closing a job right after creating it races the scheduler's own first
+        # transition of its tasks, which strands the batch.
+        self._run()
+
+        for batch_id in {e[0] for e in FakeTest.events}:
+            actions = [e[1] for e in FakeTest.events if e[0] == batch_id]
+            self.assertEqual(
+                actions,
+                ["upload"] * len(EXPERIENCES) + ["close"] * len(EXPERIENCES),
+                f"batch {batch_id} interleaved uploads and closes",
+            )
+
+    def test_tests_are_closed_even_if_a_later_one_fails(self) -> None:
+        # A failure partway through must not leave jobs open.
+        real = run_module.replay_job
+        calls = {"n": 0}
+
+        def flaky(*args: Any, **kwargs: Any) -> Any:
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise RuntimeError("boom")
+            return real(*args, **kwargs)
+
+        with patch.object(run_module, "replay_job", side_effect=flaky):
+            with self.assertRaises(RuntimeError):
+                self._run()
+
+        uploaded = [e[2] for e in FakeTest.events if e[1] == "upload"]
+        closed = [e[2] for e in FakeTest.events if e[1] == "close"]
+        self.assertTrue(uploaded)
+        self.assertEqual(closed, uploaded)
 
     def test_leaves_no_emissions_files_behind(self) -> None:
         # Test writes its emissions next to the working directory; the demo is

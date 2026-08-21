@@ -15,6 +15,8 @@ import unittest
 from importlib import import_module
 from unittest.mock import MagicMock, patch
 
+import httpx
+
 from resim.demo.bundle import DemoDataError
 from resim.demo.run import DEFAULT_BRANCH, DEFAULT_PROJECT_NAME
 
@@ -75,9 +77,25 @@ class MainTest(unittest.TestCase):
         written = "".join(str(c.args[0]) for c in stderr.write.call_args_list if c.args)
         self.assertIn("https://example/x", written)
 
-    def test_other_exceptions_are_not_swallowed(self) -> None:
-        # Only the data error is turned into a message; anything else should
-        # keep its traceback rather than being reported as a tidy failure.
+    def test_network_failure_is_reported_without_a_traceback(self) -> None:
+        # Uploads retry internally, so reaching here means the network stayed
+        # down. Someone trying to look at the product should get a sentence.
+        with (
+            patch.object(
+                main_module, "run", side_effect=httpx.ConnectError("reset by peer")
+            ),
+            patch("sys.argv", ["resim-demo"]),
+            patch("sys.stderr") as stderr,
+        ):
+            code = main_module.main()
+
+        self.assertEqual(code, 1)
+        written = "".join(str(c.args[0]) for c in stderr.write.call_args_list if c.args)
+        self.assertIn("lost contact with ReSim", written)
+
+    def test_unexpected_exceptions_are_not_swallowed(self) -> None:
+        # A bug in the demo should keep its traceback rather than being
+        # reported as a tidy failure.
         with (
             patch.object(main_module, "run", side_effect=RuntimeError("boom")),
             patch("sys.argv", ["resim-demo"]),
