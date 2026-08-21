@@ -414,9 +414,9 @@ metrics:
   Localization Error by Build Version:
     type: dashboard
     description: >
-      Mean localizer error for each build of the stack. A line that climbs from
-      one build to the next is a regression, and it aggregates every run of that
-      build inside the dashboard's window.
+      Mean localizer error for each build of the stack, taking in every run of
+      that build inside the dashboard's window. A taller bar than the build
+      before it is a regression.
     query_string: |
       SELECT
         'Mean' AS group_name,
@@ -428,7 +428,7 @@ metrics:
       GROUP BY m.build_version
       ORDER BY m.build_version;
     template_type: system
-    template: line
+    template: bar
 
   Pass Rate by Build Version:
     type: dashboard
