@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Union
 
 import yaml
-from httpx import URL
 
+from resim.sdk.bff_client.graphql import post
 from resim.sdk.client import AuthenticatedClient
 from resim.sdk.metrics.emissions import (
     merge_metrics_config_files,
@@ -72,26 +72,17 @@ def sync_config(
             merged, sort_keys=False, allow_unicode=True
         ).encode("utf-8")
 
-    body = {
-        "query": mutation,
-        "operationName": "UpdateMetricsConfig",
-        "variables": {
+    post(
+        client,
+        mutation,
+        "UpdateMetricsConfig",
+        {
             "projectId": project_id,
             "config": base64.b64encode(config_bytes).decode(),
             "templateFiles": read_templates(templates_path),
             "branch": branch_name,
         },
-    }
-    httpx_client = client.get_httpx_client()
-    bff_url = _get_bff_url(httpx_client._base_url)
-
-    response = httpx_client.post(bff_url, json=body)
-    if response.status_code != 200:
-        raise Exception(
-            f"failed to sync metrics config {response.status_code}: {response.content}"
-        )
-    if "errors" in response.json():
-        raise Exception(response.json()["errors"])
+    )
 
 
 def read_templates(path: Union[str, Path, None]) -> list[dict[str, str]]:
@@ -124,8 +115,3 @@ def read_templates(path: Union[str, Path, None]) -> list[dict[str, str]]:
                 }
             )
     return templates
-
-
-def _get_bff_url(api_base_url: URL) -> str:
-    bff_host = api_base_url.host.replace("api.", "bff.", 1)
-    return str(api_base_url.copy_with(host=bff_host, raw_path=b"/graphql"))

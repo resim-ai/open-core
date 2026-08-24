@@ -6,6 +6,10 @@ comment: # this is a top-level key
   require_head: yes # [if yes :: must have a head report to post]
 
 ignore:
+  # Development tools for regenerating the SDK demo's data bundle. Run by hand,
+  # deliberately excluded from the published wheels, and not a dependency of any
+  # test target — so bazel emits no coverage data for them at all.
+  - resim/demo/tools/**
   - resim/converter/fuzz_helpers_test_template.hh # testonly
   - resim/visualization/curve/line_primitive_from_curve_test_helpers.cc # testonly
   - resim/visualization/save_visualization_log.cc # testonly
