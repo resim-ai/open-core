@@ -496,5 +496,56 @@ class ResolveProjectTest(unittest.TestCase):
         self.assertEqual(listed.call_count, 2)
 
 
+class PackageDataTest(unittest.TestCase):
+    """The shipped config and templates are part of the public API.
+
+    People copy the demo's config as the starting point for their own, and
+    without these they end up poking at ``resim.demo.__file__``.
+    """
+
+    def test_config_path_points_at_a_readable_config(self) -> None:
+        path = run_module.config_path()
+        self.assertTrue(path.is_file(), f"{path} is not a file")
+        self.assertEqual(path.name, "config.resim.yml")
+        self.assertIn("metrics:", path.read_text(encoding="utf8"))
+
+    def test_templates_path_points_at_the_liquid_templates(self) -> None:
+        path = run_module.templates_path()
+        self.assertTrue(path.is_dir(), f"{path} is not a directory")
+        self.assertTrue(
+            list(path.glob("*.liquid")),
+            f"no .liquid templates in {path}",
+        )
+
+    def test_the_demo_runs_with_exactly_what_it_publishes(self) -> None:
+        # If these ever drift, someone copies a config the demo does not use.
+        config, templates = run_module._package_data()
+        self.assertEqual(str(run_module.config_path()), str(config))
+        self.assertEqual(str(run_module.templates_path()), str(templates))
+
+    def test_package_data_outside_the_filesystem_is_copied_out(self) -> None:
+        # A zip import has no real path, so the data is copied somewhere that
+        # outlives the call rather than handed back as a path that does not
+        # exist.
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "config.resim.yml"
+            source.write_text("metrics: {}\n", encoding="utf8")
+
+            class NotAPath:
+                name = "config.resim.yml"
+
+            cache = Path(tmp) / "cache"
+            with (
+                patch.object(run_module.bundle, "cache_dir", return_value=cache),
+                patch.object(run_module.resources, "as_file") as as_file,
+            ):
+                as_file.return_value.__enter__.return_value = source
+                result = run_module._materialise(NotAPath())
+
+            self.assertTrue(result.is_file())
+            self.assertNotEqual(str(result), str(source))
+            self.assertEqual(result.read_text(encoding="utf8"), "metrics: {}\n")
+
+
 if __name__ == "__main__":
     unittest.main()

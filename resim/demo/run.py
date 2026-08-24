@@ -8,6 +8,7 @@
 
 import json
 import os
+import shutil
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -30,7 +31,7 @@ from resim.sdk.client.api.projects import create_project, list_projects
 from resim.sdk.client.models.create_project_input import CreateProjectInput
 from resim.sdk.test import Test
 
-__all__ = ["DemoResult", "run"]
+__all__ = ["DemoResult", "config_path", "run", "templates_path"]
 
 DEFAULT_PROJECT_NAME = "ReSim SDK Demo"
 DEFAULT_BRANCH = "sdk-demo"
@@ -274,10 +275,57 @@ def _emissions(
                 ) from e
 
 
+def config_path() -> Path:
+    """Return the path to the metrics config the demo runs with.
+
+    Copy it as the starting point for your own config, or read it to see how
+    the charts in the demo are defined::
+
+        from resim.demo import config_path
+
+        print(config_path().read_text())
+
+    Returns:
+        A real filesystem path. The templates the config references live in
+        :func:`templates_path`.
+    """
+    return _materialise(_package_data()[0])
+
+
+def templates_path() -> Path:
+    """Return the path to the ``.liquid`` templates the demo's config uses.
+
+    Returns:
+        A real filesystem path to the directory holding them.
+    """
+    return _materialise(_package_data()[1])
+
+
 def _package_data() -> tuple[Any, Any]:
     """Locate the shipped metrics config and template directory."""
     root = resources.files("resim.demo") / "data"
     return root / "config.resim.yml", root / "templates"
+
+
+def _materialise(resource: Any) -> Path:
+    """Return a real path for package data, copying it out if it is not one.
+
+    An ordinary install puts package data on disk, so this is the resource
+    itself. Zip imports have no such path, so the data is copied into the same
+    cache the demo bundle uses, where it stays valid after this returns.
+    """
+    if isinstance(resource, Path):
+        return resource
+
+    target: Path = bundle.cache_dir() / "package-data" / str(resource.name)
+    if not target.exists():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with resources.as_file(resource) as source:
+            if source.is_dir():
+                shutil.copytree(source, target, dirs_exist_ok=True)
+            else:
+                shutil.copy2(source, target)
+    return target
 
 
 def _urls(
