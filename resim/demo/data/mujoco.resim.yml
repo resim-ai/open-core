@@ -1,17 +1,12 @@
-# Metrics config for the ReSim SDK demo's MuJoCo tour (resim-demo --demo mujoco).
+# Metrics config for `resim-demo --demo mujoco`: a bimanual manipulation policy
+# evaluated in MuJoCo, one test per random seed.
 #
-# The data is a bimanual manipulation policy evaluated in MuJoCo: one test per
-# random seed, each reporting how well the policy did on that episode, plus a
-# recording of the attempt.
-#
-# Compared with the default demo this is a deliberately small config. The source
-# runs report a handful of summary numbers per episode rather than dense
-# telemetry, so the metrics here are the ones that data genuinely supports —
-# there is no invented signal to fill out the template list.
+# Small on purpose. Each source run reports a few summary numbers per episode
+# rather than dense telemetry, so these are the metrics that data supports.
 version: 1
 
 topics:
-  # One row per test: how the policy did on that seed's episode.
+  # One row per test.
   summary_metrics:
     schema:
       overall_success_rate: float
@@ -19,8 +14,8 @@ topics:
       overall_average_max_reward: float
       total_evaluation_time: float
 
-  # The rendered episode. Image and video columns cannot share a topic, so the
-  # clip and the animation are separate topics over the same recording.
+  # Two topics over the same recording: a topic may not carry both an image
+  # and a video column.
   episode_video:
     schema:
       filename: video
@@ -61,8 +56,8 @@ metrics:
   Peak Reward:
     type: test
     description: >
-      Best single-step reward reached. A high peak with a low total means the
-      policy got close and then lost the task.
+      Best single-step reward reached. High peak with a low total means the
+      policy got close, then lost the task.
     query_string: |
       SELECT
         overall_average_max_reward AS "Max Reward"
@@ -73,8 +68,8 @@ metrics:
   Evaluation Time:
     type: test
     description: >
-      Wall-clock time to evaluate this seed. Episodes that fail tend to run to
-      the step limit, so a long evaluation is itself a signal.
+      Wall-clock time to evaluate this seed. Failing episodes run to the step
+      limit, so a long evaluation is itself a signal.
     query_string: |
       SELECT
         total_evaluation_time AS "Evaluation Time (s)"
@@ -143,9 +138,8 @@ metrics:
   Reward Distribution:
     type: batch
     description: >
-      How reward is spread across seeds. A policy that works on most seeds and
-      collapses on a few looks very different here from one that is uniformly
-      mediocre.
+      How reward is spread across seeds. Separates a policy that fails on a few
+      seeds from one that is uniformly mediocre.
     query_string: |
       SELECT overall_average_sum_reward AS "Sum Reward"
       FROM summary_metrics;
@@ -208,7 +202,7 @@ metrics:
   Reward by Build Version:
     type: dashboard
     description: >
-      Mean reward for each policy build. A build that drops here has regressed,
+      Mean reward per policy build. A build that drops here has regressed,
       whatever its pass count says.
     query_string: |
       SELECT
