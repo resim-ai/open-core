@@ -546,6 +546,54 @@ class PackageDataTest(unittest.TestCase):
             self.assertNotEqual(str(result), str(source))
             self.assertEqual(result.read_text(encoding="utf8"), "metrics: {}\n")
 
+    def test_a_package_data_directory_is_copied_whole(self) -> None:
+        # Templates are a directory, not a file, so the zip-import path has to
+        # copy the tree rather than a single entry.
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "templates"
+            source.mkdir()
+            (source / "raw.liquid").write_text("{{ raw }}", encoding="utf8")
+
+            class NotAPath:
+                name = "templates"
+
+            cache = Path(tmp) / "cache"
+            with (
+                patch.object(run_module.bundle, "cache_dir", return_value=cache),
+                patch.object(run_module.resources, "as_file") as as_file,
+            ):
+                as_file.return_value.__enter__.return_value = source
+                result = run_module._materialise(NotAPath())
+
+            self.assertTrue(result.is_dir())
+            self.assertNotEqual(str(result), str(source))
+            self.assertEqual(
+                (result / "raw.liquid").read_text(encoding="utf8"), "{{ raw }}"
+            )
+
+    def test_package_data_already_copied_out_is_reused(self) -> None:
+        # The copy is keyed by name, so a second call must not re-copy over a
+        # directory that is already there.
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "config.resim.yml"
+            source.write_text("metrics: {}\n", encoding="utf8")
+
+            class NotAPath:
+                name = "config.resim.yml"
+
+            cache = Path(tmp) / "cache"
+            with (
+                patch.object(run_module.bundle, "cache_dir", return_value=cache),
+                patch.object(run_module.resources, "as_file") as as_file,
+            ):
+                as_file.return_value.__enter__.return_value = source
+                first = run_module._materialise(NotAPath())
+                as_file.reset_mock()
+                second = run_module._materialise(NotAPath())
+
+            self.assertEqual(str(first), str(second))
+            as_file.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -785,6 +785,89 @@ class TestTest(unittest.TestCase):
         mock_create_log.sync_detailed.assert_not_called()
         mock_close_job.sync_detailed.assert_not_called()
 
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_keeps_retrying_a_non_400_failure(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # A retry that fails again with something other than "already closed"
+        # is a real failure, so it keeps retrying rather than being mistaken
+        # for its own earlier success.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_close_job.sync_detailed.return_value = MagicMock(
+            status_code=503, content=b"no healthy upstream"
+        )
+
+        with self._patched_open():
+            with self.assertRaises(Exception):
+                test.close()
+
+        self.assertEqual(mock_close_job.sync_detailed.call_count, 4)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_reads_already_closed_from_a_text_body(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # Bodies are bytes over the wire, but a client that has decoded one
+        # should be understood too rather than silently missing the signal.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_close_job.sync_detailed.side_effect = [
+            httpx.ReadTimeout("lost the response"),
+            MagicMock(status_code=400, content="job is already closed"),
+        ]
+
+        with self._patched_open():
+            test.close()
+
+        self.assertEqual(mock_close_job.sync_detailed.call_count, 2)
+
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_unparseable_job_creation_response_is_reported(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+    ) -> None:
+        # A 201 whose body did not parse leaves no job id to work with, so it
+        # fails here rather than further along with an unhelpful AttributeError.
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+        mock_create_job.sync_detailed.return_value = MagicMock(
+            status_code=201, parsed=None, content=b"not json"
+        )
+
+        with self.assertRaises(Exception) as ctx:
+            self._built.append(Test(MagicMock(), mock_batch, TEST_NAME))
+
+        self.assertIn("parse", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
