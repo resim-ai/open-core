@@ -533,6 +533,217 @@ class TestTest(unittest.TestCase):
         self.assertEqual(mock_httpx.put.call_count, 4)
         self.assertIn("ConnectError", str(ctx.exception))
 
+    # --- API call retries -------------------------------------------------
+    #
+    # These calls are not equally safe to repeat, and the tests pin the
+    # difference: CloseJob is a state transition the server reports on, while
+    # CreateJobForBatch mints a new job every time it is called.
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_retries_a_server_error(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # A 503 while a deploy cycles the API used to abort a whole run and
+        # leave the batch half closed.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_close_job.sync_detailed.side_effect = [
+            MagicMock(status_code=503, content=b"no healthy upstream"),
+            MagicMock(status_code=204),
+        ]
+
+        with self._patched_open():
+            test.close()
+
+        self.assertEqual(mock_close_job.sync_detailed.call_count, 2)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_treats_already_closed_on_a_retry_as_success(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # The first close landed but its response was lost. The server refuses
+        # the replay with a 400 that names the condition, which is our own
+        # earlier success rather than a failure.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_close_job.sync_detailed.side_effect = [
+            httpx.ReadTimeout("lost the response"),
+            MagicMock(status_code=400, content=b"job is already closed"),
+        ]
+
+        with self._patched_open():
+            test.close()
+
+        self.assertEqual(mock_close_job.sync_detailed.call_count, 2)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_close_does_not_swallow_a_first_attempt_already_closed(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # Nothing was replayed, so an already-closed job means the caller
+        # closed it twice. That is a real error and must surface.
+        test = self._make_test(
+            mock_create_job, mock_create_log, mock_close_job, mock_httpx
+        )
+        mock_close_job.sync_detailed.return_value = MagicMock(
+            status_code=400, content=b"job is already closed"
+        )
+
+        with self._patched_open():
+            with self.assertRaises(Exception) as ctx:
+                test.close()
+
+        self.assertEqual(mock_close_job.sync_detailed.call_count, 1)
+        self.assertIn("400", str(ctx.exception))
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_job_creation_retries_a_refused_connection(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # The connection never opened, so no job was created and a replay
+        # cannot duplicate one.
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        created = MagicMock(status_code=201)
+        created.parsed.job_id = JOB_ID
+        mock_create_job.sync_detailed.side_effect = [
+            httpx.ConnectError("connection refused"),
+            created,
+        ]
+
+        Test(MagicMock(), mock_batch, TEST_NAME)
+
+        self.assertEqual(mock_create_job.sync_detailed.call_count, 2)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_job_creation_does_not_retry_once_the_request_was_sent(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # CreateJobForBatch mints a new job on every call. A read timeout
+        # leaves it unknown whether the server acted, so replaying risks a
+        # duplicate test in the batch — fail instead.
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        mock_create_job.sync_detailed.side_effect = httpx.ReadTimeout("no reply")
+
+        with self.assertRaises(Exception):
+            Test(MagicMock(), mock_batch, TEST_NAME)
+
+        self.assertEqual(mock_create_job.sync_detailed.call_count, 1)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_job_creation_retries_a_shed_load_response(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # A 503 comes from the load balancer with no healthy upstream, so the
+        # application never saw the request and no job was created.
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        created = MagicMock(status_code=201)
+        created.parsed.job_id = JOB_ID
+        mock_create_job.sync_detailed.side_effect = [
+            MagicMock(status_code=503, content=b"no healthy upstream"),
+            created,
+        ]
+
+        Test(MagicMock(), mock_batch, TEST_NAME)
+
+        self.assertEqual(mock_create_job.sync_detailed.call_count, 2)
+
+    @patch("resim.sdk.test.time.sleep")
+    @patch("resim.sdk.test.httpx")
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    @patch("resim.sdk.test.create_job_for_batch")
+    def test_job_creation_does_not_retry_a_server_error(
+        self,
+        mock_create_job: Any,
+        mock_create_log: Any,
+        mock_close_job: Any,
+        mock_httpx: Any,
+        mock_sleep: Any,
+    ) -> None:
+        # A 500 means the application did see the request, and it may have
+        # created the job before failing.
+        mock_batch = MagicMock()
+        mock_batch.project_id = PROJECT_ID
+        mock_batch.id = BATCH_ID
+        mock_batch.metrics_config_path = CONFIG_PATH
+
+        mock_create_job.sync_detailed.return_value = MagicMock(
+            status_code=500, content=b"boom"
+        )
+
+        with self.assertRaises(Exception):
+            Test(MagicMock(), mock_batch, TEST_NAME)
+
+        self.assertEqual(mock_create_job.sync_detailed.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

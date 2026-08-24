@@ -5,7 +5,7 @@ import time
 import traceback
 import httpx
 from types import TracebackType
-from typing import Optional
+from typing import Any, Callable, Optional
 
 from pathlib import Path
 from resim.sdk.batch import Batch
@@ -27,9 +27,83 @@ __all__ = ["Test", "LogType"]
 
 # Uploads go to a presigned URL over the open internet, so a transient failure
 # is expected rather than exceptional.
-_UPLOAD_ATTEMPTS = 4
-_UPLOAD_BACKOFF_SECONDS = 0.5
 _UPLOAD_TIMEOUT_SECONDS = 120.0
+
+# Every call retries, but what counts as retryable depends on the call. A
+# failure during the connect phase proves the request never reached the server,
+# so any call can be replayed. Once the request is on the wire — a 5xx, a read
+# timeout — it is unknown whether the server acted, so only calls that are safe
+# to repeat are retried on those.
+_API_ATTEMPTS = 4
+_API_BACKOFF_SECONDS = 0.5
+_CONNECT_ERRORS = (httpx.ConnectError, httpx.ConnectTimeout)
+_TRANSPORT_ERROR = httpx.TransportError
+_RETRYABLE_STATUS = (429, 500, 502, 503, 504)
+
+
+def _call_api(
+    call: Callable[[], Any],
+    *,
+    expected: int,
+    describe: str,
+    replayable: bool = False,
+    succeeded_if: Optional[Callable[[Any], bool]] = None,
+) -> Any:
+    """Make an API call, retrying the failures that are safe to retry.
+
+    Args:
+        call: A zero-argument callable returning a ``sync_detailed`` response.
+        expected: The status code that means success.
+        describe: Used in the error message when every attempt fails.
+        replayable: True when repeating the call cannot create anything twice.
+            Non-replayable calls are retried only on connect-phase failures.
+        succeeded_if: Given a failed response, returns True when it shows an
+            earlier attempt already landed. Lets a replayed call recognise its
+            own prior success instead of reporting a spurious failure.
+
+    Returns:
+        The successful response.
+
+    Raises:
+        Exception: If no attempt succeeded.
+    """
+    last_error: Optional[str] = None
+    for attempt in range(_API_ATTEMPTS):
+        try:
+            response = call()
+        except _CONNECT_ERRORS as e:
+            # The connection never opened, so nothing was sent.
+            last_error = repr(e)
+        except _TRANSPORT_ERROR as e:
+            last_error = repr(e)
+            if not replayable:
+                break
+        else:
+            if response.status_code == expected:
+                return response
+            if attempt > 0 and succeeded_if is not None and succeeded_if(response):
+                return response
+            last_error = f"{response.status_code}: {response.content!r}"
+            if response.status_code not in _RETRYABLE_STATUS:
+                break
+            if not replayable and response.status_code != 503:
+                # A 503 is a load balancer shedding load, so the request never
+                # reached the application. Other 5xx may have been acted on.
+                break
+        if attempt + 1 < _API_ATTEMPTS:
+            time.sleep(_API_BACKOFF_SECONDS * 2**attempt)
+
+    raise Exception(f"{describe}. Last error {last_error}")
+
+
+def _already_closed(response: Any) -> bool:
+    """True when CloseJob reports the job was closed by an earlier attempt."""
+    if response.status_code != 400:
+        return False
+    content = response.content
+    if isinstance(content, bytes):
+        return b"already closed" in content
+    return "already closed" in str(content)
 
 
 class Test(Emitter):
@@ -40,16 +114,20 @@ class Test(Emitter):
         self._closed = False
 
         body = CreateJobForBatchInput(name=self.name)
-        response = create_job_for_batch.sync_detailed(
-            self._batch.project_id,
-            self._batch.id,
-            client=self._client,
-            body=body,
+        # Not replayable: the endpoint creates a new job every call, so a blind
+        # retry would add a duplicate test to the batch.
+        response = _call_api(
+            lambda: create_job_for_batch.sync_detailed(
+                self._batch.project_id,
+                self._batch.id,
+                client=self._client,
+                body=body,
+            ),
+            expected=201,
+            describe=f"failed to create job {self.name!r}",
         )
-        if response.status_code != 201 or not response.parsed:
-            raise Exception(
-                f"failed to create job {response.status_code}: {response.content}"
-            )
+        if not response.parsed:
+            raise Exception(f"failed to parse job creation response {response.content}")
 
         self._test = response.parsed
         emissions_file_path = Path(f"emissions_{self._test.job_id}.resim.jsonl")
@@ -87,17 +165,17 @@ class Test(Emitter):
             checksum=h.hexdigest(),
             log_type=log_type if log_type is not None else UNSET,
         )
-        response = create_job_log.sync_detailed(
-            self._batch.project_id,
-            self._batch.id,
-            self._test.job_id,
-            client=self._client,
-            body=body,
+        response = _call_api(
+            lambda: create_job_log.sync_detailed(
+                self._batch.project_id,
+                self._batch.id,
+                self._test.job_id,
+                client=self._client,
+                body=body,
+            ),
+            expected=201,
+            describe=f"failed to create job log {file_name!r}",
         )
-        if response.status_code != 201:
-            raise Exception(
-                f"failed to create job log {response.status_code}: {response.content}"
-            )
 
         log_output = response.parsed
         assert log_output is not None, "Failed to parse job log response"
@@ -109,30 +187,20 @@ class Test(Emitter):
         with open(file_path, "rb") as f:
             body = f.read()
 
-        # A presigned PUT is idempotent, and a dropped connection partway
-        # through a run of tests would otherwise lose the whole run's work, so
-        # transient transport failures and 5xx are retried.
-        last_error: Optional[str] = None
-        for attempt in range(_UPLOAD_ATTEMPTS):
-            try:
-                r = httpx.put(
-                    upload_url,
-                    headers=upload_headers,
-                    content=body,
-                    timeout=_UPLOAD_TIMEOUT_SECONDS,
-                )
-            except httpx.TransportError as e:
-                last_error = repr(e)
-            else:
-                if r.status_code == 200:
-                    return
-                last_error = f"{r.status_code}: {r.content!r}"
-                if r.status_code < 500:
-                    break
-            if attempt + 1 < _UPLOAD_ATTEMPTS:
-                time.sleep(_UPLOAD_BACKOFF_SECONDS * 2**attempt)
-
-        raise Exception(f"failed to upload log {file_name}. Last error {last_error}")
+        # Replayable: a presigned PUT writes the same object every time, and a
+        # dropped connection partway through a run would otherwise lose all of
+        # the run's work.
+        _call_api(
+            lambda: httpx.put(
+                upload_url,
+                headers=upload_headers,
+                content=body,
+                timeout=_UPLOAD_TIMEOUT_SECONDS,
+            ),
+            expected=200,
+            describe=f"failed to upload log {file_name}",
+            replayable=True,
+        )
 
     def attach_system_log(
         self,
@@ -214,14 +282,19 @@ class Test(Emitter):
         body = CloseJobInput(status=status)
         if error:
             body.error_message = error
-        response = close_job.sync_detailed(
-            self._batch.project_id,
-            self._batch.id,
-            self._test.job_id,
-            client=self._client,
-            body=body,
+        # Replayable: closing an already-closed job is refused with a 400 that
+        # names the condition, so a retry can tell its own earlier success from
+        # a real failure.
+        _call_api(
+            lambda: close_job.sync_detailed(
+                self._batch.project_id,
+                self._batch.id,
+                self._test.job_id,
+                client=self._client,
+                body=body,
+            ),
+            expected=204,
+            describe=f"failed to close test {self.name!r}",
+            replayable=True,
+            succeeded_if=_already_closed,
         )
-        if response.status_code != 204:
-            raise Exception(
-                f"failed to close test. Expected 204 response, got {response.status_code} instead"
-            )
