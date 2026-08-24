@@ -53,13 +53,11 @@ Shipped, under `resim/demo/`:
 | `data/config.resim.yml` | 13 topics, 21 metrics, 2 metrics sets, 1 dashboard. |
 | `data/templates/*.liquid` | The two custom templates the config references. |
 
-Development tools, under `resim/demo/tools/`, deliberately not dependencies of
-`:demo` so they stay out of the wheels:
-
-- `export_source_batches.py` — captures a source batch: every job's emissions and
-  media logs, plus the metrics config version that batch ran against
-  (`getBatch` → `branchConfigVersions` → `branchConfigContent`).
-- `build_bundle.py` — turns an export into the published tarball.
+The scripts that produce the published tarball — one to capture a source batch's
+emissions, media and config version, one to turn that capture into the bundle —
+are deliberately not in this repo. They take internal project and batch IDs as
+input and this repo is public, so `resim/demo/README.md` describes what they do
+and the scripts themselves live with the rest of our internal tooling.
 
 Supporting changes elsewhere:
 
@@ -78,7 +76,7 @@ run. There is no local-generation fallback: if the download fails, the demo exit
 with the URL and the reason. The tarball is byte-reproducible — same inputs, same
 digest — so a rebuild cannot look like a data change.
 
-`build_bundle.py` does four things to the export:
+The bundle build does four things to the export:
 
 - **Filters** to the topics the shipped config declares. A real batch also emits
   `container_performance` and `test_length_seconds`, whose names are reserved, so a
@@ -95,8 +93,8 @@ digest — so a rebuild cannot look like a data change.
   has no image topic, so the extracted frame gets a `camera_frame` topic emission of
   its own; a topic may not carry both an image and a video column.
 
-Publishing is manual: run `build_bundle.py`, set `BUNDLE_SHA256` in `bundle.py` to
-the printed digest, and upload to `s3://resim-public-assets/sdk-demo/`.
+Publishing is manual: build the bundle, set `BUNDLE_SHA256` in `bundle.py` to the
+printed digest, and upload to `s3://resim-public-assets/sdk-demo/`.
 
 ## Metrics coverage
 
@@ -137,8 +135,8 @@ All offline. `//resim/demo:demo_test` runs 66 of them; the new
    four pass. 72 of those tests are new (66 in `demo_test`, 6 in `dashboards_test`).
 2. `bazel build //pkg:sdk_wheel`, then install the wheel into a clean venv. Confirmed
    `entry_points.txt` carries `resim-demo = resim.demo.__main__:main`, the package
-   ships `data/config.resim.yml` and both `.liquid` files, the dev tools and tests are
-   excluded, `from resim.demo import run` works, and `resim-demo --help` resolves.
+   ships `data/config.resim.yml` and both `.liquid` files, tests are excluded,
+   `from resim.demo import run` works, and `resim-demo --help` resolves.
 3. End to end against staging (`RESIM_API_URL=https://api.resim.io/v1` with the dev
    Auth0 tenant). Confirmed across two runs:
    - Project, branch, 68 tests across two batches in about four minutes, and no

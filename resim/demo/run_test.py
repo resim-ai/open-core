@@ -100,7 +100,7 @@ def _emissions(with_media: bool) -> list[dict[str, Any]]:
 
 
 def write_fixture_bundle(root: Path) -> None:
-    """Write a two-experience-per-side bundle in the shape build_bundle emits."""
+    """Write a two-experience-per-side bundle in the shape the builder emits."""
     batches: dict[str, Any] = {}
     for side, name, version in (
         ("a", "Nav stack v2 (baseline)", "nav-v2.0.0"),

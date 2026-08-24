@@ -6,7 +6,7 @@
 
 load("@resim_python_client_deps//:requirements.bzl", client_requirement = "requirement")
 load("@resim_python_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 py_library(
     name = "demo",
@@ -43,36 +43,6 @@ py_test(
     deps = [
         ":demo",
         client_requirement("httpx"),
-        requirement("pyyaml"),
-    ],
-)
-
-# Development tools for regenerating the demo's data bundle. Deliberately not a
-# dependency of :demo, so they stay out of the published wheels.
-py_binary(
-    name = "export_source_batches",
-    srcs = [
-        "tools/__init__.py",
-        "tools/export_source_batches.py",
-    ],
-    main = "tools/export_source_batches.py",
-    deps = [
-        "//resim/sdk:client",
-        "//resim/sdk/auth:device_code_client",
-        "//resim/sdk/bff_client:graphql",
-        client_requirement("httpx"),
-    ],
-)
-
-py_binary(
-    name = "build_bundle",
-    srcs = [
-        "tools/__init__.py",
-        "tools/build_bundle.py",
-    ],
-    main = "tools/build_bundle.py",
-    deps = [
-        "//resim/sdk/metrics:emissions",
         requirement("pyyaml"),
     ],
 )
