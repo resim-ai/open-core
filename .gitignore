@@ -58,3 +58,6 @@ MODULE.bazel.lock
 /compile_commands.json
 # Directory where clangd puts its indexing work
 /.cache/
+# Python bytecode caches
+__pycache__/
+*.py[cod]

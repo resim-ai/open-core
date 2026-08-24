@@ -1,0 +1,283 @@
+# Metrics config for the ReSim SDK demo's MuJoCo tour (resim-demo --demo mujoco).
+#
+# The data is a bimanual manipulation policy evaluated in MuJoCo: one test per
+# random seed, each reporting how well the policy did on that episode, plus a
+# recording of the attempt.
+#
+# Compared with the default demo this is a deliberately small config. The source
+# runs report a handful of summary numbers per episode rather than dense
+# telemetry, so the metrics here are the ones that data genuinely supports —
+# there is no invented signal to fill out the template list.
+version: 1
+
+topics:
+  # One row per test: how the policy did on that seed's episode.
+  summary_metrics:
+    schema:
+      overall_success_rate: float
+      overall_average_sum_reward: float
+      overall_average_max_reward: float
+      total_evaluation_time: float
+
+  # The rendered episode. Image and video columns cannot share a topic, so the
+  # clip and the animation are separate topics over the same recording.
+  episode_video:
+    schema:
+      filename: video
+
+  output_gif:
+    schema:
+      filename: image
+
+metrics:
+  # ---------------------------------------------------------------- test level
+  Task Success:
+    type: test
+    description: >
+      Share of episodes on this seed where the policy completed the task.
+      Warns on any failure, blocks when nothing succeeded.
+    query_string: |
+      SELECT
+        overall_success_rate AS "Success Rate (%)"
+      FROM summary_metrics;
+    status:
+      query_string: SELECT 1 FROM summary_metrics WHERE overall_success_rate <= ? LIMIT 1
+      block: 0
+      warn: 99.9
+    template_type: system
+    template: scalar
+    units: percent
+
+  Episode Reward:
+    type: test
+    description: Total reward the policy accumulated over the episode.
+    query_string: |
+      SELECT
+        overall_average_sum_reward AS "Sum Reward"
+      FROM summary_metrics;
+    template_type: system
+    template: scalar
+
+  Peak Reward:
+    type: test
+    description: >
+      Best single-step reward reached. A high peak with a low total means the
+      policy got close and then lost the task.
+    query_string: |
+      SELECT
+        overall_average_max_reward AS "Max Reward"
+      FROM summary_metrics;
+    template_type: system
+    template: scalar
+
+  Evaluation Time:
+    type: test
+    description: >
+      Wall-clock time to evaluate this seed. Episodes that fail tend to run to
+      the step limit, so a long evaluation is itself a signal.
+    query_string: |
+      SELECT
+        total_evaluation_time AS "Evaluation Time (s)"
+      FROM summary_metrics;
+    template_type: system
+    template: scalar
+    units: seconds
+
+  Episode Summary:
+    type: test
+    description: Everything the evaluation reported for this seed, in one place.
+    query_string: |
+      SELECT * FROM (
+        SELECT 1 AS sort_order, 'Success Rate' AS "Metric",
+               CONCAT(CAST(ROUND(overall_success_rate, 1) AS VARCHAR), '%') AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 2 AS sort_order, 'Sum Reward' AS "Metric",
+               CAST(ROUND(overall_average_sum_reward, 1) AS VARCHAR) AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 3 AS sort_order, 'Max Reward' AS "Metric",
+               CAST(ROUND(overall_average_max_reward, 2) AS VARCHAR) AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 4 AS sort_order, 'Evaluation Time' AS "Metric",
+               CONCAT(CAST(ROUND(total_evaluation_time, 2) AS VARCHAR), 's') AS "Value"
+        FROM summary_metrics
+        ORDER BY sort_order
+      );
+    template_type: system
+    template: table
+
+  Episode Recording:
+    type: test
+    description: The policy attempting the task on this seed.
+    query_string: SELECT filename FROM episode_video;
+    skip_if_no_data: true
+    template_type: system
+    template: video
+
+  Episode Animation:
+    type: test
+    description: The same attempt as a looping animation.
+    query_string: SELECT filename FROM output_gif;
+    skip_if_no_data: true
+    template_type: system
+    template: image
+
+  # --------------------------------------------------------------- batch level
+  Reward by Seed:
+    type: batch
+    description: Total reward on each seed, across the run.
+    query_string: |
+      SELECT
+        'Sum Reward' AS group_name,
+        m.experience_name AS "Seed",
+        AVG(s.overall_average_sum_reward) AS "Sum Reward"
+      FROM summary_metrics s
+      JOIN metadata m ON s.job_id = m.job_id
+      GROUP BY m.experience_name
+      ORDER BY m.experience_name;
+    template_type: system
+    template: bar
+
+  Reward Distribution:
+    type: batch
+    description: >
+      How reward is spread across seeds. A policy that works on most seeds and
+      collapses on a few looks very different here from one that is uniformly
+      mediocre.
+    query_string: |
+      SELECT overall_average_sum_reward AS "Sum Reward"
+      FROM summary_metrics;
+    template_type: system
+    template: histogram
+
+  Evaluation Time by Seed:
+    type: batch
+    description: Wall-clock evaluation time per seed.
+    query_string: |
+      SELECT
+        'Evaluation Time' AS group_name,
+        m.experience_name AS "Seed",
+        AVG(s.total_evaluation_time) AS "Evaluation Time (s)"
+      FROM summary_metrics s
+      JOIN metadata m ON s.job_id = m.job_id
+      GROUP BY m.experience_name
+      ORDER BY m.experience_name;
+    template_type: system
+    template: bar
+
+  Seeds Solved:
+    type: batch
+    description: Share of seeds where the policy completed the task at least once.
+    query_string: |
+      SELECT
+        100.0 * AVG(CASE WHEN overall_success_rate > 0 THEN 1.0 ELSE 0.0 END)
+          AS "Seeds Solved (%)"
+      FROM summary_metrics;
+    template_type: system
+    template: scalar
+    units: percent
+
+  Evaluation Summary:
+    type: batch
+    description: Headline numbers for the whole run.
+    query_string: |
+      SELECT * FROM (
+        SELECT 1 AS sort_order, 'Seeds Evaluated' AS "Metric",
+               CAST(COUNT(*) AS VARCHAR) AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 2 AS sort_order, 'Mean Success Rate' AS "Metric",
+               CONCAT(CAST(ROUND(AVG(overall_success_rate), 1) AS VARCHAR), '%') AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 3 AS sort_order, 'Mean Sum Reward' AS "Metric",
+               CAST(ROUND(AVG(overall_average_sum_reward), 1) AS VARCHAR) AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 4 AS sort_order, 'Mean Evaluation Time' AS "Metric",
+               CONCAT(CAST(ROUND(AVG(total_evaluation_time), 2) AS VARCHAR), 's') AS "Value"
+        FROM summary_metrics
+        ORDER BY sort_order
+      );
+    template_type: system
+    template: table
+
+  # ----------------------------------------------------------- dashboard level
+  Reward by Build Version:
+    type: dashboard
+    description: >
+      Mean reward for each policy build. A build that drops here has regressed,
+      whatever its pass count says.
+    query_string: |
+      SELECT
+        'Mean Sum Reward' AS group_name,
+        m.build_version AS "Build Version",
+        AVG(s.overall_average_sum_reward) AS "Sum Reward",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM summary_metrics s
+      JOIN metadata m ON s.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY m.build_version
+      ORDER BY m.build_version;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Test Outcomes by Build Version:
+    type: dashboard
+    description: >
+      How each build's seeds turned out, one bar per outcome. Click a bar to
+      open a batch that build ran in.
+    query_string: |
+      SELECT
+        job_conflated_status AS group_name,
+        build_version AS "Build Version",
+        COUNT(*) AS "Tests",
+        '/projects/' || ARBITRARY(project_id) || '/batches/' || ARBITRARY(batch_id) AS link_path
+      FROM metadata
+      WHERE build_version IS NOT NULL
+        AND job_conflated_status IS NOT NULL
+      GROUP BY job_conflated_status, build_version
+      ORDER BY build_version, job_conflated_status;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Tests Run:
+    type: dashboard
+    description: Seeds evaluated in the window.
+    query_string: SELECT COUNT(*) AS "Tests Run" FROM metadata;
+    template_type: system
+    template: scalar
+
+metrics sets:
+  MuJoCo Metrics:
+    metrics:
+      - Task Success
+      - Episode Reward
+      - Peak Reward
+      - Evaluation Time
+      - Episode Summary
+      - Episode Recording
+      - Episode Animation
+      - Reward by Seed
+      - Reward Distribution
+      - Evaluation Time by Seed
+      - Seeds Solved
+      - Evaluation Summary
+
+  MuJoCo Trends:
+    metrics:
+      - Reward by Build Version
+      - Test Outcomes by Build Version
+      - Tests Run
+
+dashboards:
+  MuJoCo Demo Trends:
+    metrics_set: MuJoCo Trends
+    description: How the policy trends across builds of the MuJoCo demo.
+    refresh: auto
+    day_range: 30

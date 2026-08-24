@@ -31,15 +31,89 @@ from resim.sdk.client.api.projects import create_project, list_projects
 from resim.sdk.client.models.create_project_input import CreateProjectInput
 from resim.sdk.test import Test
 
-__all__ = ["DemoResult", "config_path", "run", "templates_path"]
-
-DEFAULT_PROJECT_NAME = "ReSim SDK Demo"
-DEFAULT_BRANCH = "sdk-demo"
-
-METRICS_SET = "Demo Metrics"
-DASHBOARD_NAME = "SDK Demo Trends"
+__all__ = ["DEMOS", "Demo", "DemoResult", "config_path", "run", "templates_path"]
 
 PROJECT_DESCRIPTION = "Created by the ReSim Python SDK demo (resim.demo.run)."
+
+
+@dataclass(frozen=True)
+class Demo:
+    """One runnable demo: its data, its metrics config, and where it lands.
+
+    Everything that differs between demos lives here, so adding another is a
+    registry entry plus a config file rather than a change to ``run``.
+    """
+
+    #: Value of ``--demo``.
+    key: str
+    #: One line, shown in ``--help``.
+    summary: str
+    project_name: str
+    branch: str
+    bundle: bundle.BundleSource
+    #: Metrics config shipped in ``resim/demo/data``.
+    config_file: str
+    metrics_set: str
+    dashboard_name: str
+
+
+DEMOS: dict[str, Demo] = {
+    "navigation": Demo(
+        key="navigation",
+        summary=(
+            "A hospital navigation suite: dense telemetry across 34 scenarios, "
+            "covering every chart type ReSim ships."
+        ),
+        project_name="ReSim SDK Demo",
+        branch="sdk-demo",
+        bundle=bundle.BundleSource(
+            url=(
+                "https://resim-public-assets.s3.us-east-1.amazonaws.com"
+                "/sdk-demo/resim-sdk-demo-data-v1.tar.gz"
+            ),
+            sha256="7bc5d26c14aaad8d849d131276af7c7287d163aeb3a9d2892f0ffba21889935d",
+            cache_key="navigation-v1",
+        ),
+        config_file="config.resim.yml",
+        metrics_set="Demo Metrics",
+        dashboard_name="SDK Demo Trends",
+    ),
+    "mujoco": Demo(
+        key="mujoco",
+        summary=(
+            "A bimanual manipulation policy in MuJoCo: one test per seed, "
+            "compared across two policy builds."
+        ),
+        project_name="ReSim SDK Demo (MuJoCo)",
+        branch="sdk-demo-mujoco",
+        bundle=bundle.BundleSource(
+            url=(
+                "https://resim-public-assets.s3.us-east-1.amazonaws.com"
+                "/sdk-demo/resim-sdk-demo-mujoco-v1.tar.gz"
+            ),
+            sha256="f5bb2f84808fc5fad2253e3b73a2f51e0e718adfc314dca3567d5f8181f8479d",
+            cache_key="mujoco-v1",
+        ),
+        config_file="mujoco.resim.yml",
+        metrics_set="MuJoCo Metrics",
+        dashboard_name="MuJoCo Demo Trends",
+    ),
+}
+
+
+def get_demo(key: str) -> Demo:
+    """Look a demo up by ``--demo`` value.
+
+    Raises:
+        DemoDataError: If no demo goes by that name.
+    """
+    try:
+        return DEMOS[key]
+    except KeyError:
+        raise DemoDataError(
+            f"unknown demo {key!r}. Available: {', '.join(sorted(DEMOS))}"
+        ) from None
+
 
 # Environment overrides for pointing the demo at a non-production deployment.
 # Undocumented on the command line on purpose: customers should never need
@@ -65,10 +139,11 @@ class DemoResult:
 
 
 def run(
-    project_name: str = DEFAULT_PROJECT_NAME,
+    project_name: Optional[str] = None,
     *,
+    demo: str,
     client: Optional[AuthenticatedClient] = None,
-    branch: str = DEFAULT_BRANCH,
+    branch: Optional[str] = None,
     data_dir: Optional[Union[str, Path]] = None,
     quiet: bool = False,
 ) -> DemoResult:
@@ -82,9 +157,12 @@ def run(
 
     Args:
         project_name: Project to run in. Created if it does not exist.
+            Defaults to the chosen demo's own project name.
+        demo: Which demo to run. See :data:`DEMOS`.
         client: An authenticated ReSim API client. Defaults to interactive
             device code authentication against production.
         branch: Branch to create the batches on. Both batches share it.
+            Defaults to the chosen demo's own branch.
         data_dir: An already-extracted demo data bundle to replay instead of
             downloading one. Mainly useful for development.
         quiet: Suppress progress and result output.
@@ -101,22 +179,26 @@ def run(
         if not quiet:
             print(message, flush=True)
 
+    chosen = get_demo(demo)
+    project_name = chosen.project_name if project_name is None else project_name
+    branch = chosen.branch if branch is None else branch
+
     # Fetch the data before authenticating: there is no point sending someone
     # through a browser login only to fail on a download afterwards.
-    data = bundle.ensure(data_dir)
+    data = bundle.ensure(chosen.bundle, data_dir)
 
     if client is None:
         client = default_client()
 
     project_id = resolve_project(client, project_name, say)
 
-    config_path, templates_path = _package_data()
+    config_resource, templates_resource = _package_data(chosen)
 
     batch_ids: dict[str, str] = {}
     dashboard_id: Optional[str] = None
     with (
-        resources.as_file(config_path) as config,
-        resources.as_file(templates_path) as templates,
+        resources.as_file(config_resource) as config,
+        resources.as_file(templates_resource) as templates,
     ):
         for side in SIDES:
             details = data.batch(side)
@@ -131,14 +213,17 @@ def run(
                 branch=branch,
                 name=str(details.get("name") or f"SDK Demo {side.upper()}"),
                 version=str(details.get("version") or ""),
-                metrics_set_name=METRICS_SET,
+                metrics_set_name=chosen.metrics_set,
                 metrics_config_path=str(config),
                 templates_path=str(templates),
             ) as batch:
                 batch_ids[side] = batch.id
                 if dashboard_id is None:
                     dashboard_id = find_dashboard_id(
-                        client, project_id, batch.branch_id, DASHBOARD_NAME
+                        client,
+                        project_id,
+                        batch.branch_id,
+                        chosen.dashboard_name,
                     )
                 tests: list[Test] = []
                 try:
@@ -275,36 +360,43 @@ def _emissions(
                 ) from e
 
 
-def config_path() -> Path:
-    """Return the path to the metrics config the demo runs with.
+def config_path(demo: str) -> Path:
+    """Return the path to the metrics config a demo runs with.
 
     Copy it as the starting point for your own config, or read it to see how
     the charts in the demo are defined::
 
         from resim.demo import config_path
 
-        print(config_path().read_text())
+        print(config_path("navigation").read_text())
+        print(config_path("mujoco").read_text())
+
+    Args:
+        demo: Which demo's config to return. See :data:`DEMOS`.
 
     Returns:
         A real filesystem path. The templates the config references live in
         :func:`templates_path`.
     """
-    return _materialise(_package_data()[0])
+    return _materialise(_package_data(get_demo(demo))[0])
 
 
-def templates_path() -> Path:
-    """Return the path to the ``.liquid`` templates the demo's config uses.
+def templates_path(demo: str) -> Path:
+    """Return the path to the ``.liquid`` templates a demo's config uses.
+
+    Args:
+        demo: Which demo's templates to return. See :data:`DEMOS`.
 
     Returns:
         A real filesystem path to the directory holding them.
     """
-    return _materialise(_package_data()[1])
+    return _materialise(_package_data(get_demo(demo))[1])
 
 
-def _package_data() -> tuple[Any, Any]:
-    """Locate the shipped metrics config and template directory."""
+def _package_data(demo: Demo) -> tuple[Any, Any]:
+    """Locate a demo's shipped metrics config and template directory."""
     root = resources.files("resim.demo") / "data"
-    return root / "config.resim.yml", root / "templates"
+    return root / demo.config_file, root / "templates"
 
 
 def _materialise(resource: Any) -> Path:

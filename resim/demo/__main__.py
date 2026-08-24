@@ -8,11 +8,28 @@
 
 import argparse
 import sys
+import textwrap
 
 import httpx
 
 from resim.demo.bundle import DemoDataError
-from resim.demo.run import DEFAULT_BRANCH, DEFAULT_PROJECT_NAME, run
+from resim.demo.run import DEMOS, run
+
+
+def _list_demos() -> None:
+    """Print the demos and how to pick one."""
+    print("resim-demo replays real test data into your own ReSim project.\n")
+    print("Pick one with --demo:\n")
+    width = max(len(key) for key in DEMOS)
+    for key in sorted(DEMOS):
+        demo = DEMOS[key]
+        first, *rest = textwrap.wrap(demo.summary, 62)
+        print(f"  {key.ljust(width)}   {first}")
+        for line in rest:
+            print(f"  {' ' * width}   {line}")
+    # Suggest the fuller tour rather than whichever key sorts first.
+    suggested = "navigation" if "navigation" in DEMOS else sorted(DEMOS)[0]
+    print(f"\nFor example:\n  resim-demo --demo {suggested}")
 
 
 def main() -> int:
@@ -24,17 +41,25 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--demo",
+        default=None,
+        choices=sorted(DEMOS),
+        help="Which demo to run. Run with no arguments to see what each one is.",
+    )
+    parser.add_argument(
         "--project-name",
-        default=DEFAULT_PROJECT_NAME,
+        default=None,
         help=(
-            "Project to run in, created if it does not exist. "
-            f"Defaults to {DEFAULT_PROJECT_NAME!r}."
+            "Project to run in, created if it does not exist. Defaults to the "
+            "chosen demo's own project name."
         ),
     )
     parser.add_argument(
         "--branch",
-        default=DEFAULT_BRANCH,
-        help=f"Branch to create the batches on. Defaults to {DEFAULT_BRANCH!r}.",
+        default=None,
+        help=(
+            "Branch to create the batches on. Defaults to the chosen demo's own branch."
+        ),
     )
     parser.add_argument(
         "--data-dir",
@@ -51,9 +76,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.demo is None:
+        # The demos are peers rather than one being the obvious choice, so
+        # rather than silently picking, say what is on offer.
+        _list_demos()
+        return 0
+
     try:
         run(
             args.project_name,
+            demo=args.demo,
             branch=args.branch,
             data_dir=args.data_dir,
             quiet=args.quiet,

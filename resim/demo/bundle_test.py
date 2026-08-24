@@ -54,23 +54,39 @@ def _valid_tarball() -> bytes:
     )
 
 
+SOURCE = bundle.BundleSource(
+    url="https://example.invalid/sdk-demo/demo-v1.tar.gz",
+    sha256="0" * 64,
+    cache_key="demo-v1",
+)
+
+
 class CacheDirTest(unittest.TestCase):
     def test_honours_xdg_cache_home(self) -> None:
         with patch.dict(os.environ, {"XDG_CACHE_HOME": "/somewhere/cache"}):
             self.assertEqual(
-                bundle.cache_dir(),
-                Path("/somewhere/cache") / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+                bundle.cache_dir(SOURCE),
+                Path("/somewhere/cache") / "resim" / "sdk-demo" / SOURCE.cache_key,
             )
 
     def test_falls_back_to_dot_cache(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(
-                bundle.cache_dir(),
-                Path.home() / ".cache" / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+                bundle.cache_dir(SOURCE),
+                Path.home() / ".cache" / "resim" / "sdk-demo" / SOURCE.cache_key,
             )
 
     def test_is_versioned_so_a_stale_bundle_is_never_reused(self) -> None:
-        self.assertIn(bundle.BUNDLE_VERSION, str(bundle.cache_dir()))
+        self.assertIn(SOURCE.cache_key, str(bundle.cache_dir(SOURCE)))
+
+    def test_each_demo_caches_separately(self) -> None:
+        # Switching demos must not make one re-download over the other's cache.
+        other = bundle.BundleSource(
+            url="https://example.invalid/sdk-demo/other-v1.tar.gz",
+            sha256="1" * 64,
+            cache_key="other-v1",
+        )
+        self.assertNotEqual(bundle.cache_dir(SOURCE), bundle.cache_dir(other))
 
 
 class LoadTest(unittest.TestCase):
@@ -255,15 +271,15 @@ class VerifyTest(unittest.TestCase):
         self.temp.cleanup()
 
     def test_accepts_matching_checksum(self) -> None:
-        bundle._verify(self.archive, hashlib.sha256(b"payload").hexdigest())
+        bundle._verify(self.archive, hashlib.sha256(b"payload").hexdigest(), SOURCE.url)
 
     def test_raises_on_mismatch(self) -> None:
         with self.assertRaises(DemoDataError) as ctx:
-            bundle._verify(self.archive, "0" * 64)
+            bundle._verify(self.archive, "0" * 64, SOURCE.url)
         self.assertIn("checksum", str(ctx.exception))
 
     def test_skips_when_no_checksum_pinned(self) -> None:
-        bundle._verify(self.archive, "")
+        bundle._verify(self.archive, "", SOURCE.url)
 
 
 class EnsureTest(unittest.TestCase):
@@ -277,7 +293,7 @@ class EnsureTest(unittest.TestCase):
     def test_explicit_data_dir_skips_download(self) -> None:
         (self.root / "manifest.json").write_text(json.dumps(MANIFEST))
         with patch.object(bundle, "_download") as download:
-            loaded = bundle.ensure(self.root)
+            loaded = bundle.ensure(SOURCE, self.root)
         download.assert_not_called()
         self.assertEqual(loaded.root, self.root)
 
@@ -289,7 +305,7 @@ class EnsureTest(unittest.TestCase):
             patch.object(bundle, "cache_dir", return_value=cache),
             patch.object(bundle, "_download") as download,
         ):
-            bundle.ensure()
+            bundle.ensure(SOURCE)
         download.assert_not_called()
 
     def test_cold_cache_downloads_verifies_and_extracts(self) -> None:
@@ -302,9 +318,14 @@ class EnsureTest(unittest.TestCase):
         with (
             patch.object(bundle, "cache_dir", return_value=cache),
             patch.object(bundle, "_download", side_effect=fake_download),
-            patch.object(bundle, "BUNDLE_SHA256", hashlib.sha256(payload).hexdigest()),
         ):
-            loaded = bundle.ensure()
+            loaded = bundle.ensure(
+                bundle.BundleSource(
+                    url=SOURCE.url,
+                    sha256=hashlib.sha256(payload).hexdigest(),
+                    cache_key=SOURCE.cache_key,
+                )
+            )
 
         self.assertEqual(loaded.manifest["version"], 1)
         self.assertFalse(
@@ -319,8 +340,8 @@ class EnsureTest(unittest.TestCase):
             patch("httpx.stream", side_effect=__import__("httpx").ConnectError("nope")),
         ):
             with self.assertRaises(DemoDataError) as ctx:
-                bundle.ensure()
-        self.assertIn(bundle.BUNDLE_URL, str(ctx.exception))
+                bundle.ensure(SOURCE)
+        self.assertIn(SOURCE.url, str(ctx.exception))
 
 
 if __name__ == "__main__":

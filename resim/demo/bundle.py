@@ -23,16 +23,23 @@ from typing import Any, Optional, Union
 
 import httpx
 
-__all__ = ["Bundle", "DemoDataError", "ensure", "load"]
+__all__ = ["Bundle", "BundleSource", "DemoDataError", "ensure", "load"]
 
-BUNDLE_VERSION = "v1"
-BUNDLE_URL = (
-    "https://resim-public-assets.s3.us-east-1.amazonaws.com"
-    f"/sdk-demo/resim-sdk-demo-data-{BUNDLE_VERSION}.tar.gz"
-)
-# sha256 of the published tarball. Bump alongside BUNDLE_VERSION whenever the
-# data is regenerated, so a stale cache can never be mistaken for a fresh one.
-BUNDLE_SHA256 = "7bc5d26c14aaad8d849d131276af7c7287d163aeb3a9d2892f0ffba21889935d"
+
+@dataclass(frozen=True)
+class BundleSource:
+    """Where one demo's replay data lives, and how to know it arrived intact.
+
+    Spelled out per demo rather than derived from a naming convention, so what
+    gets downloaded is greppable and a bundle can be republished under any name.
+    """
+
+    url: str
+    sha256: str
+    # Cache directory name. Carries the bundle's version so regenerated data
+    # never collides with a stale copy of the old bundle.
+    cache_key: str
+
 
 MANIFEST_NAME = "manifest.json"
 
@@ -67,11 +74,16 @@ class Bundle:
         return dict((self.manifest.get("batches") or {}).get(side) or {})
 
 
-def cache_dir() -> Path:
-    """Directory the bundle is cached in, honouring ``XDG_CACHE_HOME``."""
+def cache_dir(source: Optional[BundleSource] = None) -> Path:
+    """Directory a bundle is cached in, honouring ``XDG_CACHE_HOME``.
+
+    Each demo caches under its own key, so switching demos does not re-download
+    the one you were using before.
+    """
     base = os.environ.get("XDG_CACHE_HOME")
     root = Path(base) if base else Path.home() / ".cache"
-    return root / "resim" / "sdk-demo" / BUNDLE_VERSION
+    cache = root / "resim" / "sdk-demo"
+    return cache / source.cache_key if source is not None else cache
 
 
 def load(directory: Union[str, Path]) -> Bundle:
@@ -95,10 +107,14 @@ def load(directory: Union[str, Path]) -> Bundle:
     return Bundle(root=root, manifest=manifest)
 
 
-def ensure(data_dir: Optional[Union[str, Path]] = None) -> Bundle:
-    """Return the demo's data bundle, downloading and caching it if needed.
+def ensure(
+    source: BundleSource,
+    data_dir: Optional[Union[str, Path]] = None,
+) -> Bundle:
+    """Return a demo's data bundle, downloading and caching it if needed.
 
     Args:
+        source: Which bundle to fetch.
         data_dir: An already-extracted bundle to use instead of downloading.
             Useful for development and for air-gapped runs.
 
@@ -109,15 +125,15 @@ def ensure(data_dir: Optional[Union[str, Path]] = None) -> Bundle:
     if data_dir is not None:
         return load(data_dir)
 
-    destination = cache_dir()
+    destination = cache_dir(source)
     if (destination / MANIFEST_NAME).is_file():
         return load(destination)
 
     archive = destination.parent / f"{destination.name}.tar.gz"
     archive.parent.mkdir(parents=True, exist_ok=True)
-    _download(BUNDLE_URL, archive)
+    _download(source.url, archive)
     try:
-        _verify(archive, BUNDLE_SHA256)
+        _verify(archive, source.sha256, source.url)
         _extract(archive, destination)
     finally:
         archive.unlink(missing_ok=True)
@@ -143,7 +159,7 @@ def _download(url: str, destination: Path) -> None:
         ) from e
 
 
-def _verify(archive: Path, expected: str) -> None:
+def _verify(archive: Path, expected: str, url: str) -> None:
     if not expected:
         return
     digest = hashlib.sha256()
@@ -153,7 +169,7 @@ def _verify(archive: Path, expected: str) -> None:
     actual = digest.hexdigest()
     if actual != expected:
         raise DemoDataError(
-            f"the demo data downloaded from {BUNDLE_URL} does not match its "
+            f"the demo data downloaded from {url} does not match its "
             f"expected checksum (got {actual}, expected {expected}). Refusing "
             "to use it."
         )
