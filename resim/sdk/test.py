@@ -257,7 +257,11 @@ class Test(Emitter):
         ``close`` calls this for you. Call it directly to upload a test's data
         before ending the job. Safe to call more than once.
         """
-        if self.file is None:
+        # getattr, not self.file: a Test whose __init__ raised never reached
+        # Emitter.__init__, and Emitter.__del__ still calls close() on it when
+        # it is collected. Without this that finaliser raises AttributeError
+        # and, worse, issues API calls for a test that was never created.
+        if getattr(self, "file", None) is None:
             return
         Emitter.close(self)
         self.attach_log(
@@ -273,12 +277,19 @@ class Test(Emitter):
     ) -> None:
         """Upload any remaining emissions and close the job, starting metrics.
 
-        Safe to call more than once.
+        Safe to call more than once, and on a test whose creation failed.
         """
-        if self._closed:
+        # getattr throughout: Emitter.__del__ calls close() on whatever is
+        # collected, including a Test whose __init__ raised part-way. Such an
+        # object has no job to close and no emissions to upload, and reaching
+        # for either raises inside a finaliser or, worse, issues API calls
+        # attributed to a test that never existed.
+        if getattr(self, "_closed", False):
+            return
+        self._closed = True
+        if getattr(self, "_test", None) is None:
             return
         self.upload_emissions()
-        self._closed = True
         body = CloseJobInput(status=status)
         if error:
             body.error_message = error

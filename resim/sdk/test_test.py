@@ -18,6 +18,18 @@ UPLOAD_URL = "https://upload.example.com/emissions"
 
 
 class TestTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._built: list[Test] = []
+
+    def tearDown(self) -> None:
+        # Emitter.__del__ closes a Test when it is collected, and collection
+        # can land in the middle of a *later* test — where it uploads into
+        # whatever mocks that test has patched in. Retire them here so the
+        # finaliser is a no-op.
+        for built in self._built:
+            built._closed = True
+        self._built.clear()
+
     def _make_test(
         self,
         mock_create_job: Any,
@@ -42,7 +54,9 @@ class TestTest(unittest.TestCase):
         mock_httpx.put.return_value = MagicMock(status_code=200)
         mock_close_job.sync_detailed.return_value = MagicMock(status_code=204)
 
-        return Test(MagicMock(), mock_batch, TEST_NAME)
+        built = Test(MagicMock(), mock_batch, TEST_NAME)
+        self._built.append(built)
+        return built
 
     def _patched_open(self) -> Any:
         content = b"fake emissions data"
@@ -652,7 +666,7 @@ class TestTest(unittest.TestCase):
             created,
         ]
 
-        Test(MagicMock(), mock_batch, TEST_NAME)
+        self._built.append(Test(MagicMock(), mock_batch, TEST_NAME))
 
         self.assertEqual(mock_create_job.sync_detailed.call_count, 2)
 
@@ -680,7 +694,7 @@ class TestTest(unittest.TestCase):
         mock_create_job.sync_detailed.side_effect = httpx.ReadTimeout("no reply")
 
         with self.assertRaises(Exception):
-            Test(MagicMock(), mock_batch, TEST_NAME)
+            self._built.append(Test(MagicMock(), mock_batch, TEST_NAME))
 
         self.assertEqual(mock_create_job.sync_detailed.call_count, 1)
 
@@ -711,7 +725,7 @@ class TestTest(unittest.TestCase):
             created,
         ]
 
-        Test(MagicMock(), mock_batch, TEST_NAME)
+        self._built.append(Test(MagicMock(), mock_batch, TEST_NAME))
 
         self.assertEqual(mock_create_job.sync_detailed.call_count, 2)
 
@@ -740,9 +754,36 @@ class TestTest(unittest.TestCase):
         )
 
         with self.assertRaises(Exception):
-            Test(MagicMock(), mock_batch, TEST_NAME)
+            self._built.append(Test(MagicMock(), mock_batch, TEST_NAME))
 
         self.assertEqual(mock_create_job.sync_detailed.call_count, 1)
+
+    @patch("resim.sdk.test.create_job_log")
+    def test_a_half_built_test_uploads_nothing(self, mock_create_log: Any) -> None:
+        # Emitter.__del__ calls close() on whatever is collected, including a
+        # Test whose __init__ raised before Emitter.__init__ ran. Such an
+        # object has no emissions file, so its finaliser must not raise and
+        # must not issue API calls for a test that never existed.
+        #
+        # Built with __new__ rather than by letting __init__ fail, because
+        # refcounting collects that object before the assertion can run.
+        half_built = Test.__new__(Test)
+
+        half_built.upload_emissions()
+
+        mock_create_log.sync_detailed.assert_not_called()
+
+    @patch("resim.sdk.test.close_job")
+    @patch("resim.sdk.test.create_job_log")
+    def test_a_half_built_test_closes_quietly(
+        self, mock_create_log: Any, mock_close_job: Any
+    ) -> None:
+        half_built = Test.__new__(Test)
+
+        half_built.close()
+
+        mock_create_log.sync_detailed.assert_not_called()
+        mock_close_job.sync_detailed.assert_not_called()
 
 
 if __name__ == "__main__":
