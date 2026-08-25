@@ -30,6 +30,7 @@ from httpx import URL
 from resim.demo.bundle import DemoDataError
 from resim.demo.run import resolve_project, run
 from resim.sdk.metrics.emissions import Emitter
+from resim.sdk.test import LogType
 
 # resim.demo exports a `run` function, which shadows the `resim.demo.run`
 # module attribute, so the module has to be fetched by name to patch into it.
@@ -503,6 +504,55 @@ class ResolveProjectTest(unittest.TestCase):
         ) as listed:
             self.assertEqual(resolve_project(self.client, "mine"), "id-mine")
         self.assertEqual(listed.call_count, 2)
+
+
+class AttachmentsTest(unittest.TestCase):
+    """What gets uploaded alongside a job's emissions, and how it is typed."""
+
+    def test_artifacts_keep_the_log_type_the_bundle_recorded(self) -> None:
+        # An .mcap sent as FOXGLOVE_MCAP_LOG opens in the viewer; the same
+        # bytes typed as anything else are only a download.
+        job = {
+            "artifacts": [
+                {"file": "run.mcap", "log_type": "FOXGLOVE_MCAP_LOG"},
+                {"file": "worker.log", "log_type": "EXECUTION_LOG"},
+            ]
+        }
+        self.assertEqual(
+            run_module._attachments(job),
+            [
+                ("run.mcap", LogType.FOXGLOVE_MCAP_LOG),
+                ("worker.log", LogType.EXECUTION_LOG),
+            ],
+        )
+
+    def test_media_without_a_type_is_left_for_resim_to_infer(self) -> None:
+        job = {"media": ["episode.mp4", "episode.gif"]}
+        self.assertEqual(
+            run_module._attachments(job),
+            [("episode.mp4", None), ("episode.gif", None)],
+        )
+
+    def test_a_file_named_twice_is_uploaded_once(self) -> None:
+        # Bundles carry media in both lists during the changeover; uploading
+        # the same file twice would show it twice on the test.
+        job = {
+            "artifacts": [{"file": "episode.mp4", "log_type": "MP4_LOG"}],
+            "media": ["episode.mp4", "episode.gif"],
+        }
+        self.assertEqual(
+            run_module._attachments(job),
+            [("episode.mp4", LogType.MP4_LOG), ("episode.gif", None)],
+        )
+
+    def test_an_unknown_log_type_falls_back_to_inference(self) -> None:
+        # A bundle may name a type added after this SDK shipped. Inferring from
+        # the filename beats failing the whole run.
+        job = {"artifacts": [{"file": "x.bin", "log_type": "INVENTED_LOG"}]}
+        self.assertEqual(run_module._attachments(job), [("x.bin", None)])
+
+    def test_a_job_with_nothing_attached_is_fine(self) -> None:
+        self.assertEqual(run_module._attachments({}), [])
 
 
 class DemoRegistryTest(unittest.TestCase):

@@ -29,7 +29,7 @@ from resim.sdk.bff_client.dashboards import find_dashboard_id
 from resim.sdk.client import AuthenticatedClient
 from resim.sdk.client.api.projects import create_project, list_projects
 from resim.sdk.client.models.create_project_input import CreateProjectInput
-from resim.sdk.test import Test
+from resim.sdk.test import LogType, Test
 
 __all__ = ["DEMOS", "Demo", "DemoResult", "config_path", "run", "templates_path"]
 
@@ -89,10 +89,10 @@ DEMOS: dict[str, Demo] = {
         bundle=bundle.BundleSource(
             url=(
                 "https://resim-public-assets.s3.us-east-1.amazonaws.com"
-                "/sdk-demo/resim-sdk-demo-mujoco-v1.tar.gz"
+                "/sdk-demo/resim-sdk-demo-mujoco-v2.tar.gz"
             ),
-            sha256="f5bb2f84808fc5fad2253e3b73a2f51e0e718adfc314dca3567d5f8181f8479d",
-            cache_key="mujoco-v1",
+            sha256="5c639c5d5cc9d3e535c1d9291aa1ac1198a1cc9194380f2ff3ed013833ebeb48",
+            cache_key="mujoco-v2",
         ),
         config_file="mujoco.resim.yml",
         metrics_set="MuJoCo Metrics",
@@ -314,8 +314,8 @@ def replay_job(
     """
     job_dir = data.root / str(job["directory"])
     test = Test(client, batch, str(job["experience_name"]))
-    for file_name in job.get("media") or []:
-        test.attach_log(str(job_dir / file_name))
+    for file_name, log_type in _attachments(job):
+        test.attach_log(str(job_dir / file_name), log_type)
     for topic, payload, timestamp, is_event in _emissions(
         job_dir / str(job["emissions"])
     ):
@@ -332,6 +332,43 @@ def replay_job(
     # would litter the directory the demo was run from.
     scratch.unlink(missing_ok=True)
     return test
+
+
+def _attachments(job: dict[str, Any]) -> list[tuple[str, Optional[LogType]]]:
+    """The files to upload alongside a job's emissions, and how to type each.
+
+    The log type decides what ReSim can do with a file — an ``.mcap`` sent as
+    ``FOXGLOVE_MCAP_LOG`` opens in the viewer, where the same bytes sent as
+    something else are only a download — so the bundle records the type its
+    source batch used rather than leaving it to be guessed from the name.
+
+    ``media`` is the older bundle shape, which carried filenames alone.
+    """
+    attachments: list[tuple[str, Optional[LogType]]] = [
+        (str(entry["file"]), _log_type(entry.get("log_type")))
+        for entry in job.get("artifacts") or []
+    ]
+    known = {file_name for file_name, _ in attachments}
+    attachments.extend(
+        (str(file_name), None)
+        for file_name in job.get("media") or []
+        if str(file_name) not in known
+    )
+    return attachments
+
+
+def _log_type(name: Optional[str]) -> Optional[LogType]:
+    """Parse a log type from the manifest, ignoring one this SDK does not know.
+
+    A bundle can name a type added after this version shipped; falling back to
+    None lets ReSim infer from the filename rather than failing the run.
+    """
+    if not name:
+        return None
+    try:
+        return LogType(name)
+    except ValueError:
+        return None
 
 
 def _emissions(
