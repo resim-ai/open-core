@@ -89,10 +89,10 @@ DEMOS: dict[str, Demo] = {
         bundle=bundle.BundleSource(
             url=(
                 "https://resim-public-assets.s3.us-east-1.amazonaws.com"
-                "/sdk-demo/resim-sdk-demo-mujoco-v2.tar.gz"
+                "/sdk-demo/resim-sdk-demo-mujoco-v3.tar.gz"
             ),
-            sha256="5c639c5d5cc9d3e535c1d9291aa1ac1198a1cc9194380f2ff3ed013833ebeb48",
-            cache_key="mujoco-v2",
+            sha256="7962cf30362dafffe7ebf8b42e657b904d8cea84a418cacef5c76e8794ab7b2c",
+            cache_key="mujoco-v3",
         ),
         config_file="mujoco.resim.yml",
         metrics_set="MuJoCo Metrics",
@@ -185,7 +185,7 @@ def run(
 
     # Fetch the data before authenticating: there is no point sending someone
     # through a browser login only to fail on a download afterwards.
-    data = bundle.ensure(chosen.bundle, data_dir)
+    data = bundle.ensure(chosen.bundle, data_dir, None if quiet else say)
 
     if client is None:
         client = default_client()

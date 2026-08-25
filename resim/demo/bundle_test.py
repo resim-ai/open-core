@@ -12,7 +12,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from unittest.mock import MagicMock, patch
 
 from resim.demo import bundle
@@ -312,7 +312,7 @@ class EnsureTest(unittest.TestCase):
         cache = self.root / "cache"
         payload = _valid_tarball()
 
-        def fake_download(url: str, destination: Path) -> None:
+        def fake_download(url: str, destination: Path, report: Any = None) -> None:
             destination.write_bytes(payload)
 
         with (
@@ -342,6 +342,70 @@ class EnsureTest(unittest.TestCase):
             with self.assertRaises(DemoDataError) as ctx:
                 bundle.ensure(SOURCE)
         self.assertIn(SOURCE.url, str(ctx.exception))
+
+
+class ProgressTest(unittest.TestCase):
+    """The bundle runs to tens of megabytes, and nothing has printed yet when
+    it starts, so a silent download reads as a hang."""
+
+    def _lines(self, total: int, chunks: list[int], tty: bool) -> list[str]:
+        said: list[str] = []
+        with patch("sys.stdout") as stdout:
+            stdout.isatty.return_value = tty
+            progress = bundle._Progress(total, said.append)
+            for chunk in chunks:
+                progress.advance(chunk)
+            progress.done()
+        return said
+
+    def test_announces_the_size_up_front(self) -> None:
+        said = self._lines(20_000_000, [], tty=False)
+        self.assertIn("20 MB", said[0])
+
+    def test_a_log_gets_a_line_per_step(self) -> None:
+        # Carriage returns in a log or a CI job produce one unreadable line.
+        said = self._lines(10_000_000, [1_000_000] * 10, tty=False)
+        self.assertGreater(len(said), 1)
+        self.assertTrue(any("10 / 10 MB" in line for line in said))
+
+    def test_a_terminal_rewrites_one_line(self) -> None:
+        # On a terminal the updating line goes straight to stdout, so `report`
+        # only carries the opening announcement.
+        said = self._lines(10_000_000, [1_000_000] * 10, tty=True)
+        self.assertEqual(len(said), 1)
+
+    def test_a_server_that_sends_no_length_still_says_something(self) -> None:
+        # Without content-length there is no percentage to show, but silence is
+        # the thing being avoided.
+        said = self._lines(0, [1_000_000], tty=False)
+        self.assertEqual(said, ["Downloading demo data"])
+
+    def test_no_reporter_prints_nothing(self) -> None:
+        progress = bundle._Progress(1_000, None)
+        progress.advance(500)
+        progress.done()
+
+    def test_download_reports_through_to_the_caller(self) -> None:
+        said: list[str] = []
+        response = MagicMock()
+        response.headers = {"content-length": "4"}
+        response.iter_bytes.return_value = [b"ab", b"cd"]
+        response.__enter__ = lambda self=response: response
+        response.__exit__ = lambda *_: None
+
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / "bundle.tar.gz"
+            with (
+                patch("httpx.stream", return_value=response),
+                patch("sys.stdout") as stdout,
+            ):
+                stdout.isatty.return_value = False
+                bundle._download(
+                    "https://example.invalid/b.tar.gz", destination, said.append
+                )
+
+            self.assertEqual(destination.read_bytes(), b"abcd")
+        self.assertTrue(said, "the download said nothing at all")
 
 
 if __name__ == "__main__":
