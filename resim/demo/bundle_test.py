@@ -333,6 +333,34 @@ class EnsureTest(unittest.TestCase):
             "the downloaded archive should be cleaned up after extraction",
         )
 
+    def test_a_cold_cache_reports_each_stage(self) -> None:
+        # The download and the checksum both take a while on a large bundle,
+        # and nothing else has printed by this point, so both say so.
+        cache = self.root / "cache"
+        payload = _valid_tarball()
+        said: list[str] = []
+
+        def fake_download(url: str, destination: Path, report: Any = None) -> None:
+            destination.write_bytes(payload)
+
+        with (
+            patch.object(bundle, "cache_dir", return_value=cache),
+            patch.object(bundle, "_download", side_effect=fake_download),
+        ):
+            bundle.ensure(
+                bundle.BundleSource(
+                    url=SOURCE.url,
+                    sha256=hashlib.sha256(payload).hexdigest(),
+                    cache_key=SOURCE.cache_key,
+                ),
+                report=said.append,
+            )
+
+        self.assertTrue(
+            any("downloaded intact" in line for line in said),
+            f"the integrity check said nothing: {said}",
+        )
+
     def test_download_failure_surfaces_the_url(self) -> None:
         cache = self.root / "cache"
         with (

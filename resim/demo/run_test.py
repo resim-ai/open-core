@@ -551,6 +551,14 @@ class AttachmentsTest(unittest.TestCase):
         job = {"artifacts": [{"file": "x.bin", "log_type": "INVENTED_LOG"}]}
         self.assertEqual(run_module._attachments(job), [("x.bin", None)])
 
+    def test_an_artifact_with_no_log_type_is_left_for_inference(self) -> None:
+        # A bundle built before log types were recorded lists the file alone.
+        # Uploading it untyped is right; refusing it would strand the bundle.
+        job = {"artifacts": [{"file": "run.mcap"}, {"file": "x.log", "log_type": ""}]}
+        self.assertEqual(
+            run_module._attachments(job), [("run.mcap", None), ("x.log", None)]
+        )
+
     def test_a_job_with_nothing_attached_is_fine(self) -> None:
         self.assertEqual(run_module._attachments({}), [])
 
