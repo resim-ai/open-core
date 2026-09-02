@@ -77,8 +77,21 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.demo is None:
-        # The demos are peers rather than one being the obvious choice, so
-        # rather than silently picking, say what is on offer.
+        # A bare invocation is someone looking around, so say what is on offer.
+        # Any other option means they meant to run something, and listing the
+        # demos while dropping their argument and exiting 0 reads as success.
+        supplied = [
+            flag
+            for flag, given in (
+                ("--project-name", args.project_name is not None),
+                ("--branch", args.branch is not None),
+                ("--data-dir", args.data_dir is not None),
+                ("--quiet", args.quiet),
+            )
+            if given
+        ]
+        if supplied:
+            parser.error(f"--demo is required when passing {', '.join(supplied)}")
         _list_demos()
         return 0
 

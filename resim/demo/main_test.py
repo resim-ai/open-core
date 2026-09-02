@@ -48,6 +48,32 @@ class MainTest(unittest.TestCase):
         for key in DEMOS:
             self.assertIn(key, printed)
 
+    def test_options_without_a_demo_are_an_error_not_a_listing(self) -> None:
+        # Listing the demos and exiting 0 while dropping the argument reads as
+        # success: a script would see the run succeed having done nothing.
+        for argv in (
+            ["--project-name", "my project"],
+            ["--branch", "b"],
+            ["--data-dir", "/tmp/d"],
+            ["--quiet"],
+        ):
+            with self.subTest(argv=argv):
+                with (
+                    patch.object(main_module, "run") as run,
+                    patch("sys.argv", ["resim-demo", *argv]),
+                    patch("sys.stderr") as stderr,
+                ):
+                    with self.assertRaises(SystemExit) as ctx:
+                        main_module.main()
+
+                self.assertNotEqual(ctx.exception.code, 0)
+                run.assert_not_called()
+                written = "".join(
+                    str(c.args[0]) for c in stderr.write.call_args_list if c.args
+                )
+                self.assertIn("--demo", written)
+                self.assertIn(argv[0], written)
+
     def test_defaults_defer_to_the_chosen_demo(self) -> None:
         # The CLI passes None for project and branch so `run()` fills in the
         # demo's own values; hardcoding them here would silently drift when a

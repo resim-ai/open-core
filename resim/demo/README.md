@@ -1,11 +1,12 @@
 # The SDK demos
 
 `resim-demo` replays real test data into a fresh ReSim project so you can see
-the platform working before wiring up your own. Pick one with `--demo`:
+the platform working before wiring up your own. Pick one with `--demo` — there
+is no default, and running `resim-demo` on its own lists them:
 
 | `--demo` | What it shows |
 | --- | --- |
-| `navigation` (default) | A hospital navigation suite. Dense telemetry across 34 scenarios, covering every chart type ReSim ships. |
+| `navigation` | A hospital navigation suite. Dense telemetry across a suite of scenarios, covering every chart type ReSim ships. |
 | `mujoco` | A bimanual manipulation policy in MuJoCo, one test per seed, compared across two policy builds. |
 
 Each demo is an entry in `DEMOS` (`run.py`) plus a metrics config in `data/`.
@@ -15,7 +16,7 @@ starting point we expect you to copy:
 ```python
 from resim.demo import config_path
 
-print(config_path().read_text())          # the navigation demo's config
+print(config_path("navigation").read_text())  # the navigation demo's config
 print(config_path("mujoco").read_text())  # the MuJoCo demo's config
 ```
 
