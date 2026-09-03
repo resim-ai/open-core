@@ -270,8 +270,11 @@ class ConfigTest(unittest.TestCase):
                 1,
                 f"metric {name!r} status query must have exactly one ? parameter",
             )
-            self.assertIn(
-                "block", status, f"metric {name!r} status needs a block value"
+            # Either threshold on its own is valid — a check that only warns
+            # never blocks a run, which is a real thing to want.
+            self.assertTrue(
+                {"block", "warn"} & set(status),
+                f"metric {name!r} status needs a block or warn value",
             )
 
     def test_covers_test_batch_and_dashboard_metrics(self) -> None:

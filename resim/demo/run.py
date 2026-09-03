@@ -81,22 +81,22 @@ DEMOS: dict[str, Demo] = {
     "mujoco": Demo(
         key="mujoco",
         summary=(
-            "A bimanual manipulation policy in MuJoCo: one test per seed, "
-            "compared across two policy builds."
+            "An ALOHA bimanual manipulation policy in MuJoCo: one test per "
+            "cube placement, compared across two policy builds."
         ),
         project_name="ReSim SDK Demo (MuJoCo)",
         branch="sdk-demo-mujoco",
         bundle=bundle.BundleSource(
             url=(
                 "https://resim-public-assets.s3.us-east-1.amazonaws.com"
-                "/sdk-demo/resim-sdk-demo-mujoco-v3.tar.gz"
+                "/sdk-demo/resim-sdk-demo-mujoco-v4.tar.gz"
             ),
-            sha256="7962cf30362dafffe7ebf8b42e657b904d8cea84a418cacef5c76e8794ab7b2c",
-            cache_key="mujoco-v3",
+            sha256="bde0c251f3d0df421c004aae7969617aa71596678228787026c1e96c87d9da2f",
+            cache_key="mujoco-v4",
         ),
         config_file="mujoco.resim.yml",
-        metrics_set="MuJoCo Metrics",
-        dashboard_name="MuJoCo Demo Trends",
+        metrics_set="ALOHA Metrics",
+        dashboard_name="ALOHA Policy Trends",
     ),
 }
 

@@ -1,8 +1,8 @@
-# Metrics config for `resim-demo --demo mujoco`: a bimanual manipulation policy
-# evaluated in MuJoCo, one test per random seed.
+# Metrics for the ALOHA transfer-cube policy evaluation, one test per seed.
 #
-# Small on purpose. Each source run reports a few summary numbers per episode
-# rather than dense telemetry, so these are the metrics that data supports.
+# The per-step topics are emitted from the evaluation loop, see
+# src/aloha_honua/emissions.py. `summary_metrics` carries the field names the
+# ReSim SDK demo's config already queries, so both read the same data.
 version: 1
 
 topics:
@@ -13,202 +13,311 @@ topics:
       overall_average_sum_reward: float
       overall_average_max_reward: float
       total_evaluation_time: float
+      # Over the whole episode, unlike stage_timing's per-stage count.
+      total_regressions: int
 
-  # Two topics over the same recording: a topic may not carry both an image
-  # and a video column.
-  episode_video:
+  # One row per simulation step.
+  step_reward:
     schema:
-      filename: video
+      reward: float
 
-  output_gif:
+  # Which rung of the reward ladder the episode is on, per step.
+  task_stage:
+    schema:
+      state: string
+
+  # World position of the cube. The handover counts as complete once x
+  # crosses -0.10, which is what the environment's reward function checks.
+  cube_pose:
+    schema:
+      x: float
+      y: float
+      z: float
+
+  # One row per stage the episode reached. The same numbers ride on the
+  # stage_reached event, but flat here so they chart and aggregate.
+  stage_timing:
+    schema:
+      stage: string
+      seconds_from_start: float
+      seconds_from_previous: float
+      regressions: int
+
+  # A Plotly figure the eval draws directly, rendered by a custom template.
+  cube_trajectory:
+    schema:
+      raw_metric: string
+
+  # The whole episode as a looping animation.
+  episode_gif:
     schema:
       filename: image
 
+  # Raised the first time an episode reaches each stage, carrying the timings
+  # that explain the transition.
+  stage_reached:
+    event: true
+    schema:
+      name: string
+      description: string
+      status: status
+      tags: string[]
+      metrics: metric[]
+
 metrics:
-  # ---------------------------------------------------------------- test level
-  Task Success:
+  # ------------------------------------------------------------- test level
+  Task Stage:
     type: test
     description: >
-      Share of episodes on this seed where the policy completed the task.
-      Warns on any failure, blocks when nothing succeeded.
+      Which stage of the transfer the policy had reached, over the episode.
     query_string: |
       SELECT
-        overall_success_rate AS "Success Rate (%)"
-      FROM summary_metrics;
-    status:
-      query_string: SELECT 1 FROM summary_metrics WHERE overall_success_rate <= ? LIMIT 1
-      block: 0
-      warn: 99.9
+        'Transfer' AS "System",
+        timestamp,
+        state
+      FROM task_stage;
     template_type: system
-    template: scalar
-    units: percent
+    template: state_timeline
 
-  Episode Reward:
-    type: test
-    description: Total reward the policy accumulated over the episode.
-    query_string: |
-      SELECT
-        overall_average_sum_reward AS "Sum Reward"
-      FROM summary_metrics;
-    template_type: system
-    template: scalar
-
-  Peak Reward:
+  Reward Over Time:
     type: test
     description: >
-      Best single-step reward reached. High peak with a low total means the
-      policy got close, then lost the task.
+      The staged reward over the episode: 1 on contact, 2 lifted, 3 transfer
+      attempted, 4 handover complete.
     query_string: |
       SELECT
-        overall_average_max_reward AS "Max Reward"
-      FROM summary_metrics;
+        'Reward' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        reward AS "Reward"
+      FROM step_reward;
     template_type: system
-    template: scalar
+    template: line
 
-  Evaluation Time:
+  Handover Progress:
     type: test
     description: >
-      Wall-clock time to evaluate this seed. Failing episodes run to the step
-      limit, so a long evaluation is itself a signal.
+      How far the cube is past the handover line, over the episode. Zero is
+      the line; the handover counts as complete once this goes positive.
     query_string: |
       SELECT
-        total_evaluation_time AS "Evaluation Time (s)"
-      FROM summary_metrics;
+        'Margin' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        (-0.10 - x) AS "Handover Margin (m)"
+      FROM cube_pose;
     template_type: system
-    template: scalar
-    units: seconds
+    template: line
+
+  Cube Height:
+    type: test
+    description: >
+      The cube's height over the episode. It sits at 0.05 m on the table, so a
+      rise here is the lift and a drop back is a lost grasp.
+    query_string: |
+      SELECT
+        'Height' AS group_name,
+        timestamp / 1E9 AS "Time (s)",
+        z AS "Cube Height (m)"
+      FROM cube_pose;
+    template_type: system
+    template: line
 
   Episode Summary:
     type: test
-    description: Everything the evaluation reported for this seed, in one place.
+    description: >
+      Everything the episode reported for this seed. Furthest stage runs from
+      0 for no contact to 4 for a completed handover, and an episode that runs
+      to the step limit is one the policy did not finish.
     query_string: |
-      SELECT * FROM (
-        SELECT 1 AS sort_order, 'Success Rate' AS "Metric",
-               CONCAT(CAST(ROUND(overall_success_rate, 1) AS VARCHAR), '%') AS "Value"
+      SELECT "Metric", "Value" FROM (
+        SELECT 1 AS sort_order, 'Handover Completed' AS "Metric",
+               CASE WHEN overall_success_rate > 0 THEN 'Yes' ELSE 'No' END AS "Value"
         FROM summary_metrics
         UNION ALL
-        SELECT 2 AS sort_order, 'Sum Reward' AS "Metric",
+        SELECT 2 AS sort_order, 'Furthest Stage' AS "Metric",
+               CAST(CAST(overall_average_max_reward AS INTEGER) AS VARCHAR) AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 3 AS sort_order, 'Episode Length' AS "Metric",
+               CONCAT(CAST(ROUND(total_evaluation_time, 2) AS VARCHAR), 's') AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 4 AS sort_order, 'Sum Reward' AS "Metric",
                CAST(ROUND(overall_average_sum_reward, 1) AS VARCHAR) AS "Value"
         FROM summary_metrics
         UNION ALL
-        SELECT 3 AS sort_order, 'Max Reward' AS "Metric",
-               CAST(ROUND(overall_average_max_reward, 2) AS VARCHAR) AS "Value"
-        FROM summary_metrics
-        UNION ALL
-        SELECT 4 AS sort_order, 'Evaluation Time' AS "Metric",
-               CONCAT(CAST(ROUND(total_evaluation_time, 2) AS VARCHAR), 's') AS "Value"
+        SELECT 5 AS sort_order, 'Ladder Regressions' AS "Metric",
+               CAST(total_regressions AS VARCHAR) AS "Value"
         FROM summary_metrics
         ORDER BY sort_order
       );
+    # Completing the handover passes; anything short of it warns. The task is
+    # hard enough that a seed the policy cannot solve is not a broken build,
+    # so nothing here blocks.
+    status:
+      query_string: SELECT 1 FROM summary_metrics WHERE overall_success_rate <= ? LIMIT 1
+      warn: 0
     template_type: system
     template: table
 
-  Episode Recording:
+  Episode Replay:
     type: test
-    description: The policy attempting the task on this seed.
-    query_string: SELECT filename FROM episode_video;
-    skip_if_no_data: true
-    template_type: system
-    template: video
-
-  Episode Animation:
-    type: test
-    description: The same attempt as a looping animation.
-    query_string: SELECT filename FROM output_gif;
+    description: The policy attempting the handover on this seed, start to finish.
+    query_string: SELECT filename FROM episode_gif;
     skip_if_no_data: true
     template_type: system
     template: image
 
-  # --------------------------------------------------------------- batch level
-  Reward by Seed:
-    type: batch
-    description: Total reward on each seed, across the run.
+  Cube Path:
+    type: test
+    description: >
+      Top-down view of the path the cube took, coloured by the stage the
+      episode was in. The per-axis charts each project this motion onto one
+      axis against time, so only this shows the shape of the path.
+    query_string: SELECT raw_metric FROM cube_trajectory;
+    skip_if_no_data: true
+    template_type: custom
+    template_file: raw.liquid
+
+  Stage Latency:
+    type: test
+    description: >
+      Simulated seconds from the start of the episode to each stage it
+      reached. A bar rather than a table column so that an A/B comparison can
+      overlay two runs on one set of axes.
     query_string: |
       SELECT
-        'Sum Reward' AS group_name,
-        m.experience_name AS "Seed",
-        AVG(s.overall_average_sum_reward) AS "Sum Reward"
-      FROM summary_metrics s
-      JOIN metadata m ON s.job_id = m.job_id
-      GROUP BY m.experience_name
-      ORDER BY m.experience_name;
+        'Time to Stage' AS group_name,
+        stage AS "Stage",
+        seconds_from_start AS "Time to Stage (s)"
+      FROM stage_timing
+      ORDER BY seconds_from_start;
     template_type: system
     template: bar
 
-  Reward Distribution:
+  Stage Timeline:
+    type: test
+    description: >
+      Each stage the episode reached, when it got there, how long the stage
+      before it took, and how many times it had fallen back by then.
+    query_string: |
+      SELECT
+        stage AS "Stage",
+        CONCAT(CAST(ROUND(seconds_from_start, 2) AS VARCHAR), 's') AS "Reached At",
+        CONCAT(CAST(ROUND(seconds_from_previous, 2) AS VARCHAR), 's') AS "Previous Stage Took",
+        CAST(regressions AS VARCHAR) AS "Regressions So Far"
+      FROM stage_timing
+      ORDER BY seconds_from_start;
+    template_type: system
+    template: table
+
+  # ------------------------------------------------------------ batch level
+  Mean Time Per Stage:
     type: batch
     description: >
-      How reward is spread across seeds. Separates a policy that fails on a few
-      seeds from one that is uniformly mediocre.
-    query_string: |
-      SELECT overall_average_sum_reward AS "Sum Reward"
-      FROM summary_metrics;
-    template_type: system
-    template: histogram
-
-  Evaluation Time by Seed:
-    type: batch
-    description: Wall-clock evaluation time per seed.
+      Average simulated seconds each stage took across the seeds that reached
+      it. A stage that slows down between builds shows up here.
     query_string: |
       SELECT
-        'Evaluation Time' AS group_name,
-        m.experience_name AS "Seed",
-        AVG(s.total_evaluation_time) AS "Evaluation Time (s)"
-      FROM summary_metrics s
-      JOIN metadata m ON s.job_id = m.job_id
-      GROUP BY m.experience_name
-      ORDER BY m.experience_name;
+        'Mean' AS group_name,
+        stage AS "Stage",
+        AVG(seconds_from_previous) AS "Stage Duration (s)"
+      FROM stage_timing
+      GROUP BY stage
+      ORDER BY 3;
     template_type: system
     template: bar
 
-  Seeds Solved:
+  Seeds Reaching Each Stage:
     type: batch
-    description: Share of seeds where the policy completed the task at least once.
+    description: How many seeds got as far as each stage.
     query_string: |
       SELECT
-        100.0 * AVG(CASE WHEN overall_success_rate > 0 THEN 1.0 ELSE 0.0 END)
-          AS "Seeds Solved (%)"
-      FROM summary_metrics;
+        'Seeds' AS group_name,
+        stage AS "Stage",
+        COUNT(*) AS "Seed Count"
+      FROM stage_timing
+      GROUP BY stage
+      ORDER BY 3 DESC;
     template_type: system
-    template: scalar
-    units: percent
+    template: bar
 
-  Evaluation Summary:
+  Furthest Stage Distribution:
     type: batch
-    description: Headline numbers for the whole run.
+    description: >
+      How far the policy got, as a share of the seeds in the batch. Parts of a
+      whole, so a pie rather than a bar.
     query_string: |
-      SELECT * FROM (
+      SELECT
+        CASE CAST(overall_average_max_reward AS INTEGER)
+          WHEN 0 THEN 'no contact'
+          WHEN 1 THEN 'right gripper contact'
+          WHEN 2 THEN 'lifted'
+          WHEN 3 THEN 'transfer attempted'
+          WHEN 4 THEN 'handover complete'
+          ELSE 'unknown'
+        END AS "Furthest Stage",
+        COUNT(*) AS "Seeds"
+      FROM summary_metrics
+      GROUP BY 1;
+    template_type: system
+    template: pie
+
+  Run Summary:
+    type: batch
+    description: Headline numbers for every seed in the batch.
+    query_string: |
+      SELECT "Metric", "Value" FROM (
         SELECT 1 AS sort_order, 'Seeds Evaluated' AS "Metric",
                CAST(COUNT(*) AS VARCHAR) AS "Value"
         FROM summary_metrics
         UNION ALL
-        SELECT 2 AS sort_order, 'Mean Success Rate' AS "Metric",
-               CONCAT(CAST(ROUND(AVG(overall_success_rate), 1) AS VARCHAR), '%') AS "Value"
+        SELECT 2 AS sort_order, 'Seeds Solved' AS "Metric",
+               CONCAT(CAST(ROUND(100.0 * AVG(CASE WHEN overall_success_rate > 0
+                 THEN 1.0 ELSE 0.0 END), 1) AS VARCHAR), '%') AS "Value"
         FROM summary_metrics
         UNION ALL
         SELECT 3 AS sort_order, 'Mean Sum Reward' AS "Metric",
                CAST(ROUND(AVG(overall_average_sum_reward), 1) AS VARCHAR) AS "Value"
         FROM summary_metrics
         UNION ALL
-        SELECT 4 AS sort_order, 'Mean Evaluation Time' AS "Metric",
+        SELECT 4 AS sort_order, 'Mean Episode Length' AS "Metric",
                CONCAT(CAST(ROUND(AVG(total_evaluation_time), 2) AS VARCHAR), 's') AS "Value"
+        FROM summary_metrics
+        UNION ALL
+        SELECT 5 AS sort_order, 'Mean Ladder Regressions' AS "Metric",
+               CAST(ROUND(AVG(total_regressions), 2) AS VARCHAR) AS "Value"
         FROM summary_metrics
         ORDER BY sort_order
       );
     template_type: system
     template: table
 
-  # ----------------------------------------------------------- dashboard level
-  Reward by Build Version:
-    type: dashboard
-    description: >
-      Mean reward per policy build. A build that drops here has regressed,
-      whatever its pass count says.
+  Reward Distribution:
+    type: batch
+    description: Spread of total episode reward across the seeds in the batch.
     query_string: |
       SELECT
-        'Mean Sum Reward' AS group_name,
+        'Sum Reward' AS group_name,
+        overall_average_sum_reward AS "Sum Reward"
+      FROM summary_metrics;
+    template_type: system
+    template: histogram
+
+  # --------------------------------------------------------- dashboard level
+  # These group by build_version, so each policy configuration becomes one
+  # category. Bars rather than lines: with a handful of builds a line is a
+  # couple of points, and bars stay readable as more accumulate.
+  Success Rate by Build Version:
+    type: dashboard
+    description: >
+      Share of seeds where the policy completed the handover, per build. The
+      headline number, and the one a policy change is trying to move.
+    query_string: |
+      SELECT
+        'Seeds Solved' AS group_name,
         m.build_version AS "Build Version",
-        AVG(s.overall_average_sum_reward) AS "Sum Reward",
+        100.0 * AVG(CASE WHEN s.overall_success_rate > 0 THEN 1.0 ELSE 0.0 END)
+          AS "Seeds Solved (%)",
         '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
           AS link_path
       FROM summary_metrics s
@@ -240,38 +349,131 @@ metrics:
     template_type: system
     template: bar
 
-  Tests Run:
+  Furthest Stage by Build Version:
     type: dashboard
-    description: Seeds evaluated in the window.
-    query_string: SELECT COUNT(*) AS "Tests Run" FROM metadata;
+    description: >
+      Where each build's seeds ended up on the reward ladder. A build can hold
+      its pass count while its failures move between stages, and that shift is
+      the more informative signal.
+    query_string: |
+      SELECT
+        CASE CAST(s.overall_average_max_reward AS INTEGER)
+          WHEN 0 THEN 'no contact'
+          WHEN 1 THEN 'right gripper contact'
+          WHEN 2 THEN 'lifted'
+          WHEN 3 THEN 'transfer attempted'
+          WHEN 4 THEN 'handover complete'
+          ELSE 'unknown'
+        END AS group_name,
+        m.build_version AS "Build Version",
+        COUNT(*) AS "Seeds",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM summary_metrics s
+      JOIN metadata m ON s.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY 1, m.build_version
+      ORDER BY m.build_version, 1;
+    skip_if_no_data: true
     template_type: system
-    template: scalar
+    template: bar
+
+  Time to Handover by Build Version:
+    type: dashboard
+    description: >
+      Mean simulated seconds to complete the handover, counting only the seeds
+      that completed it. Separates getting there from getting there quickly.
+    query_string: |
+      SELECT
+        'Mean Time to Handover' AS group_name,
+        m.build_version AS "Build Version",
+        AVG(t.seconds_from_start) AS "Time to Handover (s)",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM stage_timing t
+      JOIN metadata m ON t.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+        AND t.stage = 'handover complete'
+      GROUP BY m.build_version
+      ORDER BY m.build_version;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Reward by Build Version:
+    type: dashboard
+    description: >
+      Mean total episode reward per build. A build that drops here has
+      regressed, whatever its pass count says.
+    query_string: |
+      SELECT
+        'Mean Sum Reward' AS group_name,
+        m.build_version AS "Build Version",
+        AVG(s.overall_average_sum_reward) AS "Sum Reward",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM summary_metrics s
+      JOIN metadata m ON s.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY m.build_version
+      ORDER BY m.build_version;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Trend Summary:
+    type: dashboard
+    description: Scope of what the dashboard is looking at.
+    query_string: |
+      SELECT "Metric", "Value" FROM (
+        SELECT 1 AS sort_order, 'Builds Compared' AS "Metric",
+               CAST(COUNT(DISTINCT build_version) AS VARCHAR) AS "Value"
+        FROM metadata WHERE build_version IS NOT NULL
+        UNION ALL
+        SELECT 2 AS sort_order, 'Tests Run' AS "Metric",
+               CAST(COUNT(*) AS VARCHAR) AS "Value"
+        FROM metadata
+        UNION ALL
+        SELECT 3 AS sort_order, 'Batches' AS "Metric",
+               CAST(COUNT(DISTINCT batch_id) AS VARCHAR) AS "Value"
+        FROM metadata
+        ORDER BY sort_order
+      );
+    template_type: system
+    template: table
 
 metrics sets:
-  MuJoCo Metrics:
+  ALOHA Metrics:
     metrics:
-      - Task Success
-      - Episode Reward
-      - Peak Reward
-      - Evaluation Time
+      - Task Stage
+      - Reward Over Time
+      - Handover Progress
+      - Cube Height
       - Episode Summary
-      - Episode Recording
-      - Episode Animation
-      - Reward by Seed
+      - Episode Replay
+      - Cube Path
+      - Stage Latency
+      - Stage Timeline
+      - Mean Time Per Stage
+      - Seeds Reaching Each Stage
+      - Furthest Stage Distribution
+      - Run Summary
       - Reward Distribution
-      - Evaluation Time by Seed
-      - Seeds Solved
-      - Evaluation Summary
 
-  MuJoCo Trends:
+  ALOHA Trends:
     metrics:
-      - Reward by Build Version
+      - Success Rate by Build Version
       - Test Outcomes by Build Version
-      - Tests Run
+      - Furthest Stage by Build Version
+      - Time to Handover by Build Version
+      - Reward by Build Version
+      - Trend Summary
 
 dashboards:
-  MuJoCo Demo Trends:
-    metrics_set: MuJoCo Trends
-    description: How the policy trends across builds of the MuJoCo demo.
+  ALOHA Policy Trends:
+    metrics_set: ALOHA Trends
+    description: >
+      How the transfer-cube policy trends across configurations. Each build
+      version is one policy configuration.
     refresh: auto
     day_range: 30
