@@ -19,9 +19,18 @@ Or from a shell, after ``pip install resim-open-core``::
 """
 
 from resim.demo.bundle import DemoDataError
-from resim.demo.run import DemoResult, config_path, run, templates_path
+from resim.demo.run import (
+    DEMOS,
+    Demo,
+    DemoResult,
+    config_path,
+    run,
+    templates_path,
+)
 
 __all__ = [
+    "DEMOS",
+    "Demo",
     "DemoDataError",
     "DemoResult",
     "config_path",

@@ -12,7 +12,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from unittest.mock import MagicMock, patch
 
 from resim.demo import bundle
@@ -54,23 +54,39 @@ def _valid_tarball() -> bytes:
     )
 
 
+SOURCE = bundle.BundleSource(
+    url="https://example.invalid/sdk-demo/demo-v1.tar.gz",
+    sha256="0" * 64,
+    cache_key="demo-v1",
+)
+
+
 class CacheDirTest(unittest.TestCase):
     def test_honours_xdg_cache_home(self) -> None:
         with patch.dict(os.environ, {"XDG_CACHE_HOME": "/somewhere/cache"}):
             self.assertEqual(
-                bundle.cache_dir(),
-                Path("/somewhere/cache") / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+                bundle.cache_dir(SOURCE),
+                Path("/somewhere/cache") / "resim" / "sdk-demo" / SOURCE.cache_key,
             )
 
     def test_falls_back_to_dot_cache(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(
-                bundle.cache_dir(),
-                Path.home() / ".cache" / "resim" / "sdk-demo" / bundle.BUNDLE_VERSION,
+                bundle.cache_dir(SOURCE),
+                Path.home() / ".cache" / "resim" / "sdk-demo" / SOURCE.cache_key,
             )
 
     def test_is_versioned_so_a_stale_bundle_is_never_reused(self) -> None:
-        self.assertIn(bundle.BUNDLE_VERSION, str(bundle.cache_dir()))
+        self.assertIn(SOURCE.cache_key, str(bundle.cache_dir(SOURCE)))
+
+    def test_each_demo_caches_separately(self) -> None:
+        # Switching demos must not make one re-download over the other's cache.
+        other = bundle.BundleSource(
+            url="https://example.invalid/sdk-demo/other-v1.tar.gz",
+            sha256="1" * 64,
+            cache_key="other-v1",
+        )
+        self.assertNotEqual(bundle.cache_dir(SOURCE), bundle.cache_dir(other))
 
 
 class LoadTest(unittest.TestCase):
@@ -255,15 +271,15 @@ class VerifyTest(unittest.TestCase):
         self.temp.cleanup()
 
     def test_accepts_matching_checksum(self) -> None:
-        bundle._verify(self.archive, hashlib.sha256(b"payload").hexdigest())
+        bundle._verify(self.archive, hashlib.sha256(b"payload").hexdigest(), SOURCE.url)
 
     def test_raises_on_mismatch(self) -> None:
         with self.assertRaises(DemoDataError) as ctx:
-            bundle._verify(self.archive, "0" * 64)
+            bundle._verify(self.archive, "0" * 64, SOURCE.url)
         self.assertIn("checksum", str(ctx.exception))
 
     def test_skips_when_no_checksum_pinned(self) -> None:
-        bundle._verify(self.archive, "")
+        bundle._verify(self.archive, "", SOURCE.url)
 
 
 class EnsureTest(unittest.TestCase):
@@ -277,7 +293,7 @@ class EnsureTest(unittest.TestCase):
     def test_explicit_data_dir_skips_download(self) -> None:
         (self.root / "manifest.json").write_text(json.dumps(MANIFEST))
         with patch.object(bundle, "_download") as download:
-            loaded = bundle.ensure(self.root)
+            loaded = bundle.ensure(SOURCE, self.root)
         download.assert_not_called()
         self.assertEqual(loaded.root, self.root)
 
@@ -289,27 +305,60 @@ class EnsureTest(unittest.TestCase):
             patch.object(bundle, "cache_dir", return_value=cache),
             patch.object(bundle, "_download") as download,
         ):
-            bundle.ensure()
+            bundle.ensure(SOURCE)
         download.assert_not_called()
 
     def test_cold_cache_downloads_verifies_and_extracts(self) -> None:
         cache = self.root / "cache"
         payload = _valid_tarball()
 
-        def fake_download(url: str, destination: Path) -> None:
+        def fake_download(url: str, destination: Path, report: Any = None) -> None:
             destination.write_bytes(payload)
 
         with (
             patch.object(bundle, "cache_dir", return_value=cache),
             patch.object(bundle, "_download", side_effect=fake_download),
-            patch.object(bundle, "BUNDLE_SHA256", hashlib.sha256(payload).hexdigest()),
         ):
-            loaded = bundle.ensure()
+            loaded = bundle.ensure(
+                bundle.BundleSource(
+                    url=SOURCE.url,
+                    sha256=hashlib.sha256(payload).hexdigest(),
+                    cache_key=SOURCE.cache_key,
+                )
+            )
 
         self.assertEqual(loaded.manifest["version"], 1)
         self.assertFalse(
             (cache.parent / f"{cache.name}.tar.gz").exists(),
             "the downloaded archive should be cleaned up after extraction",
+        )
+
+    def test_a_cold_cache_reports_each_stage(self) -> None:
+        # The download and the checksum both take a while on a large bundle,
+        # and nothing else has printed by this point, so both say so.
+        cache = self.root / "cache"
+        payload = _valid_tarball()
+        said: list[str] = []
+
+        def fake_download(url: str, destination: Path, report: Any = None) -> None:
+            destination.write_bytes(payload)
+
+        with (
+            patch.object(bundle, "cache_dir", return_value=cache),
+            patch.object(bundle, "_download", side_effect=fake_download),
+        ):
+            bundle.ensure(
+                bundle.BundleSource(
+                    url=SOURCE.url,
+                    sha256=hashlib.sha256(payload).hexdigest(),
+                    cache_key=SOURCE.cache_key,
+                ),
+                report=said.append,
+            )
+
+        self.assertTrue(
+            any("downloaded intact" in line for line in said),
+            f"the integrity check said nothing: {said}",
         )
 
     def test_download_failure_surfaces_the_url(self) -> None:
@@ -319,8 +368,72 @@ class EnsureTest(unittest.TestCase):
             patch("httpx.stream", side_effect=__import__("httpx").ConnectError("nope")),
         ):
             with self.assertRaises(DemoDataError) as ctx:
-                bundle.ensure()
-        self.assertIn(bundle.BUNDLE_URL, str(ctx.exception))
+                bundle.ensure(SOURCE)
+        self.assertIn(SOURCE.url, str(ctx.exception))
+
+
+class ProgressTest(unittest.TestCase):
+    """The bundle runs to tens of megabytes, and nothing has printed yet when
+    it starts, so a silent download reads as a hang."""
+
+    def _lines(self, total: int, chunks: list[int], tty: bool) -> list[str]:
+        said: list[str] = []
+        with patch("sys.stdout") as stdout:
+            stdout.isatty.return_value = tty
+            progress = bundle._Progress(total, said.append)
+            for chunk in chunks:
+                progress.advance(chunk)
+            progress.done()
+        return said
+
+    def test_announces_the_size_up_front(self) -> None:
+        said = self._lines(20_000_000, [], tty=False)
+        self.assertIn("20 MB", said[0])
+
+    def test_a_log_gets_a_line_per_step(self) -> None:
+        # Carriage returns in a log or a CI job produce one unreadable line.
+        said = self._lines(10_000_000, [1_000_000] * 10, tty=False)
+        self.assertGreater(len(said), 1)
+        self.assertTrue(any("10 / 10 MB" in line for line in said))
+
+    def test_a_terminal_rewrites_one_line(self) -> None:
+        # On a terminal the updating line goes straight to stdout, so `report`
+        # only carries the opening announcement.
+        said = self._lines(10_000_000, [1_000_000] * 10, tty=True)
+        self.assertEqual(len(said), 1)
+
+    def test_a_server_that_sends_no_length_still_says_something(self) -> None:
+        # Without content-length there is no percentage to show, but silence is
+        # the thing being avoided.
+        said = self._lines(0, [1_000_000], tty=False)
+        self.assertEqual(said, ["Downloading demo data"])
+
+    def test_no_reporter_prints_nothing(self) -> None:
+        progress = bundle._Progress(1_000, None)
+        progress.advance(500)
+        progress.done()
+
+    def test_download_reports_through_to_the_caller(self) -> None:
+        said: list[str] = []
+        response = MagicMock()
+        response.headers = {"content-length": "4"}
+        response.iter_bytes.return_value = [b"ab", b"cd"]
+        response.__enter__ = lambda self=response: response
+        response.__exit__ = lambda *_: None
+
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / "bundle.tar.gz"
+            with (
+                patch("httpx.stream", return_value=response),
+                patch("sys.stdout") as stdout,
+            ):
+                stdout.isatty.return_value = False
+                bundle._download(
+                    "https://example.invalid/b.tar.gz", destination, said.append
+                )
+
+            self.assertEqual(destination.read_bytes(), b"abcd")
+        self.assertTrue(said, "the download said nothing at all")
 
 
 if __name__ == "__main__":

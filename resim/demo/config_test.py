@@ -41,8 +41,8 @@ METRIC_TYPES = frozenset({"test", "batch", "dashboard"})
 BUILTIN_TABLES = frozenset({"metadata", "container_performance", "test_length_seconds"})
 
 
-def _load() -> dict[str, Any]:
-    config = resources.files("resim.demo") / "data" / "config.resim.yml"
+def _load(config_file: str) -> dict[str, Any]:
+    config = resources.files("resim.demo") / "data" / config_file
     loaded = yaml.safe_load(config.read_text(encoding="utf8"))
     assert isinstance(loaded, dict), "the metrics config must be a YAML mapping"
     return loaded
@@ -82,6 +82,15 @@ def _tables_in(query: str) -> set[str]:
 
 
 class ConfigTest(unittest.TestCase):
+    """Mirrors the checks the platform's own config validator applies.
+
+    Every shipped demo config runs through this, so a new demo cannot land a
+    config that only fails once someone runs it.
+    """
+
+    #: Config this case checks. Subclasses point at the other demos'.
+    config_file = "config.resim.yml"
+
     config: dict[str, Any]
     topics: dict[str, Any]
     metrics: dict[str, Any]
@@ -90,7 +99,7 @@ class ConfigTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.config = _load()
+        cls.config = _load(cls.config_file)
         cls.topics = cls.config.get("topics") or {}
         cls.metrics = cls.config.get("metrics") or {}
         cls.metrics_sets = cls.config.get("metrics sets") or {}
@@ -175,13 +184,23 @@ class ConfigTest(unittest.TestCase):
                     f"metric {name!r} references a template that is not shipped",
                 )
 
-    def test_every_shipped_template_is_used(self) -> None:
-        referenced = {
-            metric.get("template_file")
-            for metric in self.metrics.values()
-            if metric.get("template_type") == "custom"
-        }
-        self.assertEqual(_templates() - referenced, set())
+    def test_joined_queries_qualify_ambiguous_columns(self) -> None:
+        # `metadata` and every topic both carry these, so a bare reference in a
+        # joined query is rejected at render time with "column name ... exists
+        # in more than one joined topic" — a failure that only shows up once
+        # the chart runs against real data.
+        shared = ("job_id", "batch_id", "project_id", "build_version", "run_counter")
+        for name, metric in self.metrics.items():
+            query = metric.get("query_string") or ""
+            if not re.search(r"\bJOIN\b", query, re.IGNORECASE):
+                continue
+            for column in shared:
+                bare = re.search(rf"(?<![.\w\"]){column}\b", query)
+                self.assertIsNone(
+                    bare,
+                    f"metric {name!r} joins tables but references {column!r} "
+                    "without a table alias",
+                )
 
     def test_metrics_declare_a_template_and_a_query(self) -> None:
         for name, metric in self.metrics.items():
@@ -251,9 +270,35 @@ class ConfigTest(unittest.TestCase):
                 1,
                 f"metric {name!r} status query must have exactly one ? parameter",
             )
-            self.assertIn(
-                "block", status, f"metric {name!r} status needs a block value"
+            # Either threshold on its own is valid — a check that only warns
+            # never blocks a run, which is a real thing to want.
+            self.assertTrue(
+                {"block", "warn"} & set(status),
+                f"metric {name!r} status needs a block or warn value",
             )
+
+    def test_covers_test_batch_and_dashboard_metrics(self) -> None:
+        self.assertEqual(
+            METRIC_TYPES - {metric["type"] for metric in self.metrics.values()}, set()
+        )
+
+
+class MujocoConfigTest(ConfigTest):
+    """The MuJoCo demo's config, held to exactly the same rules."""
+
+    config_file = "mujoco.resim.yml"
+
+
+class NavigationCoverageTest(ConfigTest):
+    """Ambitions specific to the default demo, not rules every config must meet.
+
+    The default demo exists to show the whole surface, so a template going
+    unused there is a gap. Other demos cover what their data honestly supports
+    — the MuJoCo runs report a few summary numbers per episode, so they have no
+    time series to draw a line from and no events to populate that tab.
+    """
+
+    config_file = "config.resim.yml"
 
     def test_covers_every_system_template(self) -> None:
         # The demo exists to show what the platform can render, so a template
@@ -265,16 +310,19 @@ class ConfigTest(unittest.TestCase):
         }
         self.assertEqual(SYSTEM_TEMPLATES - used, set())
 
-    def test_covers_test_batch_and_dashboard_metrics(self) -> None:
-        self.assertEqual(
-            METRIC_TYPES - {metric["type"] for metric in self.metrics.values()}, set()
-        )
-
     def test_declares_an_event_topic(self) -> None:
         self.assertTrue(
             any(topic.get("event") for topic in self.topics.values()),
             "the demo should populate the Events tab",
         )
+
+    def test_every_shipped_template_is_used(self) -> None:
+        referenced = {
+            metric.get("template_file")
+            for metric in self.metrics.values()
+            if metric.get("template_type") == "custom"
+        }
+        self.assertEqual(_templates() - referenced, set())
 
 
 if __name__ == "__main__":

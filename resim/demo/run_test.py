@@ -18,6 +18,8 @@ import json
 import os
 import tempfile
 import unittest
+
+import yaml
 from importlib import import_module, resources
 from pathlib import Path
 from typing import Any
@@ -26,12 +28,16 @@ from unittest.mock import MagicMock, patch
 from httpx import URL
 
 from resim.demo.bundle import DemoDataError
-from resim.demo.run import DASHBOARD_NAME, METRICS_SET, resolve_project, run
+from resim.demo.run import resolve_project, run
 from resim.sdk.metrics.emissions import Emitter
+from resim.sdk.test import LogType
 
 # resim.demo exports a `run` function, which shadows the `resim.demo.run`
 # module attribute, so the module has to be fetched by name to patch into it.
 run_module = import_module("resim.demo.run")
+
+#: Demo the orchestration tests exercise.
+DEMO = "navigation"
 
 EXPERIENCES = ["Corridor - Bright", "Corridor - Dark"]
 
@@ -232,7 +238,7 @@ class RunTest(unittest.TestCase):
         self.temp.cleanup()
 
     def _run(self) -> Any:
-        return run(client=fake_client(), data_dir=self.root, quiet=True)
+        return run(demo=DEMO, client=fake_client(), data_dir=self.root, quiet=True)
 
     def test_runs_both_batches(self) -> None:
         result = self._run()
@@ -248,7 +254,8 @@ class RunTest(unittest.TestCase):
         branches = {kwargs["branch"] for kwargs in FakeBatch.created}
         self.assertEqual(len(branches), 1, "one dashboard cannot span two branches")
         self.assertEqual(
-            {kwargs["metrics_set_name"] for kwargs in FakeBatch.created}, {METRICS_SET}
+            {kwargs["metrics_set_name"] for kwargs in FakeBatch.created},
+            {run_module.DEMOS[DEMO].metrics_set},
         )
 
     def test_batches_differ_by_version(self) -> None:
@@ -309,7 +316,10 @@ class RunTest(unittest.TestCase):
     def test_looks_the_dashboard_up_by_name(self) -> None:
         self._run()
         run_module.find_dashboard_id.assert_called_with(
-            unittest.mock.ANY, "project-1", "branch-1", DASHBOARD_NAME
+            unittest.mock.ANY,
+            "project-1",
+            "branch-1",
+            run_module.DEMOS[DEMO].dashboard_name,
         )
 
     def test_falls_back_to_the_dashboards_list_when_not_found(self) -> None:
@@ -323,7 +333,7 @@ class RunTest(unittest.TestCase):
 
     def test_prints_every_link(self) -> None:
         with patch("builtins.print") as printed:
-            result = run(client=fake_client(), data_dir=self.root)
+            result = run(demo=DEMO, client=fake_client(), data_dir=self.root)
         output = "\n".join(
             str(call.args[0]) for call in printed.call_args_list if call.args
         )
@@ -343,7 +353,7 @@ class RunTest(unittest.TestCase):
         with patch.object(
             run_module, "default_client", return_value=fake_client()
         ) as default:
-            run(data_dir=self.root, quiet=True)
+            run(demo=DEMO, data_dir=self.root, quiet=True)
         default.assert_called_once_with()
 
     def test_blank_lines_in_the_emissions_file_are_skipped(self) -> None:
@@ -496,6 +506,114 @@ class ResolveProjectTest(unittest.TestCase):
         self.assertEqual(listed.call_count, 2)
 
 
+class AttachmentsTest(unittest.TestCase):
+    """What gets uploaded alongside a job's emissions, and how it is typed."""
+
+    def test_artifacts_keep_the_log_type_the_bundle_recorded(self) -> None:
+        # An .mcap sent as FOXGLOVE_MCAP_LOG opens in the viewer; the same
+        # bytes typed as anything else are only a download.
+        job = {
+            "artifacts": [
+                {"file": "run.mcap", "log_type": "FOXGLOVE_MCAP_LOG"},
+                {"file": "worker.log", "log_type": "EXECUTION_LOG"},
+            ]
+        }
+        self.assertEqual(
+            run_module._attachments(job),
+            [
+                ("run.mcap", LogType.FOXGLOVE_MCAP_LOG),
+                ("worker.log", LogType.EXECUTION_LOG),
+            ],
+        )
+
+    def test_media_without_a_type_is_left_for_resim_to_infer(self) -> None:
+        job = {"media": ["episode.mp4", "episode.gif"]}
+        self.assertEqual(
+            run_module._attachments(job),
+            [("episode.mp4", None), ("episode.gif", None)],
+        )
+
+    def test_a_file_named_twice_is_uploaded_once(self) -> None:
+        # Bundles carry media in both lists during the changeover; uploading
+        # the same file twice would show it twice on the test.
+        job = {
+            "artifacts": [{"file": "episode.mp4", "log_type": "MP4_LOG"}],
+            "media": ["episode.mp4", "episode.gif"],
+        }
+        self.assertEqual(
+            run_module._attachments(job),
+            [("episode.mp4", LogType.MP4_LOG), ("episode.gif", None)],
+        )
+
+    def test_an_unknown_log_type_falls_back_to_inference(self) -> None:
+        # A bundle may name a type added after this SDK shipped. Inferring from
+        # the filename beats failing the whole run.
+        job = {"artifacts": [{"file": "x.bin", "log_type": "INVENTED_LOG"}]}
+        self.assertEqual(run_module._attachments(job), [("x.bin", None)])
+
+    def test_an_artifact_with_no_log_type_is_left_for_inference(self) -> None:
+        # A bundle built before log types were recorded lists the file alone.
+        # Uploading it untyped is right; refusing it would strand the bundle.
+        job = {"artifacts": [{"file": "run.mcap"}, {"file": "x.log", "log_type": ""}]}
+        self.assertEqual(
+            run_module._attachments(job), [("run.mcap", None), ("x.log", None)]
+        )
+
+    def test_a_job_with_nothing_attached_is_fine(self) -> None:
+        self.assertEqual(run_module._attachments({}), [])
+
+
+class DemoRegistryTest(unittest.TestCase):
+    """Every registered demo has to be runnable, not just declared."""
+
+    def test_every_demo_ships_its_config(self) -> None:
+        for key in run_module.DEMOS:
+            with self.subTest(demo=key):
+                path = run_module.config_path(key)
+                self.assertTrue(path.is_file(), f"{key}: {path} missing")
+
+    def test_every_demo_declares_the_sets_its_config_defines(self) -> None:
+        # A demo naming a metrics set or dashboard the config does not define
+        # syncs cleanly and then renders nothing, which is hard to spot.
+        for key, demo in run_module.DEMOS.items():
+            with self.subTest(demo=key):
+                config = yaml.safe_load(
+                    run_module.config_path(key).read_text(encoding="utf8")
+                )
+                # The platform spells this key with a space, not an
+                # underscore; a config using the wrong one syncs with no sets
+                # at all and renders nothing.
+                self.assertIn(demo.metrics_set, config.get("metrics sets") or {})
+                self.assertIn(demo.dashboard_name, config.get("dashboards") or {})
+
+    def test_demos_do_not_collide(self) -> None:
+        # Two demos sharing a project, branch or cache key would overwrite each
+        # other's results.
+        for field in ("project_name", "branch"):
+            values = [getattr(d, field) for d in run_module.DEMOS.values()]
+            self.assertEqual(len(values), len(set(values)), f"duplicate {field}")
+        keys = [d.bundle.cache_key for d in run_module.DEMOS.values()]
+        self.assertEqual(len(keys), len(set(keys)), "duplicate bundle cache_key")
+
+    def test_bundle_sources_are_pinned(self) -> None:
+        for key, demo in run_module.DEMOS.items():
+            with self.subTest(demo=key):
+                self.assertRegex(demo.bundle.sha256, r"^[0-9a-f]{64}$")
+                self.assertTrue(demo.bundle.url.startswith("https://"))
+
+    def test_registry_keys_match_their_entries(self) -> None:
+        for key, demo in run_module.DEMOS.items():
+            self.assertEqual(key, demo.key)
+
+    def test_unknown_demo_is_reported_with_the_alternatives(self) -> None:
+        with self.assertRaises(DemoDataError) as ctx:
+            run_module.get_demo("nope")
+        message = str(ctx.exception)
+        self.assertIn("nope", message)
+        for key in run_module.DEMOS:
+            self.assertIn(key, message)
+
+
 class PackageDataTest(unittest.TestCase):
     """The shipped config and templates are part of the public API.
 
@@ -504,13 +622,13 @@ class PackageDataTest(unittest.TestCase):
     """
 
     def test_config_path_points_at_a_readable_config(self) -> None:
-        path = run_module.config_path()
+        path = run_module.config_path(DEMO)
         self.assertTrue(path.is_file(), f"{path} is not a file")
         self.assertEqual(path.name, "config.resim.yml")
         self.assertIn("metrics:", path.read_text(encoding="utf8"))
 
     def test_templates_path_points_at_the_liquid_templates(self) -> None:
-        path = run_module.templates_path()
+        path = run_module.templates_path(DEMO)
         self.assertTrue(path.is_dir(), f"{path} is not a directory")
         self.assertTrue(
             list(path.glob("*.liquid")),
@@ -519,9 +637,9 @@ class PackageDataTest(unittest.TestCase):
 
     def test_the_demo_runs_with_exactly_what_it_publishes(self) -> None:
         # If these ever drift, someone copies a config the demo does not use.
-        config, templates = run_module._package_data()
-        self.assertEqual(str(run_module.config_path()), str(config))
-        self.assertEqual(str(run_module.templates_path()), str(templates))
+        config, templates = run_module._package_data(run_module.get_demo(DEMO))
+        self.assertEqual(str(run_module.config_path(DEMO)), str(config))
+        self.assertEqual(str(run_module.templates_path(DEMO)), str(templates))
 
     def test_package_data_outside_the_filesystem_is_copied_out(self) -> None:
         # A zip import has no real path, so the data is copied somewhere that
