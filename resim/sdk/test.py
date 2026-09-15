@@ -10,7 +10,7 @@ import traceback
 import httpx
 from httpx import TransportError
 from types import TracebackType
-from typing import Callable, Optional, Sequence, TypeVar
+from typing import Any, Callable, Optional, Sequence, TypeVar
 
 from pathlib import Path
 from resim.sdk.batch import Batch
@@ -106,6 +106,91 @@ def _retry(
     raise AssertionError("unreachable")
 
 
+# Total tries for creating or closing a job, including the first one.
+_API_ATTEMPTS = 4
+# A failure in the connect phase proves the request never reached the server.
+_CONNECT_ERRORS = (httpx.ConnectError, httpx.ConnectTimeout)
+
+
+def _call_api(
+    call: Callable[[], Any],
+    *,
+    expected: int,
+    describe: str,
+    replayable: bool = False,
+    succeeded_if: Optional[Callable[[Any], bool]] = None,
+) -> Any:
+    """Make an API call, retrying the failures that are safe to retry.
+
+    Unlike ``_retry`` this inspects the response, and it tells apart calls that
+    can be repeated blindly from calls that cannot. A connect-phase failure
+    proves the request never reached the server, so any call can be replayed
+    after one. Once the request is on the wire (a 5xx, a read timeout) it is
+    unknown whether the server acted, so only replayable calls are retried.
+
+    Args:
+        call: A zero-argument callable returning a ``sync_detailed`` response.
+        expected: The status code that means success.
+        describe: Used in the error message when every attempt fails.
+        replayable: True when repeating the call cannot create anything twice.
+            Non-replayable calls are retried only on connect-phase failures.
+        succeeded_if: Given a failed response, returns True when it shows an
+            earlier attempt already landed. Lets a replayed call recognise its
+            own prior success instead of reporting a spurious failure.
+
+    Returns:
+        The successful response.
+
+    Raises:
+        Exception: If no attempt succeeded.
+    """
+    last_error: Optional[str] = None
+    for attempt in range(_API_ATTEMPTS):
+        try:
+            response = call()
+        except _CONNECT_ERRORS as e:
+            last_error = repr(e)
+        except TransportError as e:
+            last_error = repr(e)
+            if not replayable:
+                break
+        else:
+            if response.status_code == expected:
+                return response
+            if attempt > 0 and succeeded_if is not None and succeeded_if(response):
+                return response
+            last_error = f"{response.status_code}: {response.content!r}"
+            if response.status_code not in _RETRYABLE_STATUS_CODES:
+                break
+            if not replayable and response.status_code != 503:
+                # A 503 is a load balancer shedding load, so the request never
+                # reached the application. Other 5xx may have been acted on.
+                break
+        if attempt + 1 < _API_ATTEMPTS:
+            sleep_for = _RETRY_BASE_DELAY_S * 2**attempt
+            logger.warning(
+                "%s (try %d of %d), retrying in %.1fs: %s",
+                describe,
+                attempt + 1,
+                _API_ATTEMPTS,
+                sleep_for,
+                last_error,
+            )
+            time.sleep(sleep_for)
+
+    raise Exception(f"{describe}. Last error {last_error}")
+
+
+def _already_closed(response: Any) -> bool:
+    """True when CloseJob reports the job was closed by an earlier attempt."""
+    if response.status_code != 400:
+        return False
+    content = response.content
+    if isinstance(content, bytes):
+        return b"already closed" in content
+    return "already closed" in str(content)
+
+
 class Test(Emitter):
     def __init__(self, client: AuthenticatedClient, batch: Batch, name: str):
         """Create a test (job) inside a batch.
@@ -122,18 +207,23 @@ class Test(Emitter):
         self._http_client: Optional[httpx.Client] = None
         self._pending: list[tuple[str, "concurrent.futures.Future[None]"]] = []
         self._pending_lock = threading.Lock()
+        self._closed = False
 
         body = CreateJobForBatchInput(name=self.name)
-        response = create_job_for_batch.sync_detailed(
-            self._batch.project_id,
-            self._batch.id,
-            client=self._client,
-            body=body,
+        # Not replayable: the endpoint creates a new job every call, so a blind
+        # retry would add a duplicate test to the batch.
+        response = _call_api(
+            lambda: create_job_for_batch.sync_detailed(
+                self._batch.project_id,
+                self._batch.id,
+                client=self._client,
+                body=body,
+            ),
+            expected=201,
+            describe=f"failed to create job {self.name!r}",
         )
-        if response.status_code != 201 or not response.parsed:
-            raise Exception(
-                f"failed to create job {response.status_code}: {response.content}"
-            )
+        if not response.parsed:
+            raise Exception(f"failed to parse job creation response {response.content}")
 
         self._test = response.parsed
         emissions_file_path = Path(f"emissions_{self._test.job_id}.resim.jsonl")
@@ -355,6 +445,30 @@ class Test(Emitter):
             error=repr(exc_value) if exc_value is not None else None,
         )
 
+    def upload_emissions(self, *, wait: bool = True) -> None:
+        """Finish the emissions file and upload it, leaving the job open.
+
+        ``close`` calls this for you. Call it directly to upload a test's data
+        before ending the job. Safe to call more than once.
+
+        Args:
+            wait: Block until the upload finishes. The default, so the
+                emissions file can be removed as soon as this returns. See
+                attach_log.
+        """
+        # getattr, not self.file: a Test whose __init__ raised never reached
+        # Emitter.__init__, and Emitter.__del__ still calls close() on it when
+        # it is collected.
+        if getattr(self, "file", None) is None:
+            return
+        Emitter.close(self)
+        self.attach_log(
+            str(self.output_path),
+            LogType.EMISSIONS_LOG,
+            file_name="emissions.resim.jsonl",
+            wait=wait,
+        )
+
     def close(
         self,
         status: LightJobStatus = LightJobStatus.SUCCEEDED,
@@ -366,6 +480,8 @@ class Test(Emitter):
         closed with an ERROR status and the failures are raised once the job
         is closed.
 
+        Safe to call more than once, and on a test whose creation failed.
+
         Args:
             status: Status to close the job with.
             error: Optional error message to record on the job.
@@ -373,15 +489,17 @@ class Test(Emitter):
         Raises:
             LogUploadError: If any log upload failed after all tries.
         """
-        if self.file is None:
+        # getattr throughout: Emitter.__del__ calls close() on whatever is
+        # collected, including a Test whose __init__ raised part-way. Such an
+        # object has no job to close, and reaching for one raises inside a
+        # finaliser or, worse, issues API calls for a test that never existed.
+        if getattr(self, "_closed", False):
             return
-        super().close()
+        self._closed = True
+        if getattr(self, "_test", None) is None:
+            return
 
-        self.attach_log(
-            str(self.output_path),
-            LogType.EMISSIONS_LOG,
-            file_name="emissions.resim.jsonl",
-        )
+        self.upload_emissions(wait=False)
         failures = self._drain_uploads()
 
         upload_error: Optional[LogUploadError] = None
@@ -394,17 +512,22 @@ class Test(Emitter):
         body = CloseJobInput(status=status)
         if error:
             body.error_message = error
-        response = close_job.sync_detailed(
-            self._batch.project_id,
-            self._batch.id,
-            self._test.job_id,
-            client=self._client,
-            body=body,
+        # Replayable: closing an already-closed job is refused with a 400 that
+        # names the condition, so a retry can tell its own earlier success from
+        # a real failure.
+        _call_api(
+            lambda: close_job.sync_detailed(
+                self._batch.project_id,
+                self._batch.id,
+                self._test.job_id,
+                client=self._client,
+                body=body,
+            ),
+            expected=204,
+            describe=f"failed to close test {self.name!r}",
+            replayable=True,
+            succeeded_if=_already_closed,
         )
-        if response.status_code != 204:
-            raise Exception(
-                f"failed to close test. Expected 204 response, got {response.status_code} instead"
-            )
         if upload_error is not None:
             raise upload_error
 

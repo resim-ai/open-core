@@ -391,6 +391,184 @@ class TestTest(unittest.TestCase):
         self.mock_close_job.sync_detailed.assert_called_once()
         self.assertEqual(self._close_job_body().status, LightJobStatus.ERROR)
 
+    def test_upload_emissions_leaves_the_job_open(self) -> None:
+        test = Test(self.client, self.batch, TEST_NAME)
+
+        test.upload_emissions()
+
+        # The upload has finished by the time upload_emissions returns, so the
+        # caller may remove the emissions file straight away.
+        self.put.assert_called_once()
+        self.assertEqual(
+            self._create_log_bodies()[0].file_name, "emissions.resim.jsonl"
+        )
+        self.mock_close_job.sync_detailed.assert_not_called()
+
+        # A second upload is a no-op, and close still closes the job once.
+        test.upload_emissions()
+        test.close()
+        test.close()
+
+        self.put.assert_called_once()
+        self.mock_close_job.sync_detailed.assert_called_once()
+
+    # --- API call retries -------------------------------------------------
+    #
+    # These calls are not equally safe to repeat, and the tests pin the
+    # difference: CloseJob is a state transition the server reports on, while
+    # CreateJobForBatch mints a new job every time it is called.
+
+    def test_close_retries_a_server_error(self) -> None:
+        # A 503 while a deploy cycles the API used to abort a whole run and
+        # leave the batch half closed.
+        self.mock_close_job.sync_detailed.side_effect = [
+            MagicMock(status_code=503, content=b"no healthy upstream"),
+            _response(204),
+        ]
+
+        with Test(self.client, self.batch, TEST_NAME):
+            pass
+
+        self.assertEqual(self.mock_close_job.sync_detailed.call_count, 2)
+        self.mock_sleep.assert_called_once()
+
+    def test_close_treats_already_closed_on_a_retry_as_success(self) -> None:
+        # The first close landed but its response was lost. The server refuses
+        # the replay with a 400 that names the condition, which is our own
+        # earlier success rather than a failure.
+        self.mock_close_job.sync_detailed.side_effect = [
+            httpx.ReadTimeout("lost the response"),
+            MagicMock(status_code=400, content=b"job is already closed"),
+        ]
+
+        with Test(self.client, self.batch, TEST_NAME):
+            pass
+
+        self.assertEqual(self.mock_close_job.sync_detailed.call_count, 2)
+
+    def test_close_reads_already_closed_from_a_text_body(self) -> None:
+        # Bodies are bytes over the wire, but a client that has decoded one
+        # should be understood too rather than silently missing the signal.
+        self.mock_close_job.sync_detailed.side_effect = [
+            httpx.ReadTimeout("lost the response"),
+            MagicMock(status_code=400, content="job is already closed"),
+        ]
+
+        with Test(self.client, self.batch, TEST_NAME):
+            pass
+
+        self.assertEqual(self.mock_close_job.sync_detailed.call_count, 2)
+
+    def test_close_does_not_swallow_a_first_attempt_already_closed(self) -> None:
+        # Nothing was replayed, so an already-closed job means the caller
+        # closed it twice. That is a real error and must surface.
+        self.mock_close_job.sync_detailed.return_value = MagicMock(
+            status_code=400, content=b"job is already closed"
+        )
+
+        with self.assertRaises(Exception) as caught:
+            with Test(self.client, self.batch, TEST_NAME):
+                pass
+
+        self.assertEqual(self.mock_close_job.sync_detailed.call_count, 1)
+        self.assertIn("400", str(caught.exception))
+
+    def test_close_keeps_retrying_a_non_400_failure(self) -> None:
+        # A retry that fails again with something other than "already closed"
+        # is a real failure, so it keeps retrying rather than being mistaken
+        # for its own earlier success.
+        self.mock_close_job.sync_detailed.return_value = MagicMock(
+            status_code=503, content=b"no healthy upstream"
+        )
+
+        with self.assertRaises(Exception):
+            with Test(self.client, self.batch, TEST_NAME):
+                pass
+
+        self.assertEqual(self.mock_close_job.sync_detailed.call_count, 4)
+
+    def test_job_creation_retries_a_refused_connection(self) -> None:
+        # The connection never opened, so no job was created and a replay
+        # cannot duplicate one.
+        created = self.mock_create_job.sync_detailed.return_value
+        self.mock_create_job.sync_detailed.side_effect = [
+            httpx.ConnectError("connection refused"),
+            created,
+        ]
+
+        with Test(self.client, self.batch, TEST_NAME):
+            pass
+
+        self.assertEqual(self.mock_create_job.sync_detailed.call_count, 2)
+
+    def test_job_creation_retries_a_shed_load_response(self) -> None:
+        # A 503 comes from the load balancer with no healthy upstream, so the
+        # application never saw the request and no job was created.
+        created = self.mock_create_job.sync_detailed.return_value
+        self.mock_create_job.sync_detailed.side_effect = [
+            MagicMock(status_code=503, content=b"no healthy upstream"),
+            created,
+        ]
+
+        with Test(self.client, self.batch, TEST_NAME):
+            pass
+
+        self.assertEqual(self.mock_create_job.sync_detailed.call_count, 2)
+
+    def test_job_creation_does_not_retry_once_the_request_was_sent(self) -> None:
+        # CreateJobForBatch mints a new job on every call. A read timeout
+        # leaves it unknown whether the server acted, so replaying risks a
+        # duplicate test in the batch. Fail instead.
+        self.mock_create_job.sync_detailed.side_effect = httpx.ReadTimeout("no reply")
+
+        with self.assertRaises(Exception):
+            Test(self.client, self.batch, TEST_NAME)
+
+        self.assertEqual(self.mock_create_job.sync_detailed.call_count, 1)
+        # The half-built test was collected without uploading or closing.
+        self.mock_create_log.sync_detailed.assert_not_called()
+        self.mock_close_job.sync_detailed.assert_not_called()
+
+    def test_job_creation_does_not_retry_a_server_error(self) -> None:
+        # A 500 means the application did see the request, and it may have
+        # created the job before failing.
+        self.mock_create_job.sync_detailed.return_value = MagicMock(
+            status_code=500, content=b"boom"
+        )
+
+        with self.assertRaises(Exception):
+            Test(self.client, self.batch, TEST_NAME)
+
+        self.assertEqual(self.mock_create_job.sync_detailed.call_count, 1)
+
+    def test_unparseable_job_creation_response_is_reported(self) -> None:
+        # A 201 whose body did not parse leaves no job id to work with, so it
+        # fails here rather than further along with an unhelpful AttributeError.
+        self.mock_create_job.sync_detailed.return_value = MagicMock(
+            status_code=201, parsed=None, content=b"not json"
+        )
+
+        with self.assertRaises(Exception) as caught:
+            Test(self.client, self.batch, TEST_NAME)
+
+        self.assertIn("parse", str(caught.exception))
+
+    def test_a_half_built_test_closes_quietly(self) -> None:
+        # Emitter.__del__ calls close() on whatever is collected, including a
+        # Test whose __init__ raised before Emitter.__init__ ran. Such an
+        # object has no emissions file and no job, so its finaliser must not
+        # raise and must not issue API calls for a test that never existed.
+        #
+        # Built with __new__ rather than by letting __init__ fail, because
+        # refcounting collects that object before the assertion can run.
+        half_built = Test.__new__(Test)
+
+        half_built.upload_emissions()
+        half_built.close()
+
+        self.mock_create_log.sync_detailed.assert_not_called()
+        self.mock_close_job.sync_detailed.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

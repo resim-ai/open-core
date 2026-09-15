@@ -18,6 +18,13 @@ TEST_SUITE_REVISION = 3
 
 
 class BatchTest(unittest.TestCase):
+    def test_branch_id_before_creation(self) -> None:
+        # The branch is only resolved on __enter__, so reading it early is a
+        # programming error rather than a silent None.
+        batch = Batch(MagicMock(), BRANCH_NAME, project_id=PROJECT_ID)
+        with self.assertRaises(AssertionError):
+            _ = batch.branch_id
+
     def _make_standard_mocks(
         self,
         mock_list_branches: Any,
@@ -78,6 +85,7 @@ class BatchTest(unittest.TestCase):
             self.assertEqual(batch.project_id, PROJECT_ID)
             self.assertEqual(batch.id, BATCH_ID)
             self.assertEqual(batch.friendly_name, BATCH_FRIENDLY_NAME)
+            self.assertEqual(batch.branch_id, BRANCH_ID)
 
         mock_list_branches.sync.assert_called_once_with(
             PROJECT_ID, client=mock_client, name=BRANCH_NAME

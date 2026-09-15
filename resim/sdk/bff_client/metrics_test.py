@@ -106,6 +106,17 @@ class SyncConfigTest(unittest.TestCase):
 
         self.assertIn("403", str(ctx.exception))
 
+    def test_raises_on_empty_config_path(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            sync_config(
+                client=self.mock_client,
+                project_id="proj-123",
+                branch_name="main",
+                config_path=[],
+            )
+
+        self.assertIn("must not be empty", str(ctx.exception))
+
     def test_raises_on_missing_config_file(self) -> None:
         missing = str(Path(self.temp_dir.name) / "nonexistent.yml")
 

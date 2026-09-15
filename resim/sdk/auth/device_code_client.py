@@ -112,7 +112,9 @@ def _get_new_token(
 
 Please navigate to: {device_code_data["verification_uri_complete"]}
 """
-    print(message)
+    # flush: the caller is blocked until they visit this URL, and stdout is
+    # block-buffered when it is not a terminal.
+    print(message, flush=True)
 
     device_code = device_code_data["device_code"]
     polling_interval = device_code_data["interval"]
