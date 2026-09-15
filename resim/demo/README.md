@@ -1,8 +1,9 @@
 # The SDK demo
 
-`resim-demo` replays real test data into a fresh ReSim project so you can see
-the platform working before wiring up your own tests: two comparable batches of
-tests on one branch, and a dashboard that trends across them.
+`resim-demo` (also installed as `signalflag-demo`) replays real test data into
+a fresh ReSim project so you can see the platform working before wiring up
+your own tests: two comparable batches of tests on one branch, and a
+dashboard that trends across them.
 
 The interesting part is `data/config.resim.yml`. It is a real, working metrics
 config — not a toy — and it is the starting point we expect you to copy:

@@ -117,7 +117,10 @@ py_wheel(
         "License :: OSI Approved :: MIT License",
     ],
     distribution = "resim-open-core",
-    entry_points = {"console_scripts": ["resim-demo = resim.demo.__main__:main"]},
+    entry_points = {"console_scripts": [
+        "resim-demo = resim.demo.__main__:main",
+        "signalflag-demo = resim.demo.__main__:main",
+    ]},
     homepage = "https://www.resim.ai/",
     license = LICENSE,
     platform = select({
@@ -287,7 +290,10 @@ py_wheel(
         "License :: OSI Approved :: MIT License",
     ],
     distribution = "resim_sdk",
-    entry_points = {"console_scripts": ["resim-demo = resim.demo.__main__:main"]},
+    entry_points = {"console_scripts": [
+        "resim-demo = resim.demo.__main__:main",
+        "signalflag-demo = resim.demo.__main__:main",
+    ]},
     homepage = "https://www.resim.ai/",
     license = LICENSE,
     python_tag = "py3",

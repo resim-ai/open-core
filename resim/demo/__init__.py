@@ -16,6 +16,8 @@ dashboard, then prints links to the results::
 Or from a shell, after ``pip install resim-open-core``::
 
     resim-demo
+
+``signalflag-demo`` is an alias for the same command.
 """
 
 from resim.demo.bundle import DemoDataError
