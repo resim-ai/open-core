@@ -1,8 +1,9 @@
 # The SDK demos
 
-`resim-demo` replays real test data into a fresh ReSim project so you can see
-the platform working before wiring up your own. Pick one with `--demo` — there
-is no default, and running `resim-demo` on its own lists them:
+`resim-demo` (also installed as `signalflag-demo`) replays real test data into
+a fresh ReSim project so you can see the platform working before wiring up
+your own. Pick one with `--demo` — there is no default, and running
+`resim-demo` on its own lists them:
 
 | `--demo` | What it shows |
 | --- | --- |

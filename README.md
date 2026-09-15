@@ -23,6 +23,8 @@ dashboard that trends them, and prints links to the results:
 resim-demo
 ```
 
+`signalflag-demo` is an alias for the same command.
+
 Or from Python:
 ```python
 from resim.demo import run

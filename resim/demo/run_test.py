@@ -396,6 +396,31 @@ class RunTest(unittest.TestCase):
         self.assertTrue(uploaded)
         self.assertEqual(closed, uploaded)
 
+    def test_every_test_is_closed_even_when_an_earlier_close_raises(self) -> None:
+        # close() raising is documented, ordinary behavior (exhausted upload
+        # retries), not just an exotic failure. It must not leave the rest of
+        # the batch's jobs open.
+        real_close = FakeTest.close
+        raised = {"done": False}
+
+        def flaky_close(self: FakeTest, *args: Any, **kwargs: Any) -> None:
+            if not raised["done"]:
+                raised["done"] = True
+                # Mirrors the real Test.close(): the idempotency guard is set
+                # before the risky work, so a later incidental close() call
+                # (e.g. Emitter.__del__) cannot mask this test as still open.
+                self._closed = True
+                raise RuntimeError("boom")
+            real_close(self, *args, **kwargs)
+
+        with patch.object(FakeTest, "close", flaky_close):
+            with self.assertRaises(RuntimeError):
+                self._run()
+
+        uploaded = [e[2] for e in FakeTest.events if e[1] == "upload"]
+        closed = [e[2] for e in FakeTest.events if e[1] == "close"]
+        self.assertEqual(len(closed), len(uploaded) - 1)
+
     def test_leaves_no_emissions_files_behind(self) -> None:
         # Test writes its emissions next to the working directory; the demo is
         # responsible for not leaving 70-odd of them lying around.

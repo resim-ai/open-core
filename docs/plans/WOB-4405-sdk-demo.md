@@ -46,7 +46,7 @@ Shipped, under `resim/demo/`:
 | File | Responsibility |
 | --- | --- |
 | `__init__.py` | Exports `run`, `DemoResult`, `DemoDataError`. |
-| `__main__.py` | `python -m resim.demo` and the `resim-demo` console script. |
+| `__main__.py` | `python -m resim.demo` and the `resim-demo` console script (aliased as `signalflag-demo`). |
 | `run.py` | Orchestration: resolve project, run both batches, print links. |
 | `bundle.py` | Download, verify, safely extract and cache the replay data. |
 | `links.py` | Build the four app URLs from the client's API base URL. |
@@ -134,9 +134,10 @@ All offline. `//resim/demo:demo_test` runs 66 of them; the new
    //resim/sdk/bff_client:dashboards_test //resim/sdk/bff_client:metrics_test` — all
    four pass. 72 of those tests are new (66 in `demo_test`, 6 in `dashboards_test`).
 2. `bazel build //pkg:sdk_wheel`, then install the wheel into a clean venv. Confirmed
-   `entry_points.txt` carries `resim-demo = resim.demo.__main__:main`, the package
-   ships `data/config.resim.yml` and both `.liquid` files, tests are excluded,
-   `from resim.demo import run` works, and `resim-demo --help` resolves.
+   `entry_points.txt` carries `resim-demo = resim.demo.__main__:main` and its
+   `signalflag-demo` alias, the package ships `data/config.resim.yml` and both
+   `.liquid` files, tests are excluded, `from resim.demo import run` works, and
+   `resim-demo --help` resolves.
 3. End to end against staging (`RESIM_API_URL=https://api.resim.io/v1` with the dev
    Auth0 tenant). Confirmed across two runs:
    - Project, branch, 68 tests across two batches in about four minutes, and no

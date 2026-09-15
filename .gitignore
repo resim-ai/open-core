@@ -45,6 +45,9 @@ terraform.tfstate*
 *.swp
 *.swo
 
+# Python
+*.pyc
+
 # Mkdocs build output
 /site/
 

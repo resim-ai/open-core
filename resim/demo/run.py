@@ -9,6 +9,7 @@
 import json
 import os
 import shutil
+import sys
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -231,8 +232,17 @@ def run(
                         tests.append(replay_job(client, batch, data, job))
                         say(f"  {job.get('experience_name')}")
                 finally:
+                    close_errors = []
                     for test in tests:
-                        test.close()
+                        try:
+                            test.close()
+                        except Exception as e:  # noqa: BLE001 - collected, then re-raised
+                            close_errors.append(e)
+                    # Only surface a close failure if nothing else is already
+                    # propagating: a bare raise here would otherwise displace
+                    # the original error the caller needs to see.
+                    if close_errors and sys.exc_info()[0] is None:
+                        raise close_errors[0]
 
     urls = _urls(client, project_id, batch_ids, dashboard_id)
     if not quiet:
