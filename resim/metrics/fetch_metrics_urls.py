@@ -12,14 +12,14 @@ metrics data.
 
 import uuid
 
-from resim.sdk.client.api.batches import (
+from signalflag.sdk.client.api.batches import (
     list_metrics_data_for_job,
     list_metrics_for_job,
 )
-from resim.sdk.client import AuthenticatedClient
-from resim.sdk.client.models.metrics_data import MetricsData
-from resim.sdk.client.models.metrics_data_type import MetricsDataType
-from resim.sdk.client.models import ListJobMetricsOutput
+from signalflag.sdk.client import AuthenticatedClient
+from signalflag.sdk.client.models.metrics_data import MetricsData
+from signalflag.sdk.client.models.metrics_data_type import MetricsDataType
+from signalflag.sdk.client.models import ListJobMetricsOutput
 
 from resim.metrics.fetch_all_pages import fetch_all_pages
 

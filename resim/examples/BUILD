@@ -120,8 +120,9 @@ py_binary(
     name = "auth_example",
     srcs = ["auth_example.py"],
     deps = [
-        "//resim/sdk:client",
-        "//resim/sdk/auth:device_code_client",
-        "//resim/sdk/auth:username_password_client",
+        "//signalflag/sdk:client",
+        "//signalflag/sdk/auth:device_code_client",
+        "//signalflag/sdk/auth:env",
+        "//signalflag/sdk/auth:username_password_client",
     ],
 )

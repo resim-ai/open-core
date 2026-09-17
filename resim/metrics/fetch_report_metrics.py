@@ -8,11 +8,11 @@
 import asyncio
 import uuid
 
-from resim.sdk.client.api.batches import list_batches, list_jobs
-from resim.sdk.client.api.reports import get_report
-from resim.sdk.client import AuthenticatedClient
-from resim.sdk.client.models.batch import Batch
-from resim.sdk.client.models.job import Job
+from signalflag.sdk.client.api.batches import list_batches, list_jobs
+from signalflag.sdk.client.api.reports import get_report
+from signalflag.sdk.client import AuthenticatedClient
+from signalflag.sdk.client.models.batch import Batch
+from signalflag.sdk.client.models.job import Job
 
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
 

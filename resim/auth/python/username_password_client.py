@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from resim.sdk.auth.username_password_client import UsernamePasswordClient
+from signalflag.sdk.auth.username_password_client import UsernamePasswordClient
 
 __all__ = [
     "UsernamePasswordClient",

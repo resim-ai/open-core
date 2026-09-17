@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from resim.sdk.auth.device_code_client import DeviceCodeClient
+from signalflag.sdk.auth.device_code_client import DeviceCodeClient
 
 __all__ = [
     "DeviceCodeClient",

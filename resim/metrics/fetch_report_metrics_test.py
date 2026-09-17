@@ -11,13 +11,13 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock, patch
 
-from resim.sdk.client.api.batches import list_batches, list_jobs
-from resim.sdk.client.models.batch import Batch
-from resim.sdk.client.models.list_batches_output import ListBatchesOutput
-from resim.sdk.client.models.list_jobs_output import ListJobsOutput
-from resim.sdk.client.models.metric_status import MetricStatus
-from resim.sdk.client.models.report import Report
-from resim.sdk.client.models.report_status import ReportStatus
+from signalflag.sdk.client.api.batches import list_batches, list_jobs
+from signalflag.sdk.client.models.batch import Batch
+from signalflag.sdk.client.models.list_batches_output import ListBatchesOutput
+from signalflag.sdk.client.models.list_jobs_output import ListJobsOutput
+from signalflag.sdk.client.models.metric_status import MetricStatus
+from signalflag.sdk.client.models.report import Report
+from signalflag.sdk.client.models.report_status import ReportStatus
 
 import resim.metrics.fetch_report_metrics as frp
 

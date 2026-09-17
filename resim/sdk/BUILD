@@ -1,64 +1,18 @@
-load("@resim_python_client_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("//bazel:openapi_client.bzl", "openapi_client")
+# Copyright 2026 ReSim, Inc.
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
 
+load("@rules_python//python:defs.bzl", "py_library")
+
+# Backwards-compatibility alias: `resim.sdk` -> `signalflag.sdk`.
 py_library(
-    name = "sdk",
-    srcs = [
-        "__init__.py",
-        "batch.py",
-        "test.py",
-    ],
+    name = "compat",
+    srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk:client",
-        "//resim/sdk/auth",
-        "//resim/sdk/bff_client",
-        "//resim/sdk/metrics",
+        "//resim:alias",
+        "//signalflag/sdk",
     ],
-)
-
-py_test(
-    name = "sdk_test",
-    size = "small",
-    srcs = [
-        "batch_test.py",
-        "sdk_test.py",
-        "test_test.py",
-    ],
-    deps = [
-        ":sdk",
-    ],
-)
-
-## Python API Client
-# Ideally, this would live in the client folder, but otherwise we end up with a bunch of horrid nested folders
-openapi_client(
-    name = "client-gen",
-    package_name = "client",
-    config = "//resim/sdk/client_generator:openapi_python_client_config.yaml",
-    specification = "//resim/sdk/client_generator:customerapi.yaml",
-)
-
-py_library(
-    name = "client",
-    data = [":client-gen"],
-    imports = ["client-gen"],
-    visibility = ["//visibility:public"],
-    deps = [
-        requirement("httpx"),
-        requirement("attrs"),
-        requirement("python-dateutil"),
-    ],
-)
-
-genrule(
-    name = "combined_requires",
-    srcs = [
-        "//resim/sdk/client_generator:requirements.txt",
-        ":requirements.txt",
-    ],
-    outs = ["combined_sdk_requirements.txt"],
-    cmd = "cat $(SRCS) > $@",
-    visibility = ["//visibility:public"],
 )

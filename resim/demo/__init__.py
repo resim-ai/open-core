@@ -4,38 +4,14 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""A runnable tour of the ReSim platform.
+"""Deprecated alias for :mod:`signalflag.demo`.
 
-One call populates a project with two comparable batches of tests and a trends
-dashboard, then prints links to the results::
-
-    from resim.demo import run
-
-    run()
-
-Or from a shell, after ``pip install resim-open-core``::
-
-    resim-demo
-
-``signalflag-demo`` is an alias for the same command.
+The demo now lives at signalflag.demo. Importing resim.demo or any submodule
+returns the corresponding signalflag.demo module object, so
+from resim.demo import run keeps working. New code should import from
+signalflag.demo directly.
 """
 
-from resim.demo.bundle import DemoDataError
-from resim.demo.run import (
-    DEMOS,
-    Demo,
-    DemoResult,
-    config_path,
-    run,
-    templates_path,
-)
+from resim._alias import alias_package
 
-__all__ = [
-    "DEMOS",
-    "Demo",
-    "DemoDataError",
-    "DemoResult",
-    "config_path",
-    "run",
-    "templates_path",
-]
+alias_package(__name__, "signalflag.demo")
