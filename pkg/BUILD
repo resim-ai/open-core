@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
+load("@resim_version//:defs.bzl", signalflag_version = "SIGNALFLAG_VERSION", version = "RESIM_VERSION")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
@@ -309,7 +309,8 @@ py_wheel(
     requires_file = "//signalflag/sdk:combined_requires",
     summary = "SignalFlag SDK.",
     twine = "@resim_pkg_deps//twine",
-    version = version,
+    # Released by release-sdk.yml on its own version line, not the open-core one.
+    version = signalflag_version,
     deps = [
         ":sdk_package",
         "//resim:py_typed_marker",

@@ -61,43 +61,9 @@ jobs:
           name: wheel-${{ matrix.arch }}-${{ matrix.python-version }}
           path: ${{ steps.build_wheel.outputs.wheel_path }}
 
-  build_sdk_wheel:
-    name: Build SDK Wheel
-    runs-on: ubuntu-22.04
-    container:
-      image: public.ecr.aws/resim/core:latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Bazel Cache Auth
-        uses: ./.github/actions/setup-bazel-cache-auth
-        with:
-          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
-
-      - name: Build SDK Wheel
-        id: build_sdk_wheel
-        env:
-          RESIM_VERSION: ${{ inputs.resim_version }}
-        run: |
-          bazel build //pkg:sdk_wheel \
-            --repo_env="RESIM_VERSION=$RESIM_VERSION"
-
-          OUTPATH=$(bazel info output_path)
-          WHEELPATH=$OUTPATH/../$(bazel cquery \
-            //pkg:sdk_wheel \
-            --repo_env="RESIM_VERSION=$RESIM_VERSION" \
-            --output files)
-          echo "wheel_path=$(realpath $WHEELPATH)" >> $GITHUB_OUTPUT
-
-      - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheel-sdk
-          path: ${{ steps.build_sdk_wheel.outputs.wheel_path }}
-
   upload_to_pypi:
     name: Upload Wheels to PyPI
-    needs: [build, build_sdk_wheel]
+    needs: [build]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
