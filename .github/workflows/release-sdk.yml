@@ -1,11 +1,11 @@
 name: Release SDK
 # Publishes the SignalFlag Python SDK (//pkg:sdk_wheel, PyPI project
-# signalflag-sdk) independently of the open-core release. The SDK has its own
+# signalflag) independently of the open-core release. The SDK has its own
 # version line and its own tags, sdk-v<version>, so it never rides along with
 # an open-core tag.
 #
 # Uploads use PyPI trusted publishing (OIDC): this workflow file must be
-# registered as a publisher for signalflag-sdk on pypi.org and test.pypi.org.
+# registered as a publisher for signalflag on pypi.org and test.pypi.org.
 # No API token is involved.
 on:
   workflow_dispatch:
@@ -74,7 +74,7 @@ jobs:
           cp "$WHEEL" dist/
           ls -l dist/
           # The wheel filename carries the version; make sure the right one was baked in.
-          [[ -f "dist/signalflag_sdk-$VERSION-py3-none-any.whl" ]]
+          [[ -f "dist/signalflag-$VERSION-py3-none-any.whl" ]]
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4

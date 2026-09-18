@@ -13,7 +13,7 @@ dashboard, then prints links to the results::
 
     run()
 
-Or from a shell, after ``pip install signalflag-sdk``::
+Or from a shell, after ``pip install signalflag``::
 
     signalflag-demo
 

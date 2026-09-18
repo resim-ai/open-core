@@ -16,9 +16,9 @@ pip install resim-open-core
 
 ### SDK only
 The Python SDK and demo are also available on their own, without the compiled
-libraries, as the [`signalflag-sdk`](https://pypi.org/project/signalflag-sdk/) package:
+libraries, as the [`signalflag`](https://pypi.org/project/signalflag/) package:
 ```bash
-pip install signalflag-sdk
+pip install signalflag
 ```
 Import it as `signalflag.sdk`. The older `resim.sdk` and `resim.demo` import paths
 still work and resolve to the same modules.
@@ -29,7 +29,7 @@ creates two comparable batches of tests in a ReSim project, along with a
 dashboard that trends them, and prints links to the results:
 
 ```bash
-pip install signalflag-sdk
+pip install signalflag
 signalflag-demo
 ```
 

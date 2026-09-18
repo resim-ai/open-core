@@ -298,7 +298,7 @@ py_wheel(
     classifiers = [
         "License :: OSI Approved :: MIT License",
     ],
-    distribution = "signalflag-sdk",
+    distribution = "signalflag",
     entry_points = {"console_scripts": [
         "resim-demo = signalflag.demo.__main__:main",
         "signalflag-demo = signalflag.demo.__main__:main",
