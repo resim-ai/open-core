@@ -1,0 +1,134 @@
+name: Release SDK
+# Publishes the SignalFlag Python SDK (//pkg:sdk_wheel, PyPI project
+# signalflag) independently of the open-core release. The SDK has its own
+# version line and its own tags, sdk-v<version>, so it never rides along with
+# an open-core tag.
+#
+# Uploads use PyPI trusted publishing (OIDC): this workflow file must be
+# registered as a publisher for signalflag on pypi.org and test.pypi.org.
+# No API token is involved.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: "SDK version to publish, e.g. 0.1.0 (tagged sdk-v<version>)"
+        required: true
+      push_to_pypi_dev:
+        type: boolean
+        description: "Push to Test PyPI instead of production PyPI"
+        default: false
+
+jobs:
+  build:
+    name: Test and build the SDK wheel
+    runs-on: ubuntu-22.04
+    container:
+      image: public.ecr.aws/resim/core:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate inputs
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "${{ github.ref }}" != "refs/heads/main" && "${{ inputs.push_to_pypi_dev }}" == "false" ]]; then
+            echo "Error: production releases must be run from main"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([a-z0-9.]*)$ ]]; then
+            echo "Error: version must look like 1.2.3 (optionally with a PEP 440 suffix), got '$VERSION'"
+            exit 1
+          fi
+
+      - name: Workaround for Custom Docker Image
+        # git refuses to operate on a checkout owned by another user unless the
+        # directory is marked safe.
+        run: git config --global --add safe.directory /__w/open-core/open-core
+
+      - name: Check tag availability
+        if: ${{ !inputs.push_to_pypi_dev }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n "$(git ls-remote origin "refs/tags/sdk-v$VERSION")" ]]; then
+            echo "Tag sdk-v$VERSION already exists"
+            exit 1
+          fi
+
+      - name: Setup Bazel Cache Auth
+        uses: ./.github/actions/setup-bazel-cache-auth
+        with:
+          bazel_cache_auth_string: ${{ secrets.BAZEL_CACHE_AUTH_STRING }}
+
+      - name: Test the SDK
+        run: bazel test //signalflag/... //resim:compat_test //resim/auth/python/...
+
+      - name: Build the SDK wheel
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          bazel build //pkg:sdk_wheel --repo_env="SIGNALFLAG_VERSION=$VERSION"
+          WHEEL=$(bazel cquery //pkg:sdk_wheel --repo_env="SIGNALFLAG_VERSION=$VERSION" --output files)
+          mkdir -p dist
+          cp "$WHEEL" dist/
+          ls -l dist/
+          # The wheel filename carries the version; make sure the right one was baked in.
+          [[ -f "dist/signalflag-$VERSION-py3-none-any.whl" ]]
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-wheel
+          path: dist/*.whl
+          if-no-files-found: error
+
+  publish:
+    name: Publish to ${{ inputs.push_to_pypi_dev && 'Test PyPI' || 'PyPI' }}
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write  # required for PyPI trusted publishing
+      contents: read
+    steps:
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-wheel
+          path: dist/
+
+      - name: Publish to Test PyPI
+        if: ${{ inputs.push_to_pypi_dev }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+      - name: Publish to PyPI
+        if: ${{ !inputs.push_to_pypi_dev }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+
+  release:
+    name: Tag and draft GitHub release
+    if: ${{ !inputs.push_to_pypi_dev }}
+    needs: publish
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-wheel
+
+      - name: Draft release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: sdk-v${{ inputs.version }}
+          commit: ${{ github.sha }}
+          name: SignalFlag SDK ${{ inputs.version }}
+          artifacts: "*.whl"
+          generateReleaseNotes: true
+          draft: true

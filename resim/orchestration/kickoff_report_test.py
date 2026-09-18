@@ -15,8 +15,8 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
-from resim.sdk.client.models import Batch, Report
-from resim.sdk.client.types import UNSET
+from signalflag.sdk.client.models import Batch, Report
+from signalflag.sdk.client.types import UNSET
 
 import resim.orchestration.kickoff_report as kr
 import resim.orchestration.resim_python_client_mocks as mocks

@@ -116,6 +116,6 @@ py_library(
     srcs = ["emissions.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/metrics:emissions",
+        "//signalflag/sdk/metrics:emissions",
     ],
 )

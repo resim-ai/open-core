@@ -17,11 +17,11 @@ from typing import Any, Callable, TypeVar
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
-from resim.sdk.client.api.batches import get_batch
-from resim.sdk.client.api.reports import create_report
-from resim.sdk.client.api.test_suites import get_test_suite
-from resim.sdk.client import AuthenticatedClient
-from resim.sdk.client.models import (
+from signalflag.sdk.client.api.batches import get_batch
+from signalflag.sdk.client.api.reports import create_report
+from signalflag.sdk.client.api.test_suites import get_test_suite
+from signalflag.sdk.client import AuthenticatedClient
+from signalflag.sdk.client.models import (
     Batch,
     MetricsBuild,
     MetricStatus,

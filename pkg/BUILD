@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-load("@resim_version//:defs.bzl", version = "RESIM_VERSION")
+load("@resim_version//:defs.bzl", signalflag_version = "SIGNALFLAG_VERSION", version = "RESIM_VERSION")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
@@ -34,12 +34,15 @@ LICENSE = """Copyright 2025 ReSim, Inc.
 
 py_package(
     name = "resim_package",
-    packages = ["resim"],
+    packages = [
+        "resim",
+        "signalflag",
+    ],
     deps = [
         "//resim/actor/state/proto:observable_state_proto_py",
         "//resim/auth/python:device_code_client",
         "//resim/auth/python:username_password_client",
-        "//resim/demo",
+        "//resim/demo:compat",
         "//resim/experiences/proto:experience_proto_py",
         "//resim/geometry/python:polygon_distance_python.so",
         "//resim/metrics:default_report_metrics",
@@ -66,13 +69,15 @@ py_package(
         "//resim/msg:primitives_proto_py",
         "//resim/msg:transform_proto_py",
         "//resim/orchestration:kickoff_report",
-        "//resim/sdk",
+        "//resim/sdk:compat",
         "//resim/transforms/proto:framed_vector_3_proto_py",
         "//resim/transforms/python:geodetic_python.so",
         "//resim/transforms/python:quaternion.so",
         "//resim/transforms/python:se3_python.so",
         "//resim/transforms/python:so3_python.so",
         "//resim/utils/proto:uuid_proto_py",
+        "//signalflag/demo",
+        "//signalflag/sdk",
     ],
 )
 
@@ -94,7 +99,7 @@ genrule(
     name = "combined_requires",
     srcs = [
         "//:requirements.txt",
-        "//resim/sdk:combined_requires",
+        "//signalflag/sdk:combined_requires",
         ":extra_requires.txt",
     ],
     outs = ["combined_requirements.txt"],
@@ -118,8 +123,8 @@ py_wheel(
     ],
     distribution = "resim-open-core",
     entry_points = {"console_scripts": [
-        "resim-demo = resim.demo.__main__:main",
-        "signalflag-demo = resim.demo.__main__:main",
+        "resim-demo = signalflag.demo.__main__:main",
+        "signalflag-demo = signalflag.demo.__main__:main",
     ]},
     homepage = "https://www.resim.ai/",
     license = LICENSE,
@@ -135,6 +140,7 @@ py_wheel(
     deps = [
         ":resim_package",
         "//resim:py_typed_marker",
+        "//signalflag:py_typed_marker",
     ] + select({
         "//:nocross": [":resim_package_stubs"],
         "//conditions:default": [],
@@ -252,7 +258,7 @@ py_wheel(
         "License :: OSI Approved :: MIT License",
     ],
     distribution = "resim_ros2",
-    homepage = "https://www.resim.ai/",
+    homepage = "https://www.signalflag.ai/",
     license = LICENSE,
     platform = select({
         "@platforms//cpu:aarch64": "manylinux2014_aarch64",
@@ -275,11 +281,14 @@ py_package(
     name = "sdk_package",
     packages = [
         "resim",
+        "signalflag",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/demo",
-        "//resim/sdk",
+        "//resim/demo:compat",
+        "//resim/sdk:compat",
+        "//signalflag/demo",
+        "//signalflag/sdk",
     ],
 )
 
@@ -289,21 +298,23 @@ py_wheel(
     classifiers = [
         "License :: OSI Approved :: MIT License",
     ],
-    distribution = "resim_sdk",
+    distribution = "signalflag",
     entry_points = {"console_scripts": [
-        "resim-demo = resim.demo.__main__:main",
-        "signalflag-demo = resim.demo.__main__:main",
+        "resim-demo = signalflag.demo.__main__:main",
+        "signalflag-demo = signalflag.demo.__main__:main",
     ]},
-    homepage = "https://www.resim.ai/",
+    homepage = "https://www.signalflag.ai/",
     license = LICENSE,
     python_tag = "py3",
-    requires_file = "//resim/sdk:combined_requires",
-    summary = "ReSim SDK Libraries.",
+    requires_file = "//signalflag/sdk:combined_requires",
+    summary = "SignalFlag SDK.",
     twine = "@resim_pkg_deps//twine",
-    version = version,
+    # Released by release-sdk.yml on its own version line, not the open-core one.
+    version = signalflag_version,
     deps = [
         ":sdk_package",
         "//resim:py_typed_marker",
+        "//signalflag:py_typed_marker",
     ],
 )
 

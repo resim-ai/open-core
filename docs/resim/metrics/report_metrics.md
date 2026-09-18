@@ -52,7 +52,7 @@ using our `fetch_report_metrics` Python package.
 ```python
 import asyncio
 
-from resim.sdk.client import AuthenticatedClient
+from signalflag.sdk.client import AuthenticatedClient
 import resim.metrics.fetch_report_metrics as frm
 
 async def main():

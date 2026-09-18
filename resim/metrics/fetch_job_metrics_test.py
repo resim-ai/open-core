@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 import requests
-from resim.sdk.client import AuthenticatedClient
+from signalflag.sdk.client import AuthenticatedClient
 
 import resim.metrics.fetch_job_metrics as fjm
 import resim.metrics.proto.metrics_pb2 as mp
@@ -306,13 +306,15 @@ class FetchJobMetricsTest(unittest.TestCase):
 )
 @patch("resim.metrics.fetch_job_metrics.get_metrics_proto", new=_mock_get_metrics_proto)
 @patch("resim.metrics.fetch_job_metrics.unpack_metrics", new=_mock_unpack_metrics)
-@patch("resim.sdk.client.api.batches.list_jobs.sync", new=_mock_list_job_ids_by_batch)
 @patch(
-    "resim.sdk.client.models.list_jobs_output.ListJobsOutput",
+    "signalflag.sdk.client.api.batches.list_jobs.sync", new=_mock_list_job_ids_by_batch
+)
+@patch(
+    "signalflag.sdk.client.models.list_jobs_output.ListJobsOutput",
     MockListJobsResponse200,
 )
 @patch("resim.metrics.fetch_job_metrics.UnpackedMetrics", MockUnpackedMetrics)
-@patch("resim.sdk.client.models.job.Job", MockJob)
+@patch("signalflag.sdk.client.models.job.Job", MockJob)
 @patch("resim.metrics.fetch_job_metrics.mp.Metric", MockMetric)
 @patch("resim.metrics.fetch_job_metrics.mp.MetricsData", MockMetricsData)
 class FetchJobMetricsByBatchTest(unittest.TestCase):

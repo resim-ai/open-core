@@ -14,20 +14,30 @@ These are distributed as part of our [Python package](https://pypi.org/project/r
 pip install resim-open-core
 ```
 
+### SDK only
+The Python SDK and demo are also available on their own, without the compiled
+libraries, as the [`signalflag`](https://pypi.org/project/signalflag/) package:
+```bash
+pip install signalflag
+```
+Import it as `signalflag.sdk`. The older `resim.sdk` and `resim.demo` import paths
+still work and resolve to the same modules.
+
 ### Try the demo
 To see what the platform does before wiring up your own system, run the demo. It
 creates two comparable batches of tests in a ReSim project, along with a
 dashboard that trends them, and prints links to the results:
 
 ```bash
-resim-demo
+pip install signalflag
+signalflag-demo
 ```
 
-`signalflag-demo` is an alias for the same command.
+`resim-demo` is an alias for the same command.
 
 Or from Python:
 ```python
-from resim.demo import run
+from signalflag.demo import run
 
 run()
 ```
@@ -60,7 +70,7 @@ Currently, the libraries are divided up into:
  - [Planning](resim/planning): Tools for high-level planning and optimal
    control.
  - [Simulator](resim/simulator): Our core simulator libraries. 
- - [Python API Client](resim/sdk/client_generator): An auto-generated Python client for the ReSim API.
+ - [Python API Client](signalflag/sdk/client_generator): An auto-generated Python client for the ReSim API.
 
 ## Development
 

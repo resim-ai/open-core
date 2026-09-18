@@ -22,10 +22,10 @@ from resim.auth.python.username_password_client import (
 )
 from resim.auth.python.const import DEFAULT_BASE_URL as DEFAULT_BASE_URL_MOVED
 
-from resim.sdk.auth.check_expiration import add_expiration_time, is_expired
-from resim.sdk.auth.device_code_client import DeviceCodeClient
-from resim.sdk.auth.username_password_client import UsernamePasswordClient
-from resim.sdk.auth.const import DEFAULT_BASE_URL
+from signalflag.sdk.auth.check_expiration import add_expiration_time, is_expired
+from signalflag.sdk.auth.device_code_client import DeviceCodeClient
+from signalflag.sdk.auth.username_password_client import UsernamePasswordClient
+from signalflag.sdk.auth.const import DEFAULT_BASE_URL
 
 
 class ImportsTest(unittest.TestCase):

@@ -5,22 +5,22 @@
 # https://opensource.org/licenses/MIT.
 
 import asyncio
-from resim.sdk.client import AuthenticatedClient
+from signalflag.sdk.client import AuthenticatedClient
 from resim.auth.python.device_code_client import DeviceCodeClient
-from resim.sdk.client.api.batches import list_jobs, list_metrics_for_job
+from signalflag.sdk.client.api.batches import list_jobs, list_metrics_for_job
 from uuid import UUID
 import pandas as pd
 import argparse
 from pathlib import Path
 
-from resim.sdk.client.models import (
+from signalflag.sdk.client.models import (
     Job,
     MetricType,
     ListJobsOutput,
     ListJobMetricsOutput,
 )
 from resim.metrics.fetch_all_pages import async_fetch_all_pages
-from resim.sdk.client.api.parameter_sweeps import get_parameter_sweep
+from signalflag.sdk.client.api.parameter_sweeps import get_parameter_sweep
 
 _PAGE_SIZE = 100
 

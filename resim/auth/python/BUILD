@@ -11,7 +11,7 @@ py_library(
     srcs = ["const.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:const",
+        "//signalflag/sdk/auth:const",
     ],
 )
 
@@ -20,7 +20,7 @@ py_library(
     srcs = ["device_code_client.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:device_code_client",
+        "//signalflag/sdk/auth:device_code_client",
     ],
 )
 
@@ -29,7 +29,7 @@ py_library(
     srcs = ["username_password_client.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:username_password_client",
+        "//signalflag/sdk/auth:username_password_client",
     ],
 )
 
@@ -38,7 +38,7 @@ py_library(
     srcs = ["check_expiration.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//resim/sdk/auth:check_expiration",
+        "//signalflag/sdk/auth:check_expiration",
     ],
 )
 

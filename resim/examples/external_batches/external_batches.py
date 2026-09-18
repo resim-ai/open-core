@@ -6,9 +6,9 @@
 
 import time
 import random
-from resim.sdk.batch import Batch
-from resim.sdk.test import Test
-from resim.sdk.auth.username_password_client import UsernamePasswordClient
+from signalflag.sdk.batch import Batch
+from signalflag.sdk.test import Test
+from signalflag.sdk.auth.username_password_client import UsernamePasswordClient
 
 PROJECT_ID = "<project_id>"
 BRANCH_NAME = "my-test-branch"

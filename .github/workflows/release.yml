@@ -77,11 +77,14 @@ jobs:
         # instead of simply relying on build_push_wheels below to put them on PyPI. We do this for
         # now, since not all the wheels our customers depend on are currently available on
         # PyPI. Eventually when all of them are available there we can remove this.
+        #
+        # The SignalFlag SDK wheel is excluded: it is versioned and released on its own by
+        # release-sdk.yml, and must never be published under an open-core version.
       - name: Build Wheels
         env:
           RESIM_VERSION: ${{ github.event.inputs.tag }}
         run: |
-          bazel build //pkg/... --repo_env="RESIM_VERSION=$RESIM_VERSION"
+          bazel build --repo_env="RESIM_VERSION=$RESIM_VERSION" -- //pkg/... -//pkg:sdk_wheel -//pkg:sdk_wheel.dist -//pkg:sdk_wheel.publish
 
       - name: Upload wheels as artifacts
         uses: actions/upload-artifact@v4

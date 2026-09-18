@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from resim.sdk.auth.check_expiration import add_expiration_time, is_expired
+from signalflag.sdk.auth.check_expiration import add_expiration_time, is_expired
 
 __all__ = [
     "add_expiration_time",

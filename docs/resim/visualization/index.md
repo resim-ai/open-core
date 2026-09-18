@@ -70,7 +70,7 @@ And once authenticated the user will be given a link which they can follow to
 observe their visualization in Foxglove Studio.
 
 ```
-View your data visualization in the ReSim App: http://app.resim.ai/view?bucket=resim-mcap&path=sessions/059787c0-3800-47e7-b95b-9d2e593d4908/view.mcap
+View your data visualization in the ReSim App: https://app.signalflag.ai/view?bucket=resim-mcap&path=sessions/059787c0-3800-47e7-b95b-9d2e593d4908/view.mcap
 ```
 
 Following this link opens Foxglove Studio in your browser with the visualization:

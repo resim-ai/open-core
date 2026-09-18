@@ -15,19 +15,21 @@ Usage:
     bazel run //resim/examples:auth_example
 
     # Using username/password (requires environment variables)
-    RESIM_USERNAME=your_username RESIM_PASSWORD=your_password bazel run //resim/examples:auth_example
+    SIGNALFLAG_USERNAME=your_username SIGNALFLAG_PASSWORD=your_password bazel run //resim/examples:auth_example
+
+    (The legacy RESIM_USERNAME and RESIM_PASSWORD names still work.)
 """
 
-import os
 import sys
 from typing import Callable
 from tempfile import NamedTemporaryFile
 import traceback
 from pathlib import Path
-from resim.sdk.auth.device_code_client import DeviceCodeClient
-from resim.sdk.auth.username_password_client import UsernamePasswordClient
-from resim.sdk.client.api.projects import list_projects
-from resim.sdk.client import AuthenticatedClient
+from signalflag.sdk.auth import env
+from signalflag.sdk.auth.device_code_client import DeviceCodeClient
+from signalflag.sdk.auth.username_password_client import UsernamePasswordClient
+from signalflag.sdk.client.api.projects import list_projects
+from signalflag.sdk.client import AuthenticatedClient
 
 
 def _test_auth_and_api(
@@ -112,15 +114,15 @@ def test_username_password_auth() -> bool:
     Returns:
         True if authentication and API call succeeded, False otherwise.
     """
-    username = os.getenv("RESIM_USERNAME")
-    password = os.getenv("RESIM_PASSWORD")
+    username = env.getenv(env.USERNAME)
+    password = env.getenv(env.PASSWORD)
 
     if not username or not password:
         print("\n" + "=" * 60)
         print("Testing Username/Password Authentication")
         print("=" * 60)
         print(
-            "⚠ Skipping username/password test (RESIM_USERNAME and RESIM_PASSWORD not set)"
+            f"⚠ Skipping username/password test ({env.describe(env.USERNAME)} and {env.describe(env.PASSWORD)} not set)"
         )
         return True  # Not a failure, just skipped
 

@@ -8,7 +8,7 @@ from typing import Any
 
 from plotly.colors import qualitative
 from plotly.graph_objects import Figure
-from resim.sdk.client.models.conflated_job_status import ConflatedJobStatus
+from signalflag.sdk.client.models.conflated_job_status import ConflatedJobStatus
 
 RESIM_BLUE = "#93B1FE"
 RESIM_RED = "#FCA6A6"
