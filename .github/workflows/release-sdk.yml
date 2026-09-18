@@ -19,6 +19,12 @@ on:
         description: "Push to Test PyPI instead of production PyPI"
         default: false
 
+# The jobs below run in a container, where the runner's default shell is
+# `sh -e {0}`, not bash -- these scripts use [[ ]] and =~, so ask for bash.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: Test and build the SDK wheel
