@@ -24,7 +24,10 @@ from signalflag.sdk.auth.const import (
     default_cache_location,
     DEFAULT_DOMAIN,
 )
-from signalflag.sdk.auth.device_code_client import DEVICE_CODE_CLIENT_ID, DeviceCodeClient
+from signalflag.sdk.auth.device_code_client import (
+    DEVICE_CODE_CLIENT_ID,
+    DeviceCodeClient,
+)
 from signalflag.sdk.batch import Batch
 from signalflag.sdk.bff_client.dashboards import find_dashboard_id
 from signalflag.sdk.client import AuthenticatedClient

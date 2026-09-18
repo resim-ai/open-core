@@ -24,7 +24,9 @@ from signalflag.sdk.client.api.light_batches import (
 )
 from signalflag.sdk.client.models.close_job_input import CloseJobInput
 from signalflag.sdk.client.models.light_job_status import LightJobStatus
-from signalflag.sdk.client.models.create_job_for_batch_input import CreateJobForBatchInput
+from signalflag.sdk.client.models.create_job_for_batch_input import (
+    CreateJobForBatchInput,
+)
 from signalflag.sdk.client.models.create_job_log_input import CreateJobLogInput
 from signalflag.sdk.client.models.log_type import LogType
 

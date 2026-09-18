@@ -15,6 +15,7 @@ on an old path affect the new module.
 
 import importlib
 import importlib.abc
+import importlib.machinery
 import importlib.util
 import sys
 from types import ModuleType
@@ -28,7 +29,7 @@ class _AliasLoader(importlib.abc.Loader):
         self._module = module
         self._spec = module.__spec__
 
-    def create_module(self, spec):  # type: ignore[override]
+    def create_module(self, spec: importlib.machinery.ModuleSpec) -> ModuleType:
         return self._module
 
     def exec_module(self, module: ModuleType) -> None:
@@ -51,7 +52,7 @@ class _AliasFinder(importlib.abc.MetaPathFinder):
         fullname: str,
         path: Optional[Sequence[str]] = None,
         target: Optional[ModuleType] = None,
-    ):
+    ) -> Optional[importlib.machinery.ModuleSpec]:
         for old, new in self._aliases.items():
             if not fullname.startswith(old + "."):
                 continue

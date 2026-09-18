@@ -306,7 +306,9 @@ class FetchJobMetricsTest(unittest.TestCase):
 )
 @patch("resim.metrics.fetch_job_metrics.get_metrics_proto", new=_mock_get_metrics_proto)
 @patch("resim.metrics.fetch_job_metrics.unpack_metrics", new=_mock_unpack_metrics)
-@patch("signalflag.sdk.client.api.batches.list_jobs.sync", new=_mock_list_job_ids_by_batch)
+@patch(
+    "signalflag.sdk.client.api.batches.list_jobs.sync", new=_mock_list_job_ids_by_batch
+)
 @patch(
     "signalflag.sdk.client.models.list_jobs_output.ListJobsOutput",
     MockListJobsResponse200,

@@ -202,12 +202,17 @@ class EnvironmentCredentialsTest(unittest.TestCase):
         self.assertEqual(client._password, "new-pass")
 
     def test_legacy_resim_names_still_work(self) -> None:
-        client = self._build({"RESIM_USERNAME": "old-user", "RESIM_PASSWORD": "old-pass"})
+        client = self._build(
+            {"RESIM_USERNAME": "old-user", "RESIM_PASSWORD": "old-pass"}
+        )
         self.assertEqual(client._username, "old-user")
         self.assertEqual(client._password, "old-pass")
 
     def test_missing_credentials_name_both_variables(self) -> None:
-        with patch.dict(os.environ, {}, clear=True), self.assertRaises(AssertionError) as ctx:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            self.assertRaises(AssertionError) as ctx,
+        ):
             UsernamePasswordClient()
         self.assertIn("SIGNALFLAG_USERNAME (or RESIM_USERNAME)", str(ctx.exception))
 

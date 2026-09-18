@@ -302,7 +302,8 @@ class RunTest(unittest.TestCase):
     def test_urls_point_at_the_app(self) -> None:
         urls = self._run().urls
         self.assertEqual(
-            urls["batch_a"], "https://app.signalflag.ai/projects/project-1/batches/batch-0"
+            urls["batch_a"],
+            "https://app.signalflag.ai/projects/project-1/batches/batch-0",
         )
         self.assertEqual(
             urls["compare"],
