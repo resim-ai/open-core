@@ -526,6 +526,24 @@ class UrlsTest(unittest.TestCase):
         self.assertNotIn("dashboard", urls)
 
 
+class ReportTest(unittest.TestCase):
+    def test_prints_the_sessions_link_when_present(self) -> None:
+        with patch("builtins.print") as printed:
+            run_module._report(
+                {"batch_a": "url-a", "sessions": "url-sessions"},
+                ("a",),
+                {"a": ""},
+            )
+        output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertIn("url-sessions", output)
+
+    def test_omits_the_dashboard_line_when_there_is_no_dashboard_url(self) -> None:
+        with patch("builtins.print") as printed:
+            run_module._report({"batch_a": "url-a"}, ("a",), {"a": ""})
+        output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertNotIn("Trends dashboard", output)
+
+
 class SessionOrchestrationTest(unittest.TestCase):
     """System resolution, experience tagging, and job-level links.
 
@@ -837,6 +855,15 @@ class TagExperienceTest(unittest.TestCase):
             return_value=MagicMock(status_code=409),
         ):
             run_module.tag_experience(self.client, "project-1", "tag-1", "exp-1")
+
+    def test_an_unexpected_status_raises(self) -> None:
+        with patch.object(
+            run_module.add_experience_tag_to_experience,
+            "sync_detailed",
+            return_value=MagicMock(status_code=500, content=b"boom"),
+        ):
+            with self.assertRaises(Exception):
+                run_module.tag_experience(self.client, "project-1", "tag-1", "exp-1")
 
 
 class AttachmentsTest(unittest.TestCase):
