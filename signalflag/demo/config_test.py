@@ -289,10 +289,19 @@ class ConfigTest(unittest.TestCase):
                         f"quoted string",
                     )
 
-    def test_covers_test_batch_and_dashboard_metrics(self) -> None:
+    def test_covers_test_and_batch_metrics(self) -> None:
         self.assertEqual(
-            METRIC_TYPES - {metric["type"] for metric in self.metrics.values()}, set()
+            {"test", "batch"} - {metric["type"] for metric in self.metrics.values()},
+            set(),
         )
+
+    def test_a_config_with_a_dashboard_has_dashboard_metrics(self) -> None:
+        # Dashboard metrics are only required of a config that declares a
+        # dashboard - a demo with no A/B pair and nothing to trend by build
+        # version (the session demo) legitimately has neither.
+        if not self.dashboards:
+            return
+        self.assertIn("dashboard", {metric["type"] for metric in self.metrics.values()})
 
 
 class MujocoConfigTest(ConfigTest):
@@ -341,7 +350,7 @@ class TemplateCoverageTest(unittest.TestCase):
     def test_every_shipped_template_is_used_by_some_demo(self) -> None:
         # Local import: the registry lives in run.py, which this module does
         # not otherwise depend on.
-        from resim.demo.run import DEMOS
+        from signalflag.demo.run import DEMOS
 
         referenced: set[str] = set()
         for demo in DEMOS.values():

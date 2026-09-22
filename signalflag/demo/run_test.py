@@ -479,7 +479,7 @@ class UrlsTest(unittest.TestCase):
     def test_links_to_the_batch_by_default(self) -> None:
         urls = run_module._urls(fake_client(), "p", {"a": "batch-a"}, None)
         self.assertEqual(
-            urls["batch_a"], "https://app.resim.ai/projects/p/batches/batch-a"
+            urls["batch_a"], "https://app.signalflag.ai/projects/p/batches/batch-a"
         )
 
     def test_links_to_the_job_when_its_side_has_exactly_one(self) -> None:
@@ -488,7 +488,7 @@ class UrlsTest(unittest.TestCase):
         )
         self.assertEqual(
             urls["batch_a"],
-            "https://app.resim.ai/projects/p/batches/batch-a/jobs/job-a?defaultTab=0",
+            "https://app.signalflag.ai/projects/p/batches/batch-a/jobs/job-a?defaultTab=0",
         )
 
     def test_a_side_missing_from_job_ids_still_links_to_its_batch(self) -> None:
@@ -500,7 +500,7 @@ class UrlsTest(unittest.TestCase):
             job_ids={"a": "job-a"},
         )
         self.assertEqual(
-            urls["batch_b"], "https://app.resim.ai/projects/p/batches/batch-b"
+            urls["batch_b"], "https://app.signalflag.ai/projects/p/batches/batch-b"
         )
 
     def test_no_sessions_link_by_default(self) -> None:
@@ -511,7 +511,19 @@ class UrlsTest(unittest.TestCase):
         urls = run_module._urls(
             fake_client(), "p", {"a": "batch-a"}, None, sessions=True
         )
-        self.assertEqual(urls["sessions"], "https://app.resim.ai/projects/p/sessions")
+        self.assertEqual(
+            urls["sessions"], "https://app.signalflag.ai/projects/p/sessions"
+        )
+
+    def test_dashboard_link_by_default(self) -> None:
+        urls = run_module._urls(fake_client(), "p", {"a": "batch-a"}, None)
+        self.assertIn("dashboard", urls)
+
+    def test_no_dashboard_link_when_the_demo_has_no_dashboard(self) -> None:
+        urls = run_module._urls(
+            fake_client(), "p", {"a": "batch-a"}, None, has_dashboard=False
+        )
+        self.assertNotIn("dashboard", urls)
 
 
 class SessionOrchestrationTest(unittest.TestCase):
@@ -905,7 +917,8 @@ class DemoRegistryTest(unittest.TestCase):
                 # underscore; a config using the wrong one syncs with no sets
                 # at all and renders nothing.
                 self.assertIn(demo.metrics_set, config.get("metrics sets") or {})
-                self.assertIn(demo.dashboard_name, config.get("dashboards") or {})
+                if demo.dashboard_name is not None:
+                    self.assertIn(demo.dashboard_name, config.get("dashboards") or {})
 
     def test_demos_do_not_collide(self) -> None:
         # Two demos sharing a project, branch or cache key would overwrite each

@@ -274,47 +274,6 @@ metrics:
     template_type: system
     template: table
 
-  # ----------------------------------------------------------- dashboard level
-  Distance by Session:
-    type: dashboard
-    description: >
-      Total distance covered, one point per session. Each build version is
-      one field session.
-    query_string: |
-      SELECT
-        'Distance' AS group_name,
-        m.build_version AS "Session",
-        s.total_distance_m AS "Distance (m)",
-        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
-          AS link_path
-      FROM session_summary s
-      JOIN metadata m ON s.job_id = m.job_id
-      WHERE m.build_version IS NOT NULL
-      GROUP BY m.build_version, s.total_distance_m
-      ORDER BY m.build_version;
-    skip_if_no_data: true
-    template_type: system
-    template: bar
-
-  Mean Speed by Session:
-    type: dashboard
-    description: Mean ground speed, one point per session.
-    query_string: |
-      SELECT
-        'Mean Speed' AS group_name,
-        m.build_version AS "Session",
-        s.mean_speed_mps AS "Mean Speed (m/s)",
-        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
-          AS link_path
-      FROM session_summary s
-      JOIN metadata m ON s.job_id = m.job_id
-      WHERE m.build_version IS NOT NULL
-      GROUP BY m.build_version, s.mean_speed_mps
-      ORDER BY m.build_version;
-    skip_if_no_data: true
-    template_type: system
-    template: bar
-
 metrics sets:
   Session Metrics:
     metrics:
@@ -327,17 +286,3 @@ metrics sets:
       - Session Summary
       - GNSS Coverage
       - Raw Source Inventory
-
-  Session Trends:
-    metrics:
-      - Distance by Session
-      - Mean Speed by Session
-
-dashboards:
-  Session Evaluations Trends:
-    metrics_set: Session Trends
-    description: >
-      How each field session compares - distance covered and mean speed,
-      one point per session.
-    refresh: auto
-    day_range: 30

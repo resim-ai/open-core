@@ -69,7 +69,10 @@ class Demo:
     #: Metrics config shipped in ``signalflag/demo/data``.
     config_file: str
     metrics_set: str
-    dashboard_name: str
+    #: Name of the dashboard this demo's config defines. None for a demo with
+    #: nothing to trend by build version - it skips dashboard resolution and
+    #: reporting entirely rather than pointing at an empty one.
+    dashboard_name: Optional[str] = None
     #: Manifest keys this demo's bundle defines, one batch each, all on the
     #: same branch. Two sides get a compare link between them; any other
     #: count does not, since "compare" only means something for a pair.
@@ -129,7 +132,7 @@ DEMOS: dict[str, Demo] = {
             "Four real field sessions from a legged robot: GNSS, IMU and gait "
             "telemetry, one batch per session on a shared branch."
         ),
-        project_name="ReSim SDK Demo (Logs to Insights)",
+        project_name="SignalFlag SDK Demo (Logs to Insights)",
         branch="sdk-demo-logs-to-insights",
         bundle=bundle.BundleSource(
             url=(
@@ -141,7 +144,6 @@ DEMOS: dict[str, Demo] = {
         ),
         config_file="session.resim.yml",
         metrics_set="Session Metrics",
-        dashboard_name="Session Evaluations Trends",
         sides=("2024-11-04", "2024-11-14", "2024-11-15", "2024-11-18"),
         system="Session Evaluations",
         experience_tag="resim-session",
@@ -272,7 +274,7 @@ def run(
                 system=chosen.system,
             ) as batch:
                 batch_ids[side] = batch.id
-                if dashboard_id is None:
+                if dashboard_id is None and chosen.dashboard_name:
                     dashboard_id = find_dashboard_id(
                         client,
                         project_id,
@@ -313,6 +315,7 @@ def run(
         dashboard_id,
         job_ids,
         sessions=bool(chosen.experience_tag),
+        has_dashboard=bool(chosen.dashboard_name),
     )
     if not quiet:
         _report(
@@ -643,6 +646,7 @@ def _urls(
     dashboard_id: Optional[str],
     job_ids: Optional[dict[str, str]] = None,
     sessions: bool = False,
+    has_dashboard: bool = True,
 ) -> dict[str, str]:
     app = links.app_base_url(client.get_httpx_client()._base_url)
     job_ids = job_ids or {}
@@ -659,11 +663,14 @@ def _urls(
     if len(batch_ids) == 2:
         first, second = batch_ids.values()
         urls["compare"] = links.compare_batches_url(app, project_id, first, second)
-    urls["dashboard"] = (
-        links.dashboard_url(app, project_id, dashboard_id)
-        if dashboard_id
-        else links.dashboards_url(app, project_id)
-    )
+    # A demo with no dashboard config has nothing to point at - not even the
+    # dashboards list, which would just be empty or someone else's.
+    if has_dashboard:
+        urls["dashboard"] = (
+            links.dashboard_url(app, project_id, dashboard_id)
+            if dashboard_id
+            else links.dashboards_url(app, project_id)
+        )
     if sessions:
         urls["sessions"] = links.sessions_url(app, project_id)
     return urls
@@ -687,7 +694,8 @@ def _report(
             version = versions[side]
             suffix = f" ({version})" if version else ""
             labels.append((f"batch_{side}", f"Batch {side}{suffix}"))
-    labels.append(("dashboard", "Trends dashboard"))
+    if "dashboard" in urls:
+        labels.append(("dashboard", "Trends dashboard"))
 
     width = max(len(label) for _, label in labels)
     print("\nSignalFlag SDK demo complete.\n")
