@@ -1,0 +1,343 @@
+# Metrics config for the Session Evaluations demo (resim.demo.run).
+#
+# Four real field sessions from a legged robot, replayed one batch per
+# session on a shared branch, each with exactly one test. There is no A/B
+# pair here - the sessions trend on the dashboard instead of comparing.
+version: 1
+
+topics:
+  # One row per mission ReSim's own boundary detector found in the session.
+  mission:
+    schema:
+      session_key: string
+      mission_idx: int
+      start_s: float
+      end_s: float
+      duration_s: float
+      distance_m: float
+      net_displacement_m: float
+      mean_speed_mps: float
+      max_speed_mps: float
+      moving_share: float
+      dlio_distance_m: float
+      odom_dlio_gap_m: float
+      gnss_distance_m: float
+      gnss_odom_gap_m: float
+      has_gnss: int
+      gnss_coverage: float
+      gnss_fix_count: int
+      altitude_min_m: float
+      altitude_max_m: float
+      altitude_gain_m: float
+      start_lat: float
+      start_lon: float
+      foot_slip_share: float
+      odom_gnss_fit_rmse_m: float
+
+  # Contiguous stopped/moving segments within a mission.
+  motion_phase:
+    schema:
+      session_key: string
+      mission_idx: int
+      phase_idx: int
+      kind: string
+      start_s: float
+      end_s: float
+      duration_s: float
+      distance_m: float
+      mean_speed_mps: float
+      max_speed_mps: float
+
+  # One row per start/stop transition, with the clip that shows it and the
+  # raw mcap snippet it was cut from.
+  movement_summary:
+    schema:
+      session_key: string
+      seq: int
+      mission_idx: int
+      t_s: float
+      kind: string
+      label: string
+      clip: image
+      snippet: string
+      phase_duration_s: float
+      phase_distance_m: float
+      phase_mean_speed_mps: float
+
+  robot_pose:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      x: float
+      y: float
+      z: float
+      east_m: float
+      north_m: float
+      has_enu: int
+
+  # Gait state: how many feet are down, whether any are slipping.
+  robot_state:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      feet_in_contact: int
+      feet_slipping: int
+      max_foot_force_n: float
+      max_joint_effort_nm: float
+      max_joint_velocity_rps: float
+      speed_mps: float
+
+  speed_sample:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      speed_mps: float
+
+  imu_sample:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      accel_mag_mps2: float
+      gyro_mag_rps: float
+
+  gnss_track:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      latitude: float
+      longitude: float
+      altitude_m: float
+      east_m: float
+      north_m: float
+
+  command_tracking:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      cmd_speed_mps: float
+      act_speed_mps: float
+      speed_error_mps: float
+      cmd_yaw_rps: float
+
+  battery_sample:
+    schema:
+      session_key: string
+      mission_idx: int
+      series: string
+      t_s: float
+      state_of_charge: float
+      cell_temperature_c: float
+
+  # Mission boundaries and clip references. Events show up on their own tab,
+  # pinned to a moment in the run; "metrics" carries the mcap snippet that
+  # backs the event, keyed by name so the viewer knows what it is looking at.
+  session_events:
+    event: true
+    schema:
+      name: string
+      description: string
+      status: status
+      tags: string[]
+      session_key: string
+      recording_key: string
+      mission_idx: int
+      t_s: float
+      metrics: metric[]
+
+  session_summary:
+    schema:
+      session_key: string
+      n_missions_detected: int
+      n_missions_ground_truth: int
+      detection_correct: int
+      boundary_error_s: float
+      total_duration_s: float
+      active_duration_s: float
+      total_distance_m: float
+      total_gnss_distance_m: float
+      mean_speed_mps: float
+
+  # What the session was captured from, before any of the above processing.
+  session_inventory:
+    schema:
+      start_ns: string
+      end_ns: string
+      files: string[]
+      sizes_bytes: string[]
+      formats: string[]
+
+metrics:
+  # ---------------------------------------------------------------- test level
+  Speed Over Time:
+    type: test
+    description: Ground speed of the robot over the course of the session.
+    query_string: |
+      SELECT 'Speed' AS group_name, t_s AS timestamp, speed_mps AS speeds
+      FROM speed_sample
+      ORDER BY t_s;
+    template_file: custom_line.liquid
+    template_type: custom
+
+  IMU Acceleration:
+    type: test
+    description: Magnitude of the IMU's linear acceleration reading.
+    query_string: |
+      SELECT
+        'IMU' AS group_name,
+        t_s AS "Time (s)",
+        accel_mag_mps2 AS "Acceleration (m/s^2)"
+      FROM imu_sample
+      ORDER BY t_s;
+    template_type: system
+    template: line
+
+  Foot Contact and Slip:
+    type: test
+    description: Gait state over the session - how many feet are down, and whether any are slipping.
+    query_string: |
+      SELECT t_s, feet_in_contact, feet_slipping, max_foot_force_n
+      FROM robot_state
+      ORDER BY t_s;
+    template_type: system
+    template: table
+
+  Motion Phases:
+    type: test
+    description: Contiguous stopped/moving segments detected within each mission.
+    query_string: |
+      SELECT mission_idx, phase_idx, kind, duration_s, distance_m, mean_speed_mps
+      FROM motion_phase
+      ORDER BY mission_idx, phase_idx;
+    template_type: system
+    template: table
+
+  Movement Snapshots:
+    type: test
+    description: A frame from every start/stop transition in the session.
+    query_string: |
+      SELECT clip FROM movement_summary ORDER BY t_s;
+    template_type: system
+    template: image
+
+  GNSS Track:
+    type: test
+    description: Raw GNSS fixes over the session.
+    query_string: |
+      SELECT mission_idx, t_s, latitude, longitude, altitude_m
+      FROM gnss_track
+      ORDER BY t_s;
+    template_type: system
+    template: table
+
+  # --------------------------------------------------------------- batch level
+  Session Summary:
+    type: batch
+    description: Headline numbers for the session.
+    query_string: |
+      SELECT n_missions_detected, n_missions_ground_truth, detection_correct,
+             total_distance_m, total_duration_s, mean_speed_mps
+      FROM session_summary;
+    template_type: system
+    template: table
+
+  GNSS Coverage:
+    status:
+      warn: 0.5
+      query_string: |
+        SELECT coverage FROM (
+          SELECT avg(gnss_coverage) AS coverage FROM mission
+        ) WHERE coverage < ?
+    type: batch
+    description: Mean share of the session with a GNSS fix, across missions.
+    query_string: |
+      SELECT avg(gnss_coverage) AS "GNSS Coverage" FROM mission;
+    template_type: system
+    template: scalar
+
+  Raw Source Inventory:
+    type: batch
+    description: The source recording this session's snippets were cut from.
+    query_string: |
+      SELECT files, sizes_bytes, formats FROM session_inventory;
+    template_type: system
+    template: table
+
+  # ----------------------------------------------------------- dashboard level
+  Distance by Session:
+    type: dashboard
+    description: >
+      Total distance covered, one point per session. Each build version is
+      one field session.
+    query_string: |
+      SELECT
+        'Distance' AS group_name,
+        m.build_version AS "Session",
+        s.total_distance_m AS "Distance (m)",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM session_summary s
+      JOIN metadata m ON s.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY m.build_version, s.total_distance_m
+      ORDER BY m.build_version;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+  Mean Speed by Session:
+    type: dashboard
+    description: Mean ground speed, one point per session.
+    query_string: |
+      SELECT
+        'Mean Speed' AS group_name,
+        m.build_version AS "Session",
+        s.mean_speed_mps AS "Mean Speed (m/s)",
+        '/projects/' || ARBITRARY(m.project_id) || '/batches/' || ARBITRARY(m.batch_id)
+          AS link_path
+      FROM session_summary s
+      JOIN metadata m ON s.job_id = m.job_id
+      WHERE m.build_version IS NOT NULL
+      GROUP BY m.build_version, s.mean_speed_mps
+      ORDER BY m.build_version;
+    skip_if_no_data: true
+    template_type: system
+    template: bar
+
+metrics sets:
+  Session Metrics:
+    metrics:
+      - Speed Over Time
+      - IMU Acceleration
+      - Foot Contact and Slip
+      - Motion Phases
+      - Movement Snapshots
+      - GNSS Track
+      - Session Summary
+      - GNSS Coverage
+      - Raw Source Inventory
+
+  Session Trends:
+    metrics:
+      - Distance by Session
+      - Mean Speed by Session
+
+dashboards:
+  Session Evaluations Trends:
+    metrics_set: Session Trends
+    description: >
+      How each field session compares - distance covered and mean speed,
+      one point per session.
+    refresh: auto
+    day_range: 30

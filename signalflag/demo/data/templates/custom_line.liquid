@@ -1,0 +1,68 @@
+{
+  "data": [
+    {
+      "x": [
+        {% for item in timestamp -%}
+          "{{ item }}"{% unless forloop.last %},{% endunless %}
+        {%- endfor %}
+      ],
+      "y": [
+        {% for item in speeds -%}
+          "{{ item }}"{% unless forloop.last %},{% endunless %}
+        {%- endfor %}
+      ],
+      "type": "scatter",
+      "mode": "lines",
+      "line": {
+        "color": "#1f77b4",
+        "dash": "solid"
+      },
+      "name": "{{ group_name[0] | default: 'Series' }}",
+      "marker": {
+        "symbol": "circle"
+      }
+    }
+  ],
+  "layout": {
+    "xaxis": {
+      "title": {
+        "text": "timestamp"
+      },
+      "gridcolor": "rgb(120, 120, 120)",
+      "showgrid": true,
+      "zeroline": false
+    },
+    "yaxis": {
+      "title": {
+        "text": "speeds"
+      },
+      "gridcolor": "rgb(120, 120, 120)",
+      "showgrid": true,
+      "zeroline": false
+    },
+    "hoverlabel": {
+      "family": "Foundry Gridnik Medium"
+    },
+    "plot_bgcolor": "rgb(0, 0, 0, 0)",
+    "paper_bgcolor": "rgb(0, 0, 0, 0)",
+    "margin": {
+      "l": 60,
+      "r": 30,
+      "b": 60,
+      "t": 80
+    },
+    "showlegend": true,
+    "hovermode": "closest"
+  },
+  "config": {
+    "responsive": true,
+    "modeBarButtonsToRemove": [
+      "sendDataToCloud",
+      "autoScale2d",
+      "hoverClosestCartesian",
+      "hoverCompareCartesian",
+      "lasso2d",
+      "select2d"
+    ]
+  }
+}

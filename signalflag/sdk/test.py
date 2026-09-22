@@ -234,6 +234,16 @@ class Test(Emitter):
             output_path=emissions_file_path,
         )
 
+    @property
+    def job_id(self) -> str:
+        """ID of the job (test) this created."""
+        return str(self._test.job_id)
+
+    @property
+    def experience_id(self) -> str:
+        """ID of the experience the API auto-created or matched for this job."""
+        return str(self._test.experience_id)
+
     def attach_log(
         self,
         file_path: str,

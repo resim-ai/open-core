@@ -9,6 +9,7 @@ your own. Pick one with `--demo` — there is no default, and running
 | --- | --- |
 | `navigation` | A hospital navigation suite. Dense telemetry across a suite of scenarios, covering every chart type ReSim ships. |
 | `mujoco` | A bimanual manipulation policy in MuJoCo, one test per seed, compared across two policy builds. |
+| `session` | Four real field sessions from a legged robot - one batch per session, trended on a shared dashboard rather than compared A/B. |
 
 Each demo is an entry in `DEMOS` (`run.py`) plus a metrics config in `data/`.
 The config is the interesting part — it is a real, working config, and the
@@ -19,6 +20,7 @@ from signalflag.demo import config_path
 
 print(config_path("navigation").read_text())  # the navigation demo's config
 print(config_path("mujoco").read_text())  # the MuJoCo demo's config
+print(config_path("session").read_text())  # the Session Evaluations demo's config
 ```
 
 ## Where the replay data comes from

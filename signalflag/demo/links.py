@@ -16,6 +16,8 @@ __all__ = [
     "compare_batches_url",
     "dashboard_url",
     "dashboards_url",
+    "job_url",
+    "sessions_url",
 ]
 
 
@@ -67,3 +69,15 @@ def dashboards_url(app_url: str, project_id: str) -> str:
     still points somewhere useful instead of printing nothing.
     """
     return f"{app_url}/projects/{project_id}/dashboards"
+
+
+def job_url(app_url: str, project_id: str, batch_id: str, job_id: str) -> str:
+    """URL of a single job's detail page, opened on its log viewer tab."""
+    return (
+        f"{app_url}/projects/{project_id}/batches/{batch_id}/jobs/{job_id}?defaultTab=0"
+    )
+
+
+def sessions_url(app_url: str, project_id: str) -> str:
+    """URL of a project's Sessions view, across every tagged experience."""
+    return f"{app_url}/projects/{project_id}/sessions"

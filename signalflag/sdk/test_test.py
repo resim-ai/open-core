@@ -142,6 +142,19 @@ class TestTest(unittest.TestCase):
         self.mock_close_job.sync_detailed.assert_called_once()
         self.assertEqual(self._close_job_body().status, LightJobStatus.SUCCEEDED)
 
+    def test_job_id_exposes_the_created_job(self) -> None:
+        with Test(self.client, self.batch, TEST_NAME) as test:
+            self.assertEqual(test.job_id, JOB_ID)
+
+    def test_experience_id_exposes_the_job_s_auto_created_experience(self) -> None:
+        # The API auto-creates or matches an experience for every job, whether
+        # or not the caller asked for one; this is the public way to read it
+        # back, e.g. to tag it, instead of reaching into the raw job response.
+        self.mock_create_job.sync_detailed.return_value.parsed.experience_id = "exp-1"
+
+        with Test(self.client, self.batch, TEST_NAME) as test:
+            self.assertEqual(test.experience_id, "exp-1")
+
     def test_attach_log(self) -> None:
         content = b"fake image data"
         log_path = self._write_file("some_image.jpeg", content)
