@@ -31,8 +31,19 @@ from signalflag.sdk.auth.device_code_client import (
 from signalflag.sdk.batch import Batch
 from signalflag.sdk.bff_client.dashboards import find_dashboard_id
 from signalflag.sdk.client import AuthenticatedClient
+from signalflag.sdk.client.api.experience_tags import (
+    add_experience_tag_to_experience,
+    create_experience_tag,
+    list_experience_tags,
+)
 from signalflag.sdk.client.api.projects import create_project, list_projects
+from signalflag.sdk.client.api.systems import create_system, list_systems
+from signalflag.sdk.client.models.architecture import Architecture
+from signalflag.sdk.client.models.create_experience_tag_input import (
+    CreateExperienceTagInput,
+)
 from signalflag.sdk.client.models.create_project_input import CreateProjectInput
+from signalflag.sdk.client.models.create_system_input import CreateSystemInput
 from signalflag.sdk.test import LogType, Test
 
 __all__ = ["DEMOS", "Demo", "DemoResult", "config_path", "run", "templates_path"]
@@ -58,7 +69,20 @@ class Demo:
     #: Metrics config shipped in ``signalflag/demo/data``.
     config_file: str
     metrics_set: str
-    dashboard_name: str
+    #: Name of the dashboard this demo's config defines. None for a demo with
+    #: nothing to trend by build version - it skips dashboard resolution and
+    #: reporting entirely rather than pointing at an empty one.
+    dashboard_name: Optional[str] = None
+    #: Manifest keys this demo's bundle defines, one batch each, all on the
+    #: same branch. Two sides get a compare link between them; any other
+    #: count does not, since "compare" only means something for a pair.
+    sides: tuple[str, ...] = ("a", "b")
+    #: System each batch is attached to. Created if it does not exist yet.
+    #: None skips system resolution entirely.
+    system: Optional[str] = None
+    #: Experience tag applied to every experience this demo's batches create.
+    #: None skips tagging entirely.
+    experience_tag: Optional[str] = None
 
 
 DEMOS: dict[str, Demo] = {
@@ -102,6 +126,28 @@ DEMOS: dict[str, Demo] = {
         metrics_set="ALOHA Metrics",
         dashboard_name="ALOHA Policy Trends",
     ),
+    "session": Demo(
+        key="session",
+        summary=(
+            "Four real field sessions from a legged robot: GNSS, IMU and gait "
+            "telemetry, one batch per session on a shared branch."
+        ),
+        project_name="SignalFlag SDK Demo (Logs to Insights)",
+        branch="sdk-demo-logs-to-insights",
+        bundle=bundle.BundleSource(
+            url=(
+                "https://resim-public-assets.s3.us-east-1.amazonaws.com"
+                "/sdk-demo/resim-sdk-demo-session-v1.tar.gz"
+            ),
+            sha256="ffdae98bfd9e4ef85f65691d82dd57d3ae10f3229fd96b9ea2dab7ccf4c7ad60",
+            cache_key="session-v1",
+        ),
+        config_file="session.resim.yml",
+        metrics_set="Session Metrics",
+        sides=("2024-11-04", "2024-11-14", "2024-11-15", "2024-11-18"),
+        system="Session Evaluations",
+        experience_tag="resim-session",
+    ),
 }
 
 
@@ -127,11 +173,6 @@ ENV_API_URL = env.API_URL
 ENV_AUTH_DOMAIN = env.AUTH_DOMAIN
 ENV_CLIENT_ID = env.CLIENT_ID
 
-# Both batches run on the same branch: a dashboard is scoped to one branch, so
-# this is what lets a single dashboard trend across both of them. They are told
-# apart by their build version instead.
-SIDES = ("a", "b")
-
 
 @dataclass(frozen=True)
 class DemoResult:
@@ -152,13 +193,13 @@ def run(
     data_dir: Optional[Union[str, Path]] = None,
     quiet: bool = False,
 ) -> DemoResult:
-    """Populate a ReSim project with two comparable batches and print the links.
+    """Populate a ReSim project with the demo's batches and print the links.
 
     Creates the project if it does not exist, syncs the demo's metrics config
     (which also creates the branch and the trends dashboard), then replays real
-    test data into two light batches that differ only by build version. The
-    result is a batch to look at, a second batch to compare it against, and a
-    dashboard that trends both.
+    test data into one light batch per side on that branch. Two sides differ
+    by build version and get an A/B comparison link; any other count trends on
+    the dashboard instead.
 
     Args:
         project_name: Project to run in. Created if it does not exist.
@@ -166,7 +207,7 @@ def run(
         demo: Which demo to run. See :data:`DEMOS`.
         client: An authenticated ReSim API client. Defaults to interactive
             device code authentication against production.
-        branch: Branch to create the batches on. Both batches share it.
+        branch: Branch to create the batches on. Every side shares it.
             Defaults to the chosen demo's own branch.
         data_dir: An already-extracted demo data bundle to replay instead of
             downloading one. Mainly useful for development.
@@ -197,15 +238,24 @@ def run(
 
     project_id = resolve_project(client, project_name, say)
 
+    if chosen.system:
+        resolve_system(client, project_id, chosen.system, say)
+    tag_id = (
+        resolve_experience_tag(client, project_id, chosen.experience_tag, say)
+        if chosen.experience_tag
+        else None
+    )
+
     config_resource, templates_resource = _package_data(chosen)
 
     batch_ids: dict[str, str] = {}
+    job_ids: dict[str, str] = {}
     dashboard_id: Optional[str] = None
     with (
         resources.as_file(config_resource) as config,
         resources.as_file(templates_resource) as templates,
     ):
-        for side in SIDES:
+        for side in chosen.sides:
             details = data.batch(side)
             jobs = data.jobs(side)
             say(
@@ -221,9 +271,10 @@ def run(
                 metrics_set_name=chosen.metrics_set,
                 metrics_config_path=str(config),
                 templates_path=str(templates),
+                system=chosen.system,
             ) as batch:
                 batch_ids[side] = batch.id
-                if dashboard_id is None:
+                if dashboard_id is None and chosen.dashboard_name:
                     dashboard_id = find_dashboard_id(
                         client,
                         project_id,
@@ -233,7 +284,12 @@ def run(
                 tests: list[Test] = []
                 try:
                     for job in jobs:
-                        tests.append(replay_job(client, batch, data, job))
+                        test = replay_job(client, batch, data, job)
+                        tests.append(test)
+                        if tag_id:
+                            tag_experience(
+                                client, project_id, tag_id, test.experience_id
+                            )
                         say(f"  {job.get('experience_name')}")
                 finally:
                     close_errors = []
@@ -247,11 +303,25 @@ def run(
                     # the original error the caller needs to see.
                     if close_errors and sys.exc_info()[0] is None:
                         raise close_errors[0]
+                # A single-job batch is one session, not an A/B suite; link
+                # straight to it instead of to the (otherwise identical) batch.
+                if len(tests) == 1:
+                    job_ids[side] = tests[0].job_id
 
-    urls = _urls(client, project_id, batch_ids, dashboard_id)
+    urls = _urls(
+        client,
+        project_id,
+        batch_ids,
+        dashboard_id,
+        job_ids,
+        sessions=bool(chosen.experience_tag),
+        has_dashboard=bool(chosen.dashboard_name),
+    )
     if not quiet:
         _report(
-            urls, {side: str(data.batch(side).get("version") or "") for side in SIDES}
+            urls,
+            chosen.sides,
+            {side: str(data.batch(side).get("version") or "") for side in chosen.sides},
         )
 
     return DemoResult(
@@ -309,6 +379,104 @@ def resolve_project(
     )
     assert created is not None, f"failed to create project {name!r}"
     return str(created.project_id)
+
+
+# A light batch never runs a container under this system, so these build
+# defaults are never actually used; the API requires them regardless.
+_UNUSED_BUILD_RESOURCES = {
+    "build_vcpus": 1,
+    "build_memory_mib": 1024,
+    "build_gpus": 0,
+    "build_shared_memory_mb": 64,
+    "metrics_build_vcpus": 1,
+    "metrics_build_memory_mib": 1024,
+    "metrics_build_gpus": 0,
+    "metrics_build_shared_memory_mb": 64,
+}
+
+
+def resolve_system(
+    client: AuthenticatedClient,
+    project_id: str,
+    name: str,
+    say: Any = lambda _: None,
+) -> str:
+    """Return the ID of the system called ``name``, creating it if needed."""
+    response = list_systems.sync_detailed(project_id, client=client, name=name)
+    assert response.parsed is not None, f"failed to list systems: {response.content!r}"
+    for system in response.parsed.systems or []:
+        if system.name == name:
+            return str(system.system_id)
+
+    say(f"Creating system {name!r}")
+    created = create_system.sync_detailed(
+        project_id,
+        client=client,
+        body=CreateSystemInput(
+            name=name,
+            description=PROJECT_DESCRIPTION,
+            architecture=Architecture.AMD64,
+            **_UNUSED_BUILD_RESOURCES,
+        ),
+    )
+    assert created.parsed is not None, (
+        f"failed to create system {name!r}: {created.content!r}"
+    )
+    return str(created.parsed.system_id)
+
+
+def resolve_experience_tag(
+    client: AuthenticatedClient,
+    project_id: str,
+    name: str,
+    say: Any = lambda _: None,
+) -> str:
+    """Return the ID of the experience tag called ``name``, creating it if needed."""
+    page_token: Optional[str] = None
+    while True:
+        kwargs: dict[str, Any] = {"client": client, "name": name}
+        if page_token:
+            kwargs["page_token"] = page_token
+        response = list_experience_tags.sync_detailed(project_id, **kwargs)
+        assert response.parsed is not None, (
+            f"failed to list experience tags: {response.content!r}"
+        )
+        for tag in response.parsed.experience_tags or []:
+            if tag.name == name:
+                return str(tag.experience_tag_id)
+        page_token = str(response.parsed.next_page_token or "") or None
+        if not page_token:
+            break
+
+    say(f"Creating experience tag {name!r}")
+    created = create_experience_tag.sync_detailed(
+        project_id,
+        client=client,
+        body=CreateExperienceTagInput(name=name, description=PROJECT_DESCRIPTION),
+    )
+    assert created.parsed is not None, (
+        f"failed to create experience tag {name!r}: {created.content!r}"
+    )
+    return str(created.parsed.experience_tag_id)
+
+
+def tag_experience(
+    client: AuthenticatedClient, project_id: str, tag_id: str, experience_id: str
+) -> None:
+    """Attach an experience tag to an experience.
+
+    A 409 means it is already tagged, which is the state this is asking for,
+    not a failure - re-running the demo against the same project hits this on
+    every pass after the first.
+    """
+    response = add_experience_tag_to_experience.sync_detailed(
+        project_id, tag_id, experience_id, client=client
+    )
+    if response.status_code not in (200, 201, 204, 409):
+        raise Exception(
+            f"failed to tag experience {experience_id} with {tag_id}: "
+            f"{response.status_code} {response.content!r}"
+        )
 
 
 def replay_job(
@@ -476,30 +644,59 @@ def _urls(
     project_id: str,
     batch_ids: dict[str, str],
     dashboard_id: Optional[str],
+    job_ids: Optional[dict[str, str]] = None,
+    sessions: bool = False,
+    has_dashboard: bool = True,
 ) -> dict[str, str]:
     app = links.app_base_url(client.get_httpx_client()._base_url)
+    job_ids = job_ids or {}
     urls = {
-        "batch_a": links.batch_url(app, project_id, batch_ids["a"]),
-        "batch_b": links.batch_url(app, project_id, batch_ids["b"]),
-        "compare": links.compare_batches_url(
-            app, project_id, batch_ids["a"], batch_ids["b"]
-        ),
+        f"batch_{side}": (
+            links.job_url(app, project_id, batch_id, job_ids[side])
+            if side in job_ids
+            else links.batch_url(app, project_id, batch_id)
+        )
+        for side, batch_id in batch_ids.items()
     }
-    urls["dashboard"] = (
-        links.dashboard_url(app, project_id, dashboard_id)
-        if dashboard_id
-        else links.dashboards_url(app, project_id)
-    )
+    # "Compare" only means something for a pair; three or more batches trend
+    # on the dashboard instead of comparing pairwise.
+    if len(batch_ids) == 2:
+        first, second = batch_ids.values()
+        urls["compare"] = links.compare_batches_url(app, project_id, first, second)
+    # A demo with no dashboard config has nothing to point at - not even the
+    # dashboards list, which would just be empty or someone else's.
+    if has_dashboard:
+        urls["dashboard"] = (
+            links.dashboard_url(app, project_id, dashboard_id)
+            if dashboard_id
+            else links.dashboards_url(app, project_id)
+        )
+    if sessions:
+        urls["sessions"] = links.sessions_url(app, project_id)
     return urls
 
 
-def _report(urls: dict[str, str], versions: dict[str, str]) -> None:
-    labels = (
-        ("batch_a", f"Batch A (baseline, {versions['a']})"),
-        ("batch_b", f"Batch B (candidate, {versions['b']})"),
-        ("compare", "A/B comparison"),
-        ("dashboard", "Trends dashboard"),
-    )
+def _report(
+    urls: dict[str, str], sides: tuple[str, ...], versions: dict[str, str]
+) -> None:
+    labels = []
+    if "sessions" in urls:
+        # The main thing to look at for a sessions-style demo; individual
+        # batch links below are for digging into one session's raw results.
+        labels.append(("sessions", "Sessions view"))
+    if len(sides) == 2:
+        first, second = sides
+        labels.append((f"batch_{first}", f"Batch A (baseline, {versions[first]})"))
+        labels.append((f"batch_{second}", f"Batch B (candidate, {versions[second]})"))
+        labels.append(("compare", "A/B comparison"))
+    else:
+        for side in sides:
+            version = versions[side]
+            suffix = f" ({version})" if version else ""
+            labels.append((f"batch_{side}", f"Batch {side}{suffix}"))
+    if "dashboard" in urls:
+        labels.append(("dashboard", "Trends dashboard"))
+
     width = max(len(label) for _, label in labels)
     print("\nSignalFlag SDK demo complete.\n")
     for key, label in labels:

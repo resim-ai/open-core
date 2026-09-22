@@ -14,6 +14,8 @@ from signalflag.demo.links import (
     compare_batches_url,
     dashboard_url,
     dashboards_url,
+    job_url,
+    sessions_url,
 )
 
 APP = "https://app.signalflag.ai"
@@ -68,6 +70,15 @@ class RouteTest(unittest.TestCase):
 
     def test_dashboards_list(self) -> None:
         self.assertEqual(dashboards_url(APP, "p"), f"{APP}/projects/p/dashboards")
+
+    def test_job(self) -> None:
+        self.assertEqual(
+            job_url(APP, "p", "b", "j"),
+            f"{APP}/projects/p/batches/b/jobs/j?defaultTab=0",
+        )
+
+    def test_sessions(self) -> None:
+        self.assertEqual(sessions_url(APP, "p"), f"{APP}/projects/p/sessions")
 
 
 if __name__ == "__main__":

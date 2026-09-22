@@ -276,11 +276,32 @@ class ConfigTest(unittest.TestCase):
                 {"block", "warn"} & set(status),
                 f"metric {name!r} status needs a block or warn value",
             )
+            for key in ("block", "warn"):
+                if key in status:
+                    # YAML happily accepts a quoted '0.5' here, but the BFF
+                    # rejects it at sync time with "Expected Number but got
+                    # String" - a failure that only shows up once someone
+                    # runs the demo, not in this test suite, unless checked.
+                    self.assertIsInstance(
+                        status[key],
+                        (int, float),
+                        f"metric {name!r} status {key!r} must be a number, not a "
+                        f"quoted string",
+                    )
 
-    def test_covers_test_batch_and_dashboard_metrics(self) -> None:
+    def test_covers_test_and_batch_metrics(self) -> None:
         self.assertEqual(
-            METRIC_TYPES - {metric["type"] for metric in self.metrics.values()}, set()
+            {"test", "batch"} - {metric["type"] for metric in self.metrics.values()},
+            set(),
         )
+
+    def test_a_config_with_a_dashboard_has_dashboard_metrics(self) -> None:
+        # Dashboard metrics are only required of a config that declares a
+        # dashboard - a demo with no A/B pair and nothing to trend by build
+        # version (the session demo) legitimately has neither.
+        if not self.dashboards:
+            return
+        self.assertIn("dashboard", {metric["type"] for metric in self.metrics.values()})
 
 
 class MujocoConfigTest(ConfigTest):
@@ -316,13 +337,32 @@ class NavigationCoverageTest(ConfigTest):
             "the demo should populate the Events tab",
         )
 
-    def test_every_shipped_template_is_used(self) -> None:
-        referenced = {
-            metric.get("template_file")
-            for metric in self.metrics.values()
-            if metric.get("template_type") == "custom"
-        }
-        self.assertEqual(_templates() - referenced, set())
+
+class SessionConfigTest(ConfigTest):
+    """The Session Evaluations demo's config, held to exactly the same rules."""
+
+    config_file = "session.resim.yml"
+
+
+class TemplateCoverageTest(unittest.TestCase):
+    """Templates are shared across every demo's config, not owned by one."""
+
+    def test_every_shipped_template_is_used_by_some_demo(self) -> None:
+        # Local import: the registry lives in run.py, which this module does
+        # not otherwise depend on.
+        from signalflag.demo.run import DEMOS
+
+        referenced: set[str] = set()
+        for demo in DEMOS.values():
+            config = _load(demo.config_file)
+            for metric in (config.get("metrics") or {}).values():
+                if metric.get("template_type") == "custom":
+                    referenced.add(metric["template_file"])
+        self.assertEqual(
+            _templates() - referenced,
+            set(),
+            "a shipped template that no demo references is dead weight",
+        )
 
 
 if __name__ == "__main__":

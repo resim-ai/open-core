@@ -18,6 +18,7 @@ import json
 import os
 import tempfile
 import unittest
+from dataclasses import replace
 
 import yaml
 from importlib import import_module, resources
@@ -142,6 +143,37 @@ def write_fixture_bundle(root: Path) -> None:
     )
 
 
+def write_single_sided_fixture_bundle(root: Path, side: str = "x") -> None:
+    """One side, one job, reusing navigation's real topics.
+
+    For testing the system/experience-tag/job-link mechanics generically,
+    without hand-writing a second full config's worth of fixture emissions.
+    """
+    job_dir = root / side
+    job_dir.mkdir(parents=True, exist_ok=True)
+    (job_dir / "emissions.resim.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in _emissions(with_media=False)),
+        encoding="utf8",
+    )
+    batches = {
+        side: {
+            "name": "Fake Session",
+            "version": side,
+            "jobs": [
+                {
+                    "experience_name": "Fake Experience",
+                    "directory": side,
+                    "emissions": "emissions.resim.jsonl",
+                    "media": [],
+                }
+            ],
+        }
+    }
+    (root / "manifest.json").write_text(
+        json.dumps({"version": 1, "batches": batches}), encoding="utf8"
+    )
+
+
 class FakeBatch:
     """Stands in for signalflag.sdk.batch.Batch, recording how it was constructed."""
 
@@ -176,6 +208,8 @@ class FakeTest(Emitter):
         self.batch_id = batch.id
         self._closed = False
         FakeTest.started.append((batch.id, name))
+        self.job_id = f"job-{batch.id}-{len(FakeTest.started)}"
+        self.experience_id = f"exp-{self.job_id}"
         output = FakeTest.output_dir / f"{batch.id}-{len(FakeTest.started)}.jsonl"
         super().__init__(config_path=batch.metrics_config_path, output_path=output)
 
@@ -441,6 +475,162 @@ class RunTest(unittest.TestCase):
         self.assertIn(":1", str(ctx.exception))
 
 
+class UrlsTest(unittest.TestCase):
+    def test_links_to_the_batch_by_default(self) -> None:
+        urls = run_module._urls(fake_client(), "p", {"a": "batch-a"}, None)
+        self.assertEqual(
+            urls["batch_a"], "https://app.signalflag.ai/projects/p/batches/batch-a"
+        )
+
+    def test_links_to_the_job_when_its_side_has_exactly_one(self) -> None:
+        urls = run_module._urls(
+            fake_client(), "p", {"a": "batch-a"}, None, job_ids={"a": "job-a"}
+        )
+        self.assertEqual(
+            urls["batch_a"],
+            "https://app.signalflag.ai/projects/p/batches/batch-a/jobs/job-a?defaultTab=0",
+        )
+
+    def test_a_side_missing_from_job_ids_still_links_to_its_batch(self) -> None:
+        urls = run_module._urls(
+            fake_client(),
+            "p",
+            {"a": "batch-a", "b": "batch-b"},
+            None,
+            job_ids={"a": "job-a"},
+        )
+        self.assertEqual(
+            urls["batch_b"], "https://app.signalflag.ai/projects/p/batches/batch-b"
+        )
+
+    def test_no_sessions_link_by_default(self) -> None:
+        urls = run_module._urls(fake_client(), "p", {"a": "batch-a"}, None)
+        self.assertNotIn("sessions", urls)
+
+    def test_sessions_link_when_requested(self) -> None:
+        urls = run_module._urls(
+            fake_client(), "p", {"a": "batch-a"}, None, sessions=True
+        )
+        self.assertEqual(
+            urls["sessions"], "https://app.signalflag.ai/projects/p/sessions"
+        )
+
+    def test_dashboard_link_by_default(self) -> None:
+        urls = run_module._urls(fake_client(), "p", {"a": "batch-a"}, None)
+        self.assertIn("dashboard", urls)
+
+    def test_no_dashboard_link_when_the_demo_has_no_dashboard(self) -> None:
+        urls = run_module._urls(
+            fake_client(), "p", {"a": "batch-a"}, None, has_dashboard=False
+        )
+        self.assertNotIn("dashboard", urls)
+
+
+class ReportTest(unittest.TestCase):
+    def test_prints_the_sessions_link_when_present(self) -> None:
+        with patch("builtins.print") as printed:
+            run_module._report(
+                {"batch_a": "url-a", "sessions": "url-sessions"},
+                ("a",),
+                {"a": ""},
+            )
+        output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertIn("url-sessions", output)
+
+    def test_omits_the_dashboard_line_when_there_is_no_dashboard_url(self) -> None:
+        with patch("builtins.print") as printed:
+            run_module._report({"batch_a": "url-a"}, ("a",), {"a": ""})
+        output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertNotIn("Trends dashboard", output)
+
+
+class SessionOrchestrationTest(unittest.TestCase):
+    """System resolution, experience tagging, and job-level links.
+
+    Exercised generically against navigation's real config with ``sides``,
+    ``system`` and ``experience_tag`` overridden, rather than duplicating a
+    second full config's worth of fixture emissions.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        write_single_sided_fixture_bundle(self.root)
+        FakeBatch.created = []
+        FakeBatch.closed = []
+        FakeTest.started = []
+        FakeTest.attached = []
+        FakeTest.events = []
+        FakeTest.output_dir = self.root / "emitted"
+        FakeTest.output_dir.mkdir()
+
+        fake_demo = replace(
+            run_module.DEMOS["navigation"],
+            key="fake-session",
+            sides=("x",),
+            system="Test System",
+            experience_tag="test-tag",
+        )
+        self.patches: list[Any] = [
+            patch.object(run_module, "Batch", FakeBatch),
+            patch.object(run_module, "Test", FakeTest),
+            patch.object(run_module, "resolve_project", return_value="project-1"),
+            patch.object(run_module, "find_dashboard_id", return_value="dash-1"),
+            patch.dict(run_module.DEMOS, {"fake-session": fake_demo}),
+            patch.object(run_module, "resolve_system", return_value="sys-1"),
+            patch.object(run_module, "resolve_experience_tag", return_value="tag-1"),
+            patch.object(run_module, "tag_experience"),
+        ]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self) -> None:
+        for p in self.patches:
+            p.stop()
+        self.temp.cleanup()
+
+    def _run(self) -> Any:
+        return run(
+            demo="fake-session", client=fake_client(), data_dir=self.root, quiet=True
+        )
+
+    def test_resolves_the_system_before_creating_a_batch(self) -> None:
+        self._run()
+        run_module.resolve_system.assert_called_once()
+        self.assertEqual(run_module.resolve_system.call_args.args[2], "Test System")
+
+    def test_passes_the_system_to_the_batch(self) -> None:
+        self._run()
+        self.assertEqual(FakeBatch.created[0]["system"], "Test System")
+
+    def test_tags_the_test_s_experience(self) -> None:
+        self._run()
+        run_module.tag_experience.assert_called_once()
+        self.assertEqual(run_module.tag_experience.call_args.args[2], "tag-1")
+
+    def test_links_to_the_job_not_the_batch(self) -> None:
+        result = self._run()
+        self.assertIn("/jobs/", result.urls["batch_x"])
+        self.assertIn("defaultTab=0", result.urls["batch_x"])
+
+    def test_no_compare_link_for_a_single_side(self) -> None:
+        result = self._run()
+        self.assertNotIn("compare", result.urls)
+
+    def test_a_demo_without_a_system_or_tag_skips_both(self) -> None:
+        with patch.dict(
+            run_module.DEMOS,
+            {
+                "fake-session": replace(
+                    run_module.DEMOS["fake-session"], system=None, experience_tag=None
+                )
+            },
+        ):
+            self._run()
+        run_module.resolve_system.assert_not_called()
+        run_module.tag_experience.assert_not_called()
+
+
 class DefaultClientTest(unittest.TestCase):
     """The env overrides decide which deployment is hit and which token cache is
     written, so both are pinned: a staging login must not overwrite the token a
@@ -542,6 +732,140 @@ class ResolveProjectTest(unittest.TestCase):
         self.assertEqual(listed.call_count, 2)
 
 
+class ResolveSystemTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = fake_client()
+
+    def _systems(self, *names: str) -> MagicMock:
+        systems = []
+        for n in names:
+            system = MagicMock(system_id=f"id-{n}")
+            system.name = n
+            systems.append(system)
+        response = MagicMock(status_code=200)
+        response.parsed.systems = systems
+        return response
+
+    def test_returns_an_existing_system(self) -> None:
+        with patch.object(
+            run_module.list_systems,
+            "sync_detailed",
+            return_value=self._systems("Mine"),
+        ):
+            self.assertEqual(
+                run_module.resolve_system(self.client, "project-1", "Mine"), "id-Mine"
+            )
+
+    def test_creates_a_missing_system(self) -> None:
+        created = MagicMock(status_code=201)
+        created.parsed.system_id = "new-id"
+        with (
+            patch.object(
+                run_module.list_systems,
+                "sync_detailed",
+                return_value=self._systems("Other"),
+            ),
+            patch.object(
+                run_module.create_system, "sync_detailed", return_value=created
+            ) as create,
+        ):
+            self.assertEqual(
+                run_module.resolve_system(self.client, "project-1", "Mine"), "new-id"
+            )
+        self.assertEqual(create.call_args.kwargs["body"].name, "Mine")
+
+
+class ResolveExperienceTagTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = fake_client()
+
+    def _tags(self, *names: str, next_page_token: Any = None) -> MagicMock:
+        tags = []
+        for n in names:
+            tag = MagicMock(experience_tag_id=f"id-{n}")
+            tag.name = n
+            tags.append(tag)
+        response = MagicMock(status_code=200)
+        response.parsed.experience_tags = tags
+        response.parsed.next_page_token = next_page_token
+        return response
+
+    def test_returns_an_existing_tag(self) -> None:
+        with patch.object(
+            run_module.list_experience_tags,
+            "sync_detailed",
+            return_value=self._tags("mine"),
+        ):
+            self.assertEqual(
+                run_module.resolve_experience_tag(self.client, "project-1", "mine"),
+                "id-mine",
+            )
+
+    def test_creates_a_missing_tag(self) -> None:
+        created = MagicMock(status_code=201)
+        created.parsed.experience_tag_id = "new-id"
+        with (
+            patch.object(
+                run_module.list_experience_tags,
+                "sync_detailed",
+                return_value=self._tags("other"),
+            ),
+            patch.object(
+                run_module.create_experience_tag, "sync_detailed", return_value=created
+            ) as create,
+        ):
+            self.assertEqual(
+                run_module.resolve_experience_tag(self.client, "project-1", "mine"),
+                "new-id",
+            )
+        self.assertEqual(create.call_args.kwargs["body"].name, "mine")
+
+    def test_pages_through_tags(self) -> None:
+        first = self._tags("other", next_page_token="page-2")
+        second = self._tags("mine")
+        with patch.object(
+            run_module.list_experience_tags,
+            "sync_detailed",
+            side_effect=[first, second],
+        ) as listed:
+            self.assertEqual(
+                run_module.resolve_experience_tag(self.client, "project-1", "mine"),
+                "id-mine",
+            )
+        self.assertEqual(listed.call_count, 2)
+
+
+class TagExperienceTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = fake_client()
+
+    def test_tags_the_experience(self) -> None:
+        with patch.object(
+            run_module.add_experience_tag_to_experience,
+            "sync_detailed",
+            return_value=MagicMock(status_code=201),
+        ) as add:
+            run_module.tag_experience(self.client, "project-1", "tag-1", "exp-1")
+        self.assertEqual(add.call_args.args, ("project-1", "tag-1", "exp-1"))
+
+    def test_already_tagged_is_not_an_error(self) -> None:
+        with patch.object(
+            run_module.add_experience_tag_to_experience,
+            "sync_detailed",
+            return_value=MagicMock(status_code=409),
+        ):
+            run_module.tag_experience(self.client, "project-1", "tag-1", "exp-1")
+
+    def test_an_unexpected_status_raises(self) -> None:
+        with patch.object(
+            run_module.add_experience_tag_to_experience,
+            "sync_detailed",
+            return_value=MagicMock(status_code=500, content=b"boom"),
+        ):
+            with self.assertRaises(Exception):
+                run_module.tag_experience(self.client, "project-1", "tag-1", "exp-1")
+
+
 class AttachmentsTest(unittest.TestCase):
     """What gets uploaded alongside a job's emissions, and how it is typed."""
 
@@ -620,7 +944,8 @@ class DemoRegistryTest(unittest.TestCase):
                 # underscore; a config using the wrong one syncs with no sets
                 # at all and renders nothing.
                 self.assertIn(demo.metrics_set, config.get("metrics sets") or {})
-                self.assertIn(demo.dashboard_name, config.get("dashboards") or {})
+                if demo.dashboard_name is not None:
+                    self.assertIn(demo.dashboard_name, config.get("dashboards") or {})
 
     def test_demos_do_not_collide(self) -> None:
         # Two demos sharing a project, branch or cache key would overwrite each
