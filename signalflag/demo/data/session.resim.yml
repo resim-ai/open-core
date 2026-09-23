@@ -179,110 +179,558 @@ topics:
       formats: string[]
 
 metrics:
-  # ---------------------------------------------------------------- test level
-  Speed Over Time:
-    type: test
-    description: Ground speed of the robot over the course of the session.
-    query_string: |
-      SELECT 'Speed' AS group_name, t_s AS timestamp, speed_mps AS speeds
-      FROM speed_sample
-      ORDER BY t_s;
-    template_file: custom_line.liquid
-    template_type: custom
 
-  IMU Acceleration:
-    type: test
-    description: Magnitude of the IMU's linear acceleration reading.
-    query_string: |
-      SELECT
-        'IMU' AS group_name,
-        t_s AS "Time (s)",
-        accel_mag_mps2 AS "Acceleration (m/s^2)"
-      FROM imu_sample
-      ORDER BY t_s;
-    template_type: system
-    template: line
+  # --- the headline: every stop and start as an animation ----------------
 
-  Foot Contact and Slip:
-    type: test
-    description: Gait state over the session - how many feet are down, and whether any are slipping.
-    query_string: |
-      SELECT t_s, feet_in_contact, feet_slipping, max_foot_force_n
-      FROM robot_state
-      ORDER BY t_s;
+  movement_summary:
+    query_string: >
+      SELECT clip AS value FROM movement_summary ORDER BY seq
     template_type: system
-    template: table
-
-  Motion Phases:
     type: test
-    description: Contiguous stopped/moving segments detected within each mission.
-    query_string: |
-      SELECT mission_idx, phase_idx, kind, duration_s, distance_m, mean_speed_mps
-      FROM motion_phase
-      ORDER BY mission_idx, phase_idx;
-    template_type: system
-    template: table
-
-  Movement Snapshots:
-    type: test
-    description: A frame from every start/stop transition in the session.
-    query_string: |
-      SELECT clip FROM movement_summary ORDER BY t_s;
-    template_type: system
     template: image
+    description: >
+      Every stop and start in the session as a camera animation, in order. Each
+      clip is 10 s around the transition, clamped to its own mission so none of
+      them spans the dead time between recordings.
 
-  GNSS Track:
+  # --- missions ---------------------------------------------------------
+
+  missions_completed:
+    query_string: SELECT COUNT(*) AS value FROM mission
+    template_type: system
     type: test
-    description: Raw GNSS fixes over the session.
-    query_string: |
-      SELECT mission_idx, t_s, latitude, longitude, altitude_m
-      FROM gnss_track
-      ORDER BY t_s;
-    template_type: system
-    template: table
-
-  # --------------------------------------------------------------- batch level
-  Session Summary:
-    type: batch
-    description: Headline numbers for the session.
-    query_string: |
-      SELECT n_missions_detected, n_missions_ground_truth, detection_correct,
-             total_distance_m, total_duration_s, mean_speed_mps
-      FROM session_summary;
-    template_type: system
-    template: table
-
-  GNSS Coverage:
-    status:
-      warn: 0.5
-      query_string: |
-        SELECT coverage FROM (
-          SELECT avg(gnss_coverage) AS coverage FROM mission
-        ) WHERE coverage < ?
-    type: batch
-    description: Mean share of the session with a GNSS fix, across missions.
-    query_string: |
-      SELECT avg(gnss_coverage) AS "GNSS Coverage" FROM mission;
-    template_type: system
     template: scalar
+    units: missions
+    description: Missions detected in this session, one per contiguous recording.
 
-  Raw Source Inventory:
-    type: batch
-    description: The source recording this session's snippets were cut from.
-    query_string: |
-      SELECT files, sizes_bytes, formats FROM session_inventory;
+  mission_detection_check:
+    query_string: >
+      SELECT ROUND(CAST(boundary_error_s AS DOUBLE), 3) AS value FROM session_summary
     template_type: system
+    type: test
+    template: scalar
+    units: s
+    description: >
+      Largest gap between a detected mission start and the ground-truth marker
+      the merge wrote. Zero means segmentation matched the known boundaries.
+    status:
+      query_string: >
+        SELECT 1 FROM ( SELECT boundary_error_s AS v FROM session_summary ) t WHERE t.v > ?
+      warn: 1.0
+      block: 10.0
+
+  session_duration:
+    query_string: >
+      SELECT LPAD(CAST(CAST(FLOOR(total_duration_s / 3600) AS INTEGER) AS VARCHAR), 2, '0') || ':' ||
+             LPAD(CAST(CAST(FLOOR(MOD(total_duration_s, 3600) / 60) AS INTEGER) AS VARCHAR), 2, '0') || ':' ||
+             LPAD(CAST(CAST(FLOOR(MOD(total_duration_s, 60)) AS INTEGER) AS VARCHAR), 2, '0') AS value
+      FROM session_summary
+    template_type: system
+    type: test
+    template: scalar
+    description: Wall-clock length of the session, dead time included.
+
+  active_share:
+    query_string: >
+      SELECT ROUND(CAST(active_duration_s / NULLIF(total_duration_s, 0) AS DOUBLE), 4) AS value
+      FROM session_summary
+    template_type: system
+    type: test
+    template: scalar
+    description: Share of the session spent inside a mission rather than idle.
+
+  mission_summary_table:
+    query_string: >
+      SELECT CAST(mission_idx AS VARCHAR) AS category,
+             ROUND(CAST(distance_m AS DOUBLE), 1) AS value
+      FROM mission ORDER BY mission_idx
+    template_type: system
+    type: test
     template: table
+    description: Distance covered by each mission.
+
+  # --- speed ------------------------------------------------------------
+
+  mean_speed_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(mean_speed_mps AS DOUBLE), 4) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    template_settings:
+      xaxis:
+        label: Mission
+      yaxis:
+        label: Mean speed while moving (m/s)
+    description: Average speed per mission, counting only samples above 0.05 m/s.
+
+  max_speed_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(max_speed_mps AS DOUBLE), 4) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    description: Fastest sample in each mission.
+
+  session_mean_speed:
+    query_string: SELECT ROUND(CAST(mean_speed_mps AS DOUBLE), 4) AS value FROM session_summary
+    template_type: system
+    type: test
+    template: scalar
+    units: m/s
+    description: Mean speed across the whole session while moving.
+
+  speed_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, speed_mps AS y
+      FROM speed_sample ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    template_settings:
+      xaxis:
+        label: Session time (s)
+      yaxis:
+        label: Speed (m/s)
+    description: >
+      Speed through the session, one series per mission. The dead time between
+      missions shows as a break because each mission is its own series.
+
+  speed_distribution:
+    query_string: SELECT speed_mps AS value FROM speed_sample WHERE speed_mps > 0.05
+    template_type: system
+    type: test
+    template: histogram
+    template_settings:
+      xaxis:
+        label: Speed (m/s)
+      display:
+        bins: 40
+    description: Distribution of speed while moving.
+
+  moving_share_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(moving_share AS DOUBLE), 4) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    description: Share of each mission actually spent moving.
+
+  # --- odometry ---------------------------------------------------------
+
+  total_distance_m:
+    query_string: SELECT ROUND(CAST(total_distance_m AS DOUBLE), 1) AS value FROM session_summary
+    template_type: system
+    type: test
+    template: scalar
+    units: m
+    description: Distance walked across the session, from leg-inertial odometry.
+
+  distance_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(distance_m AS DOUBLE), 2) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    template_settings:
+      yaxis:
+        label: Distance (m)
+    description: Path length per mission.
+
+  path_efficiency_per_mission:
+    query_string: >
+      SELECT mission_idx AS x,
+             ROUND(CAST(net_displacement_m / NULLIF(distance_m, 0) AS DOUBLE), 4) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    description: >
+      Straight-line displacement over path length. Near 1 is a traverse, near 0
+      is a loop that came back to where it started.
+
+  path_xy:
+    query_string: >
+      SELECT series AS group_name, x AS x, y AS y FROM robot_pose ORDER BY 1, t_s
+    template_type: system
+    type: test
+    template: line
+    template_settings:
+      xaxis:
+        label: x (m, odom)
+      yaxis:
+        label: y (m, odom)
+    description: >
+      Ground track per mission. Each mission is its own series - odom restarts
+      between recordings, so a single polyline would draw a false connector.
+
+  mission0_path_with_gnss:
+    query_string: >
+      SELECT 'odometry' AS group_name, east_m AS x, north_m AS y
+      FROM robot_pose WHERE mission_idx = 0 AND has_enu = 1
+      UNION ALL
+      SELECT 'GNSS fix', east_m, north_m
+      FROM gnss_track WHERE mission_idx = 0
+      ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    skip_if_no_data: true
+    template_settings:
+      xaxis:
+        label: East (m from first fix)
+      yaxis:
+        label: North (m from first fix)
+      series:
+        - group_name: odometry
+          color: "#AE84DE"
+        - group_name: GNSS fix
+          color: "#D3FAA3"
+    description: >
+      Mission 0 in one frame - the odometry track rotated onto local ENU, with
+      the GNSS fixes over it. Where the two separate, odometry has drifted.
+      Ordering is by east rather than by time, so this reads as a shape, not a
+      trajectory.
+
+  all_missions_path_enu:
+    query_string: >
+      SELECT series AS group_name, east_m AS x, north_m AS y
+      FROM robot_pose WHERE has_enu = 1 ORDER BY 1, t_s
+    template_type: system
+    type: test
+    template: line
+    skip_if_no_data: true
+    template_settings:
+      xaxis:
+        label: East (m)
+      yaxis:
+        label: North (m)
+    description: Every mission's track in a shared east/north frame.
+
+  odom_gnss_fit_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(odom_gnss_fit_rmse_m AS DOUBLE), 3) AS y
+      FROM mission WHERE has_gnss = 1 ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    skip_if_no_data: true
+    template_settings:
+      yaxis:
+        label: RMSE (m)
+    description: >
+      How well odometry could be rotated onto GNSS. A small residual means the
+      two agree on the shape of the path; a large one means real drift.
+
+  odom_dlio_gap_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(odom_dlio_gap_m AS DOUBLE), 3) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    template_settings:
+      yaxis:
+        label: Path-length disagreement (m)
+    description: >
+      Leg-inertial against lidar-inertial path length. Two independent solutions
+      over the same ground, so their disagreement estimates drift with no
+      external reference.
+
+  # --- GNSS -------------------------------------------------------------
+
+  gnss_track_map:
+    query_string: >
+      SELECT series AS group_name, longitude AS x, latitude AS y
+      FROM gnss_track ORDER BY 1, t_s
+    template_type: system
+    type: test
+    template: line
+    skip_if_no_data: true
+    template_settings:
+      xaxis:
+        label: Longitude
+      yaxis:
+        label: Latitude
+    description: GNSS ground track per mission.
+
+  gnss_distance_per_mission:
+    query_string: >
+      SELECT CAST(mission_idx AS VARCHAR) AS group_name, mission_idx AS x,
+             ROUND(CAST(gnss_distance_m AS DOUBLE), 2) AS y
+      FROM mission WHERE has_gnss = 1 ORDER BY 2
+    template_type: system
+    type: test
+    template: bar
+    skip_if_no_data: true
+    description: Distance per mission measured by GNSS rather than odometry.
+
+  gnss_odom_gap_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(gnss_odom_gap_m AS DOUBLE), 2) AS y
+      FROM mission WHERE has_gnss = 1 ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    skip_if_no_data: true
+    template_settings:
+      yaxis:
+        label: GNSS minus odometry (m)
+    description: >
+      How far the two distance measurements disagree. GNSS is absolute, so a
+      large gap points at odometry drift rather than at the satellite fix.
+
+  gnss_coverage_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(gnss_coverage AS DOUBLE), 4) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    template_settings:
+      yaxis:
+        label: Share of mission with a fix
+        min: 0
+        max: 1
+    description: >
+      How much of each mission had a GNSS fix. Read gnss_odom_gap_per_mission
+      against this - a big distance gap under poor coverage is a dropout, not
+      odometry drift.
+    status:
+      query_string: >
+        SELECT 1 FROM ( SELECT MIN(gnss_coverage) AS v FROM mission WHERE has_gnss = 1 ) t
+        WHERE t.v < ?
+      warn: 0.9
+      block: 0.5
+
+  altitude_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, altitude_m AS y
+      FROM gnss_track ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    skip_if_no_data: true
+    template_settings:
+      yaxis:
+        label: Altitude (m)
+    description: Altitude through the session, per mission.
+
+  altitude_gain_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(altitude_gain_m AS DOUBLE), 2) AS y
+      FROM mission WHERE has_gnss = 1 ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    skip_if_no_data: true
+    description: Altitude spread within each mission - how hilly it was.
+
+  # --- health -----------------------------------------------------------
+
+  tracking_error_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, speed_error_mps AS y
+      FROM command_tracking ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    template_settings:
+      yaxis:
+        label: Commanded minus measured (m/s)
+    description: Gap between commanded and achieved speed.
+
+  mean_tracking_error:
+    query_string: >
+      SELECT ROUND(CAST(AVG(speed_error_mps) AS DOUBLE), 4) AS value FROM command_tracking
+    template_type: system
+    type: test
+    template: scalar
+    units: m/s
+    description: Mean speed tracking error across the session.
+    status:
+      query_string: >
+        SELECT 1 FROM ( SELECT AVG(speed_error_mps) AS v FROM command_tracking ) t
+        WHERE t.v > ?
+      warn: 0.15
+      block: 0.35
+
+  foot_slip_per_mission:
+    query_string: >
+      SELECT mission_idx AS x, ROUND(CAST(foot_slip_share AS DOUBLE), 5) AS y
+      FROM mission ORDER BY 1
+    template_type: system
+    type: test
+    template: bar
+    description: Share of samples with at least one foot reporting slip.
+
+  joint_effort_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, max_joint_effort_nm AS y
+      FROM robot_state ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    template_settings:
+      yaxis:
+        label: Peak joint effort (Nm)
+    description: Highest absolute joint effort across all 12 joints, per sample.
+
+  imu_shock_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, accel_mag_mps2 AS y
+      FROM imu_sample ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    template_settings:
+      yaxis:
+        label: Acceleration magnitude (m/s2)
+    description: IMU acceleration magnitude - spikes above ~15 are impacts.
+
+  battery_over_time:
+    query_string: >
+      SELECT series AS group_name, t_s AS x, state_of_charge AS y
+      FROM battery_sample ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: line
+    description: >
+      Reported state of charge. Note this dataset reports 0.01-0.16 rather than
+      a 0-1 sweep; treat the trend as meaningful and the absolute value as not.
+
+  # --- movement phases, the carousel's backing summary -------------------
+
+  motion_phase_summary:
+    query_string: >
+      SELECT CAST(mission_idx AS VARCHAR) || '.' || CAST(phase_idx AS VARCHAR)
+             || ' ' || kind AS category,
+             ROUND(CAST(duration_s AS DOUBLE), 1) AS value
+      FROM motion_phase ORDER BY mission_idx, phase_idx
+    template_type: system
+    type: test
+    template: table
+    description: >
+      Every moving and stopped phase in order, with its length. The start and
+      stop events carry the matching camera animation.
+
+  moving_vs_stopped_time:
+    query_string: >
+      SELECT kind AS category, ROUND(CAST(SUM(duration_s) AS DOUBLE), 1) AS value
+      FROM motion_phase GROUP BY 1 ORDER BY 2 DESC
+    template_type: system
+    type: test
+    template: pie
+    template_settings:
+      display:
+        text_info: label_percent
+    description: Time spent moving against time spent stopped.
+
+  phase_distance:
+    query_string: >
+      SELECT kind AS group_name, phase_idx AS x,
+             ROUND(CAST(distance_m AS DOUBLE), 2) AS y
+      FROM motion_phase ORDER BY 1, 2
+    template_type: system
+    type: test
+    template: bar
+    template_settings:
+      xaxis:
+        label: Phase
+      yaxis:
+        label: Distance (m)
+    description: Ground covered in each phase.
+
+  stop_count:
+    query_string: >
+      SELECT COUNT(*) AS value FROM motion_phase WHERE kind = 'stopped'
+    template_type: system
+    type: test
+    template: scalar
+    units: stops
+    description: Times the robot came to a stop and started again.
+
+  longest_stop_s:
+    query_string: >
+      SELECT ROUND(CAST(COALESCE(MAX(duration_s), 0) AS DOUBLE), 1) AS value
+      FROM motion_phase WHERE kind = 'stopped'
+    template_type: system
+    type: test
+    template: scalar
+    units: s
+    description: Longest single stop.
+
+  tracking_excursions:
+    query_string: >
+      SELECT COUNT(*) AS value FROM session_events
+      WHERE name = 'Speed tracking excursion'
+    template_type: system
+    type: test
+    template: scalar
+    units: events
+    description: >
+      Windows where commanded speed exceeded measured by more than 0.20 m/s for
+      at least 1.5 s - the robot told to move and lagging. The threshold sits
+      just below this platform's p90 tracking error, so these are the tail, not
+      routine acceleration lag.
+    status:
+      query_string: >
+        SELECT 1 FROM ( SELECT COUNT(*) AS v FROM session_events
+                        WHERE name = 'Speed tracking excursion' ) t WHERE t.v > ?
+      warn: 5
+      block: 15
+
+  event_breakdown:
+    query_string: >
+      SELECT name AS x, COUNT(*) AS y FROM session_events GROUP BY 1 ORDER BY 2 DESC
+    template_type: system
+    type: test
+    template: bar
+    description: Events fired, by kind.
 
 metrics sets:
   Session Metrics:
     metrics:
-      - Speed Over Time
-      - IMU Acceleration
-      - Foot Contact and Slip
-      - Motion Phases
-      - Movement Snapshots
-      - GNSS Track
-      - Session Summary
-      - GNSS Coverage
-      - Raw Source Inventory
+      - movement_summary
+      - missions_completed
+      - mission_detection_check
+      - session_duration
+      - active_share
+      - session_mean_speed
+      - total_distance_m
+      - mean_tracking_error
+      - mean_speed_per_mission
+      - max_speed_per_mission
+      - distance_per_mission
+      - path_efficiency_per_mission
+      - moving_share_per_mission
+      - odom_dlio_gap_per_mission
+      - foot_slip_per_mission
+      - mission_summary_table
+      - speed_over_time
+      - speed_distribution
+      - path_xy
+      - mission0_path_with_gnss
+      - all_missions_path_enu
+      - odom_gnss_fit_per_mission
+      - gnss_track_map
+      - gnss_distance_per_mission
+      - gnss_odom_gap_per_mission
+      - gnss_coverage_per_mission
+      - altitude_over_time
+      - altitude_gain_per_mission
+      - tracking_error_over_time
+      - joint_effort_over_time
+      - imu_shock_over_time
+      - battery_over_time
+      - stop_count
+      - longest_stop_s
+      - tracking_excursions
+      - motion_phase_summary
+      - moving_vs_stopped_time
+      - phase_distance
+      - event_breakdown

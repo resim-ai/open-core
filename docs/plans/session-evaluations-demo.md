@@ -87,21 +87,23 @@ start/stop), pose/IMU/GNSS/battery/command time series, mission-boundary
 events, a session summary, and a record of the raw source file the session's
 mcap snippets were cut from.
 
-Test-level metrics cover line (both the system template and a custom Liquid
-one - `custom_line.liquid`, carried over from an internal config used to
-exercise the config validator, generalized to any query aliasing its columns
-to `timestamp`/`speeds`/`group_name`) and table charts; batch-level metrics
-cover table and scalar, including a status check that warns when a session's
-mean GNSS coverage drops below half; dashboard-level metrics chart distance
-and mean speed per session as bars grouped by `build_version`, which the demo
-sets to the session date.
+The metrics are the ones the internal `grandtour-sessions` project runs on
+the same four sessions: 39 test-level metrics, all on system templates (bar,
+line, scalar, table, histogram, pie, image), grouped into one `Session
+Metrics` set. They cover per-mission speed, distance, path efficiency and
+stop behaviour, odometry-vs-GNSS agreement, altitude, tracking error, joint
+effort, IMU shock, battery, motion phases and the event breakdown. Keeping
+them identical to the internal project means the demo shows what the team
+actually looks at for this data.
 
-Adding `custom_line.liquid` to the shared `data/templates/` directory exposed
-a real gap in `config_test.py`: `NavigationCoverageTest.test_every_shipped_template_is_used`
-assumed every shipped template belonged to the flagship demo, which broke the
-moment a second demo brought its own template. Replaced with
-`TemplateCoverageTest`, which checks that every shipped template is used by
-*some* registered demo rather than by `config.resim.yml` specifically.
+There are no batch or dashboard metrics: with one test per batch, a batch
+view would repeat the test view. `config_test.py` therefore exempts the
+session demo from the rule that every config carries batch metrics, the
+same way it already exempts configs without a dashboard.
+
+`TemplateCoverageTest` checks that every shipped template in `data/templates/`
+is used by *some* registered demo. The session demo uses only system
+templates, so it ships none of its own.
 
 ## The data bundle
 
