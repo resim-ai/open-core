@@ -876,7 +876,9 @@ class ResolveExperienceTest(unittest.TestCase):
                 run_module.resolve_experience(self.client, "project-1", "session-a"),
                 "new-id",
             )
-        self.assertEqual(create.call_args.kwargs["body"].name, "session-a")
+        body = create.call_args.kwargs["body"]
+        self.assertEqual(body.name, "session-a")
+        self.assertEqual(body.location, "placeholder")
 
 
 class ResolveTestSuiteTest(unittest.TestCase):

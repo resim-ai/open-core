@@ -524,7 +524,15 @@ def resolve_experience(
     created = create_experience.sync_detailed(
         project_id,
         client=client,
-        body=CreateExperienceInput(name=name, description=PROJECT_DESCRIPTION),
+        # A light batch never reads experience files, but the API requires a
+        # location; this matches the placeholder a job gives the experiences
+        # it creates by name.
+        body=CreateExperienceInput(
+            name=name,
+            description=PROJECT_DESCRIPTION,
+            location="placeholder",
+            cache_exempt=True,
+        ),
     )
     assert created.parsed is not None, (
         f"failed to create experience {name!r}: {created.content!r}"
