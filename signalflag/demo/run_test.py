@@ -664,6 +664,22 @@ class SessionOrchestrationTest(unittest.TestCase):
             )
         )
 
+    def test_each_side_reports_its_own_version_by_default(self) -> None:
+        self._run()
+        self.assertNotEqual(FakeBatch.created[0]["version"], "shared")
+
+    def test_a_build_version_is_shared_by_every_batch(self) -> None:
+        with patch.dict(
+            run_module.DEMOS,
+            {
+                "fake-session": replace(
+                    run_module.DEMOS["fake-session"], build_version="shared"
+                )
+            },
+        ):
+            self._run()
+        self.assertEqual({b["version"] for b in FakeBatch.created}, {"shared"})
+
     def test_a_test_suite_without_a_system_is_rejected(self) -> None:
         with patch.dict(
             run_module.DEMOS,

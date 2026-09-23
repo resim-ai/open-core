@@ -98,6 +98,9 @@ class Demo:
     #: Test suite every batch runs against, holding one experience per job
     #: across all sides. Requires ``system``. None runs each batch ad hoc.
     test_suite: Optional[str] = None
+    #: Version every batch reports, so they all share one build. None uses
+    #: each side's own version from the bundle, one build per version.
+    build_version: Optional[str] = None
 
 
 DEMOS: dict[str, Demo] = {
@@ -163,6 +166,7 @@ DEMOS: dict[str, Demo] = {
         system="Session Evaluations",
         experience_tag="resim-session",
         test_suite="Field Sessions",
+        build_version="grandtour-sessions",
     ),
 }
 
@@ -309,7 +313,7 @@ def run(
                 project_id=project_id,
                 branch=branch,
                 name=str(details.get("name") or f"SDK Demo {side.upper()}"),
-                version=str(details.get("version") or ""),
+                version=chosen.build_version or str(details.get("version") or ""),
                 metrics_set_name=chosen.metrics_set,
                 metrics_config_path=str(config),
                 templates_path=str(templates),
