@@ -18,6 +18,7 @@ __all__ = [
     "dashboards_url",
     "job_url",
     "sessions_url",
+    "test_suite_url",
 ]
 
 
@@ -69,6 +70,16 @@ def dashboards_url(app_url: str, project_id: str) -> str:
     still points somewhere useful instead of printing nothing.
     """
     return f"{app_url}/projects/{project_id}/dashboards"
+
+
+def test_suite_url(
+    app_url: str, project_id: str, test_suite_id: str, revision: int
+) -> str:
+    """URL of one revision of a test suite."""
+    return (
+        f"{app_url}/projects/{project_id}/test-suites/{test_suite_id}"
+        f"/revisions/{revision}"
+    )
 
 
 def job_url(app_url: str, project_id: str, batch_id: str, job_id: str) -> str:

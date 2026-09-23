@@ -31,6 +31,7 @@ from signalflag.sdk.auth.device_code_client import (
 from signalflag.sdk.batch import Batch
 from signalflag.sdk.bff_client.dashboards import find_dashboard_id
 from signalflag.sdk.client import AuthenticatedClient
+from signalflag.sdk.client.api.experiences import create_experience, list_experiences
 from signalflag.sdk.client.api.experience_tags import (
     add_experience_tag_to_experience,
     create_experience_tag,
@@ -38,12 +39,23 @@ from signalflag.sdk.client.api.experience_tags import (
 )
 from signalflag.sdk.client.api.projects import create_project, list_projects
 from signalflag.sdk.client.api.systems import create_system, list_systems
+from signalflag.sdk.client.api.test_suites import (
+    create_test_suite,
+    list_test_suites,
+    revise_test_suite,
+)
 from signalflag.sdk.client.models.architecture import Architecture
+from signalflag.sdk.client.models.create_experience_input import (
+    CreateExperienceInput,
+)
 from signalflag.sdk.client.models.create_experience_tag_input import (
     CreateExperienceTagInput,
 )
 from signalflag.sdk.client.models.create_project_input import CreateProjectInput
 from signalflag.sdk.client.models.create_system_input import CreateSystemInput
+from signalflag.sdk.client.models.create_test_suite_input import CreateTestSuiteInput
+from signalflag.sdk.client.models.revise_test_suite_input import ReviseTestSuiteInput
+from signalflag.sdk.client.models.test_suite import TestSuite
 from signalflag.sdk.test import LogType, Test
 
 __all__ = ["DEMOS", "Demo", "DemoResult", "config_path", "run", "templates_path"]
@@ -83,6 +95,9 @@ class Demo:
     #: Experience tag applied to every experience this demo's batches create.
     #: None skips tagging entirely.
     experience_tag: Optional[str] = None
+    #: Test suite every batch runs against, holding one experience per job
+    #: across all sides. Requires ``system``. None runs each batch ad hoc.
+    test_suite: Optional[str] = None
 
 
 DEMOS: dict[str, Demo] = {
@@ -147,6 +162,7 @@ DEMOS: dict[str, Demo] = {
         sides=("2024-11-04", "2024-11-14", "2024-11-15", "2024-11-18"),
         system="Session Evaluations",
         experience_tag="resim-session",
+        test_suite="Field Sessions",
     ),
 }
 
@@ -182,6 +198,7 @@ class DemoResult:
     batch_ids: dict[str, str]
     dashboard_id: Optional[str]
     urls: dict[str, str]
+    test_suite_id: Optional[str] = None
 
 
 def run(
@@ -238,13 +255,38 @@ def run(
 
     project_id = resolve_project(client, project_name, say)
 
-    if chosen.system:
+    system_id = (
         resolve_system(client, project_id, chosen.system, say)
+        if chosen.system
+        else None
+    )
     tag_id = (
         resolve_experience_tag(client, project_id, chosen.experience_tag, say)
         if chosen.experience_tag
         else None
     )
+
+    suite: Optional[TestSuite] = None
+    if chosen.test_suite:
+        if system_id is None:
+            raise ValueError(f"demo {chosen.key!r} has a test suite but no system")
+        # The suite has to exist before the first batch attaches to it, so its
+        # experiences are created up front; each job then matches its own
+        # experience by name instead of creating a new one.
+        experience_ids = [
+            resolve_experience(client, project_id, str(job["experience_name"]), say)
+            for side in chosen.sides
+            for job in data.jobs(side)
+        ]
+        suite = resolve_test_suite(
+            client,
+            project_id,
+            chosen.test_suite,
+            system_id,
+            experience_ids,
+            chosen.metrics_set,
+            say,
+        )
 
     config_resource, templates_resource = _package_data(chosen)
 
@@ -272,6 +314,7 @@ def run(
                 metrics_config_path=str(config),
                 templates_path=str(templates),
                 system=chosen.system,
+                test_suite=chosen.test_suite,
             ) as batch:
                 batch_ids[side] = batch.id
                 if dashboard_id is None and chosen.dashboard_name:
@@ -316,6 +359,7 @@ def run(
         job_ids,
         sessions=bool(chosen.experience_tag),
         has_dashboard=bool(chosen.dashboard_name),
+        suite=suite,
     )
     if not quiet:
         _report(
@@ -329,6 +373,7 @@ def run(
         batch_ids=batch_ids,
         dashboard_id=dashboard_id,
         urls=urls,
+        test_suite_id=suite.test_suite_id if suite else None,
     )
 
 
@@ -458,6 +503,97 @@ def resolve_experience_tag(
         f"failed to create experience tag {name!r}: {created.content!r}"
     )
     return str(created.parsed.experience_tag_id)
+
+
+def resolve_experience(
+    client: AuthenticatedClient,
+    project_id: str,
+    name: str,
+    say: Any = lambda _: None,
+) -> str:
+    """Return the ID of the experience called ``name``, creating it if needed."""
+    response = list_experiences.sync_detailed(project_id, client=client, name=name)
+    assert response.parsed is not None, (
+        f"failed to list experiences: {response.content!r}"
+    )
+    for experience in response.parsed.experiences or []:
+        if experience.name == name:
+            return str(experience.experience_id)
+
+    say(f"Creating experience {name!r}")
+    created = create_experience.sync_detailed(
+        project_id,
+        client=client,
+        body=CreateExperienceInput(name=name, description=PROJECT_DESCRIPTION),
+    )
+    assert created.parsed is not None, (
+        f"failed to create experience {name!r}: {created.content!r}"
+    )
+    return str(created.parsed.experience_id)
+
+
+def resolve_test_suite(
+    client: AuthenticatedClient,
+    project_id: str,
+    name: str,
+    system_id: str,
+    experience_ids: list[str],
+    metrics_set: str,
+    say: Any = lambda _: None,
+) -> TestSuite:
+    """Return the test suite called ``name``, holding exactly ``experience_ids``.
+
+    Creates it if missing. An existing suite whose experiences or metrics set
+    differ is revised to match, so re-running the demo after its data changes
+    does not leave batches attached to a stale suite.
+    """
+    response = list_test_suites.sync_detailed(project_id, client=client, name=name)
+    assert response.parsed is not None, (
+        f"failed to list test suites: {response.content!r}"
+    )
+    existing = next(
+        (suite for suite in response.parsed.test_suites or [] if suite.name == name),
+        None,
+    )
+    if existing is None:
+        say(f"Creating test suite {name!r}")
+        created = create_test_suite.sync_detailed(
+            project_id,
+            client=client,
+            body=CreateTestSuiteInput(
+                name=name,
+                description=PROJECT_DESCRIPTION,
+                system_id=system_id,
+                experiences=experience_ids,
+                metrics_set_name=metrics_set,
+            ),
+        )
+        assert created.parsed is not None, (
+            f"failed to create test suite {name!r}: {created.content!r}"
+        )
+        return created.parsed
+
+    if (
+        set(existing.experiences) == set(experience_ids)
+        and existing.metrics_set_name == metrics_set
+    ):
+        return existing
+
+    say(f"Revising test suite {name!r}")
+    revised = revise_test_suite.sync_detailed(
+        project_id,
+        existing.test_suite_id,
+        client=client,
+        body=ReviseTestSuiteInput(
+            update_metrics_build=False,
+            experiences=experience_ids,
+            metrics_set_name=metrics_set,
+        ),
+    )
+    assert revised.parsed is not None, (
+        f"failed to revise test suite {name!r}: {revised.content!r}"
+    )
+    return revised.parsed
 
 
 def tag_experience(
@@ -647,6 +783,7 @@ def _urls(
     job_ids: Optional[dict[str, str]] = None,
     sessions: bool = False,
     has_dashboard: bool = True,
+    suite: Optional[TestSuite] = None,
 ) -> dict[str, str]:
     app = links.app_base_url(client.get_httpx_client()._base_url)
     job_ids = job_ids or {}
@@ -673,6 +810,10 @@ def _urls(
         )
     if sessions:
         urls["sessions"] = links.sessions_url(app, project_id)
+    if suite is not None:
+        urls["test_suite"] = links.test_suite_url(
+            app, project_id, str(suite.test_suite_id), suite.test_suite_revision
+        )
     return urls
 
 
@@ -696,6 +837,8 @@ def _report(
             labels.append((f"batch_{side}", f"Batch {side}{suffix}"))
     if "dashboard" in urls:
         labels.append(("dashboard", "Trends dashboard"))
+    if "test_suite" in urls:
+        labels.append(("test_suite", "Test suite"))
 
     width = max(len(label) for _, label in labels)
     print("\nSignalFlag SDK demo complete.\n")

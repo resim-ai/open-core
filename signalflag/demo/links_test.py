@@ -16,6 +16,7 @@ from signalflag.demo.links import (
     dashboards_url,
     job_url,
     sessions_url,
+    test_suite_url,
 )
 
 APP = "https://app.signalflag.ai"
@@ -70,6 +71,12 @@ class RouteTest(unittest.TestCase):
 
     def test_dashboards_list(self) -> None:
         self.assertEqual(dashboards_url(APP, "p"), f"{APP}/projects/p/dashboards")
+
+    def test_test_suite(self) -> None:
+        self.assertEqual(
+            test_suite_url(APP, "p", "s", 3),
+            f"{APP}/projects/p/test-suites/s/revisions/3",
+        )
 
     def test_job(self) -> None:
         self.assertEqual(
