@@ -537,6 +537,15 @@ class ReportTest(unittest.TestCase):
         output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
         self.assertIn("url-sessions", output)
 
+    def test_prints_the_test_suite_link_when_present(self) -> None:
+        with patch("builtins.print") as printed:
+            run_module._report(
+                {"batch_a": "url-a", "test_suite": "url-suite"}, ("a",), {"a": ""}
+            )
+        output = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertIn("Test suite", output)
+        self.assertIn("url-suite", output)
+
     def test_omits_the_dashboard_line_when_there_is_no_dashboard_url(self) -> None:
         with patch("builtins.print") as printed:
             run_module._report({"batch_a": "url-a"}, ("a",), {"a": ""})
@@ -616,6 +625,72 @@ class SessionOrchestrationTest(unittest.TestCase):
     def test_no_compare_link_for_a_single_side(self) -> None:
         result = self._run()
         self.assertNotIn("compare", result.urls)
+
+    def test_a_demo_without_a_test_suite_runs_batches_ad_hoc(self) -> None:
+        with patch.object(run_module, "resolve_test_suite") as resolve:
+            result = self._run()
+        resolve.assert_not_called()
+        self.assertIsNone(FakeBatch.created[0]["test_suite"])
+        self.assertIsNone(result.test_suite_id)
+        self.assertNotIn("test_suite", result.urls)
+
+    def test_creates_the_test_suite_before_the_first_batch(self) -> None:
+        suite = MagicMock(test_suite_id="suite-1", test_suite_revision=2)
+        with (
+            patch.dict(
+                run_module.DEMOS,
+                {
+                    "fake-session": replace(
+                        run_module.DEMOS["fake-session"], test_suite="Test Suite"
+                    )
+                },
+            ),
+            patch.object(
+                run_module, "resolve_experience", return_value="exp-1"
+            ) as resolve_experience,
+            patch.object(
+                run_module, "resolve_test_suite", return_value=suite
+            ) as resolve_suite,
+        ):
+            result = self._run()
+        resolve_experience.assert_called_once()
+        args = resolve_suite.call_args.args
+        self.assertEqual(args[2:6], ("Test Suite", "sys-1", ["exp-1"], "Demo Metrics"))
+        self.assertEqual(FakeBatch.created[0]["test_suite"], "Test Suite")
+        self.assertEqual(result.test_suite_id, "suite-1")
+        self.assertTrue(
+            result.urls["test_suite"].endswith(
+                "/projects/project-1/test-suites/suite-1/revisions/2"
+            )
+        )
+
+    def test_each_side_reports_its_own_version_by_default(self) -> None:
+        self._run()
+        self.assertNotEqual(FakeBatch.created[0]["version"], "shared")
+
+    def test_a_build_version_is_shared_by_every_batch(self) -> None:
+        with patch.dict(
+            run_module.DEMOS,
+            {
+                "fake-session": replace(
+                    run_module.DEMOS["fake-session"], build_version="shared"
+                )
+            },
+        ):
+            self._run()
+        self.assertEqual({b["version"] for b in FakeBatch.created}, {"shared"})
+
+    def test_a_test_suite_without_a_system_is_rejected(self) -> None:
+        with patch.dict(
+            run_module.DEMOS,
+            {
+                "fake-session": replace(
+                    run_module.DEMOS["fake-session"], system=None, test_suite="Suite"
+                )
+            },
+        ):
+            with self.assertRaises(ValueError):
+                self._run()
 
     def test_a_demo_without_a_system_or_tag_skips_both(self) -> None:
         with patch.dict(
@@ -773,6 +848,145 @@ class ResolveSystemTest(unittest.TestCase):
                 run_module.resolve_system(self.client, "project-1", "Mine"), "new-id"
             )
         self.assertEqual(create.call_args.kwargs["body"].name, "Mine")
+
+
+class ResolveExperienceTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = fake_client()
+
+    def _experiences(self, *names: str) -> MagicMock:
+        experiences = []
+        for n in names:
+            experience = MagicMock(experience_id=f"id-{n}")
+            experience.name = n
+            experiences.append(experience)
+        response = MagicMock(status_code=200)
+        response.parsed.experiences = experiences
+        return response
+
+    def test_returns_an_existing_experience(self) -> None:
+        with patch.object(
+            run_module.list_experiences,
+            "sync_detailed",
+            return_value=self._experiences("session-a"),
+        ):
+            self.assertEqual(
+                run_module.resolve_experience(self.client, "project-1", "session-a"),
+                "id-session-a",
+            )
+
+    def test_creates_a_missing_experience(self) -> None:
+        created = MagicMock(status_code=201)
+        created.parsed.experience_id = "new-id"
+        with (
+            patch.object(
+                run_module.list_experiences,
+                "sync_detailed",
+                return_value=self._experiences("session-b"),
+            ),
+            patch.object(
+                run_module.create_experience, "sync_detailed", return_value=created
+            ) as create,
+        ):
+            self.assertEqual(
+                run_module.resolve_experience(self.client, "project-1", "session-a"),
+                "new-id",
+            )
+        body = create.call_args.kwargs["body"]
+        self.assertEqual(body.name, "session-a")
+        self.assertEqual(body.location, "placeholder")
+
+
+class ResolveTestSuiteTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = fake_client()
+
+    def _suites(self, *suites: MagicMock) -> MagicMock:
+        response = MagicMock(status_code=200)
+        response.parsed.test_suites = list(suites)
+        return response
+
+    def _suite(self, name: str, experiences: list[str], metrics_set: str) -> MagicMock:
+        suite = MagicMock(
+            test_suite_id=f"id-{name}",
+            experiences=experiences,
+            metrics_set_name=metrics_set,
+        )
+        suite.name = name
+        return suite
+
+    def _resolve(self) -> Any:
+        return run_module.resolve_test_suite(
+            self.client, "project-1", "Suite", "sys-1", ["e1", "e2"], "Metrics"
+        )
+
+    def test_creates_a_missing_suite(self) -> None:
+        created = MagicMock(status_code=201)
+        with (
+            patch.object(
+                run_module.list_test_suites,
+                "sync_detailed",
+                return_value=self._suites(self._suite("Other", [], "Metrics")),
+            ),
+            patch.object(
+                run_module.create_test_suite, "sync_detailed", return_value=created
+            ) as create,
+        ):
+            self.assertIs(self._resolve(), created.parsed)
+        body = create.call_args.kwargs["body"]
+        self.assertEqual(
+            (body.name, body.system_id, body.experiences, body.metrics_set_name),
+            ("Suite", "sys-1", ["e1", "e2"], "Metrics"),
+        )
+
+    def test_reuses_a_suite_that_already_matches(self) -> None:
+        existing = self._suite("Suite", ["e2", "e1"], "Metrics")
+        with (
+            patch.object(
+                run_module.list_test_suites,
+                "sync_detailed",
+                return_value=self._suites(existing),
+            ),
+            patch.object(run_module.revise_test_suite, "sync_detailed") as revise,
+            patch.object(run_module.create_test_suite, "sync_detailed") as create,
+        ):
+            self.assertIs(self._resolve(), existing)
+        revise.assert_not_called()
+        create.assert_not_called()
+
+    def test_revises_a_suite_whose_experiences_differ(self) -> None:
+        revised = MagicMock(status_code=200)
+        with (
+            patch.object(
+                run_module.list_test_suites,
+                "sync_detailed",
+                return_value=self._suites(self._suite("Suite", ["e1"], "Metrics")),
+            ),
+            patch.object(
+                run_module.revise_test_suite, "sync_detailed", return_value=revised
+            ) as revise,
+        ):
+            self.assertIs(self._resolve(), revised.parsed)
+        self.assertEqual(revise.call_args.args[1], "id-Suite")
+        self.assertEqual(revise.call_args.kwargs["body"].experiences, ["e1", "e2"])
+
+    def test_revises_a_suite_whose_metrics_set_differs(self) -> None:
+        with (
+            patch.object(
+                run_module.list_test_suites,
+                "sync_detailed",
+                return_value=self._suites(
+                    self._suite("Suite", ["e1", "e2"], "Old Metrics")
+                ),
+            ),
+            patch.object(
+                run_module.revise_test_suite,
+                "sync_detailed",
+                return_value=MagicMock(status_code=200),
+            ) as revise,
+        ):
+            self._resolve()
+        self.assertEqual(revise.call_args.kwargs["body"].metrics_set_name, "Metrics")
 
 
 class ResolveExperienceTagTest(unittest.TestCase):

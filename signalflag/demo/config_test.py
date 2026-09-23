@@ -289,9 +289,12 @@ class ConfigTest(unittest.TestCase):
                         f"quoted string",
                     )
 
-    def test_covers_test_and_batch_metrics(self) -> None:
+    required_metric_types = {"test", "batch"}
+
+    def test_covers_required_metric_types(self) -> None:
         self.assertEqual(
-            {"test", "batch"} - {metric["type"] for metric in self.metrics.values()},
+            self.required_metric_types
+            - {metric["type"] for metric in self.metrics.values()},
             set(),
         )
 
@@ -342,6 +345,8 @@ class SessionConfigTest(ConfigTest):
     """The Session Evaluations demo's config, held to exactly the same rules."""
 
     config_file = "session.resim.yml"
+    # One test per batch, so a batch view would only repeat the test view.
+    required_metric_types = {"test"}
 
 
 class TemplateCoverageTest(unittest.TestCase):
